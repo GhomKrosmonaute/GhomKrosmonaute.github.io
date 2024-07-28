@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="styles/index.css">
+    <script src="scripts/theme.mjs" defer></script>
+    <title>Ghom - Développeur Web</title>
+  </head>
+  <body>
+    <!-- Bouton pour activer/désactiver le mode sombre -->
+    <button onclick="toggleDarkMode()" class="button icon" style="position: fixed; right: 0; top: 0; margin: 1rem;">
+      <img src="assets/theme.svg" alt="theme icon" id="theme-button">
+    </button>
+
+    <!-- Contenu du milieu -->
+    <div style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);">
+
+      <!-- Titre / heading -->
+      <div style="display: flex; align-items: center; margin: auto; max-width: fit-content">
+        <h1 style="font-size: 3.5rem; padding: 0; margin: 0 0.5rem 0 0; white-space: nowrap;">GHOM</h1>
+        <h2 style="margin: 0; white-space: nowrap;">
+          Développeur <br> <span style="font-size: 1.35rem; white-space: nowrap;">Web Freelance</span>
+        </h2>
+      </div>
+
+      <!-- Phrase d'accroche -->
+      <p style="text-align: center; letter-spacing: 0.15rem;">
+        Une qualité <span class="changa">maximale</span> pour un prix <span class="changa">minimal</span>
+      </p>
+
+      <!-- Boutons / liens -->
+      <div style="min-width: 100%; display: flex; justify-content: space-evenly; margin-top: 2rem">
+        <a class="button" href="https://github.com/GhomKrosmonaute" target="_blank">
+          Projets
+        </a>
+        <a class="button cta" href="./contact.html">
+          Contact
+        </a>
+        <a class="button" href="./tarifs.html">
+          Tarifs
+        </a>
+      </div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,48 @@
+.button {
+  display: block;
+  width: 60px;
+  text-align: center;
+  font-family: "Zain", sans-serif;
+  font-weight: 300;
+  font-style: normal;
+  font-size: 1rem;
+  line-height: 1.5;
+  padding: 0.5rem 1rem;
+  border: 1px solid #333;
+  border-radius: var(--radius);
+  background-color: hsla(var(--secondary));
+  color: hsla(var(--secondary-foreground));
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+  text-decoration: none;
+}
+
+.button:hover {
+  background-color: hsla(var(--secondary) / 0.8);
+  color: hsla(var(--secondary-foreground));
+}
+
+.button.cta {
+  width: 90px;
+  background-color: hsla(var(--primary));
+  color:hsla( var(--primary-foreground));
+}
+
+.button.cta:hover {
+  background-color: hsla(var(--primary) / 0.8);
+  color:hsla( var(--primary-foreground));
+}
+
+.button.icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 40px;
+  height: 40px;
+}
+
+.button.icon svg,
+.button.icon img {
+  width: 1.5rem;
+  height: 1.5rem;
+}

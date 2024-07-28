@@ -1,0 +1,4 @@
+body {
+  background-color: hsla(var(--background));
+  color: hsla(var(--foreground));
+}
