@@ -1,0 +1,17 @@
+.card {
+  background-color: hsla(var(--card));
+  border-radius: var(--radius);
+  border-width: 2px;
+  border-bottom-color: hsla(var(--secondary-foreground));
+  border-right-color: hsla(var(--primary));
+  border-bottom-style: solid;
+  border-right-style: solid;
+  padding: 40px;
+  box-shadow: hsla(var(--primary)) 50px 80px 300px, hsla(var(--primary-foreground)) -50px -80px 300px;
+  transition: box-shadow 1s ease-in-out, border-bottom-color 0.5s ease-in-out;
+}
+
+.card:hover {
+  box-shadow: hsla(var(--primary)) 0 0 150px;
+  border-bottom-color: hsla(var(--primary));
+}
