@@ -9,6 +9,7 @@
   padding: 40px;
   box-shadow: hsla(var(--primary)) 50px 80px 300px, hsla(var(--primary-foreground)) -50px -80px 300px;
   transition: box-shadow 1s ease-in-out, border-bottom-color 0.5s ease-in-out;
+  min-width: max-content;
 }
 
 .card:hover {

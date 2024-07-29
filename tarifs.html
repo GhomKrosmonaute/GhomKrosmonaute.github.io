@@ -10,6 +10,80 @@
     <title>Ghom - Tarifs</title>
   </head>
   <body>
+    <!-- Bouton pour activer/désactiver le mode sombre -->
+    <button onclick="toggleDarkMode()" class="button icon reverse" style="position: fixed; right: 0; top: 0; margin: 1rem;">
+      <img src="assets/theme.svg" alt="theme icon">
+    </button>
 
+    <!-- Contenu du milieu -->
+    <div style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);" class="card">
+      <!-- Bouton de retour en arrière -->
+      <a href="./" class="button icon reverse" style="position: absolute; right: 0; top: 0; margin: 1rem;">
+        <img src="assets/cross.svg" alt="back">
+      </a>
+
+      <h1 style="text-align: center;">Tarifs</h1>
+      <p style="text-align: center; font-size: 1.5em;">
+        <span title="Tarif journalier moyen">TJM</span> <code>300€</code>
+        négociables (<code>~37€</code>/h)
+      </p>
+      <h2>Prestations en tant que produit</h2>
+      <table>
+        <tr>
+          <th style="text-align: left;">Prix</th>
+          <th style="text-align: left;">Produit</th>
+          <th style="text-align: left;">Description</th>
+        </tr>
+        <tr>
+          <td><code>200€</code></td>
+          <td>Portfolio</td>
+          <td>Site web simple, sans base de données</td>
+        </tr>
+        <tr>
+          <td><code>500€</code></td>
+          <td>Site vitrine / Blog</td>
+          <td>Site web simple avec CMS</td>
+        </tr>
+        <tr>
+          <td><code>50€</code></td>
+          <td>Bot Discord (Bot.ts)</td>
+          <td>Bot Discord simple avec commandes textuelles</td>
+        </tr>
+        <tr>
+          <td><code>200€</code></td>
+          <td>Bot Discord avancé</td>
+          <td>Bot Discord entièrement personalisé</td>
+        </tr>
+        <tr>
+          <td><code>1000€</code></td>
+          <td>Jeu vidéo 2D</td>
+          <td>Jeu vidéo 2D simple pour le web</td>
+        </tr>
+      </table>
+      <h2>Hébergement</h2>
+      <table>
+        <tr>
+          <th style="text-align: left;">Prix</th>
+          <th style="text-align: left;">Description</th>
+        </tr>
+        <tr>
+          <td><code>2€</code>/mois</td>
+          <td>Application web sans base de données</td>
+        </tr>
+        <tr>
+          <td><code>5€</code>/mois</td>
+          <td>Application web avec base de données</td>
+        </tr>
+      </table>
+
+      <!-- Bouton de contact CTA -->
+      <div style="display: flex; flex-direction: column; align-items: center;">
+        <h2>Pour plus d'informations</h2>
+        <a href="./contact.html" class="button cta">Contactez-moi !</a>
+        <p style="font-style: italic; color: hsl(var(--muted-foreground))">
+          Les tarifs peuvent être redéfinis en fonction de la complexité du projet.
+        </p>
+      </div>
+    </div>
   </body>
 </html>

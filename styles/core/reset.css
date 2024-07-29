@@ -2,3 +2,33 @@ body {
   background-color: hsla(var(--background));
   color: hsla(var(--foreground));
 }
+
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+td, th {
+  padding: 0.1rem 0.5rem;
+}
+
+a {
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: none;
+}
+
+a:active {
+  text-decoration: none;
+}
+
+code {
+  display: inline-block;
+  font-weight: bold;
+  font-size: 1.4em;
+  padding: 0 0.2em;
+  color: hsla(var(--secondary-foreground));
+  text-shadow: 0 0 0.5em hsla(var(--primary));
+}

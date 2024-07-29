@@ -1,13 +1,13 @@
 @import url('https://api.fonts.coollabs.io/css2?family=Changa:wght@700&family=Zain:wght@300&display=swap');
 
-.changa, h1, h2, h3, h4, h5, h6 {
+.changa, h1, h2, h3, h4, h5, h6, a, th {
   font-family: "Changa", sans-serif;
   font-optical-sizing: auto;
   font-weight: 700;
   font-style: normal;
 }
 
-.zain, p, span, a, li, button {
+.zain, p, span, li, button, td {
   font-family: "Zain", sans-serif;
   font-weight: 300;
   font-style: normal;
