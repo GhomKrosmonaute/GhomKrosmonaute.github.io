@@ -2,6 +2,11 @@ const theme = localStorage.getItem('theme');
 
 if (theme === 'dark') {
   toggleDarkMode();
+} else if (!theme) {
+  const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+  if (prefersDarkScheme.matches) {
+    toggleDarkMode();
+  }
 }
 
 function toggleDarkMode() {
