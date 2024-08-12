@@ -6,8 +6,8 @@
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link rel="stylesheet" href="styles/index.css">
-    <script src="scripts/theme.mjs" defer></script>
-    <script src="scripts/reload.mjs" defer></script>
+    <script src="src/theme.ts" defer></script>
+    <script src="src/tarifs.ts" defer type="module"></script>
     <title>Ghom - Tarifs</title>
   </head>
   <body>
@@ -29,58 +29,14 @@
         négociables (<code>~37€</code>/h)
       </p>
       <h2>Prestations en tant que produit</h2>
-      <table>
-        <tr>
-          <th style="text-align: left;">Prix</th>
-          <th style="text-align: left;">Produit</th>
-          <th style="text-align: left;">Description</th>
-        </tr>
-        <tr>
-          <td><code>200€</code></td>
-          <td>Portfolio</td>
-          <td>Site web simple, sans base de données</td>
-        </tr>
-        <tr>
-          <td><code>500€</code></td>
-          <td>Site vitrine / Blog</td>
-          <td>Site web simple avec CMS</td>
-        </tr>
-        <tr>
-          <td><code>50€</code></td>
-          <td>Bot Discord (Bot.ts)</td>
-          <td>Bot Discord simple avec commandes textuelles</td>
-        </tr>
-        <tr>
-          <td><code>200€</code></td>
-          <td>Bot Discord avancé</td>
-          <td>Bot Discord entièrement personalisé</td>
-        </tr>
-        <tr>
-          <td><code>1000€</code></td>
-          <td>Jeu vidéo 2D</td>
-          <td>Jeu vidéo 2D simple pour le web</td>
-        </tr>
-      </table>
+      <table id="products"></table>
       <h2>Hébergement</h2>
       <p>
         J'héberge vos projets si vous ne savez pas comment le faire vous-même. <br>
         Cela me permet de pouvoir intervenir rapidement en cas de modification ou de panne. <br>
         Les tarifs sont mensuels.
       </p>
-      <table>
-        <tr>
-          <th style="text-align: left;">Prix</th>
-          <th style="text-align: left;">Description</th>
-        </tr>
-        <tr>
-          <td><code>2€</code>/mois</td>
-          <td>Application web sans base de données</td>
-        </tr>
-        <tr>
-          <td><code>5€</code>/mois</td>
-          <td>Application web avec base de données</td>
-        </tr>
-      </table>
+      <table id="hosting"></table>
 
       <!-- Bouton de contact CTA -->
       <div style="display: flex; flex-direction: column; align-items: center;">

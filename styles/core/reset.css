@@ -1,9 +1,16 @@
+* {
+  box-sizing: border-box;
+}
+
 body {
   background-color: hsla(var(--background));
   color: hsla(var(--foreground));
   overflow: hidden;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  margin: 0;
+  padding: 0;
+  min-height: 100svh;
 }
 
 table {

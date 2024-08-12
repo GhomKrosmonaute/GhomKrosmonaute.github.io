@@ -1,0 +1,39 @@
+{
+  "products": [
+    {
+      "name": "Portfolio",
+      "description": "Site web simple, sans base de données",
+      "price": 200
+    },
+    {
+      "name": "Site vitrine / Blog",
+      "description": "Site web simple avec CMS",
+      "price": 500
+    },
+    {
+      "name": "Bot Discord (Bot.ts)",
+      "description": "Bot Discord simple avec mon framework",
+      "price": 50
+    },
+    {
+      "name": "Bot Discord avancé",
+      "description": "Bot Discord entièrement personnalisé",
+      "price": 200
+    },
+    {
+      "name": "Jeu vidéo 2D",
+      "description": "Jeu vidéo 2D simple pour le web",
+      "price": 1000
+    }
+  ],
+  "hosting": [
+    {
+      "description": "Application web sans base de données",
+      "price": 3
+    },
+    {
+      "description": "Application web avec base de données",
+      "price": 6
+    }
+  ]
+}

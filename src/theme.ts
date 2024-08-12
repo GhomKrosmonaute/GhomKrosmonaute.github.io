@@ -10,9 +10,9 @@ if (theme === 'dark') {
 }
 
 function toggleDarkMode() {
-  const html = document.querySelector('html');
+  const html = document.querySelector('html')!;
   const theme = html.classList.toggle('dark') ? 'dark' : 'light';
-  const toReverse = document.querySelectorAll('.reverse img');
+  const toReverse = document.querySelectorAll<HTMLImageElement>('.reverse img');
   for(const element of toReverse) {
     element.style.filter = html.classList.contains('dark') ? 'invert(1)' : 'invert(0)';
   }
