@@ -18,11 +18,13 @@ table {
   border-spacing: 0;
 }
 
-td, th {
+td,
+th {
   padding: 0.1rem 0.5rem;
 }
 
 a {
+  pointer-events: auto;
   text-decoration: none;
 }
 

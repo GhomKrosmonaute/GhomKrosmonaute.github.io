@@ -1,0 +1,44 @@
+[
+  {
+    "name": "Discord",
+    "url": "https://discord.gg/3vC2XWK",
+    "username": "@ghom",
+    "icon": "IoLogoDiscord"
+  },
+  {
+    "name": "Twitter",
+    "url": "https://x.com/GhomKrosmonaute",
+    "username": "@GhomKrosmonaute",
+    "icon": "IoLogoTwitter"
+  },
+  {
+    "name": "Github",
+    "url": "https://github.com/GhomKrosmonaute",
+    "username": "GhomKrosmonaute",
+    "icon": "IoLogoGithub"
+  },
+  {
+    "name": "LinkedIn",
+    "url": "https://www.linkedin.com/in/camille-abella-a99950176/",
+    "username": "Camille Abella",
+    "icon": "IoLogoLinkedin"
+  },
+  {
+    "name": "Instagram",
+    "url": "https://www.instagram.com/camsakaghom/",
+    "username": "@camsakaghom",
+    "icon": "IoLogoInstagram"
+  },
+  {
+    "name": "Facebook",
+    "url": "https://www.facebook.com/camille.abella.7921",
+    "username": "Camille Abella",
+    "icon": "IoLogoFacebook"
+  },
+  {
+    "name": "Malt",
+    "url": "https://www.malt.fr/profile/camilleabella",
+    "username": "Camille Abella",
+    "icon": "SiMalt"
+  }
+]
