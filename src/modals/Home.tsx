@@ -17,24 +17,17 @@ export const Home = () => {
         style={{
           minWidth: "100%",
           display: "flex",
-          justifyContent: "space-evenly",
+          justifyContent: "center",
           marginTop: "2rem",
+          gap: "2rem",
         }}
       >
-        <a
-          className="button"
-          href="https://github.com/GhomKrosmonaute"
-          target="_blank"
-        >
-          Projets
-          <div className="light" />
-        </a>
-        <button className="button cta" onClick={() => setModal("contact")}>
-          Contact
-          <div className="light" />
-        </button>
         <button className="button" onClick={() => setModal("tarifs")}>
           Tarifs
+          <div className="light" />
+        </button>
+        <button className="button cta" onClick={() => setModal("contact")}>
+          Contact
           <div className="light" />
         </button>
       </div>

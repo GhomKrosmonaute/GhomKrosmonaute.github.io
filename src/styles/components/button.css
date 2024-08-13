@@ -3,7 +3,7 @@
   overflow: hidden;
   pointer-events: auto;
   display: block;
-  min-width: 60px;
+  min-width: 100px;
   max-width: fit-content;
   text-align: center;
   font-family: "Zain", sans-serif;
@@ -36,7 +36,7 @@
 }
 
 .button.cta {
-  min-width: 90px;
+  min-width: 200px;
   background-color: hsla(var(--primary) / 0.8);
   color: hsla(var(--primary-foreground));
 }
