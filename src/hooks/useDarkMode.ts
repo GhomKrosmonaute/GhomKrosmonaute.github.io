@@ -13,7 +13,10 @@ const useDarkMode = () => {
   useEffect(() => {
     const theme = localStorage.getItem("theme");
 
-    if (theme === "dark") {
+    if (
+      theme === "dark" &&
+      !document.querySelector("html")?.classList.contains("dark")
+    ) {
       toggleDarkMode();
     } else if (!theme) {
       const prefersDarkScheme = window.matchMedia(

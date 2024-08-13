@@ -4,6 +4,8 @@ import { IconContext } from "react-icons";
 import * as Io from "react-icons/io5";
 import * as Si from "react-icons/si";
 
+import "./Socials.css";
+
 const icons = { Io, Si };
 
 export const Socials = () => {
@@ -30,7 +32,7 @@ export const Socials = () => {
               gap: "0.5rem",
             }}
           >
-            {/* @ts-ignore */}
+            {/* @ts-expect-error it's ok */}
             {React.createElement(icons[social.icon.slice(0, 2)][social.icon])}
           </a>
         ))}

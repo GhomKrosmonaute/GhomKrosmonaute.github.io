@@ -35,3 +35,9 @@
     offset-distance: 100%;
   }
 }
+
+@media (width <= 768px) {
+  .button.cta .light {
+    opacity: 1;
+  }
+}

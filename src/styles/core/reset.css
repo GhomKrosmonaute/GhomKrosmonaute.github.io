@@ -6,6 +6,7 @@ body {
   background-color: hsla(var(--background));
   color: hsla(var(--foreground));
   overflow-x: hidden;
+  overflow-y: scroll;
   scrollbar-width: none;
   -ms-overflow-style: none;
   margin: 0;

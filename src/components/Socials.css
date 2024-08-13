@@ -1,0 +1,12 @@
+.social {
+  display: inline-block;
+  margin: 0 0.5rem;
+  transition:
+    filter 0.5s,
+    transform 0.2s;
+}
+
+.social:hover {
+  filter: drop-shadow(0 0 10px hsla(var(--background)));
+  transform: scale(1.5) rotate(360deg);
+}
