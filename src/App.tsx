@@ -28,7 +28,8 @@ export default function App() {
           margin: "1rem",
         }}
       >
-        <img src={themeIcon} alt="theme icon" id="theme-button" />
+        <img src={themeIcon} alt="theme icon" />
+        <div className="light" />
       </button>
 
       {!modal && <Home />}

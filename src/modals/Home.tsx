@@ -30,12 +30,15 @@ export const Home = () => {
           target="_blank"
         >
           Projets
+          <div className="light" />
         </a>
         <button className="button cta" onClick={() => setModal("contact")}>
           Contact
+          <div className="light" />
         </button>
         <button className="button" onClick={() => setModal("tarifs")}>
           Tarifs
+          <div className="light" />
         </button>
       </div>
     </Card>

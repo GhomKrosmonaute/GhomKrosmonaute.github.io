@@ -1,4 +1,6 @@
 .button {
+  position: relative;
+  overflow: hidden;
   pointer-events: auto;
   display: block;
   min-width: 60px;
@@ -91,4 +93,12 @@
 
 .link:active {
   color: hsla(var(--primary) / 0.9);
+}
+
+.reverse img {
+  filter: invert(0);
+}
+
+.dark .reverse img {
+  filter: invert(1);
 }

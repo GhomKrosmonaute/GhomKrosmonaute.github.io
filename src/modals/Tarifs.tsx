@@ -30,6 +30,7 @@ export const Tarifs = () => {
         <h2>Pour plus d'informations</h2>
         <button onClick={() => setModal("contact")} className="button cta">
           Contactez-moi !
+          <div className="light" />
         </button>
         <p
           style={{

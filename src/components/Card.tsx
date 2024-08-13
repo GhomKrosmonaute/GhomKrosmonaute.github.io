@@ -18,10 +18,13 @@ export const Card = (
           }}
         >
           <img src={cross} alt="back" />
+          <div className="light" />
         </button>
       )}
 
       {props.children}
+
+      <div className="light" />
     </div>
   );
 };

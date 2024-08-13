@@ -1,0 +1,37 @@
+.light {
+  position: absolute;
+  offset-path: padding-box;
+  opacity: 0;
+  background-color: hsla(var(--primary));
+  box-shadow: hsla(var(--primary)) 0 0 10px;
+  pointer-events: none;
+  width: 20%;
+  min-width: 20px;
+  height: 3px;
+  border-radius: 50%;
+  transition: opacity 0.5s ease-out;
+  animation: box-light 4s infinite linear;
+}
+
+.button .light {
+  width: 30px;
+  animation: box-light 1s infinite linear;
+}
+
+.button.cta .light {
+  background-color: hsla(var(--primary-foreground));
+  box-shadow: hsla(var(--primary-foreground)) 0 0 10px;
+}
+
+*:hover > .light {
+  opacity: 1;
+}
+
+@keyframes box-light {
+  0% {
+    offset-distance: 0;
+  }
+  100% {
+    offset-distance: 100%;
+  }
+}
