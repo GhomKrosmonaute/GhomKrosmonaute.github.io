@@ -13,7 +13,8 @@
   animation: box-light 3s infinite linear;
 }
 
-.light.opposed {
+.light.opposed,
+.button.cta .light {
   offset-distance: 50%;
   animation: box-light-opposed 3s infinite linear;
   background-color: hsla(var(--primary-foreground));
@@ -26,8 +27,7 @@
 }
 
 .button.cta .light {
-  background-color: hsla(var(--primary-foreground));
-  box-shadow: hsla(var(--primary-foreground)) 0 0 10px;
+  animation: box-light-opposed 1s infinite linear;
 }
 
 *:hover > .light {
@@ -56,7 +56,8 @@
 }
 
 @media (width <= 768px) {
-  .button.cta .light {
+  .button.cta .light,
+  .card > .light {
     opacity: 1;
   }
 }

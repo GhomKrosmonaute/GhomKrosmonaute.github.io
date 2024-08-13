@@ -1,9 +1,14 @@
-.card {
-  pointer-events: none;
+.center {
   position: absolute;
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
+  width: max-content;
+  min-width: min-content;
+  max-width: 100vw;
+}
+
+.card {
   background-color: hsla(var(--card) / 0.7);
   backdrop-filter: blur(30px);
   border-radius: var(--radius);
@@ -20,9 +25,6 @@
     box-shadow 1s ease-in-out,
     border-bottom-color 0.5s ease-in-out,
     backdrop-filter 0.5s ease-in-out;
-  width: max-content;
-  min-width: min-content;
-  max-width: 100vw;
   overflow: hidden;
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -35,23 +37,29 @@
 }
 
 @media (width <= 768px) {
-  .card {
-    pointer-events: auto;
+  .center {
     left: 0;
     top: 0;
     transform: none;
     width: 100%;
     height: 100svh;
+  }
+
+  .card {
+    pointer-events: auto;
     border-radius: 0;
   }
 }
 
 @media (height <= 768px) and (width > 768px) {
-  .card {
-    pointer-events: auto;
+  .center {
     top: 0;
     transform: translate(-50%, 0);
     height: 100svh;
+  }
+
+  .card {
+    pointer-events: auto;
     overflow-y: scroll;
   }
 }
