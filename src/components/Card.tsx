@@ -20,6 +20,7 @@ export const Card = (
           }}
         >
           <img src={cross} alt="back" />
+
           <div className="light" />
         </button>
       )}
@@ -27,6 +28,7 @@ export const Card = (
       {props.children}
 
       <div className="light" />
+      <div className="light opposed" />
     </div>
   );
 };

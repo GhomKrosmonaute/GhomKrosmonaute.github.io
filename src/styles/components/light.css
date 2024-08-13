@@ -10,7 +10,14 @@
   height: 3px;
   border-radius: 50%;
   transition: opacity 0.5s ease-out;
-  animation: box-light 4s infinite linear;
+  animation: box-light 3s infinite linear;
+}
+
+.light.opposed {
+  offset-distance: 50%;
+  animation: box-light-opposed 3s infinite linear;
+  background-color: hsla(var(--primary-foreground));
+  box-shadow: hsla(var(--primary-foreground)) 0 0 10px;
 }
 
 .button .light {
@@ -33,6 +40,18 @@
   }
   100% {
     offset-distance: 100%;
+  }
+}
+
+@keyframes box-light-opposed {
+  0% {
+    offset-distance: 50%;
+  }
+  50% {
+    offset-distance: 100%;
+  }
+  100% {
+    offset-distance: 150%;
   }
 }
 
