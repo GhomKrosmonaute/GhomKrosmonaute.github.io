@@ -2,6 +2,7 @@ import { Heading } from "../components/Heading.tsx";
 import { Socials } from "../components/Socials.tsx";
 import { Card } from "../components/Card.tsx";
 import { useModal } from "../hooks/useModal.ts";
+import { Slogan } from "../components/Slogan.tsx";
 
 export const Home = () => {
   const { setModal } = useModal();
@@ -10,11 +11,7 @@ export const Home = () => {
     <Card>
       <Heading />
       <Socials />
-
-      <p style={{ textAlign: "center", letterSpacing: "0.15rem" }}>
-        Une qualité <span className="changa">maximale</span> pour un prix{" "}
-        <span className="changa">minimal</span>
-      </p>
+      <Slogan />
 
       <div
         style={{

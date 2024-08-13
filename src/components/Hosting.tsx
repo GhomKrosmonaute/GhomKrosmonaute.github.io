@@ -5,7 +5,7 @@ export const Hosting = () => {
     <>
       <h2>Hébergement</h2>
 
-      <p>
+      <p className="md">
         J'héberge vos projets si vous ne savez pas comment le faire vous-même.{" "}
         <br />
         Cela me permet de pouvoir intervenir rapidement en cas de modification
@@ -23,7 +23,7 @@ export const Hosting = () => {
         <tbody>
           {tarifs.hosting.map((hosting) => (
             <tr key={hosting.description}>
-              <td>
+              <td style={{ whiteSpace: "nowrap" }}>
                 <code>{hosting.price}€</code>/mois
               </td>
               <td>{hosting.description}</td>

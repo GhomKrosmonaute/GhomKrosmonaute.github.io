@@ -10,7 +10,9 @@ export const Products = () => {
           <tr>
             <th style={{ textAlign: "left" }}>Prix</th>
             <th style={{ textAlign: "left" }}>Produit</th>
-            <th style={{ textAlign: "left" }}>Description</th>
+            <th style={{ textAlign: "left" }} className="md">
+              Description
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -20,7 +22,7 @@ export const Products = () => {
                 <code>{produit.price}€</code>
               </td>
               <td>{produit.name}</td>
-              <td>{produit.description}</td>
+              <td className="md">{produit.description}</td>
             </tr>
           ))}
         </tbody>

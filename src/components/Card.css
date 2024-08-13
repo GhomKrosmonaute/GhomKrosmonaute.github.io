@@ -23,8 +23,8 @@
   width: max-content;
   min-width: min-content;
   max-width: 100vw;
-  scrollbar-width: none;
   overflow: hidden;
+  scrollbar-width: none;
   -ms-overflow-style: none;
 }
 
@@ -37,5 +37,21 @@
 @media (width <= 768px) {
   .card {
     pointer-events: auto;
+    left: 0;
+    top: 0;
+    transform: none;
+    width: 100%;
+    height: 100svh;
+    border-radius: 0;
+  }
+}
+
+@media (height <= 768px) and (width > 768px) {
+  .card {
+    pointer-events: auto;
+    top: 0;
+    transform: translate(-50%, 0);
+    height: 100svh;
+    overflow-y: scroll;
   }
 }

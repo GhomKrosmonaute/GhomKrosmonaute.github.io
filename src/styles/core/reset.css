@@ -39,9 +39,16 @@ a:active {
 
 code {
   display: inline-block;
+  white-space: nowrap;
   font-weight: bold;
   font-size: 1.4em;
   padding: 0 0.2em;
   color: hsla(var(--secondary-foreground));
   text-shadow: 0 0 0.5em hsla(var(--primary));
+}
+
+@media (width <= 768px) {
+  .md {
+    display: none;
+  }
 }

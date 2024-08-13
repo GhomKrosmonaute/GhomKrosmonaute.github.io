@@ -1,0 +1,10 @@
+.slogan {
+  text-align: center;
+  letter-spacing: 0.15rem;
+}
+
+@media (width <= 768px) {
+  .slogan {
+    letter-spacing: 0.05rem;
+  }
+}

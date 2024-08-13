@@ -1,3 +1,5 @@
+import "./Heading.css";
+
 export const Heading = () => {
   return (
     <div className="heading">

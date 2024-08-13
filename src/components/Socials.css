@@ -1,3 +1,10 @@
+.socials {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
 .social {
   display: inline-block;
   margin: 0 0.5rem;
@@ -9,4 +16,15 @@
 .social:hover {
   filter: drop-shadow(0 0 10px hsla(var(--background)));
   transform: scale(1.5) rotate(360deg);
+}
+
+@media (width <= 768px) {
+  .socials {
+    gap: 0.3rem;
+  }
+
+  .social:hover {
+    filter: none;
+    transform: none;
+  }
 }

@@ -11,14 +11,7 @@ const icons = { Io, Si };
 export const Socials = () => {
   return (
     <IconContext.Provider value={{ size: "2rem", color: "#7c3aedcc" }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          gap: "1rem",
-          marginTop: "0.5rem",
-        }}
-      >
+      <div className="socials">
         {socials.map((social) => (
           <a
             href={social.url}

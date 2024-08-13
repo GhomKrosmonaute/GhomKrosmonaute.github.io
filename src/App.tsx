@@ -9,7 +9,7 @@ import { Contact } from "./modals/Contact.tsx";
 
 export default function App() {
   const toggleDarkMode = useDarkMode();
-  const matches = useMediaQuery("(width >= 768px)");
+  const matches = useMediaQuery("(width >= 768px) and (height >= 768px)");
   const modal = useModal((state) => state.modal);
 
   return (

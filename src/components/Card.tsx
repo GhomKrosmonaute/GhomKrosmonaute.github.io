@@ -1,6 +1,8 @@
 import React from "react";
 import cross from "../assets/cross.svg";
 
+import "./Card.css";
+
 export const Card = (
   props: React.PropsWithChildren<{ onClose?: () => unknown }>,
 ) => {

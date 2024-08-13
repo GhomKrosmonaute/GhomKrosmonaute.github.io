@@ -13,8 +13,10 @@ export const Tarifs = () => {
 
       <p style={{ textAlign: "center", fontSize: "1.5em" }}>
         <span title="Tarif journalier moyen">TJM</span>{" "}
-        <code>{tarifs.tjm}€</code> négociables (
-        <code>~{Math.floor(tarifs.tjm / 8)}€</code>/h)
+        <code>{tarifs.tjm}€</code> négociables{" "}
+        <span className="md">
+          (<code>~{Math.floor(tarifs.tjm / 8)}€</code>/h)
+        </span>
       </p>
 
       <Products />
