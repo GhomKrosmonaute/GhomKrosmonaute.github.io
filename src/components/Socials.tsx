@@ -1,12 +1,27 @@
 import React from "react";
 import socials from "../data/socials.json";
 import { IconContext } from "react-icons";
-import * as Io from "react-icons/io5";
-import * as Si from "react-icons/si";
+import {
+  IoLogoLinkedin,
+  IoLogoDiscord,
+  IoLogoTwitter,
+  IoLogoGithub,
+  IoLogoInstagram,
+  IoLogoFacebook,
+} from "react-icons/io5";
+import { SiMalt } from "react-icons/si";
 
 import "./Socials.css";
 
-const icons = { Io, Si };
+const icons = {
+  IoLogoDiscord,
+  IoLogoTwitter,
+  IoLogoGithub,
+  IoLogoLinkedin,
+  IoLogoInstagram,
+  IoLogoFacebook,
+  SiMalt,
+};
 
 export const Socials = () => {
   return (
@@ -26,7 +41,7 @@ export const Socials = () => {
             }}
           >
             {/* @ts-expect-error it's ok */}
-            {React.createElement(icons[social.icon.slice(0, 2)][social.icon])}
+            {React.createElement(icons[social.icon])}
           </a>
         ))}
       </div>

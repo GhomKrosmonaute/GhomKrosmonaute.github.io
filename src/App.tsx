@@ -1,4 +1,4 @@
-import Spline from "@splinetool/react-spline";
+import React from "react";
 import useDarkMode from "./hooks/useDarkMode.ts";
 import themeIcon from "./assets/theme.svg";
 import { useMediaQuery } from "usehooks-ts";
@@ -6,6 +6,8 @@ import { useModal } from "./hooks/useModal.ts";
 import { Home } from "./modals/Home.tsx";
 import { Tarifs } from "./modals/Tarifs.tsx";
 import { Contact } from "./modals/Contact.tsx";
+
+const Spline = React.lazy(() => import("@splinetool/react-spline"));
 
 export default function App() {
   const toggleDarkMode = useDarkMode();
@@ -15,7 +17,9 @@ export default function App() {
   return (
     <>
       {matches && (
-        <Spline scene="https://prod.spline.design/jotuSLcx9NOHdvVx/scene.splinecode" />
+        <React.Suspense>
+          <Spline scene="https://prod.spline.design/jotuSLcx9NOHdvVx/scene.splinecode" />
+        </React.Suspense>
       )}
 
       <button
