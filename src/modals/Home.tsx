@@ -3,12 +3,19 @@ import { Socials } from "../components/Socials.tsx";
 import { Card } from "../components/Card.tsx";
 import { useModal } from "../hooks/useModal.ts";
 import { Slogan } from "../components/Slogan.tsx";
+import { useMediaQuery } from "usehooks-ts";
 
 export const Home = () => {
-  const { setModal } = useModal();
+  const { setModal, modal } = useModal();
+  const largeScreen = useMediaQuery("(width >= 768px) and (height >= 768px)");
 
   return (
-    <Card>
+    <Card
+      style={{
+        transition: "transform 1s ease-in-out",
+        transform: modal === "game" ? "translate(-50%, -100%)" : undefined,
+      }}
+    >
       <Heading />
       <Socials />
       <Slogan />
@@ -22,10 +29,15 @@ export const Home = () => {
           gap: "2rem",
         }}
       >
-        <button className="button" onClick={() => setModal("game")}>
-          Jouer
-          <div className="light" />
-        </button>
+        {largeScreen && (
+          <button
+            className="button"
+            onClick={() => setModal(modal === "game" ? false : "game")}
+          >
+            {modal === "game" ? "Stop" : "Jouer"}
+            <div className="light" />
+          </button>
+        )}
         <button className="button" onClick={() => setModal("tarifs")}>
           Tarifs
           <div className="light" />

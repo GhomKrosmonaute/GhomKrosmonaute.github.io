@@ -47,7 +47,7 @@ export default function App() {
         <div className="light" />
       </button>
 
-      {!modal && <Home />}
+      {(!modal || modal === "game") && <Home />}
       {modal === "contact" && <Contact />}
       {modal === "tarifs" && <Tarifs />}
       {largeScreen && <Hand show={modal === "game"} />}

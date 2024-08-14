@@ -1,0 +1,12 @@
+[
+  {
+    "description": "Ajoute 1 à la street-cred de Ghom",
+    "onPlayed": "addStreetCred(1, 'Ghom')",
+    "type": "action"
+  },
+  {
+    "description": "Pioche une carte",
+    "onPlayed": "drawCard()",
+    "type": "support"
+  }
+]

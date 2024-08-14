@@ -13,6 +13,7 @@ export const Hand = (props: React.PropsWithChildren<{ show?: boolean }>) => {
         left: "50vw",
         transition: "bottom 1s ease-in-out",
         display: "flex",
+        alignItems: "end",
         transform: "translateX(-50%)",
       }}
     >
