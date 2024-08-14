@@ -1,12 +1,13 @@
 import { create } from "zustand";
 
+type ModalType = false | "contact" | "tarifs" | "game";
+
 export const useModal = create<{
-  modal: false | "contact" | "tarifs";
-  setModal: (modal: false | "contact" | "tarifs") => void;
+  modal: ModalType;
+  setModal: (modal: ModalType) => void;
 }>((set) => ({
-  modal:
-    (localStorage.getItem("modal") as false | "contact" | "tarifs") || false,
-  setModal: (modal: false | "contact" | "tarifs") => {
+  modal: (localStorage.getItem("modal") as ModalType) || false,
+  setModal: (modal: ModalType) => {
     set({ modal });
 
     if (modal) localStorage.setItem("modal", modal);

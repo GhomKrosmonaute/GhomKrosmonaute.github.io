@@ -50,8 +50,7 @@ export default function App() {
       {!modal && <Home />}
       {modal === "contact" && <Contact />}
       {modal === "tarifs" && <Tarifs />}
-
-      <Hand show />
+      {largeScreen && <Hand show={modal === "game"} />}
 
       {modal && !largeScreen && (
         <button

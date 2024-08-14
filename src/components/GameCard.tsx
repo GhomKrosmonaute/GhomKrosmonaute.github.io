@@ -1,7 +1,14 @@
-import "./GameCard.css";
 import { Tilt } from "./Tilt.tsx";
 
-export const GameCard = () => {
+import "./GameCard.css";
+import React from "react";
+import { GameCardInfo, useCardGame } from "../hooks/useCardGame.ts";
+
+export const GameCard = (
+  props: React.PropsWithoutRef<{ card: GameCardInfo; position: number }>,
+) => {
+  const handSize = useCardGame((state) => state.hand.length);
+
   return (
     <div className="game-card">
       <Tilt
@@ -10,9 +17,12 @@ export const GameCard = () => {
         style={{
           width: "100%",
           height: "100%",
+          rotate: `${(props.position - handSize / 2) * 2}deg`,
         }}
       >
-        Test
+        <h2>{props.card.name}</h2>
+        <div className="light" />
+        <div className="light opposed" />
       </Tilt>
     </div>
   );

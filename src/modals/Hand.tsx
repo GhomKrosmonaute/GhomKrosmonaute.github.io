@@ -1,7 +1,10 @@
 import React from "react";
 import { GameCard } from "../components/GameCard.tsx";
+import { useCardGame } from "../hooks/useCardGame.ts";
 
 export const Hand = (props: React.PropsWithChildren<{ show?: boolean }>) => {
+  const cardGame = useCardGame();
+
   return (
     <div
       style={{
@@ -10,14 +13,12 @@ export const Hand = (props: React.PropsWithChildren<{ show?: boolean }>) => {
         left: "50vw",
         transition: "bottom 1s ease-in-out",
         display: "flex",
+        transform: "translateX(-50%)",
       }}
     >
-      <GameCard />
-      <GameCard />
-      <GameCard />
-      <GameCard />
-      <GameCard />
-      <GameCard />
+      {cardGame.hand.map((card, index) => (
+        <GameCard key={index} card={card} position={index} />
+      ))}
     </div>
   );
 };

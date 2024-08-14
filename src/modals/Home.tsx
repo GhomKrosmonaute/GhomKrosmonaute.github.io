@@ -22,6 +22,10 @@ export const Home = () => {
           gap: "2rem",
         }}
       >
+        <button className="button" onClick={() => setModal("game")}>
+          Jouer
+          <div className="light" />
+        </button>
         <button className="button" onClick={() => setModal("tarifs")}>
           Tarifs
           <div className="light" />

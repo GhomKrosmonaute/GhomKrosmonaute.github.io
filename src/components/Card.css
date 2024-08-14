@@ -32,7 +32,12 @@
 }
 
 .card.without-shadow {
-  box-shadow: none !important;
+  transition: box-shadow 0.2s ease-in-out !important;
+  box-shadow: hsla(var(--primary-foreground) / 0.2) 0 0 10px !important;
+}
+
+.card.without-shadow:hover {
+  box-shadow: hsla(var(--primary)) 0 0 50px !important;
 }
 
 .card:hover {
