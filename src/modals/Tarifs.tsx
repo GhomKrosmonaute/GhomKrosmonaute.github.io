@@ -8,7 +8,7 @@ export const Tarifs = () => {
   const { setModal } = useModal();
 
   return (
-    <Card onClose={() => setModal(false)}>
+    <Card onClose={() => setModal(false)} className="big">
       <h1 style={{ textAlign: "center" }}>Tarifs</h1>
 
       <p style={{ textAlign: "center", fontSize: "1.5em" }}>

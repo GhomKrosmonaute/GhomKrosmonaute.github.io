@@ -29,6 +29,10 @@
   box-shadow: hsla(var(--secondary)) 0 0 10px;
 }
 
+.button.fill {
+  background-color: hsla(var(--secondary));
+}
+
 .button:hover {
   background-color: hsla(var(--secondary));
   color: hsla(var(--secondary-foreground));

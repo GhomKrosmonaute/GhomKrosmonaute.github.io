@@ -11,14 +11,23 @@ const Spline = React.lazy(() => import("@splinetool/react-spline"));
 
 export default function App() {
   const toggleDarkMode = useDarkMode();
-  const matches = useMediaQuery("(width >= 768px) and (height >= 768px)");
-  const modal = useModal((state) => state.modal);
+  const largeScreen = useMediaQuery("(width >= 768px) and (height >= 768px)");
+  const largeWidth = useMediaQuery("(width >= 768px)");
+  const { modal, setModal } = useModal();
 
   return (
     <>
-      {matches && (
+      {largeWidth && (
         <React.Suspense>
-          <Spline scene="https://prod.spline.design/jotuSLcx9NOHdvVx/scene.splinecode" />
+          <Spline
+            scene="https://prod.spline.design/jotuSLcx9NOHdvVx/scene.splinecode"
+            style={{
+              top: "50vh",
+              left: "50vw",
+              position: "fixed",
+              transform: "translate(-50%, -50%)",
+            }}
+          />
         </React.Suspense>
       )}
 
@@ -39,6 +48,23 @@ export default function App() {
       {!modal && <Home />}
       {modal === "contact" && <Contact />}
       {modal === "tarifs" && <Tarifs />}
+
+      {modal && !largeScreen && (
+        <button
+          className="button fill"
+          onClick={() => setModal(false)}
+          style={{
+            position: "fixed",
+            margin: "1rem",
+            right: 0,
+            bottom: 0,
+          }}
+        >
+          {/*<img src={cross} alt="back" />*/}
+          Retour
+          <div className="light" />
+        </button>
+      )}
     </>
   );
 }

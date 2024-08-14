@@ -75,14 +75,17 @@ const Tilt: React.FC<TiltProps> = ({
     }, settings.speed);
   };
 
-  const handleMouseEnter = (e: React.MouseEvent) => {
-    setCurrentStyle((prevStyle) => ({
-      ...prevStyle,
-      willChange: "transform",
-    }));
-    setTransition();
-    onMouseEnter?.(e);
-  };
+  const handleMouseEnter = React.useCallback(
+    (e: React.MouseEvent) => {
+      setCurrentStyle((prevStyle) => ({
+        ...prevStyle,
+        willChange: "transform",
+      }));
+      setTransition();
+      onMouseEnter?.(e);
+    },
+    [onMouseEnter],
+  );
 
   const handleMouseMove = (e: React.MouseEvent) => {
     const position = updateElementPosition();

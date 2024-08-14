@@ -3,17 +3,21 @@ import cross from "../assets/cross.svg";
 
 import { useMediaQuery } from "usehooks-ts";
 import { Tilt } from "./Tilt";
+import { clsx } from "clsx";
 
 import "./Card.css";
 
 export const Card = (
-  props: React.PropsWithChildren<{ onClose?: () => unknown }>,
+  props: React.PropsWithChildren<{
+    onClose?: () => unknown;
+    className?: string;
+  }>,
 ) => {
   const matches = useMediaQuery("(width >= 768px) and (height >= 768px)");
 
   return (
     <>
-      <div className="center">
+      <div className={clsx("center", props.className)}>
         <Tilt
           className="card"
           options={
@@ -48,22 +52,6 @@ export const Card = (
           <div className="light opposed" />
         </Tilt>
       </div>
-      {props.onClose && !matches && (
-        <button
-          className="button"
-          onClick={props.onClose}
-          style={{
-            position: "absolute",
-            margin: "1rem",
-            right: 0,
-            bottom: 0,
-          }}
-        >
-          {/*<img src={cross} alt="back" />*/}
-          Retour
-          <div className="light" />
-        </button>
-      )}
     </>
   );
 };

@@ -6,6 +6,7 @@
   width: max-content;
   min-width: min-content;
   max-width: 100vw;
+  max-height: 100svh;
 }
 
 .card {
@@ -34,6 +35,14 @@
   box-shadow: hsla(var(--primary)) 0 0 150px;
   border-bottom-color: hsla(var(--primary));
   backdrop-filter: blur(10px);
+}
+
+@media (height <= 768px) {
+  .center:not(.big) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 }
 
 @media (width <= 768px) {
