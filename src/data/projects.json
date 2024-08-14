@@ -1,0 +1,9 @@
+[
+  {
+    "name": "Bot.ts",
+    "image": "",
+    "description": "TypeScript framework for building Discord bots",
+    "effect": "Inflige 3 dégâts à l'adversaire",
+    "onPlayed": ""
+  }
+]

@@ -1,0 +1,42 @@
+[
+  {
+    "name": "TypeScript",
+    "logo": ""
+  },
+  {
+    "name": "React",
+    "logo": ""
+  },
+  {
+    "name": "Tailwind CSS",
+    "logo": ""
+  },
+  {
+    "name": "NodeJS",
+    "logo": ""
+  },
+  {
+    "name": "Vercel",
+    "logo": ""
+  },
+  {
+    "name": "Next.js",
+    "logo": ""
+  },
+  {
+    "name": "SQL",
+    "logo": ""
+  },
+  {
+    "name": "Docker",
+    "logo": ""
+  },
+  {
+    "name": "PixiJS",
+    "logo": ""
+  },
+  {
+    "name": "Three.js",
+    "logo": ""
+  }
+]

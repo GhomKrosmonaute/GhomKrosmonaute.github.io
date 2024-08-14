@@ -11,13 +11,14 @@ export const Card = (
   props: React.PropsWithChildren<{
     onClose?: () => unknown;
     className?: string;
+    style?: React.CSSProperties;
   }>,
 ) => {
   const matches = useMediaQuery("(width >= 768px) and (height >= 768px)");
 
   return (
     <>
-      <div className={clsx("center", props.className)}>
+      <div className={clsx("center", props.className)} style={props.style}>
         <Tilt
           className="card"
           options={

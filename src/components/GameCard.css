@@ -1,0 +1,12 @@
+.game-card {
+  position: relative;
+  width: calc(630px / 3);
+  height: calc(880px / 3);
+  transition: transform 0.3s ease-in-out;
+  z-index: 1;
+}
+
+.game-card:hover {
+  transform: translate(0, -50px);
+  z-index: 2;
+}

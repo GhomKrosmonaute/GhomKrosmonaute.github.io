@@ -6,6 +6,7 @@ import { useModal } from "./hooks/useModal.ts";
 import { Home } from "./modals/Home.tsx";
 import { Tarifs } from "./modals/Tarifs.tsx";
 import { Contact } from "./modals/Contact.tsx";
+import { Hand } from "./modals/Hand.tsx";
 
 const Spline = React.lazy(() => import("@splinetool/react-spline"));
 
@@ -49,6 +50,8 @@ export default function App() {
       {!modal && <Home />}
       {modal === "contact" && <Contact />}
       {modal === "tarifs" && <Tarifs />}
+
+      <Hand show />
 
       {modal && !largeScreen && (
         <button

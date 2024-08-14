@@ -31,6 +31,10 @@
   -ms-overflow-style: none;
 }
 
+.card.without-shadow {
+  box-shadow: none !important;
+}
+
 .card:hover {
   box-shadow: hsla(var(--primary)) 0 0 150px;
   border-bottom-color: hsla(var(--primary));
