@@ -13,6 +13,7 @@ export default function App() {
   const toggleDarkMode = useDarkMode();
   const largeScreen = useMediaQuery("(width >= 768px) and (height >= 768px)");
   const largeWidth = useMediaQuery("(width >= 768px)");
+  const veryLargeWidth = useMediaQuery("(width >= 2000px)");
   const { modal, setModal } = useModal();
 
   return (
@@ -23,7 +24,7 @@ export default function App() {
             scene="https://prod.spline.design/jotuSLcx9NOHdvVx/scene.splinecode"
             style={{
               top: "50vh",
-              left: "50vw",
+              left: veryLargeWidth ? "30vw" : "50vw",
               position: "fixed",
               transform: "translate(-50%, -50%)",
             }}

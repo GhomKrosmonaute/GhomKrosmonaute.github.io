@@ -72,3 +72,9 @@
     overflow-y: scroll;
   }
 }
+
+@media (width >= 2000px) {
+  .center {
+    left: 70vw;
+  }
+}
