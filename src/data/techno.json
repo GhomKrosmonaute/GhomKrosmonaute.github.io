@@ -1,42 +1,42 @@
 [
   {
     "name": "TypeScript",
-    "logo": ""
+    "logo": "ts.png"
   },
   {
     "name": "React",
-    "logo": ""
+    "logo": "react.webp"
   },
   {
     "name": "Tailwind CSS",
-    "logo": ""
+    "logo": "tailwind.png"
   },
   {
     "name": "NodeJS",
-    "logo": ""
+    "logo": "node.png"
   },
   {
     "name": "Vercel",
-    "logo": ""
+    "logo": "vercel.png"
   },
   {
     "name": "Next.js",
-    "logo": ""
+    "logo": "nextjs.webp"
   },
   {
-    "name": "SQL",
-    "logo": ""
+    "name": "PostgreSQL",
+    "logo": "pgsql.png"
   },
   {
     "name": "Docker",
-    "logo": ""
+    "logo": "docker.webp"
   },
   {
     "name": "PixiJS",
-    "logo": ""
+    "logo": "pixi.png"
   },
   {
     "name": "Three.js",
-    "logo": ""
+    "logo": "three.png"
   }
 ]

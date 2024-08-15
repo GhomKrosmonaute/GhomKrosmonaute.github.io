@@ -26,7 +26,7 @@ export function map(
   withinBounds: boolean = false,
 ): number {
   const newValue =
-    ((value - start1) / (stop1 - start1)) * (start2 - stop2) + start2;
+    ((value - start1) / (stop1 - start1)) * (stop2 - start2) + start2;
   if (!withinBounds) {
     return newValue;
   }
@@ -71,6 +71,7 @@ export type GameCardState =
   | "unauthorized"
   | "idle"
   | null;
+
 export type GameCardInfo = (ProjectCardInfo | TechnoCardInfo) & {
   state: GameCardState;
 };
@@ -91,33 +92,24 @@ const supports = effects.filter((effect) => effect.type === "support");
 const actions = effects.filter((effect) => effect.type === "action");
 
 const technoWithEffect = technos.map((techno, i) => {
+  const mapping = map(i, 0, technos.length, 0, supports.length, true);
+
   return {
     ...techno,
     state: "idle" as const,
-    effect:
-      supports[
-        Math.floor(
-          map(i, 0, technos.length, 0, supports.length, true) * supports.length,
-        )
-      ],
+    effect: supports[Math.floor(mapping)],
   };
 });
 
 const projectsWithEffect = projects.map((project, i) => {
+  const mapping = map(i, 0, projects.length, 0, actions.length, true);
+
   return {
     ...project,
     state: "idle" as const,
-    effect:
-      actions[
-        Math.floor(
-          map(i, 0, projects.length, 0, actions.length, true) * actions.length,
-        )
-      ],
+    effect: actions[Math.floor(mapping)],
   };
 });
-
-console.log(supports);
-console.log(technos);
 
 const deck = [...technoWithEffect, ...projectsWithEffect].sort(
   () => Math.random() - 0.5,
@@ -126,7 +118,7 @@ const deck = [...technoWithEffect, ...projectsWithEffect].sort(
 export const useCardGame = create<CardGameState>((set, getState) => ({
   deck: deck.slice(7),
   hand: deck.slice(0, 7),
-  energy: 10,
+  energy: 20,
   streetCred: 0,
   addEnergy: (count: number) => {
     set((state) => {
@@ -138,10 +130,17 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
       return { streetCred: state.streetCred + count };
     });
   },
-  draw: async (count = 1) => {
+  draw: async (count = 1, type?: "action" | "support") => {
     set((state) => {
-      const deck = state.deck.slice();
       const hand = state.hand.slice();
+      const deck = state.deck.slice().filter((c) => {
+        if (type) {
+          if (isProjectCardInfo(c)) {
+            return c.effect.type === type;
+          }
+        }
+        return true;
+      });
 
       for (let i = 0; i < count; i++) {
         if (deck.length === 0) {
@@ -170,7 +169,7 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
   drop: async () => {
     const state = getState();
 
-    const hand = state.hand.slice();
+    const hand = state.hand.slice().filter((c) => c.state === "idle");
 
     const index = Math.floor(Math.random() * hand.length);
 
@@ -198,8 +197,7 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
   play: async (card: GameCardInfo) => {
     const state = getState();
 
-    // on vérifie la condition s'il y en a une (eval(effect.condition))
-    if (card.effect.condition && !eval(card.effect.condition)) {
+    const cantPlay = async () => {
       // activer l'animation can't play
       set({
         hand: state.hand.map((c) => {
@@ -222,34 +220,18 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
           return c;
         }),
       });
+    };
+
+    // on vérifie la condition s'il y en a une (eval(effect.condition))
+    if (card.effect.condition && !eval(card.effect.condition)) {
+      await cantPlay();
 
       return;
     }
 
     // on vérifie si on a assez d'énergie (state.energy >= effect.cost)
     if (state.energy < card.effect.cost) {
-      // activer l'animation can't play
-      set({
-        hand: state.hand.map((c) => {
-          if (c.name === card.name) {
-            return { ...c, state: "unauthorized" };
-          }
-          return c;
-        }),
-      });
-
-      // on attend la fin de l'animation
-      await wait();
-
-      // on remet la carte en idle
-      set({
-        hand: state.hand.map((c) => {
-          if (c.name === card.name) {
-            return { ...c, state: "idle" };
-          }
-          return c;
-        }),
-      });
+      await cantPlay();
 
       return;
     }
@@ -271,7 +253,9 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
     await wait();
 
     // on applique l'effet de la carte (toujours via eval)
-    eval(`(async () => { ${card.effect.onPlayed} })()`);
+    if (card.effect.onPlayed.includes(";"))
+      await eval(`(async () => { ${card.effect.onPlayed} })()`);
+    else eval(`(async () => { ${card.effect.onPlayed} })()`);
 
     // la carte retourne dans le deck et on retire la carte de la main
     set((state) => ({

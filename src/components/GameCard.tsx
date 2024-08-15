@@ -79,8 +79,9 @@ export const GameCard = (
         <p
           style={{
             padding: 0,
-            margin: "0 20px 15px 20px",
+            margin: "10px 15px",
             textAlign: "center",
+            flexShrink: 0,
           }}
         >
           {props.card.effect.description}
@@ -99,12 +100,12 @@ const GameCardProject = (
   return (
     <>
       <div
+        className="inset-shadow"
         style={{
+          position: "relative",
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
-          // inner shadow
-          boxShadow: "inset 0 0 10px 0 rgba(0, 0, 0, 0.5)",
         }}
       >
         <img
@@ -114,19 +115,35 @@ const GameCardProject = (
             width: "100%",
             aspectRatio: "16/9",
             objectFit: "cover",
-            backgroundColor: "purple",
           }}
         />
+
+        <div
+          style={{
+            position: "absolute",
+            width: "100%",
+            height: "33%",
+            bottom: 0,
+            // backgroundImage:
+            //   "linear-gradient(transparent, hsla(var(--background)))",
+            backgroundColor: "hsla(var(--background) / 0.5)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <p
+            style={{
+              fontSize: "12px",
+              textAlign: "center",
+              margin: 0,
+              padding: 0,
+            }}
+          >
+            "{props.card.description}"
+          </p>
+        </div>
       </div>
-      <p
-        style={{
-          textAlign: "center",
-          flex: 1,
-          padding: "0 10px",
-        }}
-      >
-        "{props.card.description}"
-      </p>
     </>
   );
 };
@@ -135,24 +152,25 @@ const GameCardTechno = (
   props: React.PropsWithoutRef<{ card: TechnoCardInfo }>,
 ) => {
   return (
-    <div
-      style={{
-        flex: 1,
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      <img
-        src={props.card.logo}
-        alt={`Logo de la techno "${props.card.name}"`}
+    <>
+      <div
         style={{
-          width: "75%",
-          objectFit: "contain",
-          backgroundColor: "purple",
-          aspectRatio: "1/1",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          marginTop: "15px",
         }}
-      />
-    </div>
+      >
+        <img
+          src={props.card.logo}
+          alt={`Logo de la techno "${props.card.name}"`}
+          style={{
+            width: "60%",
+            objectFit: "contain",
+            aspectRatio: "1/1",
+          }}
+        />
+      </div>
+    </>
   );
 };

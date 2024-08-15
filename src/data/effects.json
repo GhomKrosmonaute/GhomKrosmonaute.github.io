@@ -31,22 +31,35 @@
     "cost": 2
   },
   {
-    "description": "Si le joueur a moins de 3 cartes en main, pioche 2 cartes",
+    "description": "Si tu as moins de 4 cartes en main, pioche 2 cartes",
     "onPlayed": "await state.draw(2)",
-    "condition": "state.hand.length < 3",
+    "condition": "state.hand.length < 4",
+    "type": "support",
+    "cost": 1
+  },
+  {
+    "description": "Pioche une carte \"projet\"",
+    "onPlayed": "await state.draw(1, 'action')",
+    "type": "support",
+    "cost": 2
+  },
+  {
+    "description": "Si tu n'as pas de carte \"projet\" en main, pioche une carte \"projet\"",
+    "onPlayed": "await state.draw(1, 'action')",
+    "condition": "state.hand.every(card => card.type !== 'action')",
     "type": "support",
     "cost": 1
   },
   {
     "description": "Défausse une carte aléatoire, pioche une carte",
     "onPlayed": "await state.drop(); await state.draw()",
-    "condition": "state.hand.length > 0",
+    "condition": "state.hand.length >= 2",
     "type": "support",
     "cost": 0
   },
   {
-    "description": "Si le joueur a plus de 7 cartes en main, ajoute 1 token",
-    "onPlayed": "await state.addEnergy(1)",
+    "description": "Si le joueur a plus de 7 cartes en main, ajoute 1 d'énergie et 1 à la street-cred de Ghom",
+    "onPlayed": "await state.addEnergy(1); await state.addStreetCred(1)",
     "condition": "state.hand.length > 7",
     "type": "support",
     "cost": 0

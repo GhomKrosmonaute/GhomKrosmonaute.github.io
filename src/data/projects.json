@@ -1,12 +1,22 @@
 [
   {
     "name": "Bot.ts",
-    "image": "",
+    "image": "bot.ts.png",
     "description": "TypeScript framework for building Discord bots"
   },
   {
     "name": "CRISPR-Crunch",
-    "image": "",
+    "image": "crispr-crunch.png",
     "description": "A game about gene editing"
+  },
+  {
+    "name": "Portfolio",
+    "image": "portfolio.png",
+    "description": "My personal portfolio"
+  },
+  {
+    "name": "Les Labs JS",
+    "image": "js-labs.png",
+    "description": "A Discord server for JavaScript developers"
   }
 ]

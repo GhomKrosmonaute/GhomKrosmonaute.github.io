@@ -23,7 +23,9 @@ export const Card = (
           className="card"
           options={
             matches
-              ? {}
+              ? {
+                  max: props.className?.includes("big") ? 5 : 30,
+                }
               : {
                   max: 0,
                   scale: "1",
