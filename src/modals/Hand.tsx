@@ -22,6 +22,15 @@ export const Hand = (props: React.PropsWithChildren<{ show?: boolean }>) => {
         Energy: {cardGame.energy} <br />
         Main: {cardGame.hand.length} <br />
         Deck: {cardGame.deck.length} <br />
+        Total: {cardGame.hand.length + cardGame.deck.length} <br />
+        Debug:{" "}
+        <ul style={{ fontSize: "16px" }}>
+          {cardGame.hand.map((card) => (
+            <li>
+              {card.effect.type} {card.effect.cost} {card.effect.description}
+            </li>
+          ))}
+        </ul>
       </div>
       <div
         style={{

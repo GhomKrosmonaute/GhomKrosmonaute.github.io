@@ -19,11 +19,24 @@
     "cost": 3
   },
   {
+    "description": "Le matin, ajoute 1 à la street-cred de Ghom. L'après-midi, ajoute 2 à l'énergie",
+    "onPlayed": "if (new Date().getHours() < 12) { await state.addStreetCred(1) } else { await state.addEnergy(2) }",
+    "type": "action",
+    "cost": 0
+  },
+  {
     "description": "Ajoute autant de street-cred à Ghom que de cartes \"projet\" en main",
     "onPlayed": "await state.addStreetCred(state.hand.filter(card => card.effect.type === 'action').length)",
     "condition": "state.hand.some(card => card.effect.type === 'action')",
     "type": "action",
     "cost": 4
+  },
+  {
+    "description": "Si le dark mode est activé, ajoute 2 à la street-cred de Ghom",
+    "onPlayed": "await state.addStreetCred(2)",
+    "condition": "localStorage.getItem(\"theme\") === \"dark\"",
+    "type": "action",
+    "cost": 3
   },
   {
     "description": "Pioche une carte",
