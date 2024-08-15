@@ -85,6 +85,7 @@ interface CardGameState {
   addStreetCred: (count: number) => void;
   draw: (count?: number, type?: "support" | "action") => void;
   drop: () => void;
+  dropAll: () => void;
   play: (card: GameCardInfo) => void;
 }
 
@@ -188,6 +189,28 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
     set((state) => ({
       deck: [{ ...card, state: null }, ...state.deck],
       hand: state.hand.filter((c) => c.name !== card.name),
+    }));
+  },
+  dropAll: async () => {
+    const state = getState();
+
+    // on active l'animation de retrait de la carte
+    set({
+      hand: state.hand.map((c) => {
+        if (c.state === "idle") {
+          return { ...c, state: "dropped" };
+        }
+        return c;
+      }),
+    });
+
+    // on attend la fin de l'animation
+    await wait();
+
+    // les cartes retournent dans le deck et on vide la main
+    set((state) => ({
+      deck: [...state.hand.map((c) => ({ ...c, state: null })), ...state.deck],
+      hand: [],
     }));
   },
   play: async (card: GameCardInfo) => {
