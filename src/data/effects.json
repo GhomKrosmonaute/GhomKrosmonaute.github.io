@@ -26,8 +26,8 @@
   },
   {
     "description": "Ajoute autant de street-cred à Ghom que de cartes \"projet\" en main",
-    "onPlayed": "await state.addStreetCred(state.hand.filter(card => card.effect.type === 'action').length)",
-    "condition": "state.hand.some(card => card.effect.type === 'action')",
+    "onPlayed": "await state.addStreetCred(state.hand.filter(card => card.effect.type === 'action').length - 1)",
+    "condition": "state.hand.filter(card => card.effect.type === 'action').length > 1",
     "type": "action",
     "cost": 4
   },
