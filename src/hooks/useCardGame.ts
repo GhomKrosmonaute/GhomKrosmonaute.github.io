@@ -83,7 +83,7 @@ interface CardGameState {
   streetCred: number;
   addEnergy: (count: number) => void;
   addStreetCred: (count: number) => void;
-  draw: (count: number) => void;
+  draw: (count?: number, type?: "support" | "action") => void;
   drop: () => void;
   play: (card: GameCardInfo) => void;
 }
@@ -134,11 +134,7 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
     set((state) => {
       const hand = state.hand.slice();
       const deck = state.deck.slice().filter((c) => {
-        if (type) {
-          if (isProjectCardInfo(c)) {
-            return c.effect.type === type;
-          }
-        }
+        if (type) return c.effect.type === type;
         return true;
       });
 
@@ -189,13 +185,13 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
     await wait();
 
     // la carte retourne dans le deck et on retire la carte de la main
-    set({
-      deck: [...state.deck, { ...card, state: null }],
+    set((state) => ({
+      deck: [{ ...card, state: null }, ...state.deck],
       hand: state.hand.filter((c) => c.name !== card.name),
-    });
+    }));
   },
   play: async (card: GameCardInfo) => {
-    const state = getState();
+    let state = getState();
 
     const cantPlay = async () => {
       // activer l'animation can't play
@@ -239,28 +235,41 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
     // on soustrait le coût de la carte à l'énergie
     set({ energy: state.energy - card.effect.cost });
 
-    // on active l'animation de retrait de la carte
-    set({
-      hand: state.hand.map((c) => {
-        if (c.name === card.name) {
-          return { ...c, state: "played" };
-        }
-        return c;
-      }),
-    });
+    const thread1 = async () => {
+      // on active l'animation de retrait de la carte
+      set({
+        hand: state.hand.map((c) => {
+          if (c.name === card.name) {
+            return { ...c, state: "played" };
+          }
+          return c;
+        }),
+      });
 
-    // on attend la fin de l'animation
-    await wait();
+      // on attend la fin de l'animation
+      await wait();
 
-    // on applique l'effet de la carte (toujours via eval)
-    if (card.effect.onPlayed.includes(";"))
+      // la carte retourne dans le deck et on retire la carte de la main
+      set((state) => ({
+        deck: [{ ...card, state: null }, ...state.deck],
+        hand: state.hand.filter((c) => c.name !== card.name),
+      }));
+    };
+
+    const thread2 = async () => {
+      // on applique l'effet de la carte (toujours via eval)
       await eval(`(async () => { ${card.effect.onPlayed} })()`);
-    else eval(`(async () => { ${card.effect.onPlayed} })()`);
+    };
 
-    // la carte retourne dans le deck et on retire la carte de la main
-    set((state) => ({
-      deck: [...state.deck, { ...card, state: null }],
-      hand: state.hand.filter((c) => c.name !== card.name),
-    }));
+    await Promise.all([thread1(), thread2()]);
+
+    // on vérifie si la main est vide
+    // si la main est vide, on pioche
+
+    state = getState();
+
+    if (state.hand.length === 0) {
+      state.draw();
+    }
   },
 }));
