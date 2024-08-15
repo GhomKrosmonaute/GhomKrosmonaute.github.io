@@ -3,6 +3,10 @@ import projects from "../data/projects.json";
 import technos from "../data/techno.json";
 import effects from "../data/effects.json";
 
+async function wait() {
+  return new Promise((resolve) => setTimeout(resolve, 500));
+}
+
 /**
  * Re-maps a number from one range to another.
  * @param value - The incoming value to be converted.
@@ -33,7 +37,9 @@ export function map(
   }
 }
 
-export function isProjectCardInfo(card: GameCardInfo): card is ProjectCardInfo {
+export function isProjectCardInfo(
+  card: GameCardInfo,
+): card is ProjectCardInfo & { state: GameCardState } {
   return (card as ProjectCardInfo).image !== undefined;
 }
 
@@ -41,6 +47,8 @@ export interface Effect {
   description: string;
   onPlayed: string;
   type: string;
+  cost: number;
+  condition?: string;
 }
 
 export interface ProjectCardInfo {
@@ -56,30 +64,45 @@ export interface TechnoCardInfo {
   effect: Effect;
 }
 
-export type GameCardInfo = ProjectCardInfo | TechnoCardInfo;
+export type GameCardState =
+  | "played"
+  | "dropped"
+  | "drawn"
+  | "unauthorized"
+  | "idle"
+  | null;
+export type GameCardInfo = (ProjectCardInfo | TechnoCardInfo) & {
+  state: GameCardState;
+};
 
 interface CardGameState {
   deck: GameCardInfo[];
   hand: GameCardInfo[];
+  energy: number;
+  streetCred: number;
+  addEnergy: (count: number) => void;
+  addStreetCred: (count: number) => void;
   draw: (count: number) => void;
-  drop: (index: number) => void;
+  drop: () => void;
+  play: (card: GameCardInfo) => void;
 }
 
-const technoWithEffect = technos.map((techno, i) => {
-  const supports = effects.filter((effect) => effect.type === "support");
+const supports = effects.filter((effect) => effect.type === "support");
+const actions = effects.filter((effect) => effect.type === "action");
 
+const technoWithEffect = technos.map((techno, i) => {
   return {
     ...techno,
+    state: "idle" as const,
     effect:
       supports[Math.floor(map(i, 0, technos.length, 0, supports.length, true))],
   };
 });
 
 const projectsWithEffect = projects.map((project, i) => {
-  const actions = effects.filter((effect) => effect.type === "action");
-
   return {
     ...project,
+    state: "idle" as const,
     effect:
       actions[Math.floor(map(i, 0, projects.length, 0, actions.length, true))],
   };
@@ -89,10 +112,22 @@ const deck = [...technoWithEffect, ...projectsWithEffect].sort(
   () => Math.random() - 0.5,
 );
 
-export const useCardGame = create<CardGameState>((set) => ({
+export const useCardGame = create<CardGameState>((set, getState) => ({
   deck: deck.slice(7),
   hand: deck.slice(0, 7),
-  draw: (count: number) => {
+  energy: 10,
+  streetCred: 0,
+  addEnergy: (count: number) => {
+    set((state) => {
+      return { energy: state.energy + count };
+    });
+  },
+  addStreetCred: (count: number) => {
+    set((state) => {
+      return { streetCred: state.streetCred + count };
+    });
+  },
+  draw: async (count = 1) => {
     set((state) => {
       const deck = state.deck.slice();
       const hand = state.hand.slice();
@@ -102,21 +137,135 @@ export const useCardGame = create<CardGameState>((set) => ({
           break;
         }
 
-        hand.push(deck.pop()!);
+        const card = deck.pop()!;
+
+        card.state = "drawn";
+
+        hand.push(card);
       }
 
       return { deck, hand };
     });
+
+    await wait();
+
+    // on passe la main en idle
+    set((state) => ({
+      hand: state.hand.map((c) => {
+        return { ...c, state: "idle" };
+      }),
+    }));
   },
-  drop: (index: number) => {
-    set((state) => {
-      const deck = state.deck.slice();
-      const hand = state.hand.slice();
+  drop: async () => {
+    const state = getState();
 
-      deck.push(hand[index]);
-      hand.splice(index, 1);
+    const hand = state.hand.slice();
 
-      return { deck, hand };
+    const index = Math.floor(Math.random() * hand.length);
+
+    const card = hand[index];
+
+    // on active l'animation de retrait de la carte
+    set({
+      hand: state.hand.map((c) => {
+        if (c.name === card.name) {
+          return { ...c, state: "dropped" };
+        }
+        return c;
+      }),
     });
+
+    // on attend la fin de l'animation
+    await wait();
+
+    // la carte retourne dans le deck et on retire la carte de la main
+    set({
+      deck: [...state.deck, { ...card, state: null }],
+      hand: state.hand.filter((c) => c.name !== card.name),
+    });
+  },
+  play: async (card: GameCardInfo) => {
+    const state = getState();
+
+    // on vérifie la condition s'il y en a une (eval(effect.condition))
+    if (card.effect.condition && !eval(card.effect.condition)) {
+      // activer l'animation can't play
+      set({
+        hand: state.hand.map((c) => {
+          if (c.name === card.name) {
+            return { ...c, state: "unauthorized" };
+          }
+          return c;
+        }),
+      });
+
+      // on attend la fin de l'animation
+      await wait();
+
+      // on remet la carte en idle
+      set({
+        hand: state.hand.map((c) => {
+          if (c.name === card.name) {
+            return { ...c, state: "idle" };
+          }
+          return c;
+        }),
+      });
+
+      return;
+    }
+
+    // on vérifie si on a assez d'énergie (state.energy >= effect.cost)
+    if (state.energy < card.effect.cost) {
+      // activer l'animation can't play
+      set({
+        hand: state.hand.map((c) => {
+          if (c.name === card.name) {
+            return { ...c, state: "unauthorized" };
+          }
+          return c;
+        }),
+      });
+
+      // on attend la fin de l'animation
+      await wait();
+
+      // on remet la carte en idle
+      set({
+        hand: state.hand.map((c) => {
+          if (c.name === card.name) {
+            return { ...c, state: "idle" };
+          }
+          return c;
+        }),
+      });
+
+      return;
+    }
+
+    // on soustrait le coût de la carte à l'énergie
+    set({ energy: state.energy - card.effect.cost });
+
+    // on active l'animation de retrait de la carte
+    set({
+      hand: state.hand.map((c) => {
+        if (c.name === card.name) {
+          return { ...c, state: "played" };
+        }
+        return c;
+      }),
+    });
+
+    // on attend la fin de l'animation
+    await wait();
+
+    // on applique l'effet de la carte (toujours via eval)
+    eval(`(async () => { ${card.effect.onPlayed} })()`);
+
+    // la carte retourne dans le deck et on retire la carte de la main
+    set((state) => ({
+      deck: [...state.deck, { ...card, state: null }],
+      hand: state.hand.filter((c) => c.name !== card.name),
+    }));
   },
 }));

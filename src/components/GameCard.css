@@ -1,5 +1,7 @@
 .game-card {
   position: relative;
+  opacity: 0;
+  top: 50px;
   width: calc(630px / 3);
   height: calc(880px / 3);
   transition: transform 0.3s ease-in-out;
@@ -11,4 +13,111 @@
 .game-card:hover {
   transform: translate(0, -55px);
   z-index: 2;
+}
+
+.game-card.idle {
+  opacity: 1;
+  scale: 1;
+  top: 0;
+}
+.game-card.played {
+  animation: play 0.5s ease-in-out forwards;
+}
+.game-card.dropped {
+  animation: drop 0.5s ease-in-out forwards;
+}
+.game-card.drawn {
+  animation: draw 0.5s ease-in-out forwards;
+}
+.game-card.unauthorized {
+  animation: unauthorized 0.5s ease-in-out forwards;
+}
+
+@keyframes draw {
+  0% {
+    opacity: 0;
+    top: 50px;
+  }
+  100% {
+    opacity: 1;
+    top: 0;
+  }
+}
+
+@keyframes drop {
+  0% {
+    opacity: 1;
+    scale: 1;
+    top: 0;
+  }
+  100% {
+    opacity: 0;
+    scale: 0;
+    top: 50px;
+  }
+}
+
+@keyframes play {
+  0% {
+    opacity: 1;
+    scale: 1;
+    top: 0;
+  }
+  100% {
+    opacity: 0;
+    scale: 1.5;
+    top: -50px;
+  }
+}
+
+/* Shake the card and apply red filter temporary, then return to original state */
+@keyframes unauthorized {
+  0% {
+    left: 0;
+    opacity: 1;
+    scale: 1;
+    top: 0;
+  }
+  10% {
+    left: -10px;
+    filter: grayscale(1);
+  }
+  20% {
+    left: 10px;
+    filter: grayscale(1);
+  }
+  30% {
+    left: -10px;
+    filter: grayscale(1);
+  }
+  40% {
+    left: 10px;
+    filter: grayscale(1);
+  }
+  50% {
+    left: -10px;
+    filter: grayscale(1);
+  }
+  60% {
+    left: 10px;
+    filter: grayscale(1);
+  }
+  70% {
+    left: -10px;
+    filter: grayscale(1);
+  }
+  80% {
+    left: 10px;
+    filter: grayscale(1);
+  }
+  90% {
+    left: -10px;
+    filter: grayscale(1);
+  }
+  100% {
+    left: 0;
+    opacity: 1;
+    scale: 1;
+    top: 0;
+  }
 }

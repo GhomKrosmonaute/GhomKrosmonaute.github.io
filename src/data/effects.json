@@ -1,12 +1,54 @@
 [
   {
     "description": "Ajoute 1 à la street-cred de Ghom",
-    "onPlayed": "addStreetCred(1, 'Ghom')",
-    "type": "action"
+    "onPlayed": "await state.addStreetCred(1)",
+    "type": "action",
+    "cost": 2
+  },
+  {
+    "description": "Ajoute 2 à la street-cred de Ghom",
+    "onPlayed": "await state.addStreetCred(2)",
+    "type": "action",
+    "cost": 4
+  },
+  {
+    "description": "Si la street-cred de Ghom est inférieure à 5, ajoute 2 à la street-cred de Ghom",
+    "onPlayed": "await state.addStreetCred(2)",
+    "condition": "state.streetCred < 5",
+    "type": "action",
+    "cost": 3
   },
   {
     "description": "Pioche une carte",
-    "onPlayed": "drawCard()",
-    "type": "support"
+    "onPlayed": "await state.draw()",
+    "type": "support",
+    "cost": 1
+  },
+  {
+    "description": "Pioche 2 cartes",
+    "onPlayed": "await state.draw(2)",
+    "type": "support",
+    "cost": 2
+  },
+  {
+    "description": "Si le joueur a moins de 3 cartes en main, pioche 2 cartes",
+    "onPlayed": "await state.draw(2)",
+    "condition": "state.hand.length < 3",
+    "type": "support",
+    "cost": 1
+  },
+  {
+    "description": "Défausse une carte aléatoire, pioche une carte",
+    "onPlayed": "await state.drop(); await state.draw()",
+    "condition": "state.hand.length > 0",
+    "type": "support",
+    "cost": 0
+  },
+  {
+    "description": "Si le joueur a plus de 7 cartes en main, ajoute 1 token",
+    "onPlayed": "await state.addEnergy(1)",
+    "condition": "state.hand.length > 7",
+    "type": "support",
+    "cost": 0
   }
 ]
