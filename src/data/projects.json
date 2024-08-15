@@ -18,5 +18,25 @@
     "name": "Les Labs JS",
     "image": "js-labs.png",
     "description": "A Discord server for JavaScript developers"
+  },
+  {
+    "name": "2D Shooter",
+    "image": "shooter.png",
+    "description": "A 2D shooter game in TypeScript with p5.js"
+  },
+  {
+    "name": "Gario",
+    "image": "gario.png",
+    "description": "A 2D platformer game in TypeScript with p5.js"
+  },
+  {
+    "name": "Booyah",
+    "image": "booyah.png",
+    "description": "A TypeScript game engine using state machines"
+  },
+  {
+    "name": "Nano",
+    "image": "nano.png",
+    "description": "TypeScript library for building modular Discord bots"
   }
 ]

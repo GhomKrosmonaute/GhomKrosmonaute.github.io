@@ -139,6 +139,8 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
         return true;
       });
 
+      const drawn: string[] = [];
+
       for (let i = 0; i < count; i++) {
         if (deck.length === 0) {
           break;
@@ -148,10 +150,14 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
 
         card.state = "drawn";
 
+        drawn.push(card.name);
         hand.push(card);
       }
 
-      return { deck, hand };
+      return {
+        hand,
+        deck: state.deck.filter((c) => !drawn.includes(c.name)),
+      };
     });
 
     await wait();

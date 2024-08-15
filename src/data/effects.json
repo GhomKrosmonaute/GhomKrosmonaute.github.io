@@ -41,19 +41,21 @@
   {
     "description": "Pioche une carte",
     "onPlayed": "await state.draw()",
+    "condition": "state.deck.length >= 1",
     "type": "support",
     "cost": 1
   },
   {
     "description": "Pioche 2 cartes",
     "onPlayed": "await state.draw(2)",
+    "condition": "state.deck.length >= 2",
     "type": "support",
     "cost": 2
   },
   {
     "description": "Si tu as moins de 4 cartes en main, pioche 2 cartes",
     "onPlayed": "await state.draw(2)",
-    "condition": "state.hand.length < 4",
+    "condition": "state.hand.length < 4 && state.deck.length >= 2",
     "type": "support",
     "cost": 1
   },
