@@ -5,8 +5,6 @@ import { useCardGame } from "../hooks/useCardGame.ts";
 export const Hand = (props: React.PropsWithChildren<{ show?: boolean }>) => {
   const cardGame = useCardGame();
 
-  console.log(cardGame.hand.map((card) => card.state));
-
   return (
     <>
       <div

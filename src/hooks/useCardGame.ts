@@ -95,7 +95,11 @@ const technoWithEffect = technos.map((techno, i) => {
     ...techno,
     state: "idle" as const,
     effect:
-      supports[Math.floor(map(i, 0, technos.length, 0, supports.length, true))],
+      supports[
+        Math.floor(
+          map(i, 0, technos.length, 0, supports.length, true) * supports.length,
+        )
+      ],
   };
 });
 
@@ -104,9 +108,16 @@ const projectsWithEffect = projects.map((project, i) => {
     ...project,
     state: "idle" as const,
     effect:
-      actions[Math.floor(map(i, 0, projects.length, 0, actions.length, true))],
+      actions[
+        Math.floor(
+          map(i, 0, projects.length, 0, actions.length, true) * actions.length,
+        )
+      ],
   };
 });
+
+console.log(supports);
+console.log(technos);
 
 const deck = [...technoWithEffect, ...projectsWithEffect].sort(
   () => Math.random() - 0.5,

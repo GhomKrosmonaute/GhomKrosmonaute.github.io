@@ -121,3 +121,15 @@
     top: 0;
   }
 }
+
+.game-card .title {
+  background-color: hsla(var(--primary) / 0.2);
+  overflow: visible;
+}
+
+.game-card .cost {
+  /*  text primary border */
+  text-shadow: 0 0 10px var(--primary);
+  font-size: 25px;
+  font-family: "Changa", sans-serif;
+}

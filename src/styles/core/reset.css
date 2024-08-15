@@ -56,3 +56,9 @@ code {
     display: none;
   }
 }
+
+@media (height > 768px) {
+  body {
+    overflow: hidden;
+  }
+}
