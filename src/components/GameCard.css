@@ -9,6 +9,7 @@
   margin: 0 -15px;
   z-index: 1;
   cursor: pointer;
+  user-select: none;
 }
 
 .game-card:hover {
