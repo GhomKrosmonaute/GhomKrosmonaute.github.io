@@ -8,6 +8,7 @@
   transform-origin: bottom center;
   margin: 0 -15px;
   z-index: 1;
+  cursor: pointer;
 }
 
 .game-card:hover {
@@ -132,4 +133,5 @@
   text-shadow: 0 0 10px var(--primary);
   font-size: 25px;
   font-family: "Changa", sans-serif;
+  transform: translateZ(10px);
 }

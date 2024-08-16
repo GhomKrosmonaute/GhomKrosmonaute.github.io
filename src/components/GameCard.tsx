@@ -30,18 +30,19 @@ export const GameCard = (
       }}
       style={{
         marginBottom: `${20 - Math.abs(positionFromCenter) * 5}px`, // temporaire, peut causer des problèmes
+        rotate: `${positionFromCenter * 2}deg`,
       }}
     >
       <Tilt
         className="card without-shadow"
-        options={{ reverse: true, max: 30, scale: "1.1" }}
+        options={{ reverse: true, max: 30, scale: "1.1", perspective: 1000 }}
         style={{
           width: "100%",
           height: "100%",
-          rotate: `${positionFromCenter * 2}deg`,
+          padding: 0,
           display: "flex",
           flexDirection: "column",
-          padding: 0,
+          transformStyle: "preserve-3d",
         }}
       >
         <div
@@ -52,6 +53,7 @@ export const GameCard = (
             alignItems: "center",
             padding: "0 20px",
             height: "40px",
+            transform: "translateZ(20px) perspective(1000px)",
           }}
         >
           <h2
@@ -82,6 +84,7 @@ export const GameCard = (
             margin: "10px 15px",
             textAlign: "center",
             flexShrink: 0,
+            transform: "translateZ(20px)",
           }}
         >
           {props.card.effect.description}
@@ -115,6 +118,7 @@ const GameCardProject = (
             width: "100%",
             aspectRatio: "16/9",
             objectFit: "cover",
+            transform: "translateZ(-20px)",
           }}
         />
 
@@ -159,6 +163,7 @@ const GameCardTechno = (
           justifyContent: "center",
           alignItems: "center",
           marginTop: "15px",
+          transform: "translateZ(20px)",
         }}
       >
         <img

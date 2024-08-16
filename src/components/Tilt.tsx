@@ -34,7 +34,9 @@ const Tilt: React.FC<TiltProps> = ({
   children,
 }) => {
   const ref = useRef<HTMLDivElement>(null);
-  const [currentStyle, setCurrentStyle] = useState<CSSProperties>({});
+  const [currentStyle, setCurrentStyle] = useState<CSSProperties>({
+    transformStyle: "preserve-3d",
+  });
   const settings = { ...defaultSettings, ...options };
   const reverse = settings.reverse ? -1 : 1;
 
@@ -121,7 +123,7 @@ const Tilt: React.FC<TiltProps> = ({
 
   return (
     <div
-      style={{ ...style, ...currentStyle }}
+      style={{ ...currentStyle, ...style }}
       ref={ref}
       className={className}
       onMouseEnter={handleMouseEnter}
