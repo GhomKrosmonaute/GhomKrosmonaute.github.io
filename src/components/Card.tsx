@@ -6,6 +6,7 @@ import { Tilt } from "./Tilt";
 import { clsx } from "clsx";
 
 import "./Card.css";
+import { Button } from "@/components/ui/button.tsx";
 
 export const Card = (
   props: React.PropsWithChildren<{
@@ -30,20 +31,14 @@ export const Card = (
           }
         >
           {props.onClose && matches && (
-            <button
-              className="button icon reverse small"
+            <Button
+              className="reverse absolute top-0 right-0 m-4"
+              variant="icon"
+              size="sm"
               onClick={props.onClose}
-              style={{
-                position: "absolute",
-                margin: "1rem",
-                right: 0,
-                top: 0,
-              }}
             >
               <img src={cross} alt="back" />
-
-              <div className="light" />
-            </button>
+            </Button>
           )}
 
           {props.children}

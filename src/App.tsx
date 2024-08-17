@@ -37,19 +37,14 @@ export default function App() {
         </React.Suspense>
       )}
 
-      <button
+      <Button
         onClick={toggleDarkMode}
-        className="button icon reverse"
-        style={{
-          position: "fixed",
-          right: 0,
-          top: 0,
-          margin: "1rem",
-        }}
+        variant="icon"
+        size="icon"
+        className="reverse fixed m-4 right-0 top-0"
       >
-        <img src={themeIcon} alt="theme icon" />
-        <div className="light" />
-      </button>
+        <img src={themeIcon} alt="theme icon" className="w-5 h-5" />
+      </Button>
 
       {!modal && <Home />}
       {modal === "contact" && <Contact />}
