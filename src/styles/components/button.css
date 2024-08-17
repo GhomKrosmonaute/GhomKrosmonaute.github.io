@@ -10,7 +10,7 @@
   font-weight: 300;
   font-style: normal;
   font-size: 1rem;
-  line-height: 1.5;
+  line-height: 1.5rem;
   padding: 0.5rem 1rem;
   border-color: hsla(var(--border));
   border-radius: var(--radius);
@@ -36,7 +36,7 @@
 .button:hover {
   background-color: hsla(var(--secondary));
   color: hsla(var(--secondary-foreground));
-  box-shadow: hsla(var(--secondary)) 0 0 20px;
+  box-shadow: 0 0 20px hsla(var(--secondary));
 }
 
 .button.cta {

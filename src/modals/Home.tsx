@@ -1,8 +1,10 @@
-import { Heading } from "../components/Heading.tsx";
-import { Socials } from "../components/Socials.tsx";
-import { Card } from "../components/Card.tsx";
-import { useModal } from "../hooks/useModal.ts";
-import { Slogan } from "../components/Slogan.tsx";
+import { Heading } from "@/components/Heading.tsx";
+import { Socials } from "@/components/Socials.tsx";
+import { Card } from "@/components/Card.tsx";
+import { Slogan } from "@/components/Slogan.tsx";
+import { Button } from "@/components/ui/button.tsx";
+
+import { useModal } from "@/hooks/useModal.ts";
 
 export const Home = () => {
   const { setModal } = useModal();
@@ -13,23 +15,11 @@ export const Home = () => {
       <Socials />
       <Slogan />
 
-      <div
-        style={{
-          minWidth: "100%",
-          display: "flex",
-          justifyContent: "center",
-          marginTop: "2rem",
-          gap: "2rem",
-        }}
-      >
-        <button className="button" onClick={() => setModal("tarifs")}>
-          Tarifs
-          <div className="light" />
-        </button>
-        <button className="button cta" onClick={() => setModal("contact")}>
+      <div className="flex justify-center mt-6 w-full gap-8">
+        <Button onClick={() => setModal("tarifs")}>Tarifs</Button>
+        <Button onClick={() => setModal("contact")} variant="cta" size="cta">
           Contact
-          <div className="light" />
-        </button>
+        </Button>
       </div>
     </Card>
   );

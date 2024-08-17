@@ -1,6 +1,6 @@
 import { useEffect, useCallback } from "react";
 
-const useDarkMode = () => {
+export const useDarkMode = () => {
   const toggleDarkMode = useCallback(() => {
     const html = document.querySelector("html");
     if (html) {
@@ -30,5 +30,3 @@ const useDarkMode = () => {
 
   return toggleDarkMode;
 };
-
-export default useDarkMode;

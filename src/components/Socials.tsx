@@ -10,8 +10,7 @@ import {
   IoLogoFacebook,
 } from "react-icons/io5";
 import { SiMalt } from "react-icons/si";
-
-import "./Socials.css";
+import { clsx } from "clsx";
 
 const icons = {
   IoLogoDiscord,
@@ -26,19 +25,17 @@ const icons = {
 export const Socials = () => {
   return (
     <IconContext.Provider value={{ size: "2rem", color: "#7c3aedcc" }}>
-      <div className="socials">
+      <div className={clsx("flex justify-center gap-1.5 mt-2", "md:gap-4")}>
         {socials.map((social) => (
           <a
             href={social.url}
             target="_blank"
-            className="social"
+            className={clsx(
+              "inline-block mx-2 transition-all",
+              "md:hover:scale-150 md:hover:rotate-[360deg]",
+            )}
             key={social.name}
             title={`${social.name}: ${social.username}`}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "0.5rem",
-            }}
           >
             {/* @ts-expect-error it's ok */}
             {React.createElement(icons[social.icon])}

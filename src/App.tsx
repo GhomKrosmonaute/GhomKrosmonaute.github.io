@@ -1,11 +1,16 @@
 import React from "react";
-import useDarkMode from "./hooks/useDarkMode.ts";
-import themeIcon from "./assets/theme.svg";
+
+import { Button } from "@/components/ui/button.tsx";
+
 import { useMediaQuery } from "usehooks-ts";
-import { useModal } from "./hooks/useModal.ts";
+import { useDarkMode } from "@/hooks/useDarkMode.ts";
+import { useModal } from "@/hooks/useModal.ts";
+
 import { Home } from "./modals/Home.tsx";
 import { Tarifs } from "./modals/Tarifs.tsx";
 import { Contact } from "./modals/Contact.tsx";
+
+import themeIcon from "./assets/theme.svg";
 
 const Spline = React.lazy(() => import("@splinetool/react-spline"));
 
@@ -51,20 +56,15 @@ export default function App() {
       {modal === "tarifs" && <Tarifs />}
 
       {modal && !largeScreen && (
-        <button
-          className="button fill"
+        <Button
+          variant="opaque"
+          className="fixed m-4 right-0 bottom-0"
           onClick={() => setModal(false)}
-          style={{
-            position: "fixed",
-            margin: "1rem",
-            right: 0,
-            bottom: 0,
-          }}
         >
           {/*<img src={cross} alt="back" />*/}
           Retour
           <div className="light" />
-        </button>
+        </Button>
       )}
     </>
   );
