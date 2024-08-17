@@ -10,7 +10,7 @@ import {
   IoLogoFacebook,
 } from "react-icons/io5";
 import { SiMalt } from "react-icons/si";
-import { clsx } from "clsx";
+import { cn } from "@/utils.ts";
 
 const icons = {
   IoLogoDiscord,
@@ -25,12 +25,12 @@ const icons = {
 export const Socials = () => {
   return (
     <IconContext.Provider value={{ size: "2rem", color: "#7c3aedcc" }}>
-      <div className={clsx("flex justify-center gap-1.5 mt-2", "md:gap-4")}>
+      <div className={cn("flex justify-center gap-1.5 mt-2", "md:gap-4")}>
         {socials.map((social) => (
           <a
             href={social.url}
             target="_blank"
-            className={clsx(
+            className={cn(
               "inline-block mx-2 transition-all",
               "md:hover:scale-150 md:hover:rotate-[360deg]",
             )}

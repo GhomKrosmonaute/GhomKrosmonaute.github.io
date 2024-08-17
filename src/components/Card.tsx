@@ -3,10 +3,11 @@ import cross from "../assets/cross.svg";
 
 import { useMediaQuery } from "usehooks-ts";
 import { Tilt } from "./Tilt";
-import { clsx } from "clsx";
 
 import "./Card.css";
 import { Button } from "@/components/ui/button.tsx";
+import { BorderLight } from "@/components/ui/border-light.tsx";
+import { cn } from "@/utils.ts";
 
 export const Card = (
   props: React.PropsWithChildren<{
@@ -18,7 +19,7 @@ export const Card = (
 
   return (
     <>
-      <div className={clsx("center", props.className)}>
+      <div className={cn("center group/card", props.className)}>
         <Tilt
           className="card"
           options={
@@ -43,8 +44,8 @@ export const Card = (
 
           {props.children}
 
-          <div className="light" />
-          <div className="light opposed" />
+          <BorderLight groupName="card" appearOnHover />
+          <BorderLight groupName="card" appearOnHover opposed />
         </Tilt>
       </div>
     </>

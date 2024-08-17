@@ -3,16 +3,17 @@ import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/utils";
+import { BorderLight } from "@/components/ui/border-light.tsx";
 
 const buttonVariants = cva(
   cn(
-    "button",
+    "button group/button",
     "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50",
     "ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
     "block relative overflow-hidden pointer-events-auto px-4 py-2 max-w-fit",
     "text-center leading-6 text-secondary-foreground whitespace-nowrap",
     "transition-all duration-200",
-    "hover:shadow-button shadow-secondary",
+    "hover:shadow-glow-20 shadow-secondary",
   ),
   {
     variants: {
@@ -56,7 +57,12 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       >
         {props.children}
 
-        <div className="light" />
+        <BorderLight
+          opposed={variant === "cta"}
+          groupName="button"
+          fast
+          appearOnHover
+        />
       </Comp>
     );
   },

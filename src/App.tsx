@@ -58,7 +58,6 @@ export default function App() {
         >
           {/*<img src={cross} alt="back" />*/}
           Retour
-          <div className="light" />
         </Button>
       )}
     </>

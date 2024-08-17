@@ -57,7 +57,8 @@ module.exports = {
         },
       },
       boxShadow: {
-        button: "0 0 20px var(--tw-shadow-color)",
+        "glow-20": "0 0 20px var(--tw-shadow-color)",
+        "glow-10": "0 0 10px var(--tw-shadow-color)",
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -73,25 +74,25 @@ module.exports = {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        "border-light": {
+          "0%": { "offset-distance": 0 },
+          "100%": { "offset-distance": "100%" },
+        },
+        "border-light-opposed": {
+          "0%": { "offset-distance": "50%" },
+          "50%": { "offset-distance": "100%" },
+          "100%": { "offset-distance": "150%" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "border-light": "border-light 3s infinite linear",
+        "border-light-opposed": "border-light-opposed 3s infinite linear",
+        "border-light-fast": "border-light 1s infinite linear",
+        "border-light-opposed-fast": "border-light-opposed 1s infinite linear",
       },
     },
   },
-  plugins: [
-    require("tailwindcss-animate"),
-    function ({ addUtilities, e }) {
-      const newUtilities = {
-        ".shadow-secondary": {
-          "--tw-shadow-color": "hsla(var(--secondary))", // Rouge
-        },
-        ".shadow-primary": {
-          "--tw-shadow-color": "hsla(var(--primary))", // Bleu
-        },
-      };
-      addUtilities(newUtilities, ["responsive", "hover"]);
-    },
-  ],
+  plugins: [require("tailwindcss-animate")],
 };

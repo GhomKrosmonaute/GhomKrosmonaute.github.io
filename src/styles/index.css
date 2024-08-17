@@ -4,7 +4,6 @@
 
 @import "components/button.css";
 @import "components/spline.css";
-@import "components/light.css";
 
 @tailwind base;
 @tailwind components;
