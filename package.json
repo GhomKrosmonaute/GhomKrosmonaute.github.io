@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "format": "prettier --write src",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist"
+    "deploy": "gh-pages -d dist",
+    "share": "cloudflared tunnel --url http://localhost:5173/portfolio-libless/"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.1.0",
