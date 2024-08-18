@@ -6,7 +6,7 @@ import { visualizer } from "rollup-plugin-visualizer";
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react(), visualizer()],
-  base: "/portfolio-libless/",
+  base: "/",
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
