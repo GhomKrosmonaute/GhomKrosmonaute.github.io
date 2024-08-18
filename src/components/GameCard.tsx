@@ -1,5 +1,3 @@
-import { Tilt } from "./Tilt.tsx";
-
 import React from "react";
 
 import {
@@ -10,6 +8,7 @@ import {
   isProjectCardInfo,
 } from "../hooks/useCardGame.ts";
 import { cn } from "@/utils.ts";
+import { Tilt } from "./Tilt.tsx";
 import { BorderLight } from "@/components/ui/border-light.tsx";
 
 import "./GameCard.css";
@@ -35,7 +34,9 @@ export const GameCard = (
         props.card.state,
       )}
       onClick={() => {
-        if (!isAnyCardAnimated) play(props.card);
+        if (!isAnyCardAnimated) {
+          play(props.card);
+        }
       }}
       style={{
         marginBottom: `${20 - Math.abs(positionFromCenter) * 5}px`, // temporaire, peut causer des problèmes
@@ -72,6 +73,7 @@ export const GameCard = (
           <h2
             className={cn("whitespace-nowrap overflow-hidden text-ellipsis", {
               "text-sm": props.card.name.length > 20,
+              "text-primary-foreground": props.card.effect.type === "action",
             })}
             style={{
               transform: "translateZ(5px)",

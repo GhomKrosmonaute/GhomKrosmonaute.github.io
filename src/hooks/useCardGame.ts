@@ -1,3 +1,4 @@
+import { bank } from "@/sound.ts";
 import { create } from "zustand";
 import projects from "../data/projects.json";
 import technos from "../data/techno.json";
@@ -122,6 +123,9 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
   energy: 20,
   streetCred: 0,
   addEnergy: (count: number) => {
+    // on joue le son de la banque
+    bank.gain.play();
+
     set((state) => {
       return { energy: state.energy + count };
     });
@@ -132,6 +136,9 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
     });
   },
   draw: async (count = 1, type?: "action" | "support") => {
+    // on joue le son de la banque
+    bank.draw.play();
+
     set((state) => {
       const hand = state.hand.slice();
       const deck = state.deck.slice().filter((c) => {
@@ -170,6 +177,9 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
     }));
   },
   drop: async () => {
+    // on joue le son de la banque
+    bank.drop.play();
+
     const state = getState();
 
     const hand = state.hand.slice().filter((c) => c.state === "idle");
@@ -198,6 +208,9 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
     }));
   },
   dropAll: async () => {
+    // on joue le son de la banque
+    bank.drop.play();
+
     const state = getState();
 
     // on active l'animation de retrait de la carte
@@ -223,6 +236,9 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
     let state = getState();
 
     const cantPlay = async () => {
+      // jouer le son de la banque
+      bank.unauthorized.play();
+
       // activer l'animation can't play
       set({
         hand: state.hand.map((c) => {
@@ -260,6 +276,9 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
 
       return;
     }
+
+    // on joue le son de la banque
+    bank.play.play();
 
     // on soustrait le coût de la carte à l'énergie
     set({ energy: state.energy - card.effect.cost });
