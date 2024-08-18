@@ -1,6 +1,7 @@
 import React from "react";
 import { GameCard } from "../components/GameCard.tsx";
 import { useCardGame } from "../hooks/useCardGame.ts";
+import { cn } from "@/utils.ts";
 
 export const Game = (props: React.PropsWithChildren<{ show?: boolean }>) => {
   const cardGame = useCardGame();
@@ -34,15 +35,11 @@ export const Game = (props: React.PropsWithChildren<{ show?: boolean }>) => {
         </ul>
       </div>
       <div
-        style={{
-          position: "absolute",
-          bottom: props.show ? -50 : "-100%",
-          left: "50vw",
-          transition: "bottom 1s ease-in-out",
-          display: "flex",
-          alignItems: "end",
-          transform: "translateX(-50%)",
-        }}
+        className={cn(
+          "absolute flex items-center -translate-x-1/2",
+          "left-[50vw] transition-[bottom] ease-in-out duration-1000",
+          props.show ? "bottom-[-50px]" : "-bottom-full",
+        )}
       >
         {cardGame.hand.map((card, index) => (
           <GameCard key={index} card={card} position={index} />
