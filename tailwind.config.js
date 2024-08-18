@@ -22,7 +22,7 @@ module.exports = {
     },
     extend: {
       screens: {
-        mdh: { raw: "(min-height: 768px)" },
+        mdh: { raw: "(height >= 768px)" },
       },
       colors: {
         border: "hsl(var(--border))",
@@ -136,6 +136,7 @@ module.exports = {
           "border-light-disappear 1s infinite linear",
         "border-light-opposed-fast-disappear":
           "border-light-opposed-disappear 1s infinite linear",
+        "spin-forward": "spin 3s linear infinite",
       },
     },
   },

@@ -38,5 +38,17 @@
   {
     "name": "Three.js",
     "logo": "three.png"
+  },
+  {
+    "name": "Gulp",
+    "logo": "gulp.webp"
+  },
+  {
+    "name": "Knex",
+    "logo": "knex.png"
+  },
+  {
+    "name": "Git",
+    "logo": "git.png"
   }
 ]

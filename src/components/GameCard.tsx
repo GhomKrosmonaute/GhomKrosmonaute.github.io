@@ -1,7 +1,7 @@
 import { Tilt } from "./Tilt.tsx";
 
-import "./GameCard.css";
 import React from "react";
+
 import {
   GameCardInfo,
   ProjectCardInfo,
@@ -11,6 +11,8 @@ import {
 } from "../hooks/useCardGame.ts";
 import { cn } from "@/utils.ts";
 import { BorderLight } from "@/components/ui/border-light.tsx";
+
+import "./GameCard.css";
 
 export const GameCard = (
   props: React.PropsWithoutRef<{ card: GameCardInfo; position: number }>,
@@ -182,6 +184,8 @@ const GameCardProject = (
   );
 };
 
+const spinners = ["React", "Knex"];
+
 const GameCardTechno = (
   props: React.PropsWithoutRef<{ card: TechnoCardInfo }>,
 ) => {
@@ -199,6 +203,11 @@ const GameCardTechno = (
         <img
           src={props.card.logo}
           alt={`Logo de la techno "${props.card.name}"`}
+          className={cn({
+            "group-hover/game-card:animate-spin-forward": spinners.includes(
+              props.card.name,
+            ),
+          })}
           style={{
             width: "60%",
             objectFit: "contain",

@@ -38,5 +38,15 @@
     "name": "Nano",
     "image": "nano.png",
     "description": "TypeScript library for building modular Discord bots"
+  },
+  {
+    "name": "Sea Rescue",
+    "image": "sea-rescue.png",
+    "description": "A 3D game in TypeScript with three.js"
+  },
+  {
+    "name": "Site Photographe",
+    "image": "photo.png",
+    "description": "A website for a photographer in Next.js"
   }
 ]
