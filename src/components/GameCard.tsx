@@ -143,42 +143,24 @@ const GameCardProject = (
         <img
           src={props.card.image}
           alt={`Illustration du projet "${props.card.name}"`}
-          className="block"
+          className="w-full aspect-video object-cover"
           style={{
-            width: "100%",
-            aspectRatio: "16/9",
-            objectFit: "cover",
             transform: "translateZ(-15px)",
           }}
         />
       </div>
 
       <div
-        className="transition-opacity duration-500 group-hover/image:opacity-0"
+        className={cn(
+          "transition-opacity duration-500 group-hover/image:opacity-0",
+          "absolute bottom-0 w-full h-1/3 bg-background/50",
+          "flex justify-center items-center",
+        )}
         style={{
-          position: "absolute",
-          width: "100%",
-          height: "33%",
-          bottom: 0,
-          // backgroundImage:
-          //   "linear-gradient(transparent, hsla(var(--background)))",
-          backgroundColor: "hsla(var(--background) / 0.5)",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
           transform: "translateZ(-5px)",
         }}
       >
-        <p
-          style={{
-            fontSize: "12px",
-            textAlign: "center",
-            margin: 0,
-            padding: 0,
-          }}
-        >
-          "{props.card.description}"
-        </p>
+        <p className="text-sm text-center">"{props.card.description}"</p>
       </div>
     </div>
   );
@@ -192,27 +174,19 @@ const GameCardTechno = (
   return (
     <>
       <div
+        className="flex justify-center items-center mt-4"
         style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          marginTop: "15px",
           transform: "translateZ(20px)",
         }}
       >
         <img
           src={props.card.logo}
           alt={`Logo de la techno "${props.card.name}"`}
-          className={cn({
+          className={cn("w-2/3 object-contain aspect-square", {
             "group-hover/game-card:animate-spin-forward": spinners.includes(
               props.card.name,
             ),
           })}
-          style={{
-            width: "60%",
-            objectFit: "contain",
-            aspectRatio: "1/1",
-          }}
         />
       </div>
     </>

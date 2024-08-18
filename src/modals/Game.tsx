@@ -9,32 +9,6 @@ export const Game = (props: React.PropsWithChildren<{ show?: boolean }>) => {
     <>
       <div
         style={{
-          pointerEvents: "none",
-          position: "absolute",
-          fontSize: "24px",
-          fontFamily: "monospace",
-          top: 0,
-          left: 0,
-          zIndex: 10,
-          display: props.show ? "block" : "none",
-        }}
-      >
-        Street Cred: {cardGame.streetCred} <br />
-        Energy: {cardGame.energy} <br />
-        Main: {cardGame.hand.length} <br />
-        Deck: {cardGame.deck.length} <br />
-        Total: {cardGame.hand.length + cardGame.deck.length} <br />
-        Debug:{" "}
-        <ul style={{ fontSize: "16px" }}>
-          {cardGame.hand.map((card, i) => (
-            <li key={i}>
-              {card.effect.type} {card.effect.cost} {card.effect.description}
-            </li>
-          ))}
-        </ul>
-      </div>
-      <div
-        style={{
           position: "absolute",
           bottom: props.show ? -50 : "-100%",
           left: "50vw",

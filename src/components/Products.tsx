@@ -3,16 +3,20 @@ import tarifs from "../data/tarifs.json";
 export const Products = () => {
   return (
     <>
-      <h2>Prestations en tant que produit</h2>
+      <h2 className="text-2xl">
+        Prestations{" "}
+        <span className="md:hidden" title="En tant que produit">
+          AAP
+        </span>
+        <span className="hidden md:inline">en tant que produit</span>
+      </h2>
 
       <table>
         <thead>
-          <tr>
-            <th style={{ textAlign: "left" }}>Prix</th>
-            <th style={{ textAlign: "left" }}>Produit</th>
-            <th style={{ textAlign: "left" }} className="md">
-              Description
-            </th>
+          <tr className="*:text-left">
+            <th>Prix</th>
+            <th>Produit</th>
+            <th className="hidden md:table-cell">Description</th>
           </tr>
         </thead>
         <tbody>
@@ -22,7 +26,7 @@ export const Products = () => {
                 <code>{produit.price}€</code>
               </td>
               <td>{produit.name}</td>
-              <td className="md">{produit.description}</td>
+              <td className="hidden md:table-cell">{produit.description}</td>
             </tr>
           ))}
         </tbody>

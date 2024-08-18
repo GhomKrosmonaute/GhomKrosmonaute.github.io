@@ -21,6 +21,12 @@ export default function App() {
   const largeWidth = useMediaQuery("(width >= 768px)");
   const { modal, setModal } = useModal();
 
+  React.useEffect(() => {
+    if (modal === "game" && !largeScreen) {
+      setModal(false);
+    }
+  }, [modal, largeScreen]);
+
   return (
     <>
       {largeWidth && (
