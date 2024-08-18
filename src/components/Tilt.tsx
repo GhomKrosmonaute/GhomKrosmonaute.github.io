@@ -1,138 +1,89 @@
-import React, { useState, useRef, useEffect, CSSProperties } from "react";
-
-type Rect = Pick<DOMRect, "width" | "height" | "left" | "top">;
+import React, { useState, useRef, useEffect, useCallback } from "react";
+import { useDebounceCallback } from "usehooks-ts";
+import { cn } from "@/utils.ts";
 
 interface TiltProps {
-  style?: CSSProperties;
-  className?: string;
-  options?: Partial<typeof defaultSettings>;
-  onMouseEnter?: (e: React.MouseEvent) => void;
-  onMouseMove?: (e: React.MouseEvent) => void;
-  onMouseLeave?: (e: React.MouseEvent) => void;
-  children?: React.ReactNode;
+  max?: number; // Inclinaison maximale en degrés
+  reverse?: boolean; // Inverser l'inclinaison
+  scale?: number; // Augmenter la scale au hover
+  perspective?: number; // Définir la perspective CSS
+  className?: string; // Classe CSS pour styliser le conteneur
+  children: React.ReactNode;
+  style?: React.CSSProperties;
 }
 
-const defaultSettings = {
-  reverse: false,
-  max: 20,
-  perspective: 1000,
-  easing: "cubic-bezier(.03,.98,.52,.99)",
-  scale: "1",
-  speed: 1000,
-  transition: true,
-  axis: null as "x" | "y" | null,
-  reset: true,
-};
+const constantStyle = {
+  transformStyle: "preserve-3d",
+} as const;
 
-const Tilt: React.FC<TiltProps> = ({
-  style,
-  className,
-  options = {},
-  onMouseEnter,
-  onMouseMove,
-  onMouseLeave,
+export const Tilt: React.FC<TiltProps> = ({
+  max = 20,
+  reverse = false,
+  scale = 1,
+  perspective = 1000,
+  className = "",
   children,
+  style,
 }) => {
-  const ref = useRef<HTMLDivElement>(null);
-  const [currentStyle, setCurrentStyle] = useState<CSSProperties>({
-    transformStyle: "preserve-3d",
-  });
-  const settings = { ...defaultSettings, ...options };
-  const reverse = settings.reverse ? -1 : 1;
+  const [styleState, setStyle] = useState<React.CSSProperties>({});
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  const updateElementPosition = (): Rect => {
-    const element = ref.current!;
-    const rect = element.getBoundingClientRect();
-    return {
-      width: element.offsetWidth,
-      height: element.offsetHeight,
-      left: rect.left,
-      top: rect.top,
-    };
-  };
+  const handleMouseMove = useDebounceCallback((e: MouseEvent) => {
+    if (containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
 
-  const getValues = (e: React.MouseEvent, position: Rect) => {
-    const x = (e.clientX - position.left) / position.width;
-    const y = (e.clientY - position.top) / position.height;
-    const _x = Math.min(Math.max(x, 0), 1);
-    const _y = Math.min(Math.max(y, 0), 1);
-    const tiltX = (reverse * (settings.max / 2 - _x * settings.max)).toFixed(2);
-    const tiltY = (reverse * (_y * settings.max - settings.max / 2)).toFixed(2);
-    return {
-      tiltX,
-      tiltY,
-    };
-  };
+      const rotateX = ((y - centerY) / centerY) * max;
+      const rotateY = ((x - centerX) / centerX) * max;
 
-  const setTransition = () => {
-    setCurrentStyle((prevStyle) => ({
-      ...prevStyle,
-      transition: `${settings.speed}ms ${settings.easing}`,
-    }));
-    setTimeout(() => {
-      setCurrentStyle((prevStyle) => ({
-        ...prevStyle,
-        transition: "",
-      }));
-    }, settings.speed);
-  };
-
-  const handleMouseEnter = React.useCallback(
-    (e: React.MouseEvent) => {
-      setCurrentStyle((prevStyle) => ({
-        ...prevStyle,
-        willChange: "transform",
-      }));
-      setTransition();
-      onMouseEnter?.(e);
-    },
-    [onMouseEnter],
-  );
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    const position = updateElementPosition();
-    const values = getValues(e, position);
-    setCurrentStyle((prevStyle) => ({
-      ...prevStyle,
-      transform: `perspective(${settings.perspective}px) rotateX(${
-        settings.axis === "x" ? 0 : values.tiltY
-      }deg) rotateY(${settings.axis === "y" ? 0 : values.tiltX}deg) scale3d(${settings.scale}, ${settings.scale}, ${settings.scale})`,
-    }));
-    onMouseMove?.(e);
-  };
-
-  const handleMouseLeave = (e: React.MouseEvent) => {
-    setTransition();
-    if (settings.reset) {
-      setCurrentStyle((prevStyle) => ({
-        ...prevStyle,
-        transform: `perspective(${settings.perspective}px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`,
-      }));
+      setStyle({
+        ...constantStyle,
+        transform: `
+            perspective(${perspective}px)
+            rotateX(${reverse ? rotateX : -rotateX}deg)
+            rotateY(${reverse ? -rotateY : rotateY}deg)
+            scale(${scale})
+          `,
+      });
     }
-    onMouseLeave?.(e);
-  };
+  }, 10);
+
+  const handleMouseLeave = useCallback(() => {
+    setStyle({
+      ...constantStyle,
+      transform: `scale(1)`,
+    });
+  }, []);
 
   useEffect(() => {
-    const element = ref.current;
-    if (element?.parentElement?.querySelector(":hover") === element) {
-      handleMouseEnter(
-        new MouseEvent("mouseenter") as unknown as React.MouseEvent,
-      );
+    const container = containerRef.current;
+
+    if (container) {
+      container.addEventListener("mousemove", handleMouseMove);
+      container.addEventListener("mouseleave", handleMouseLeave);
     }
-  }, [handleMouseEnter]);
+
+    return () => {
+      if (container) {
+        container.removeEventListener("mousemove", handleMouseMove);
+        container.removeEventListener("mouseleave", handleMouseLeave);
+      }
+    };
+  }, [max, reverse, scale, perspective]);
 
   return (
     <div
-      style={{ ...currentStyle, ...style }}
-      ref={ref}
-      className={className}
-      onMouseEnter={handleMouseEnter}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
+      ref={containerRef}
+      className={cn("will-change-transform", className)}
+      style={{
+        ...styleState,
+        ...style,
+      }}
     >
       {children}
     </div>
   );
 };
-
-export { Tilt };

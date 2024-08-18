@@ -2,8 +2,6 @@ import React from "react";
 import cross from "../assets/cross.svg";
 
 import { useMediaQuery } from "usehooks-ts";
-import { Tilt } from "./Tilt";
-
 import { Button } from "@/components/ui/button.tsx";
 import { BorderLight } from "@/components/ui/border-light.tsx";
 import { cn } from "@/utils.ts";
@@ -32,27 +30,19 @@ export const Card = (
         )}
         style={props.style}
       >
-        <Tilt
+        <div
           className={cn(
             "md:h-auto bg-card/70 backdrop-blur-xl md:rounded-md md:border-2",
             "border-b-secondary-foreground border-r-primary p-10 md:overflow-hidden",
             "md:shadow-spotlight md:transition md:ease-in-out md:duration-500",
             "md:hover:shadow-glow-150 md:hover:shadow-primary md:hover:border-b-primary md:hover:backdrop-blur-md",
+            // set inclination
+            "mdh:hover:transform mdh:rotate-2 mdh:hover:rotate-0 mdh:hover:scale-105",
           )}
           style={{
             scrollbarWidth: "none",
             msOverflowStyle: "none",
           }}
-          options={
-            matches
-              ? {
-                  max: props.big ? 5 : 30,
-                }
-              : {
-                  max: 0,
-                  scale: "1",
-                }
-          }
         >
           {props.onClose && matches && (
             <Button
@@ -69,7 +59,7 @@ export const Card = (
 
           <BorderLight groupName="card" appearOnHover />
           <BorderLight groupName="card" appearOnHover opposed />
-        </Tilt>
+        </div>
       </div>
     </>
   );

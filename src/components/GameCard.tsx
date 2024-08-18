@@ -46,6 +46,7 @@ export const GameCard = (
       }}
     >
       <Tilt
+        scale={1.1}
         className={cn(
           "group/game-card transition-shadow duration-200 ease-in-out",
           "shadow-primary hover:shadow-glow-20",
@@ -53,10 +54,6 @@ export const GameCard = (
           "rounded-md *:shrink-0",
           { "bg-card": props.card.effect.type === "support" },
         )}
-        options={{ reverse: true, max: 30, scale: "1.1", perspective: 1000 }}
-        style={{
-          transformStyle: "preserve-3d",
-        }}
       >
         <div
           className={cn(
@@ -154,7 +151,7 @@ const GameCardProject = (
 
       <div
         className={cn(
-          "transition-opacity duration-500 group-hover/image:opacity-0",
+          "transition-opacity duration-1000 group-hover/image:opacity-0",
           "absolute bottom-0 w-full h-1/3 bg-background/50",
           "flex justify-center items-center",
         )}
