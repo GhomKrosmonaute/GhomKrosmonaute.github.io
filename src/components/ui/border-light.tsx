@@ -1,0 +1,55 @@
+import React from "react";
+import { cn } from "@/utils";
+
+const groupHover = [
+  "group-hover/card:opacity-100",
+  "md:group-hover/card:opacity-100",
+  "group-hover/button:opacity-100",
+  "md:group-hover/button:opacity-100",
+];
+
+export interface BorderLightProps {
+  groupName?: string;
+  opposed?: boolean;
+  fast?: boolean;
+  appearOnHover?: boolean;
+}
+
+export const BorderLight = (
+  props: React.ComponentProps<"div"> & BorderLightProps,
+) => {
+  const currentGroup = props.groupName
+    ? groupHover.filter((x) => x.includes(props.groupName!))
+    : [];
+
+  return (
+    <div
+      className={cn(
+        "absolute shadow-glow-10 pointer-events-none",
+        "w-1/5 min-w-5 h-1 rounded-[50%]",
+        {
+          [`opacity-0 ${currentGroup[0]}`]:
+            !props.opposed && props.appearOnHover,
+          [`md:transition-opacity md:opacity-0 ${currentGroup[1]}`]:
+            props.appearOnHover,
+        },
+        {
+          "bg-primary shadow-primary": !props.opposed,
+          "bg-primary-foreground shadow-primary-foreground": props.opposed,
+        },
+        {
+          "animate-border-light": !props.opposed && !props.fast,
+          "animate-border-light-opposed": props.opposed && !props.fast,
+          "animate-border-light-fast": !props.opposed && props.fast,
+          "animate-border-light-opposed-fast": props.opposed && props.fast,
+        },
+        props.className,
+      )}
+      style={{
+        offsetPath: "padding-box",
+        offsetDistance: props.opposed ? "50%" : "0%",
+        transitionDuration: "1s",
+      }}
+    />
+  );
+};

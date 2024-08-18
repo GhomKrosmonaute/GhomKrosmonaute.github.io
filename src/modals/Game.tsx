@@ -2,7 +2,7 @@ import React from "react";
 import { GameCard } from "../components/GameCard.tsx";
 import { useCardGame } from "../hooks/useCardGame.ts";
 
-export const Hand = (props: React.PropsWithChildren<{ show?: boolean }>) => {
+export const Game = (props: React.PropsWithChildren<{ show?: boolean }>) => {
   const cardGame = useCardGame();
 
   return (

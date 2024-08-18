@@ -3,9 +3,11 @@ import cross from "../assets/cross.svg";
 
 import { useMediaQuery } from "usehooks-ts";
 import { Tilt } from "./Tilt";
-import { clsx } from "clsx";
 
 import "./Card.css";
+import { Button } from "@/components/ui/button.tsx";
+import { BorderLight } from "@/components/ui/border-light.tsx";
+import { cn } from "@/utils.ts";
 
 export const Card = (
   props: React.PropsWithChildren<{
@@ -18,7 +20,7 @@ export const Card = (
 
   return (
     <>
-      <div className={clsx("center", props.className)} style={props.style}>
+      <div className={cn("center group/card", props.className)}>
         <Tilt
           className="card"
           options={
@@ -33,26 +35,20 @@ export const Card = (
           }
         >
           {props.onClose && matches && (
-            <button
-              className="button icon reverse small"
+            <Button
+              className="reverse absolute top-0 right-0 m-4"
+              variant="icon"
+              size="sm"
               onClick={props.onClose}
-              style={{
-                position: "absolute",
-                margin: "1rem",
-                right: 0,
-                top: 0,
-              }}
             >
               <img src={cross} alt="back" />
-
-              <div className="light" />
-            </button>
+            </Button>
           )}
 
           {props.children}
 
-          <div className="light" />
-          <div className="light opposed" />
+          <BorderLight groupName="card" appearOnHover />
+          <BorderLight groupName="card" appearOnHover opposed />
         </Tilt>
       </div>
     </>

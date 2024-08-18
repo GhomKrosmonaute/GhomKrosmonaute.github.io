@@ -3,6 +3,7 @@ import { Card } from "../components/Card.tsx";
 import tarifs from "../data/tarifs.json";
 import { Products } from "../components/Products.tsx";
 import { Hosting } from "../components/Hosting.tsx";
+import { Button } from "@/components/ui/button.tsx";
 
 export const Tarifs = () => {
   const { setModal } = useModal();
@@ -30,10 +31,9 @@ export const Tarifs = () => {
         }}
       >
         <h2>Pour plus d'informations</h2>
-        <button onClick={() => setModal("contact")} className="button cta">
+        <Button onClick={() => setModal("contact")} variant="cta" size="cta">
           Contactez-moi !
-          <div className="light" />
-        </button>
+        </Button>
         <p
           style={{
             fontStyle: "italic",
