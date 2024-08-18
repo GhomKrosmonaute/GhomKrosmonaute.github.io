@@ -1,22 +1,3 @@
-.game-card {
-  position: relative;
-  opacity: 0;
-  top: 50px;
-  width: calc(630px / 3);
-  height: calc(880px / 3);
-  transition: transform 0.3s ease-in-out;
-  transform-origin: bottom center;
-  margin: 0 -15px;
-  z-index: 1;
-  cursor: pointer;
-  user-select: none;
-}
-
-.game-card:hover {
-  transform: translate(0, -55px);
-  z-index: 2;
-}
-
 .game-card.idle {
   opacity: 1;
   scale: 1;
@@ -33,6 +14,16 @@
 }
 .game-card.unauthorized {
   animation: unauthorized 0.5s ease-in-out forwards;
+}
+
+.inset-shadow:after {
+  box-shadow: inset 0 0 15px 0 black;
+  content: "";
+  display: block;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  width: 100%;
 }
 
 @keyframes draw {
@@ -122,17 +113,4 @@
     scale: 1;
     top: 0;
   }
-}
-
-.game-card .title {
-  background-color: hsla(var(--primary) / 0.2);
-  overflow: visible;
-}
-
-.game-card .cost {
-  /*  text primary border */
-  text-shadow: 0 0 10px var(--primary);
-  font-size: 25px;
-  font-family: "Changa", sans-serif;
-  transform: translateZ(10px);
 }

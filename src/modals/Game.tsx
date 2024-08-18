@@ -26,8 +26,8 @@ export const Game = (props: React.PropsWithChildren<{ show?: boolean }>) => {
         Total: {cardGame.hand.length + cardGame.deck.length} <br />
         Debug:{" "}
         <ul style={{ fontSize: "16px" }}>
-          {cardGame.hand.map((card) => (
-            <li>
+          {cardGame.hand.map((card, i) => (
+            <li key={i}>
               {card.effect.type} {card.effect.cost} {card.effect.description}
             </li>
           ))}

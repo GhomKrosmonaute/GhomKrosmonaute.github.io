@@ -24,8 +24,12 @@ const icons = {
 
 export const Socials = () => {
   return (
-    <IconContext.Provider value={{ size: "2rem", color: "#7c3aedcc" }}>
-      <div className={cn("flex justify-center gap-1.5 mt-2", "md:gap-4")}>
+    <IconContext.Provider value={{ size: "2rem", color: "#9A37B2" }}>
+      <div
+        className={cn(
+          "flex justify-center gap-1.5 mt-2 scale-75 md:scale-100 md:gap-4",
+        )}
+      >
         {socials.map((social) => (
           <a
             href={social.url}

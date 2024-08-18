@@ -9,7 +9,8 @@ import {
   useCardGame,
   isProjectCardInfo,
 } from "../hooks/useCardGame.ts";
-import { clsx } from "clsx";
+import { cn } from "@/utils.ts";
+import { BorderLight } from "@/components/ui/border-light.tsx";
 
 export const GameCard = (
   props: React.PropsWithoutRef<{ card: GameCardInfo; position: number }>,
@@ -24,52 +25,66 @@ export const GameCard = (
 
   return (
     <div
-      className={clsx("game-card", props.card.state)}
+      className={cn(
+        "game-card",
+        "relative w-[calc(630px/3)] h-[calc(880px/3)]",
+        "transition-transform hover:-translate-y-14",
+        "-mx-3.5 z-10 hover:z-20 cursor-pointer select-none",
+        props.card.state,
+      )}
       onClick={() => {
         if (!isAnyCardAnimated) play(props.card);
       }}
       style={{
         marginBottom: `${20 - Math.abs(positionFromCenter) * 5}px`, // temporaire, peut causer des problèmes
         rotate: `${positionFromCenter * 2}deg`,
+        transitionDuration: "0.3s",
+        transitionTimingFunction: "ease-in-out",
       }}
     >
       <Tilt
-        className="card without-shadow"
+        className={cn(
+          "group/game-card transition-shadow duration-200 ease-in-out",
+          "shadow-primary hover:shadow-glow-20",
+          "flex flex-col w-full h-full rounded-md",
+          "rounded-md *:shrink-0",
+          { "bg-card": props.card.effect.type === "support" },
+        )}
         options={{ reverse: true, max: 30, scale: "1.1", perspective: 1000 }}
         style={{
-          width: "100%",
-          height: "100%",
-          padding: 0,
-          display: "flex",
-          flexDirection: "column",
           transformStyle: "preserve-3d",
         }}
       >
         <div
-          className="title"
+          className={cn(
+            "flex justify-between items-center px-5 h-10 rounded-t-md",
+            {
+              "bg-primary": props.card.effect.type === "action",
+              "bg-secondary/50": props.card.effect.type === "support",
+            },
+          )}
           style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            padding: "0 20px",
-            height: "40px",
-            transform: "translateZ(20px) perspective(1000px)",
+            transformStyle: "preserve-3d",
           }}
         >
           <h2
+            className={cn("whitespace-nowrap overflow-hidden text-ellipsis", {
+              "text-sm": props.card.name.length > 20,
+            })}
             style={{
-              margin: 0,
-              padding: 0,
-              fontSize: props.card.name.length <= 20 ? "18px" : "16px",
-              whiteSpace: "nowrap",
-              // add ... if the name is too long
-              overflow: "hidden",
-              textOverflow: "ellipsis",
+              transform: "translateZ(5px)",
             }}
           >
             {props.card.name}
           </h2>
-          <div className="cost">{props.card.effect.cost}</div>
+          <div
+            className="font-changa"
+            style={{
+              transform: "translateZ(5px)",
+            }}
+          >
+            {props.card.effect.cost}
+          </div>
         </div>
 
         {isProjectCardInfo(props.card) ? (
@@ -78,20 +93,27 @@ export const GameCard = (
           <GameCardTechno card={props.card} />
         )}
 
-        <p
-          style={{
-            padding: 0,
-            margin: "10px 15px",
-            textAlign: "center",
-            flexShrink: 0,
-            transform: "translateZ(20px)",
-          }}
+        <div
+          className="bg-card flex-grow rounded-b-md"
+          style={{ transformStyle: "preserve-3d" }}
         >
-          {props.card.effect.description}
-        </p>
+          <p
+            className="py-[10px] px-[15px] text-center"
+            style={{
+              transform: "translateZ(10px)",
+            }}
+          >
+            {props.card.effect.description}
+          </p>
+        </div>
 
-        <div className="light" />
-        <div className="light opposed" />
+        <BorderLight groupName="game-card" appearOnHover disappearOnCorners />
+        <BorderLight
+          groupName="game-card"
+          appearOnHover
+          disappearOnCorners
+          opposed
+        />
       </Tilt>
     </div>
   );
@@ -101,54 +123,62 @@ const GameCardProject = (
   props: React.PropsWithoutRef<{ card: ProjectCardInfo }>,
 ) => {
   return (
-    <>
+    <div
+      className="group/image"
+      style={{
+        transformStyle: "preserve-3d",
+      }}
+    >
       <div
-        className="inset-shadow"
+        className={cn(
+          "inset-shadow",
+          "relative flex justify-center items-center",
+        )}
         style={{
-          position: "relative",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
+          transformStyle: "preserve-3d",
         }}
       >
         <img
           src={props.card.image}
           alt={`Illustration du projet "${props.card.name}"`}
+          className="block"
           style={{
             width: "100%",
             aspectRatio: "16/9",
             objectFit: "cover",
-            transform: "translateZ(-20px)",
+            transform: "translateZ(-15px)",
           }}
         />
+      </div>
 
-        <div
+      <div
+        className="transition-opacity duration-500 group-hover/image:opacity-0"
+        style={{
+          position: "absolute",
+          width: "100%",
+          height: "33%",
+          bottom: 0,
+          // backgroundImage:
+          //   "linear-gradient(transparent, hsla(var(--background)))",
+          backgroundColor: "hsla(var(--background) / 0.5)",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          transform: "translateZ(-5px)",
+        }}
+      >
+        <p
           style={{
-            position: "absolute",
-            width: "100%",
-            height: "33%",
-            bottom: 0,
-            // backgroundImage:
-            //   "linear-gradient(transparent, hsla(var(--background)))",
-            backgroundColor: "hsla(var(--background) / 0.5)",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
+            fontSize: "12px",
+            textAlign: "center",
+            margin: 0,
+            padding: 0,
           }}
         >
-          <p
-            style={{
-              fontSize: "12px",
-              textAlign: "center",
-              margin: 0,
-              padding: 0,
-            }}
-          >
-            "{props.card.description}"
-          </p>
-        </div>
+          "{props.card.description}"
+        </p>
       </div>
-    </>
+    </div>
   );
 };
 

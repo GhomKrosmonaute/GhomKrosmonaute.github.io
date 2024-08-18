@@ -19,7 +19,6 @@ export default function App() {
   const toggleDarkMode = useDarkMode();
   const largeScreen = useMediaQuery("(width >= 768px) and (height >= 768px)");
   const largeWidth = useMediaQuery("(width >= 768px)");
-  const veryLargeWidth = useMediaQuery("(width >= 2000px)");
   const { modal, setModal } = useModal();
 
   return (
@@ -28,12 +27,7 @@ export default function App() {
         <React.Suspense>
           <Spline
             scene="https://prod.spline.design/jotuSLcx9NOHdvVx/scene.splinecode"
-            style={{
-              top: "50vh",
-              left: veryLargeWidth ? "30vw" : "50vw",
-              position: "fixed",
-              transform: "translate(-50%, -50%)",
-            }}
+            className="fixed top-[50svh] left-[50vw] 2xl:left-[30vw] -translate-x-1/2 -translate-y-1/2"
           />
         </React.Suspense>
       )}
