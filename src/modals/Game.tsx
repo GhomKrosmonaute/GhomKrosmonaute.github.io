@@ -9,6 +9,7 @@ export const Game = (props: React.PropsWithChildren<{ show?: boolean }>) => {
     <>
       <div
         style={{
+          pointerEvents: "none",
           position: "absolute",
           fontSize: "24px",
           fontFamily: "monospace",

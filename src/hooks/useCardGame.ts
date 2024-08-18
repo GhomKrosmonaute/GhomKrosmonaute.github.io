@@ -286,6 +286,9 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
     };
 
     const thread2 = async () => {
+      // si il ne s'agit que de pioche une carte, on attend avant de piocher
+      if (/^await state.draw(.*?)$/.test(card.effect.onPlayed)) await wait();
+
       // on applique l'effet de la carte (toujours via eval)
       await eval(`(async () => { ${card.effect.onPlayed} })()`);
     };
