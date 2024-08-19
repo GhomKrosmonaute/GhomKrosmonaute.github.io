@@ -54,19 +54,26 @@ export default function App() {
 
   return (
     <>
-      {largeWidth && desktop && (
-        <React.Suspense
-          fallback={
-            <img
-              src="images/spline-placeholder.png"
-              alt="Image stylisée d'un Mac book pro"
-              className="fixed top-[50svh] left-[50vw] 2xl:left-[30vw] -translate-x-1/2 -translate-y-1/2"
-            />
-          }
-        >
-          <SplineMacbook />
-        </React.Suspense>
-      )}
+      {largeWidth &&
+        (desktop ? (
+          <React.Suspense
+            fallback={
+              <img
+                src="images/spline-placeholder.png"
+                alt="Image stylisée d'un Mac book pro"
+                className="fixed top-[50svh] left-[50vw] 2xl:left-[30vw] -translate-x-1/2 -translate-y-1/2"
+              />
+            }
+          >
+            <SplineMacbook />
+          </React.Suspense>
+        ) : (
+          <img
+            src="images/spline-placeholder.png"
+            alt="Image stylisée d'un Mac book pro"
+            className="fixed top-[50svh] left-[50vw] 2xl:left-[30vw] -translate-x-1/2 -translate-y-1/2"
+          />
+        ))}
 
       <Button
         onClick={toggleDarkMode}
