@@ -1,4 +1,5 @@
 import React from "react";
+import DeviceDetector from "device-detector-js";
 
 import { Button } from "@/components/ui/button.tsx";
 
@@ -27,6 +28,23 @@ export default function App() {
   const largeScreen = useMediaQuery("(width >= 768px) and (height >= 768px)");
   const largeWidth = useMediaQuery("(width >= 768px)");
   const { modal, setModal } = useModal();
+  const [desktop, setDesktop] = React.useState(false);
+
+  React.useEffect(() => {
+    const deviceDetector = new DeviceDetector();
+    const userAgent = navigator.userAgent;
+    const device = deviceDetector.parse(userAgent);
+
+    if (device.device) {
+      switch (device.device.type) {
+        case "desktop":
+        case "television":
+        case "smart display":
+          setDesktop(true);
+          break;
+      }
+    }
+  }, []);
 
   React.useEffect(() => {
     if (modal === "game" && !largeScreen) {
@@ -36,7 +54,7 @@ export default function App() {
 
   return (
     <>
-      {largeWidth && (
+      {largeWidth && desktop && (
         <React.Suspense
           fallback={
             <img
