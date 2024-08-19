@@ -9,11 +9,18 @@ import { useModal } from "@/hooks/useModal.ts";
 import { Home } from "./modals/Home.tsx";
 import { Tarifs } from "./modals/Tarifs.tsx";
 import { Contact } from "./modals/Contact.tsx";
-import { Game } from "./modals/Game.tsx";
 
-import themeIcon from "./assets/theme.svg";
+import Theme from "@/assets/icons/theme.svg";
 
-const Spline = React.lazy(() => import("@splinetool/react-spline"));
+const SplineMacbook = React.lazy(() =>
+  import("@/components/ui/spline-macbook.tsx").then((mod) => ({
+    default: mod.SplineMacbook,
+  })),
+);
+
+const Game = React.lazy(() =>
+  import("./modals/Game.tsx").then((mod) => ({ default: mod.Game })),
+);
 
 export default function App() {
   const toggleDarkMode = useDarkMode();
@@ -30,11 +37,16 @@ export default function App() {
   return (
     <>
       {largeWidth && (
-        <React.Suspense>
-          <Spline
-            scene="https://prod.spline.design/jotuSLcx9NOHdvVx/scene.splinecode"
-            className="fixed top-[50svh] left-[50vw] 2xl:left-[30vw] -translate-x-1/2 -translate-y-1/2"
-          />
+        <React.Suspense
+          fallback={
+            <img
+              src="images/spline-placeholder.png"
+              alt="Image stylisée d'un Mac book pro"
+              className="fixed top-[50svh] left-[50vw] 2xl:left-[30vw] -translate-x-1/2 -translate-y-1/2"
+            />
+          }
+        >
+          <SplineMacbook />
         </React.Suspense>
       )}
 
@@ -42,15 +54,19 @@ export default function App() {
         onClick={toggleDarkMode}
         variant="icon"
         size="icon"
-        className="reverse fixed m-4 right-0 top-0"
+        className="fixed m-4 right-0 top-0 z-50"
       >
-        <img src={themeIcon} alt="theme icon" className="w-5 h-5" />
+        <Theme />
       </Button>
 
       {(!modal || modal === "game") && <Home />}
       {modal === "contact" && <Contact />}
       {modal === "tarifs" && <Tarifs />}
-      {largeScreen && <Game show={modal === "game"} />}
+      {largeScreen && (
+        <React.Suspense fallback="Loading...">
+          <Game show={modal === "game"} />
+        </React.Suspense>
+      )}
 
       {modal && !largeScreen && (
         <Button

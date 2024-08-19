@@ -1,6 +1,8 @@
 import { useModal } from "../hooks/useModal.ts";
 import { Card } from "../components/Card.tsx";
-import { IoMail, IoLogoLinkedin } from "react-icons/io5";
+
+import Email from "@/assets/icons/social/email.svg";
+import LinkedIn from "@/assets/icons/social/linkedin.svg";
 
 export const Contact = () => {
   const { setModal } = useModal();
@@ -11,8 +13,9 @@ export const Contact = () => {
         <h1 className="text-3xl">Contact</h1>
         <div className="flex flex-col gap-2">
           <a href="mailto: camille.abella@proton.me" target="_blank">
-            <code className="flex items-center gap-4">
-              <IoMail />
+            <code className="flex items-center gap-4 h-min">
+              {/* @ts-expect-error It's OK */}
+              <Email className="w-5" />
               camille.abella@proton.me
             </code>
           </a>
@@ -21,7 +24,8 @@ export const Contact = () => {
             target="_blank"
           >
             <code className="flex items-center gap-4">
-              <IoLogoLinkedin />
+              {/* @ts-expect-error It's OK */}
+              <LinkedIn className="w-5" />
               LinkedIn: Camille ABELLA
             </code>
           </a>

@@ -1,10 +1,10 @@
 import React from "react";
-import cross from "../assets/cross.svg";
+import Cross from "@/assets/icons/cross.svg";
 
+import { cn } from "@/utils.ts";
 import { useMediaQuery } from "usehooks-ts";
 import { Button } from "@/components/ui/button.tsx";
 import { BorderLight } from "@/components/ui/border-light.tsx";
-import { cn } from "@/utils.ts";
 
 export const Card = (
   props: React.PropsWithChildren<{
@@ -37,7 +37,7 @@ export const Card = (
             "md:shadow-spotlight md:transition md:ease-in-out md:duration-500",
             "md:hover:shadow-glow-150 md:hover:shadow-primary md:hover:border-b-primary md:hover:backdrop-blur-md",
             // set inclination
-            "mdh:hover:transform mdh:rotate-2 mdh:hover:rotate-0 mdh:hover:scale-105",
+            "md:mdh:hover:transform md:mdh:rotate-2 md:mdh:hover:rotate-0 md:mdh:hover:scale-105",
           )}
           style={{
             scrollbarWidth: "none",
@@ -49,16 +49,27 @@ export const Card = (
               className="reverse absolute top-0 right-0 m-4"
               variant="icon"
               size="sm"
+              autoFocus
+              onKeyDown={(e) => e.key === "Escape" && props.onClose?.()}
               onClick={props.onClose}
             >
-              <img src={cross} alt="back" />
+              <Cross />
             </Button>
           )}
 
           {props.children}
 
-          <BorderLight groupName="card" appearOnHover />
-          <BorderLight groupName="card" appearOnHover opposed />
+          <BorderLight
+            className="hidden md:mdh:block"
+            groupName="card"
+            appearOnHover
+          />
+          <BorderLight
+            className="hidden md:mdh:block"
+            groupName="card"
+            appearOnHover
+            opposed
+          />
         </div>
       </div>
     </>

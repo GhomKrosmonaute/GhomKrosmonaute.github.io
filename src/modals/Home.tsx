@@ -24,12 +24,21 @@ export const Home = () => {
 
       <div className="flex justify-center mt-6 w-full gap-8 md:gap-5">
         {largeScreen && (
-          <Button onClick={() => setModal(modal === "game" ? false : "game")}>
+          <Button
+            autoFocus={modal === "game"}
+            onClick={() => setModal(modal === "game" ? false : "game")}
+            onKeyDown={(e) => e.key === "Escape" && setModal(false)}
+          >
             {modal === "game" ? "Stop" : "Jouer"}
           </Button>
         )}
         <Button onClick={() => setModal("tarifs")}>Tarifs</Button>
-        <Button onClick={() => setModal("contact")} variant="cta" size="cta">
+        <Button
+          onClick={() => setModal("contact")}
+          variant="cta"
+          size="cta"
+          autoFocus={modal !== "game"}
+        >
           Contact
         </Button>
       </div>

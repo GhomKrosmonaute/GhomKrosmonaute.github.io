@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { useDebounceCallback } from "usehooks-ts";
+import { useHover } from "usehooks-ts";
 import { cn } from "@/utils.ts";
 
 interface TiltProps {
@@ -25,35 +25,40 @@ export const Tilt: React.FC<TiltProps> = ({
   children,
   style,
 }) => {
-  const [styleState, setStyle] = useState<React.CSSProperties>({});
   const containerRef = useRef<HTMLDivElement>(null);
+  const isHovered = useHover(containerRef);
+  const [styleState, setStyle] = useState<React.CSSProperties>({});
 
-  const handleMouseMove = useDebounceCallback((e: MouseEvent) => {
-    if (containerRef.current) {
-      const rect = containerRef.current.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      const centerX = rect.width / 2;
-      const centerY = rect.height / 2;
+  const handleMouseMove = useCallback(
+    (e: MouseEvent) => {
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
 
-      const rotateX = ((y - centerY) / centerY) * max;
-      const rotateY = ((x - centerX) / centerX) * max;
+        const rotateX = ((y - centerY) / centerY) * max;
+        const rotateY = ((x - centerX) / centerX) * max;
 
-      setStyle({
-        ...constantStyle,
-        transform: `
+        setStyle({
+          ...constantStyle,
+          transform: `
             perspective(${perspective}px)
             rotateX(${reverse ? rotateX : -rotateX}deg)
             rotateY(${reverse ? -rotateY : rotateY}deg)
             scale(${scale})
           `,
-      });
-    }
-  }, 10);
+        });
+      }
+    },
+    [max, perspective, reverse, scale],
+  );
 
   const handleMouseLeave = useCallback(() => {
     setStyle({
       ...constantStyle,
+      transition: "transform 0.5s ease-in-out",
       transform: `scale(1)`,
     });
   }, []);
@@ -61,9 +66,13 @@ export const Tilt: React.FC<TiltProps> = ({
   useEffect(() => {
     const container = containerRef.current;
 
-    if (container) {
-      container.addEventListener("mousemove", handleMouseMove);
-      container.addEventListener("mouseleave", handleMouseLeave);
+    if (isHovered) {
+      if (container) {
+        container.addEventListener("mousemove", handleMouseMove);
+        container.addEventListener("mouseleave", handleMouseLeave);
+      }
+    } else {
+      handleMouseLeave();
     }
 
     return () => {
@@ -71,8 +80,10 @@ export const Tilt: React.FC<TiltProps> = ({
         container.removeEventListener("mousemove", handleMouseMove);
         container.removeEventListener("mouseleave", handleMouseLeave);
       }
+
+      handleMouseLeave();
     };
-  }, [max, reverse, scale, perspective]);
+  }, [max, reverse, scale, perspective, isHovered]);
 
   return (
     <div

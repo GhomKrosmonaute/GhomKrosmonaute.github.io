@@ -1,5 +1,7 @@
 import React from "react";
 
+import Energy from "@/assets/icons/energy.svg";
+
 import {
   GameCardInfo,
   ProjectCardInfo,
@@ -56,36 +58,51 @@ export const GameCard = (
         )}
       >
         <div
-          className={cn(
-            "flex justify-between items-center px-5 h-10 rounded-t-md",
-            {
-              "bg-primary": props.card.effect.type === "action",
-              "bg-secondary/50": props.card.effect.type === "support",
-            },
-          )}
+          className={cn("flex justify-start items-center h-10 rounded-t-md", {
+            "bg-primary": props.card.effect.type === "action",
+            "bg-secondary/50": props.card.effect.type === "support",
+          })}
           style={{
             transformStyle: "preserve-3d",
           }}
         >
+          <div
+            className="font-changa shrink-0 relative"
+            style={{
+              transform: "translateZ(5px) translateX(-15px)",
+              transformStyle: "preserve-3d",
+            }}
+          >
+            <Energy
+              // @ts-expect-error - SVG attributes are not typed
+              className="w-16 h-16 text-background/75"
+              style={{
+                transform: "translateZ(5px) scale(0.7)",
+              }}
+            />
+            <div
+              className="absolute top-1/2 left-1/2 font-bold text-2xl"
+              style={{
+                transform: "translateZ(10px) translate(-50%, -45%)",
+              }}
+            >
+              {props.card.effect.cost}
+            </div>
+          </div>
           <h2
-            className={cn("whitespace-nowrap overflow-hidden text-ellipsis", {
-              "text-sm": props.card.name.length > 20,
-              "text-primary-foreground": props.card.effect.type === "action",
-            })}
+            className={cn(
+              "whitespace-nowrap overflow-hidden text-ellipsis shrink-0 flex-grow",
+              {
+                "text-sm": props.card.name.length > 20,
+                "text-primary-foreground": props.card.effect.type === "action",
+              },
+            )}
             style={{
               transform: "translateZ(5px)",
             }}
           >
             {props.card.name}
           </h2>
-          <div
-            className="font-changa"
-            style={{
-              transform: "translateZ(5px)",
-            }}
-          >
-            {props.card.effect.cost}
-          </div>
         </div>
 
         {isProjectCardInfo(props.card) ? (
@@ -140,7 +157,7 @@ const GameCardProject = (
         }}
       >
         <img
-          src={props.card.image}
+          src={`images/projects/${props.card.image}`}
           alt={`Illustration du projet "${props.card.name}"`}
           className="w-full aspect-video object-cover"
           style={{
@@ -179,7 +196,7 @@ const GameCardTechno = (
         }}
       >
         <img
-          src={props.card.logo}
+          src={`images/techno/${props.card.logo}`}
           alt={`Logo de la techno "${props.card.name}"`}
           className={cn("w-2/3 object-contain aspect-square", {
             "group-hover/game-card:animate-spin-forward": spinners.includes(

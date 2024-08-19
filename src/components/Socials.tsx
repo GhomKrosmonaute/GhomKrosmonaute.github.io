@@ -1,51 +1,50 @@
 import React from "react";
 import socials from "../data/socials.json";
-import { IconContext } from "react-icons";
-import {
-  IoLogoLinkedin,
-  IoLogoDiscord,
-  IoLogoTwitter,
-  IoLogoGithub,
-  IoLogoInstagram,
-  IoLogoFacebook,
-} from "react-icons/io5";
-import { SiMalt } from "react-icons/si";
 import { cn } from "@/utils.ts";
 
+import Discord from "@/assets/icons/social/discord.svg";
+import Linkedin from "@/assets/icons/social/linkedin.svg";
+import Facebook from "@/assets/icons/social/facebook.svg";
+import Github from "@/assets/icons/social/github.svg";
+import Twitter from "@/assets/icons/social/twitter.svg";
+import Instagram from "@/assets/icons/social/instagram.svg";
+
 const icons = {
-  IoLogoDiscord,
-  IoLogoTwitter,
-  IoLogoGithub,
-  IoLogoLinkedin,
-  IoLogoInstagram,
-  IoLogoFacebook,
-  SiMalt,
-};
+  // @ts-expect-error it's fine
+  discord: <Discord className="text-[#9A37B2]" />,
+  // @ts-expect-error it's fine
+  linkedin: <Linkedin className="text-[#9A37B2]" />,
+  // @ts-expect-error it's fine
+  facebook: <Facebook className="text-[#9A37B2]" />,
+  // @ts-expect-error it's fine
+  github: <Github className="text-[#9A37B2]" />,
+  // @ts-expect-error it's fine
+  twitter: <Twitter className="text-[#9A37B2]" />,
+  // @ts-expect-error it's fine
+  instagram: <Instagram className="text-[#9A37B2]" />,
+} as Record<string, React.ReactElement>;
 
 export const Socials = () => {
   return (
-    <IconContext.Provider value={{ size: "2rem", color: "#9A37B2" }}>
-      <div
-        className={cn(
-          "flex justify-center gap-1.5 mt-2 scale-75 md:scale-100 md:gap-4",
-        )}
-      >
-        {socials.map((social) => (
-          <a
-            href={social.url}
-            target="_blank"
-            className={cn(
-              "inline-block mx-2 transition-all",
-              "md:hover:scale-150 md:hover:rotate-[360deg]",
-            )}
-            key={social.name}
-            title={`${social.name}: ${social.username}`}
-          >
-            {/* @ts-expect-error it's ok */}
-            {React.createElement(icons[social.icon])}
-          </a>
-        ))}
-      </div>
-    </IconContext.Provider>
+    <div
+      className={cn(
+        "grid grid-cols-6 mx-auto md:scale-100 max-w-sm md:max-w-sm",
+      )}
+    >
+      {socials.map((social) => (
+        <a
+          href={social.url}
+          target="_blank"
+          className={cn(
+            "flex justify-center items-center p-3 mx-2 transition-all",
+            "md:hover:scale-150 md:hover:rotate-[360deg]",
+          )}
+          key={social.name}
+          title={`${social.name}: ${social.username}`}
+        >
+          {icons[social.icon]}
+        </a>
+      ))}
+    </div>
   );
 };

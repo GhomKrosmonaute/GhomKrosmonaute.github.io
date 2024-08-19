@@ -2,9 +2,6 @@
 
 @import "core/reset.css";
 
-@import "components/button.css";
-@import "components/spline.css";
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

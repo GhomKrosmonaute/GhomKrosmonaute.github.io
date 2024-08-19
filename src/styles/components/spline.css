@@ -1,9 +1,0 @@
-#spline-viewer {
-  display: none;
-}
-
-@media (width >= 768px) {
-  #spline-viewer {
-    display: block;
-  }
-}
