@@ -22,7 +22,7 @@ export const Home = () => {
       <Socials />
       <Slogan />
 
-      <div className="flex justify-center mt-6 w-full gap-8 md:gap-5">
+      <div className="flex justify-center mt-6 w-full gap-8 md:gap-5 flex-wrap">
         {largeScreen && (
           <Button
             autoFocus={modal === "game"}

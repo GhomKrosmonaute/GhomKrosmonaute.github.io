@@ -36,7 +36,7 @@ export const Socials = () => {
           href={social.url}
           target="_blank"
           className={cn(
-            "flex justify-center items-center p-3 mx-2 transition-all",
+            "flex justify-center items-center p-2 md:p-4 transition-all",
             "md:hover:scale-150 md:hover:rotate-[360deg]",
           )}
           key={social.name}
