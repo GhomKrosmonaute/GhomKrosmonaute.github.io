@@ -20,7 +20,14 @@ export const Game = (props: React.PropsWithChildren<{ show?: boolean }>) => {
 
   return (
     <>
-      <HUD />
+      <div
+        className={cn(
+          "absolute w-full transition-[left] ease-in-out duration-500 pointer-events-none",
+          props.show ? "left-0" : "-left-full",
+        )}
+      >
+        <HUD />
+      </div>
       <div
         className={cn(
           "absolute flex items-center -translate-x-1/2",

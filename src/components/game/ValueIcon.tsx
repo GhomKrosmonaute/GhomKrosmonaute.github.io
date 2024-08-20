@@ -5,6 +5,8 @@ export const ValueIcon = (props: {
   value: number;
   name: string;
   image: string;
+  iconScale?: number | string;
+  textColor?: string;
   className?: string;
   style?: React.CSSProperties;
 }) => {
@@ -14,9 +16,14 @@ export const ValueIcon = (props: {
         src={props.image}
         alt={`${props.name} background image`}
         title={props.name}
+        className="pointer-events-auto"
+        style={{ scale: props.iconScale }}
       />
       <div
-        className="absolute top-1/2 left-1/2 font-bold text-3xl text-white pointer-events-none"
+        className={cn(
+          "absolute top-1/2 left-1/2 font-bold text-3xl text-white pointer-events-none",
+          props.textColor,
+        )}
         style={{
           transform: "translateZ(5px) translate(-50%, -45%)",
         }}

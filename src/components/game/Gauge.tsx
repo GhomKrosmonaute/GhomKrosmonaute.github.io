@@ -7,16 +7,22 @@ export const Gauge = (props: {
   className?: string;
   value: number;
   max: number;
+  iconScale?: number | string;
+  textColor?: string;
+  barColor?: string;
 }) => {
   return (
-    <div className="flex items-center">
+    <div className="flex items-center h-12">
       <ValueIcon
         name={props.name}
         image={props.image}
         value={props.value}
-        className="translate-x-1/2 z-50"
+        iconScale={props.iconScale}
+        textColor={props.textColor}
+        className="absolute -translate-x-1/2 z-50"
       />
       <Progress
+        barColor={props.barColor}
         className={props.className}
         value={(props.value / props.max) * 100}
       />
