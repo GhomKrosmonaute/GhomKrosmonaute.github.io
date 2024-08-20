@@ -1,11 +1,11 @@
-import React from "react";
+import React, { useMemo } from "react";
 import DeviceDetector from "device-detector-js";
+import { RouterProvider, createBrowserRouter } from "react-router-dom";
 
 import { Button } from "@/components/ui/button.tsx";
 
 import { useMediaQuery } from "usehooks-ts";
 import { useDarkMode } from "@/hooks/useDarkMode.ts";
-import { useModal } from "@/hooks/useModal.ts";
 
 import { Home } from "./modals/Home.tsx";
 import { Tarifs } from "./modals/Tarifs.tsx";
@@ -27,7 +27,6 @@ export default function App() {
   const toggleDarkMode = useDarkMode();
   const largeScreen = useMediaQuery("(width >= 768px) and (height >= 768px)");
   const largeWidth = useMediaQuery("(width >= 768px)");
-  const { modal, setModal } = useModal();
   const [desktop, setDesktop] = React.useState(false);
 
   React.useEffect(() => {
@@ -46,11 +45,50 @@ export default function App() {
     }
   }, []);
 
-  React.useEffect(() => {
-    if (modal === "game" && !largeScreen) {
-      setModal(false);
-    }
-  }, [modal, largeScreen]);
+  const router = useMemo(
+    () =>
+      createBrowserRouter(
+        [
+          {
+            path: "/",
+            element: (
+              <>
+                <Home />
+                {largeScreen && (
+                  <React.Suspense fallback="Loading...">
+                    <Game show={false} />
+                  </React.Suspense>
+                )}
+              </>
+            ),
+          },
+          {
+            path: "/contact",
+            element: <Contact />,
+          },
+          {
+            path: "/pricing",
+            element: <Tarifs />,
+          },
+          largeScreen
+            ? {
+                path: "/card-game",
+                element: (
+                  <>
+                    <Home inGame />
+                    {largeScreen && (
+                      <React.Suspense fallback="Loading...">
+                        <Game show={true} />
+                      </React.Suspense>
+                    )}
+                  </>
+                ),
+              }
+            : null,
+        ].filter((route) => !!route),
+      ),
+    [largeScreen],
+  );
 
   return (
     <>
@@ -84,20 +122,15 @@ export default function App() {
         <Theme />
       </Button>
 
-      {(!modal || modal === "game") && <Home />}
-      {modal === "contact" && <Contact />}
-      {modal === "tarifs" && <Tarifs />}
-      {largeScreen && (
-        <React.Suspense fallback="Loading...">
-          <Game show={modal === "game"} />
-        </React.Suspense>
-      )}
+      <RouterProvider router={router} />
 
-      {modal && !largeScreen && (
+      {window.location.pathname !== "/" && !largeScreen && (
         <Button
           variant="opaque"
           className="fixed m-4 right-0 bottom-0"
-          onClick={() => setModal(false)}
+          onClick={() => {
+            window.location.pathname = "/";
+          }}
         >
           {/*<img src={cross} alt="back" />*/}
           Retour

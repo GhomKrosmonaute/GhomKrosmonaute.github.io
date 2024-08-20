@@ -57,6 +57,8 @@ export interface ProjectCardInfo {
   image: string;
   description: string;
   effect: Effect;
+  detail?: string;
+  url?: string;
 }
 
 export interface TechnoCardInfo {

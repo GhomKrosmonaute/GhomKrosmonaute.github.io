@@ -72,6 +72,10 @@ module.exports = {
         sm: "calc(var(--radius) - 4px)",
       },
       keyframes: {
+        appear: {
+          from: { opacity: 0 },
+          to: { opacity: 1 },
+        },
         "accordion-down": {
           from: { height: "0" },
           to: { height: "var(--radix-accordion-content-height)" },
@@ -137,6 +141,7 @@ module.exports = {
         "border-light-opposed-fast-disappear":
           "border-light-opposed-disappear 1s infinite linear",
         "spin-forward": "spin 3s linear infinite",
+        appear: "appear 0.5s ease-in-out forwards 1s",
       },
     },
   },

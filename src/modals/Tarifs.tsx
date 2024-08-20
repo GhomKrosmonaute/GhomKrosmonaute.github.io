@@ -1,15 +1,17 @@
-import { useModal } from "../hooks/useModal.ts";
-import { Card } from "../components/Card.tsx";
-import tarifs from "../data/tarifs.json";
+import { useNavigate } from "react-router-dom";
+
+import { Modal } from "@/components/Modal.tsx";
 import { Products } from "../components/Products.tsx";
 import { Hosting } from "../components/Hosting.tsx";
 import { Button } from "@/components/ui/button.tsx";
 
+import tarifs from "../data/tarifs.json";
+
 export const Tarifs = () => {
-  const { setModal } = useModal();
+  const navigate = useNavigate();
 
   return (
-    <Card onClose={() => setModal(false)} big>
+    <Modal modalName="/pricing" big>
       <div className="space-y-4">
         <h1 className="text-center text-4xl">Tarifs</h1>
 
@@ -26,7 +28,7 @@ export const Tarifs = () => {
 
         <div className="flex flex-col items-center gap-4">
           <h2 className="text-2xl">Pour plus d'informations</h2>
-          <Button onClick={() => setModal("contact")} variant="cta" size="cta">
+          <Button onClick={() => navigate("/contact")} variant="cta" size="cta">
             Contactez-moi !
           </Button>
           <p className="italic text-muted-foreground">
@@ -35,6 +37,6 @@ export const Tarifs = () => {
           </p>
         </div>
       </div>
-    </Card>
+    </Modal>
   );
 };

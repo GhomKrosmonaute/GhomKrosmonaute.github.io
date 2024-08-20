@@ -1,21 +1,22 @@
 import { Heading } from "@/components/Heading.tsx";
 import { Socials } from "@/components/Socials.tsx";
-import { Card } from "@/components/Card.tsx";
 import { Slogan } from "@/components/Slogan.tsx";
 import { Button } from "@/components/ui/button.tsx";
 
-import { useModal } from "@/hooks/useModal.ts";
 import { useMediaQuery } from "usehooks-ts";
+import { useNavigate } from "react-router-dom";
+import { Modal } from "@/components/Modal.tsx";
 
-export const Home = () => {
-  const { setModal, modal } = useModal();
+export const Home = (props: { inGame?: boolean }) => {
+  const navigate = useNavigate();
   const largeScreen = useMediaQuery("(width >= 768px) and (height >= 768px)");
 
   return (
-    <Card
+    <Modal
+      modalName="/"
       style={{
         transition: "transform 1s ease-in-out",
-        transform: modal === "game" ? "translate(-50%, -100%)" : undefined,
+        transform: props.inGame ? "translate(-50%, -100%)" : undefined,
       }}
     >
       <Heading />
@@ -25,23 +26,21 @@ export const Home = () => {
       <div className="flex justify-center mt-6 w-full gap-8 md:gap-5 flex-wrap">
         {largeScreen && (
           <Button
-            autoFocus={modal === "game"}
-            onClick={() => setModal(modal === "game" ? false : "game")}
-            onKeyDown={(e) => e.key === "Escape" && setModal(false)}
+            onClick={() =>
+              navigate(props.inGame ? "/" : "/card-game", {
+                replace: true,
+              })
+            }
+            onKeyDown={(e) => e.key === "Escape" && navigate("/")}
           >
-            {modal === "game" ? "Stop" : "Jouer"}
+            {props.inGame ? "Stop" : "Jouer"}
           </Button>
         )}
-        <Button onClick={() => setModal("tarifs")}>Tarifs</Button>
-        <Button
-          onClick={() => setModal("contact")}
-          variant="cta"
-          size="cta"
-          autoFocus={modal !== "game"}
-        >
+        <Button onClick={() => navigate("/pricing")}>Tarifs</Button>
+        <Button onClick={() => navigate("/contact")} variant="cta" size="cta">
           Contact
         </Button>
       </div>
-    </Card>
+    </Modal>
   );
 };

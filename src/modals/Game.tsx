@@ -2,9 +2,17 @@ import React from "react";
 import { GameCard } from "../components/GameCard.tsx";
 import { useCardGame } from "../hooks/useCardGame.ts";
 import { cn } from "@/utils.ts";
+import { useMediaQuery } from "usehooks-ts";
+import { useNavigate } from "react-router-dom";
 
 export const Game = (props: React.PropsWithChildren<{ show?: boolean }>) => {
   const cardGame = useCardGame();
+  const navigate = useNavigate();
+  const largeScreen = useMediaQuery("(width >= 768px) and (height >= 768px)");
+
+  React.useEffect(() => {
+    if (!largeScreen) navigate("/");
+  }, [largeScreen, navigate]);
 
   return (
     <>

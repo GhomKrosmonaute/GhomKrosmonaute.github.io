@@ -1,14 +1,16 @@
-import { useModal } from "../hooks/useModal.ts";
-import { Card } from "../components/Card.tsx";
+import { useNavigate } from "react-router-dom";
+
+import { Button } from "@/components/ui/button.tsx";
+import { Modal } from "@/components/Modal.tsx";
 
 import Email from "@/assets/icons/social/email.svg";
 import LinkedIn from "@/assets/icons/social/linkedin.svg";
 
 export const Contact = () => {
-  const { setModal } = useModal();
+  const navigate = useNavigate();
 
   return (
-    <Card onClose={() => setModal(false)}>
+    <Modal modalName="/contact">
       <div className="space-y-4">
         <h1 className="text-3xl">Contact</h1>
         <div className="flex flex-col gap-2">
@@ -30,7 +32,10 @@ export const Contact = () => {
             </code>
           </a>
         </div>
+        <Button onClick={() => navigate("/pricing")} variant="cta" size="cta">
+          Mes tarifs
+        </Button>
       </div>
-    </Card>
+    </Modal>
   );
 };

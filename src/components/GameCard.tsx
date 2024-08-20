@@ -40,6 +40,14 @@ export const GameCard = (
           play(props.card);
         }
       }}
+      onContextMenu={(e) => {
+        e.preventDefault();
+
+        if (isProjectCardInfo(props.card)) {
+          // open new tab with project url
+          window.open(props.card.url, "_blank");
+        }
+      }}
       style={{
         marginBottom: `${20 - Math.abs(positionFromCenter) * 5}px`, // temporaire, peut causer des problèmes
         rotate: `${positionFromCenter * 2}deg`,
@@ -57,6 +65,17 @@ export const GameCard = (
           { "bg-card": props.card.effect.type === "support" },
         )}
       >
+        {isProjectCardInfo(props.card) && props.card.detail && (
+          <div
+            className={cn(
+              "absolute pointer-events-none left-1/2 -top-[10px] -translate-x-1/2 -translate-y-full rounded-2xl bg-card",
+              "px-5 py-2 opacity-0 group-hover/game-card:animate-appear text-sm w-max max-w-full text-center shadow shadow-primary",
+            )}
+          >
+            {props.card.detail}
+          </div>
+        )}
+
         <div
           className={cn("flex justify-start items-center h-10 rounded-t-md", {
             "bg-primary": props.card.effect.type === "action",
