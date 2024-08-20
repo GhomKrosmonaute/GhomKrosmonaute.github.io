@@ -24,7 +24,7 @@ const Game = React.lazy(() =>
 );
 
 const Music = React.lazy(() =>
-  import("@/components/Music.tsx").then((mod) => ({ default: mod.Music })),
+  import("@/components/game/Music.tsx").then((mod) => ({ default: mod.Music })),
 );
 
 export default function App() {

@@ -15,6 +15,7 @@
     "share": "cloudflared tunnel --url http://localhost:5173/portfolio-libless/"
   },
   "dependencies": {
+    "@radix-ui/react-progress": "^1.1.0",
     "@radix-ui/react-slot": "^1.1.0",
     "@splinetool/react-spline": "^4.0.0",
     "@splinetool/runtime": "^1.9.6",

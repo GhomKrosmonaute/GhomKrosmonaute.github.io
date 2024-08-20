@@ -1,19 +1,18 @@
 import React from "react";
 
-import Energy from "@/assets/icons/energy.svg";
-
 import {
   GameCardInfo,
   ProjectCardInfo,
   TechnoCardInfo,
   useCardGame,
   isProjectCardInfo,
-} from "../hooks/useCardGame.ts";
+} from "../../hooks/useCardGame.ts";
 import { cn } from "@/utils.ts";
 import { Tilt } from "./Tilt.tsx";
 import { BorderLight } from "@/components/ui/border-light.tsx";
 
 import "./GameCard.css";
+import { ValueIcon } from "@/components/game/ValueIcon.tsx";
 
 export const GameCard = (
   props: React.PropsWithoutRef<{ card: GameCardInfo; position: number }>,
@@ -43,7 +42,7 @@ export const GameCard = (
       onContextMenu={(e) => {
         e.preventDefault();
 
-        if (isProjectCardInfo(props.card)) {
+        if (isProjectCardInfo(props.card) && props.card.url) {
           // open new tab with project url
           window.open(props.card.url, "_blank");
         }
@@ -92,21 +91,15 @@ export const GameCard = (
               transformStyle: "preserve-3d",
             }}
           >
-            <Energy
-              // @ts-expect-error - SVG attributes are not typed
-              className="w-16 h-16 text-background/75"
+            <ValueIcon
+              name="Energie / Points d'action"
+              image="images/energy-background.png"
+              value={props.card.effect.cost}
               style={{
-                transform: "translateZ(5px) scale(0.7)",
+                transform: "translateZ(5px)",
+                transformStyle: "preserve-3d",
               }}
             />
-            <div
-              className="absolute top-1/2 left-1/2 font-bold text-2xl"
-              style={{
-                transform: "translateZ(10px) translate(-50%, -45%)",
-              }}
-            >
-              {props.card.effect.cost}
-            </div>
           </div>
           <h2
             className={cn(
