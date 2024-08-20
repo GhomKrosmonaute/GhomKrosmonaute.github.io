@@ -1,6 +1,12 @@
 import { Howl } from "howler";
 
 export const bank = {
+  music: new Howl({
+    src: ["sounds/music.mp3"],
+    volume: 0.7,
+    loop: true,
+    preload: true,
+  }),
   unauthorized: new Howl({
     src: ["sounds/unauthorized.mp3"],
     volume: 0.4,

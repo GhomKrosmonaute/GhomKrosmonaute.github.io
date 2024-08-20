@@ -23,6 +23,10 @@ const Game = React.lazy(() =>
   import("./modals/Game.tsx").then((mod) => ({ default: mod.Game })),
 );
 
+const Music = React.lazy(() =>
+  import("@/components/Music.tsx").then((mod) => ({ default: mod.Music })),
+);
+
 export default function App() {
   const toggleDarkMode = useDarkMode();
   const largeScreen = useMediaQuery("(width >= 768px) and (height >= 768px)");
@@ -79,6 +83,7 @@ export default function App() {
                     {largeScreen && (
                       <React.Suspense fallback="Loading...">
                         <Game show={true} />
+                        <Music />
                       </React.Suspense>
                     )}
                   </>
