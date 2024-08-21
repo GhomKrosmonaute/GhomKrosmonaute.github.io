@@ -103,8 +103,6 @@ export const HUD = () => {
                     "Vous avez utilisé toute votre jauge de réputation...",
                   mill: "Vous n'avez plus de carte...",
                   "soft-lock": "Votre main est injouable...",
-                  "missing-resource":
-                    "Vous n'avez plus assez de resource pour jouer vos cartes...",
                 }[game.reason]
               }
             </p>

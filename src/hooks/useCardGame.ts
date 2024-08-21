@@ -198,7 +198,7 @@ function generateInitialState(): Omit<
 }
 
 interface CardGameState {
-  reason: "mill" | "soft-lock" | "reputation" | "missing-resource" | null;
+  reason: "mill" | "soft-lock" | "reputation" | null;
   isWon: boolean;
   isGameOver: boolean;
   deck: GameCardInfo[];
@@ -623,25 +623,19 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
 
     const isMill = state.deck.length === 0 && state.hand.length === 0;
     const isSoftLocked = state.hand.every(
-      (c) => c.effect.condition && !eval(c.effect.condition),
-    );
-    const resourceLess = state.hand.every(
       (c) =>
+        (c.effect.condition && !eval(c.effect.condition)) ||
         (typeof c.effect.cost === "number" &&
           c.effect.cost > state.energy + state.reputation) ||
         (typeof c.effect.cost === "string" &&
           Number(c.effect.cost) > state.money),
     );
 
-    if (isMill || isSoftLocked || resourceLess) {
+    if (isMill || isSoftLocked) {
       set({
         isGameOver: true,
         isWon: false,
-        reason: isMill
-          ? "mill"
-          : isSoftLocked
-            ? "soft-lock"
-            : "missing-resource",
+        reason: isMill ? "mill" : "soft-lock",
       });
     }
   },
