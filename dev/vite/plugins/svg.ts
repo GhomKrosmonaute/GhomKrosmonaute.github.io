@@ -15,12 +15,12 @@ export default function svgPlugin(): Plugin {
           import React from "react"; 
           import { cn } from "@/utils.ts";
     
-          export default function Svg({ className, style }: { className?: string, style?: React.CSSProperties }) { 
-            return <div className={cn("w-full h-full aspect-square text-foreground", className)} style={style}>
+          export default function Svg(props: React.ComponentProps<"div">) { 
+            return <div {...props} className={cn("w-full h-full aspect-square text-foreground", props.className)} style={props.style}>
               ${file
                 .replace(/<\?.+?>/g, "")
                 .replace(/<!.+?>/g, "")
-                .replace(/(\s)(width|height)=".+?"/g, '$1$2="100%"')
+                .replace(/(\s)(width|height)=".+?px"/g, '$1$2="100%"')
                 .replace(/fill="#.+?"/g, 'fill="currentColor"')}
             </div>; 
           }

@@ -25,5 +25,5 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src", "globals.d.ts"],
+  "include": ["src", "src/svg.d.ts"],
 }

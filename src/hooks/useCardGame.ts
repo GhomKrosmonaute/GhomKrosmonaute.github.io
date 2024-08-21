@@ -8,6 +8,13 @@ async function wait() {
   return new Promise((resolve) => setTimeout(resolve, 500));
 }
 
+function shuffle(cards: GameCardInfo[], times = 1): GameCardInfo[] {
+  for (let i = 0; i < times; i++) {
+    cards.sort(() => Math.random() - 0.5);
+  }
+  return cards;
+}
+
 /**
  * Re-maps a number from one range to another.
  * @param value - The incoming value to be converted.
@@ -82,6 +89,7 @@ export type GameCardInfo = (ProjectCardInfo | TechnoCardInfo) & {
 interface CardGameState {
   deck: GameCardInfo[];
   hand: GameCardInfo[];
+  discard: GameCardInfo[];
   energy: number;
   streetCred: number;
   addEnergy: (count: number) => void;
@@ -115,13 +123,12 @@ const projectsWithEffect = projects.map((project, i) => {
   };
 });
 
-const deck = [...technoWithEffect, ...projectsWithEffect].sort(
-  () => Math.random() - 0.5,
-);
+const deck = shuffle([...technoWithEffect, ...projectsWithEffect], 3);
 
 export const useCardGame = create<CardGameState>((set, getState) => ({
   deck: deck.slice(7),
   hand: deck.slice(0, 7),
+  discard: [],
   energy: 20,
   streetCred: 0,
   addEnergy: (count: number) => {
@@ -137,25 +144,33 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
       return { streetCred: state.streetCred + count };
     });
   },
-  draw: async (count = 1, type?: "action" | "support") => {
+  draw: async (
+    count = 1,
+    options?: Partial<{
+      type: "action" | "support";
+      fromDiscardPile: boolean;
+    }>,
+  ) => {
     // on joue le son de la banque
     bank.draw.play();
 
     set((state) => {
+      const fromKey = options?.fromDiscardPile ? "discard" : "deck";
+
       const hand = state.hand.slice();
-      const deck = state.deck.slice().filter((c) => {
-        if (type) return c.effect.type === type;
+      const from = state[fromKey].slice().filter((c) => {
+        if (options?.type) return c.effect.type === options.type;
         return true;
       });
 
       const drawn: string[] = [];
 
       for (let i = 0; i < count; i++) {
-        if (deck.length === 0) {
+        if (from.length === 0) {
           break;
         }
 
-        const card = deck.pop()!;
+        const card = from.pop()!;
 
         card.state = "drawn";
 
@@ -165,7 +180,9 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
 
       return {
         hand,
-        deck: state.deck.filter((c) => !drawn.includes(c.name)),
+        [fromKey]: shuffle(
+          state[fromKey].filter((c) => !drawn.includes(c.name)),
+        ),
       };
     });
 
@@ -178,7 +195,9 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
       }),
     }));
   },
-  drop: async () => {
+  drop: async (options?: { toDeck?: boolean }) => {
+    const toKey = options?.toDeck ? "deck" : "discard";
+
     // on joue le son de la banque
     bank.drop.play();
 
@@ -205,11 +224,13 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
 
     // la carte retourne dans le deck et on retire la carte de la main
     set((state) => ({
-      deck: [{ ...card, state: null }, ...state.deck],
       hand: state.hand.filter((c) => c.name !== card.name),
+      [toKey]: shuffle([{ ...card, state: null }, ...state[toKey]], 2),
     }));
   },
-  dropAll: async () => {
+  dropAll: async (options?: { toDeck?: boolean }) => {
+    const toKey = options?.toDeck ? "deck" : "discard";
+
     // on joue le son de la banque
     bank.drop.play();
 
@@ -230,7 +251,10 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
 
     // les cartes retournent dans le deck et on vide la main
     set((state) => ({
-      deck: [...state.hand.map((c) => ({ ...c, state: null })), ...state.deck],
+      [toKey]: shuffle(
+        [...state.hand.map((c) => ({ ...c, state: null })), ...state[toKey]],
+        2,
+      ),
       hand: [],
     }));
   },
@@ -299,9 +323,9 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
       // on attend la fin de l'animation
       await wait();
 
-      // la carte retourne dans le deck et on retire la carte de la main
+      // la carte va dans la défausse et on retire la carte de la main
       set((state) => ({
-        deck: [{ ...card, state: null }, ...state.deck],
+        discard: shuffle([{ ...card, state: null }, ...state.discard], 3),
         hand: state.hand.filter((c) => c.name !== card.name),
       }));
     };

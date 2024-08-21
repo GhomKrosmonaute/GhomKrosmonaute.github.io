@@ -22,7 +22,6 @@ export const Contact = () => {
         <div className="flex flex-col gap-2">
           <a href="mailto: camille.abella@proton.me" target="_blank">
             <code className="flex items-center gap-4 h-min">
-              {/* @ts-expect-error It's OK */}
               <Email className="w-5" />
               camille.abella@proton.me
             </code>
@@ -32,7 +31,6 @@ export const Contact = () => {
             target="_blank"
           >
             <code className="flex items-center gap-4">
-              {/* @ts-expect-error It's OK */}
               <LinkedIn className="w-5" />
               LinkedIn: Camille ABELLA
             </code>

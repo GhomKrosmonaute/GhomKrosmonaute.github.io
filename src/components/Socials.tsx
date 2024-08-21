@@ -10,17 +10,11 @@ import Twitter from "@/assets/icons/social/twitter.svg";
 import Instagram from "@/assets/icons/social/instagram.svg";
 
 const icons = {
-  // @ts-expect-error it's fine
   discord: <Discord className="text-[#9A37B2]" />,
-  // @ts-expect-error it's fine
   linkedin: <Linkedin className="text-[#9A37B2]" />,
-  // @ts-expect-error it's fine
   facebook: <Facebook className="text-[#9A37B2]" />,
-  // @ts-expect-error it's fine
   github: <Github className="text-[#9A37B2]" />,
-  // @ts-expect-error it's fine
   twitter: <Twitter className="text-[#9A37B2]" />,
-  // @ts-expect-error it's fine
   instagram: <Instagram className="text-[#9A37B2]" />,
 } as Record<string, React.ReactElement>;
 
@@ -35,14 +29,13 @@ export const Socials = () => {
         <a
           href={social.url}
           target="_blank"
-          className={cn(
-            "flex justify-center items-center p-2 md:m-2 transition-all",
-            "md:hover:scale-150 md:hover:rotate-[360deg]",
-          )}
+          className="flex justify-center items-center p-2 md:m-1 md:p-3 group/social"
           key={social.name}
           title={`${social.name}: ${social.username}`}
         >
-          {icons[social.icon]}
+          <div className="transition-all md:group-hover/social:scale-150 md:group-hover/social:rotate-[360deg]">
+            {icons[social.icon]}
+          </div>
         </a>
       ))}
     </div>

@@ -61,14 +61,14 @@
   },
   {
     "description": "Pioche une carte \"projet\"",
-    "onPlayed": "await state.draw(1, 'action')",
+    "onPlayed": "await state.draw(1, { type: 'action' })",
     "condition": "state.deck.some(card => card.effect.type === 'action')",
     "type": "support",
     "cost": 2
   },
   {
     "description": "Si tu n'as pas de carte \"projet\" en main, pioche une carte \"projet\"",
-    "onPlayed": "await state.draw(1, 'action')",
+    "onPlayed": "await state.draw(1, { type: 'action' })",
     "condition": "state.hand.every(card => card.effect.type !== 'action') && state.deck.some(card => card.effect.type === 'action')",
     "type": "support",
     "cost": 1

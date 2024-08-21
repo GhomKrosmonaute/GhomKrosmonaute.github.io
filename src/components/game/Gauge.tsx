@@ -12,7 +12,7 @@ export const Gauge = (props: {
   barColor?: string;
 }) => {
   return (
-    <div className="flex items-center h-12">
+    <div className="flex items-center h-7 w-[250px]">
       <ValueIcon
         name={props.name}
         image={props.image}
