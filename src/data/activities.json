@@ -1,0 +1,37 @@
+[
+  {
+    "name": "Starbucks",
+    "description": "Rend une énergie par jour",
+    "image": "starbucks.png",
+    "onTrigger": "await state.addEnergy(1)",
+    "cost": "20"
+  },
+  {
+    "name": "Méditation",
+    "description": "Pioche une carte par jour",
+    "image": "meditation.png",
+    "onTrigger": "await state.draw()",
+    "cost": "20"
+  },
+  {
+    "name": "Bourse",
+    "description": "Gagne 1M$ fois le nombre de cartes en main par jour",
+    "image": "bourse.png",
+    "onTrigger": "await state.addMoney(1 * state.hand.length)",
+    "cost": "25"
+  },
+  {
+    "name": "Recyclage",
+    "description": "Place une carte aléatoire de la défausse dans le deck par jour",
+    "image": "recyclage.png",
+    "onTrigger": "await state.recycle()",
+    "cost": "20"
+  },
+  {
+    "name": "I.A",
+    "description": "Gagne 1M$ fois le nombre de carte en défausse par jour",
+    "image": "ia.png",
+    "onTrigger": "await state.addMoney(1 * state.discard.length)",
+    "cost": "25"
+  }
+]

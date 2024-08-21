@@ -19,7 +19,7 @@ export const Gauge = (props: {
         value={props.value}
         iconScale={props.iconScale}
         textColor={props.textColor}
-        className="absolute -translate-x-1/2 z-50"
+        className="absolute -translate-x-1/2 z-50 scale-50"
       />
       <Progress
         barColor={props.barColor}

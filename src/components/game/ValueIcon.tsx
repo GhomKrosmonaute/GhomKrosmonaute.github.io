@@ -11,7 +11,7 @@ export const ValueIcon = (props: {
   style?: React.CSSProperties;
 }) => {
   return (
-    <div className={cn("scale-75", props.className)} style={props.style}>
+    <div className={cn("relative", props.className)} style={props.style}>
       <img
         src={props.image}
         alt={`${props.name} background image`}
@@ -21,11 +21,11 @@ export const ValueIcon = (props: {
       />
       <div
         className={cn(
-          "absolute top-1/2 left-1/2 font-bold text-3xl text-white pointer-events-none",
+          "absolute top-1/2 left-1/2 font-bold text-[1.8em] text-white pointer-events-none box-content",
           props.textColor,
         )}
         style={{
-          transform: "translateZ(5px) translate(-50%, -45%)",
+          transform: "translateX(-50%) translateY(-50%) translateZ(5px)",
         }}
       >
         {props.value}

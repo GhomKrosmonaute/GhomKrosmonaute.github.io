@@ -6,7 +6,8 @@ import {
   TechnoCardInfo,
   useCardGame,
   isProjectCardInfo,
-} from "../../hooks/useCardGame.ts";
+} from "@/hooks/useCardGame.ts";
+
 import { cn } from "@/utils.ts";
 import { Tilt } from "./Tilt.tsx";
 import { BorderLight } from "@/components/ui/border-light.tsx";
@@ -34,9 +35,9 @@ export const GameCard = (
         "-mx-3.5 z-10 hover:z-20 cursor-pointer select-none",
         props.card.state,
       )}
-      onClick={() => {
+      onClick={async () => {
         if (!isAnyCardAnimated) {
-          play(props.card);
+          await play(props.card);
         }
       }}
       onContextMenu={(e) => {
@@ -91,15 +92,33 @@ export const GameCard = (
               transformStyle: "preserve-3d",
             }}
           >
-            <ValueIcon
-              name="Energie / Points d'action"
-              image="images/energy-background.png"
-              value={props.card.effect.cost}
-              style={{
-                transform: "translateZ(5px)",
-                transformStyle: "preserve-3d",
-              }}
-            />
+            {typeof props.card.effect.cost === "number" ? (
+              <ValueIcon
+                name="Energie / Points d'action"
+                image="images/energy-background.png"
+                value={props.card.effect.cost}
+                style={{
+                  transform: "translateZ(5px)",
+                  transformStyle: "preserve-3d",
+                }}
+              />
+            ) : (
+              <div
+                className="text-2xl font-bold border border-foreground px-1 bg-green-950"
+                style={{
+                  transform: "translateZ(10px) rotate(-10deg)",
+                  transformStyle: "preserve-3d",
+                }}
+              >
+                <div
+                  style={{
+                    transform: "translateZ(5px)",
+                  }}
+                >
+                  {props.card.effect.cost}M$
+                </div>
+              </div>
+            )}
           </div>
           <h2
             className={cn(
@@ -132,10 +151,15 @@ export const GameCard = (
             style={{
               transform: "translateZ(10px)",
             }}
-          >
-            {props.card.effect.description}
-          </p>
+            dangerouslySetInnerHTML={{ __html: props.card.effect.description }}
+          />
         </div>
+
+        {props.card.ephemeral && (
+          <div className="text-center h-full text-2xl text-muted-foreground/20 font-bold">
+            Éphémère
+          </div>
+        )}
 
         <BorderLight groupName="game-card" appearOnHover disappearOnCorners />
         <BorderLight
@@ -169,7 +193,7 @@ const GameCardProject = (
         }}
       >
         <img
-          src={`images/projects/${props.card.image}`}
+          src={props.card.image}
           alt={`Illustration du projet "${props.card.name}"`}
           className="w-full aspect-video object-cover"
           style={{
@@ -178,18 +202,20 @@ const GameCardProject = (
         />
       </div>
 
-      <div
-        className={cn(
-          "transition-opacity duration-1000 group-hover/image:opacity-0",
-          "absolute bottom-0 w-full h-1/3 bg-background/50",
-          "flex justify-center items-center",
-        )}
-        style={{
-          transform: "translateZ(-5px)",
-        }}
-      >
-        <p className="text-sm text-center">"{props.card.description}"</p>
-      </div>
+      {props.card.description && (
+        <div
+          className={cn(
+            "transition-opacity duration-1000 group-hover/image:opacity-0",
+            "absolute bottom-0 w-full h-1/3 bg-background/50",
+            "flex justify-center items-center",
+          )}
+          style={{
+            transform: "translateZ(-5px)",
+          }}
+        >
+          <p className="text-sm text-center">"{props.card.description}"</p>
+        </div>
+      )}
     </div>
   );
 };
@@ -208,7 +234,7 @@ const GameCardTechno = (
         }}
       >
         <img
-          src={`images/techno/${props.card.logo}`}
+          src={props.card.logo}
           alt={`Logo de la techno "${props.card.name}"`}
           className={cn("w-2/3 object-contain aspect-square", {
             "group-hover/game-card:animate-spin-forward": spinners.includes(

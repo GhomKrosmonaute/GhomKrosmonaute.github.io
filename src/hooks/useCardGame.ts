@@ -1,8 +1,26 @@
 import { bank } from "@/sound.ts";
 import { create } from "zustand";
+
 import projects from "../data/projects.json";
 import technos from "../data/techno.json";
 import effects from "../data/effects.json";
+import activities from "../data/activities.json";
+
+export const MAX_REPUTATION = 10;
+export const MAX_ENERGY = 20;
+export const MONEY_TO_REACH = 100;
+
+function formatText(text: string) {
+  return text
+    .replace(
+      /@action/g,
+      '<span style="color: hsl(var(--primary))">Action</span>',
+    )
+    .replace(
+      /(\d+M\$)/g,
+      '<span style="display: inline-block; background-color: rgb(5 46 22); padding: 0 4px;">$1</span>',
+    );
+}
 
 async function wait() {
   return new Promise((resolve) => setTimeout(resolve, 500));
@@ -51,19 +69,28 @@ export function isProjectCardInfo(
   return (card as ProjectCardInfo).image !== undefined;
 }
 
+export interface Activity {
+  name: string;
+  description: string;
+  image: string;
+  onTrigger: string;
+  cost: number | string;
+  state: "appear" | "idle" | "triggered";
+}
+
 export interface Effect {
   description: string;
   onPlayed: string;
   type: string;
-  cost: number;
+  cost: number | string;
   condition?: string;
 }
 
 export interface ProjectCardInfo {
   name: string;
   image: string;
-  description: string;
   effect: Effect;
+  description?: string;
   detail?: string;
   url?: string;
 }
@@ -84,73 +111,232 @@ export type GameCardState =
 
 export type GameCardInfo = (ProjectCardInfo | TechnoCardInfo) & {
   state: GameCardState;
+  ephemeral?: boolean;
 };
 
-interface CardGameState {
-  deck: GameCardInfo[];
-  hand: GameCardInfo[];
-  discard: GameCardInfo[];
-  energy: number;
-  streetCred: number;
-  addEnergy: (count: number) => void;
-  addStreetCred: (count: number) => void;
-  draw: (count?: number, type?: "support" | "action") => void;
-  drop: () => void;
-  dropAll: () => void;
-  play: (card: GameCardInfo) => void;
-}
+const supportEffects = effects.filter((effect) => effect.type === "support");
+const actionEffects = effects.filter((effect) => effect.type === "action");
 
-const supports = effects.filter((effect) => effect.type === "support");
-const actions = effects.filter((effect) => effect.type === "action");
-
-const technoWithEffect = technos.map((techno, i) => {
-  const mapping = map(i, 0, technos.length, 0, supports.length, true);
+const supports = technos.map((techno, i) => {
+  const mapping = map(i, 0, technos.length, 0, supportEffects.length, true);
+  const effect = supportEffects[Math.floor(mapping)];
 
   return {
     ...techno,
+    logo: `images/techno/${techno.logo}`,
     state: "idle" as const,
-    effect: supports[Math.floor(mapping)],
+    effect: {
+      ...effect,
+      description: formatText(effect.description),
+    },
   };
 });
 
-const projectsWithEffect = projects.map((project, i) => {
-  const mapping = map(i, 0, projects.length, 0, actions.length, true);
+const actions = projects.map((project, i) => {
+  const mapping = map(i, 0, projects.length, 0, actionEffects.length, true);
+  const effect = actionEffects[Math.floor(mapping)];
 
   return {
     ...project,
+    image: `images/projects/${project.image}`,
     state: "idle" as const,
-    effect: actions[Math.floor(mapping)],
+    effect: {
+      ...effect,
+      description: formatText(effect.description),
+    },
   };
 });
 
-const deck = shuffle([...technoWithEffect, ...projectsWithEffect], 3);
+const bonusesAsActions = activities.map((activity) => {
+  return {
+    name: activity.name,
+    image: `images/activities/${activity.image}`,
+    state: "idle" as const,
+    ephemeral: true,
+    effect: {
+      description: "Découvre une activité",
+      onPlayed: `await state.discover("${activity.name}")`,
+      type: "action",
+      cost: activity.cost,
+    },
+  };
+});
 
-export const useCardGame = create<CardGameState>((set, getState) => ({
-  deck: deck.slice(7),
-  hand: deck.slice(0, 7),
-  discard: [],
-  energy: 20,
-  streetCred: 0,
-  addEnergy: (count: number) => {
-    // on joue le son de la banque
-    bank.gain.play();
+const deck = shuffle([...supports, ...actions, ...bonusesAsActions], 3);
 
-    set((state) => {
-      return { energy: state.energy + count };
-    });
-  },
-  addStreetCred: (count: number) => {
-    set((state) => {
-      return { streetCred: state.streetCred + count };
-    });
-  },
-  draw: async (
-    count = 1,
+interface CardGameState {
+  isWon: boolean;
+  isGameOver: boolean;
+  deck: GameCardInfo[];
+  hand: GameCardInfo[];
+  discard: GameCardInfo[];
+  activities: Activity[];
+  day: number;
+  energy: number;
+  reputation: number;
+  money: number;
+  addEnergy: (count: number) => Promise<void>;
+  addVitality: (count: number) => Promise<void>;
+  addMoney: (count: number) => Promise<void>;
+  addDay: (count?: number) => Promise<void>;
+  discover: (name: string) => Promise<void>;
+  draw: (
+    count?: number,
     options?: Partial<{
       type: "action" | "support";
       fromDiscardPile: boolean;
     }>,
-  ) => {
+  ) => Promise<void>;
+  drop: (options?: { toDeck?: boolean }) => Promise<void>;
+  dropAll: (options?: { toDeck?: boolean }) => Promise<void>;
+  recycle: (count?: number) => Promise<void>;
+  play: (card: GameCardInfo) => Promise<void>;
+}
+
+export const useCardGame = create<CardGameState>((set, getState) => ({
+  isWon: false,
+  isGameOver: false,
+  deck: deck.slice(7),
+  hand: deck.slice(0, 7),
+  discard: [],
+  activities: [],
+  day: 1,
+  energy: MAX_ENERGY,
+  reputation: MAX_REPUTATION,
+  money: 0,
+
+  addEnergy: async (count) => {
+    // on joue le son de la banque
+    bank.gain.play();
+
+    set((state) => {
+      return {
+        energy: Math.max(0, Math.min(MAX_ENERGY, state.energy + count)),
+      };
+    });
+  },
+
+  addVitality: async (count) => {
+    // on joue le son de la banque
+    if (count > 0) bank.gain.play();
+    else bank.loss.play();
+
+    set((state) => {
+      return {
+        reputation: Math.max(
+          0,
+          Math.min(MAX_REPUTATION, state.reputation + count),
+        ),
+      };
+    });
+
+    await wait();
+
+    const state = getState();
+
+    if (state.reputation === 0) {
+      // on joue le son de la banque
+      bank.defeat.play();
+
+      set({ isGameOver: true, isWon: false });
+    }
+  },
+
+  addMoney: async (count) => {
+    // on joue le son de la banque
+    if (count > 0) bank.gain.play();
+
+    set((state) => {
+      const money = state.money + count;
+
+      return { money };
+    });
+
+    await wait();
+
+    const state = getState();
+
+    if (state.money >= MONEY_TO_REACH) {
+      // on joue le son de la banque
+      bank.victory.play();
+
+      set({ isGameOver: true, isWon: true });
+    }
+  },
+
+  addDay: async (count = 1) => {
+    set((state) => ({
+      day: state.day + count,
+    }));
+
+    if (count > 0) {
+      // appliquer les effets de fin de journée
+      const state = getState();
+
+      for (let i = 0; i < count; i++) {
+        for (const activity of state.activities.slice()) {
+          await eval(`(async () => {
+            ${activity.onTrigger}
+          })()`);
+
+          // // mettre l'activité en triggered
+          // set((state) => {
+          //   return {
+          //     activities: state.activities.map((a) => {
+          //       if (a.name === activity.name) {
+          //         return { ...a, state: "triggered" };
+          //       }
+          //       return a;
+          //     }),
+          //   };
+          // });
+          //
+          // await wait();
+          //
+          // // remettre l'activité en idle
+          // set((state) => {
+          //   return {
+          //     activities: state.activities.map((a) => {
+          //       if (a.name === activity.name) {
+          //         return { ...a, state: "idle" };
+          //       }
+          //       return a;
+          //     }),
+          //   };
+          // });
+        }
+      }
+    }
+  },
+
+  discover: async (name) => {
+    const activity = activities.find((a) => a.name === name)!;
+
+    // on joue le son de la banque
+    bank.discover.play();
+
+    set((state) => {
+      return {
+        activities: [...state.activities, { ...activity, state: "appear" }],
+      };
+    });
+
+    await wait();
+
+    // remet l'activité en idle
+    set((state) => {
+      return {
+        activities: state.activities.map((a) => {
+          if (a.name === name) {
+            return { ...a, state: "idle" };
+          }
+          return a;
+        }),
+      };
+    });
+  },
+
+  draw: async (count = 1, options) => {
     // on joue le son de la banque
     bank.draw.play();
 
@@ -195,7 +381,8 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
       }),
     }));
   },
-  drop: async (options?: { toDeck?: boolean }) => {
+
+  drop: async (options) => {
     const toKey = options?.toDeck ? "deck" : "discard";
 
     // on joue le son de la banque
@@ -228,7 +415,8 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
       [toKey]: shuffle([{ ...card, state: null }, ...state[toKey]], 2),
     }));
   },
-  dropAll: async (options?: { toDeck?: boolean }) => {
+
+  dropAll: async (options) => {
     const toKey = options?.toDeck ? "deck" : "discard";
 
     // on joue le son de la banque
@@ -258,7 +446,36 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
       hand: [],
     }));
   },
-  play: async (card: GameCardInfo) => {
+
+  /**
+   * Place des cartes de la défausse dans le deck
+   */
+  recycle: async (count = 1) => {
+    const state = getState();
+
+    const from = state.discard.slice();
+    const to = state.deck.slice();
+
+    const recycled: string[] = [];
+
+    for (let i = 0; i < count; i++) {
+      if (from.length === 0) {
+        break;
+      }
+
+      const card = from.pop()!;
+
+      recycled.push(card.name);
+      to.push(card);
+    }
+
+    set({
+      deck: shuffle(to),
+      discard: state.discard.filter((c) => !recycled.includes(c.name)),
+    });
+  },
+
+  play: async (card) => {
     let state = getState();
 
     const cantPlay = async () => {
@@ -296,38 +513,48 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
       return;
     }
 
+    const payWith = typeof card.effect.cost === "number" ? "energy" : "money";
+    const cost = Number(card.effect.cost);
+
     // on vérifie si on a assez d'énergie (state.energy >= effect.cost)
-    if (state.energy < card.effect.cost) {
+    if (state[payWith] < cost) {
       await cantPlay();
 
       return;
     }
 
+    // on soustrait le coût de la carte à l'énergie
+    set({ [payWith]: state[payWith] - cost });
+
     // on joue le son de la banque
     bank.play.play();
 
-    // on soustrait le coût de la carte à l'énergie
-    set({ energy: state.energy - card.effect.cost });
-
     const thread1 = async () => {
       // on active l'animation de retrait de la carte
-      set({
+      set((state) => ({
         hand: state.hand.map((c) => {
           if (c.name === card.name) {
             return { ...c, state: "played" };
           }
           return c;
         }),
-      });
+      }));
 
       // on attend la fin de l'animation
       await wait();
 
       // la carte va dans la défausse et on retire la carte de la main
       set((state) => ({
-        discard: shuffle([{ ...card, state: null }, ...state.discard], 3),
+        discard: card.ephemeral
+          ? state.discard
+          : shuffle([{ ...card, state: null }, ...state.discard], 3),
         hand: state.hand.filter((c) => c.name !== card.name),
       }));
+
+      // on change de jour si besoin
+      if (card.effect.type === "action") {
+        await state.addDay();
+      }
     };
 
     const thread2 = async () => {
@@ -346,7 +573,7 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
     state = getState();
 
     if (state.hand.length === 0) {
-      state.draw();
+      await state.draw();
     }
   },
 }));

@@ -125,6 +125,11 @@ module.exports = {
           "98%": { "offset-distance": "148%", width: 0, height: 0 },
           "100%": { "offset-distance": "150%", width: 0, height: 0 },
         },
+        trigger: {
+          "0%": { transform: "scale(1)" },
+          "30%": { transform: "scale(1.2)" },
+          "100%": { transform: "scale(1)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -142,6 +147,7 @@ module.exports = {
           "border-light-opposed-disappear 1s infinite linear",
         "spin-forward": "spin 3s linear infinite",
         appear: "appear 0.5s ease-in-out forwards 1s",
+        trigger: "trigger 0.5s ease-in-out forwards",
       },
     },
   },
