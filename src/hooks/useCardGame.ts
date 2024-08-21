@@ -191,9 +191,24 @@ interface CardGameState {
   dropAll: (options?: { toDeck?: boolean }) => Promise<void>;
   recycle: (count?: number) => Promise<void>;
   play: (card: GameCardInfo) => Promise<void>;
+  reset: () => void;
 }
 
-export const useCardGame = create<CardGameState>((set, getState) => ({
+// le satisfies doit utiliser Exclude pour retirer les fonctions
+const initialGameState: Omit<
+  CardGameState,
+  | "addEnergy"
+  | "addVitality"
+  | "addMoney"
+  | "addDay"
+  | "discover"
+  | "draw"
+  | "drop"
+  | "dropAll"
+  | "recycle"
+  | "play"
+  | "reset"
+> = {
   isWon: false,
   isGameOver: false,
   deck: deck.slice(7),
@@ -204,6 +219,10 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
   energy: MAX_ENERGY,
   reputation: MAX_REPUTATION,
   money: 0,
+};
+
+export const useCardGame = create<CardGameState>((set, getState) => ({
+  ...initialGameState,
 
   addEnergy: async (count) => {
     // on joue le son de la banque
@@ -575,5 +594,9 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
     if (state.hand.length === 0) {
       await state.draw();
     }
+  },
+
+  reset: () => {
+    set(initialGameState);
   },
 }));

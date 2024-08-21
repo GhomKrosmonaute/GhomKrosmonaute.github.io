@@ -15,15 +15,7 @@ import { Button } from "@/components/ui/button.tsx";
 import { cn } from "@/utils.ts";
 
 export const HUD = () => {
-  const day = useCardGame((state) => state.day);
-  const reputation = useCardGame((state) => state.reputation);
-  const energy = useCardGame((state) => state.energy);
-  const money = useCardGame((state) => state.money);
-  const activities = useCardGame((state) => state.activities);
-  const deckLength = useCardGame((state) => state.deck.length);
-  const discardLength = useCardGame((state) => state.discard.length);
-  const won = useCardGame((state) => state.isGameOver && state.isWon);
-  const lost = useCardGame((state) => state.isGameOver && !state.isWon);
+  const game = useCardGame();
 
   return (
     <div className="w-min ml-10 mt-4 space-y-2">
@@ -31,34 +23,34 @@ export const HUD = () => {
       <Gauge
         name="Energie / Points d'action"
         image="images/energy-background.png"
-        value={energy}
+        value={game.energy}
         max={MAX_ENERGY}
       />
       <Gauge
         name="Réputation"
         image="images/reputation-background.png"
-        value={reputation}
+        value={game.reputation}
         max={MAX_REPUTATION}
         barColor="bg-pink-500"
       />
 
       <div className="*:flex *:items-center *:gap-2 space-y-2">
         <div>
-          <Money className="w-6" /> Argent: {money}M$ / {MONEY_TO_REACH}M$
+          <Money className="w-6" /> Argent: {game.money}M$ / {MONEY_TO_REACH}M$
         </div>
         <div>
-          <Day className="w-6" /> Jour: {day}
+          <Day className="w-6" /> Jour: {game.day}
         </div>
         <div>
-          <Deck className="w-6" /> Deck: {deckLength}
+          <Deck className="w-6" /> Deck: {game.deck.length}
         </div>
         <div>
-          <Discard className="w-6" /> Défausse: {discardLength}
+          <Discard className="w-6" /> Défausse: {game.discard.length}
         </div>
       </div>
 
       <div className="flex flex-wrap p-2 gap-4">
-        {activities.map((activity, index) => (
+        {game.activities.map((activity, index) => (
           <div key={index} className="text-sm">
             <img
               src={`images/activities/${activity.image}`}
@@ -77,16 +69,18 @@ export const HUD = () => {
         ))}
       </div>
 
-      {(won || lost) && (
+      {game.isGameOver && (
         <>
-          {won && (
+          {game.isWon && (
             <h1 className="text-4xl text-green-500">Vous avez gagné !</h1>
           )}
-          {lost && <h1 className="text-4xl text-red-500">Vous avez perdu !</h1>}
+          {!game.isWon && (
+            <h1 className="text-4xl text-red-500">Vous avez perdu !</h1>
+          )}
 
           <Button
             onClick={() => {
-              window.location.reload();
+              game.reset();
             }}
             variant="cta"
             size="cta"
