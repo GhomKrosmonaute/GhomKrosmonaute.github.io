@@ -44,10 +44,10 @@ export const Game = (props: React.PropsWithChildren<{ show?: boolean }>) => {
         {cardGame.hand
           .sort((a, b) => {
             // trier par type de carte (action ou support) puis par type de prix (énergie ou $) puis par prix
-            const typeA = a.effect.type === "action" ? 0 : 1;
-            const typeB = b.effect.type === "action" ? 0 : 1;
-            const priceA = typeof a.effect.cost === "string" ? 0 : 1;
-            const priceB = typeof b.effect.cost === "string" ? 0 : 1;
+            const typeA = a.effect.type === "action" ? 1 : 0;
+            const typeB = b.effect.type === "action" ? 1 : 0;
+            const priceA = typeof a.effect.cost === "string" ? 1 : 0;
+            const priceB = typeof b.effect.cost === "string" ? 1 : 0;
             const costA = Number(a.effect.cost);
             const costB = Number(b.effect.cost);
             return typeA - typeB || priceA - priceB || costA - costB;

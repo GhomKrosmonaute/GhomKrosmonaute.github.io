@@ -147,7 +147,7 @@ module.exports = {
           "border-light-opposed-disappear 1s infinite linear",
         "spin-forward": "spin 3s linear infinite",
         appear: "appear 0.5s ease-in-out forwards 1s",
-        trigger: "trigger 0.5s ease-in-out forwards",
+        trigger: "trigger 0.5s ease-in-out forwards 0.5s",
       },
     },
   },

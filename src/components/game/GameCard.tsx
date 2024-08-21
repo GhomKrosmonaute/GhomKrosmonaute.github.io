@@ -14,15 +14,22 @@ import { BorderLight } from "@/components/ui/border-light.tsx";
 
 import "./GameCard.css";
 import { ValueIcon } from "@/components/game/ValueIcon.tsx";
+import { MoneyIcon } from "@/components/game/MoneyIcon.tsx";
 
 export const GameCard = (
   props: React.PropsWithoutRef<{ card: GameCardInfo; position: number }>,
 ) => {
-  const handSize = useCardGame((state) => state.hand.length);
-  const isAnyCardAnimated = useCardGame((state) =>
-    state.hand.some((card) => card.state !== "idle"),
+  const { handSize, isAnyCardAnimated, isGameOver, play } = useCardGame(
+    (state) => ({
+      handSize: state.hand.length,
+      isAnyCardAnimated:
+        state.hand.some((card) => card.state !== "idle") ||
+        (state.activities.length > 0 &&
+          state.activities.some((activity) => activity.state !== "idle")),
+      play: state.play,
+      isGameOver: state.isGameOver,
+    }),
   );
-  const play = useCardGame((state) => state.play);
 
   const positionFromCenter = props.position - (handSize - 1) / 2;
 
@@ -36,7 +43,7 @@ export const GameCard = (
         props.card.state,
       )}
       onClick={async () => {
-        if (!isAnyCardAnimated) {
+        if (!isAnyCardAnimated && !isGameOver) {
           await play(props.card);
         }
       }}
@@ -94,7 +101,7 @@ export const GameCard = (
           >
             {typeof props.card.effect.cost === "number" ? (
               <ValueIcon
-                name="Energie / Points d'action"
+                name="Coût en énergie / points d'action"
                 image="images/energy-background.png"
                 value={props.card.effect.cost}
                 style={{
@@ -103,21 +110,13 @@ export const GameCard = (
                 }}
               />
             ) : (
-              <div
-                className="text-2xl font-bold border border-foreground px-1 bg-green-950"
+              <MoneyIcon
+                value={props.card.effect.cost}
                 style={{
                   transform: "translateZ(10px) rotate(-10deg)",
                   transformStyle: "preserve-3d",
                 }}
-              >
-                <div
-                  style={{
-                    transform: "translateZ(5px)",
-                  }}
-                >
-                  {props.card.effect.cost}M$
-                </div>
-              </div>
+              />
             )}
           </div>
           <h2
@@ -153,13 +152,13 @@ export const GameCard = (
             }}
             dangerouslySetInnerHTML={{ __html: props.card.effect.description }}
           />
-        </div>
 
-        {props.card.ephemeral && (
-          <div className="text-center h-full text-2xl text-muted-foreground/20 font-bold">
-            Éphémère
-          </div>
-        )}
+          {props.card.ephemeral && (
+            <div className="text-center h-full text-2xl text-muted-foreground/20 font-bold">
+              Éphémère
+            </div>
+          )}
+        </div>
 
         <BorderLight groupName="game-card" appearOnHover disappearOnCorners />
         <BorderLight

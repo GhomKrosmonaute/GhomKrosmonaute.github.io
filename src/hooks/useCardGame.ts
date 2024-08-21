@@ -10,7 +10,7 @@ export const MAX_REPUTATION = 10;
 export const MAX_ENERGY = 20;
 export const MONEY_TO_REACH = 100;
 
-function formatText(text: string) {
+export function formatText(text: string) {
   return text
     .replace(
       /@action/g,
@@ -162,9 +162,43 @@ const bonusesAsActions = activities.map((activity) => {
   };
 });
 
-const deck = shuffle([...supports, ...actions, ...bonusesAsActions], 3);
+function generateInitialState(): Omit<
+  CardGameState,
+  | "addEnergy"
+  | "addReputation"
+  | "addMoney"
+  | "addDay"
+  | "discover"
+  | "draw"
+  | "drop"
+  | "dropAll"
+  | "recycle"
+  | "play"
+  | "reset"
+> {
+  const deck = shuffle([...supports, ...actions, ...bonusesAsActions], 3);
+
+  deck.forEach((card) => {
+    card.state = "idle";
+  });
+
+  return {
+    reason: null,
+    isWon: false,
+    isGameOver: false,
+    deck: deck.slice(7),
+    hand: deck.slice(0, 7),
+    discard: [],
+    activities: [],
+    day: 1,
+    energy: MAX_ENERGY,
+    reputation: MAX_REPUTATION,
+    money: 0,
+  };
+}
 
 interface CardGameState {
+  reason: "mill" | "soft-lock" | "reputation" | "missing-resource" | null;
   isWon: boolean;
   isGameOver: boolean;
   deck: GameCardInfo[];
@@ -176,7 +210,7 @@ interface CardGameState {
   reputation: number;
   money: number;
   addEnergy: (count: number) => Promise<void>;
-  addVitality: (count: number) => Promise<void>;
+  addReputation: (count: number) => Promise<void>;
   addMoney: (count: number) => Promise<void>;
   addDay: (count?: number) => Promise<void>;
   discover: (name: string) => Promise<void>;
@@ -194,35 +228,8 @@ interface CardGameState {
   reset: () => void;
 }
 
-// le satisfies doit utiliser Exclude pour retirer les fonctions
-const initialGameState: Omit<
-  CardGameState,
-  | "addEnergy"
-  | "addVitality"
-  | "addMoney"
-  | "addDay"
-  | "discover"
-  | "draw"
-  | "drop"
-  | "dropAll"
-  | "recycle"
-  | "play"
-  | "reset"
-> = {
-  isWon: false,
-  isGameOver: false,
-  deck: deck.slice(7),
-  hand: deck.slice(0, 7),
-  discard: [],
-  activities: [],
-  day: 1,
-  energy: MAX_ENERGY,
-  reputation: MAX_REPUTATION,
-  money: 0,
-};
-
 export const useCardGame = create<CardGameState>((set, getState) => ({
-  ...initialGameState,
+  ...generateInitialState(),
 
   addEnergy: async (count) => {
     // on joue le son de la banque
@@ -235,7 +242,7 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
     });
   },
 
-  addVitality: async (count) => {
+  addReputation: async (count) => {
     // on joue le son de la banque
     if (count > 0) bank.gain.play();
     else bank.loss.play();
@@ -257,7 +264,7 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
       // on joue le son de la banque
       bank.defeat.play();
 
-      set({ isGameOver: true, isWon: false });
+      set({ isGameOver: true, isWon: false, reason: "reputation" });
     }
   },
 
@@ -294,35 +301,35 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
 
       for (let i = 0; i < count; i++) {
         for (const activity of state.activities.slice()) {
+          // mettre l'activité en triggered
+          set((state) => {
+            return {
+              activities: state.activities.map((a) => {
+                if (a.name === activity.name) {
+                  return { ...a, state: "triggered" };
+                }
+                return a;
+              }),
+            };
+          });
+
+          await wait();
+
           await eval(`(async () => {
             ${activity.onTrigger}
           })()`);
 
-          // // mettre l'activité en triggered
-          // set((state) => {
-          //   return {
-          //     activities: state.activities.map((a) => {
-          //       if (a.name === activity.name) {
-          //         return { ...a, state: "triggered" };
-          //       }
-          //       return a;
-          //     }),
-          //   };
-          // });
-          //
-          // await wait();
-          //
-          // // remettre l'activité en idle
-          // set((state) => {
-          //   return {
-          //     activities: state.activities.map((a) => {
-          //       if (a.name === activity.name) {
-          //         return { ...a, state: "idle" };
-          //       }
-          //       return a;
-          //     }),
-          //   };
-          // });
+          // remettre l'activité en idle
+          set((state) => {
+            return {
+              activities: state.activities.map((a) => {
+                if (a.name === activity.name) {
+                  return { ...a, state: "idle" };
+                }
+                return a;
+              }),
+            };
+          });
         }
       }
     }
@@ -470,6 +477,9 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
    * Place des cartes de la défausse dans le deck
    */
   recycle: async (count = 1) => {
+    // on joue le son de la banque
+    bank.gain.play();
+
     const state = getState();
 
     const from = state.discard.slice();
@@ -537,9 +547,21 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
 
     // on vérifie si on a assez d'énergie (state.energy >= effect.cost)
     if (state[payWith] < cost) {
-      await cantPlay();
+      if (payWith === "energy") {
+        // on vérifie si on a assez de réputation (state.reputation >= effect.cost)
+        if (state.reputation + state.energy < cost) {
+          await cantPlay();
+          return;
+        }
 
-      return;
+        // on retire la réputation et on met à zéro l'énergie
+        await state.addReputation(cost - state.energy);
+
+        set({ energy: 0 });
+      } else {
+        await cantPlay();
+        return;
+      }
     }
 
     // on soustrait le coût de la carte à l'énergie
@@ -594,9 +616,40 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
     if (state.hand.length === 0) {
       await state.draw();
     }
+
+    // vérifier si le jeu est soft lock
+
+    state = getState();
+
+    const isMill = state.deck.length === 0 && state.hand.length === 0;
+    const isSoftLocked = state.hand.every(
+      (c) => c.effect.condition && !eval(c.effect.condition),
+    );
+    const resourceLess = state.hand.every(
+      (c) =>
+        (typeof c.effect.cost === "number" &&
+          c.effect.cost > state.energy + state.reputation) ||
+        (typeof c.effect.cost === "string" &&
+          Number(c.effect.cost) > state.money),
+    );
+
+    if (isMill || isSoftLocked || resourceLess) {
+      set({
+        isGameOver: true,
+        isWon: false,
+        reason: isMill
+          ? "mill"
+          : isSoftLocked
+            ? "soft-lock"
+            : "missing-resource",
+      });
+    }
   },
 
   reset: () => {
-    set(initialGameState);
+    set(generateInitialState());
+
+    bank.music.stop();
+    bank.music.play();
   },
 }));

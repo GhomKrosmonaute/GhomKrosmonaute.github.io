@@ -44,7 +44,7 @@ export const bank = {
   }),
   victory: new Howl({
     src: ["sounds/victory.wav"],
-    volume: 1,
+    volume: 0.6,
     preload: true,
   }),
   defeat: new Howl({
