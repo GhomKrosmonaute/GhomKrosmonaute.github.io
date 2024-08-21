@@ -18,7 +18,7 @@
     "cost": 0
   },
   {
-    "description": "Gange 10M$ fois le nombre de cartes @action en main",
+    "description": "Gagne 10M$ fois le nombre de cartes @action en main",
     "onPlayed": "await state.addMoney(10 * (state.hand.filter(card => card.effect.type === 'action').length - 1))",
     "type": "action",
     "cost": 4
