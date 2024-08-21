@@ -12,6 +12,8 @@ import { Tarifs } from "./modals/Tarifs.tsx";
 import { Contact } from "./modals/Contact.tsx";
 
 import Theme from "@/assets/icons/theme.svg";
+import { cn } from "@/utils.ts";
+import { useGlobalState } from "@/hooks/useGlobalState.ts";
 
 const SplineMacbook = React.lazy(() =>
   import("@/components/ui/spline-macbook.tsx").then((mod) => ({
@@ -29,6 +31,8 @@ const Music = React.lazy(() =>
 
 export default function App() {
   const toggleDarkMode = useDarkMode();
+  const isCardGameVisible = useGlobalState((state) => state.isCardGameVisible);
+  const isSplineLoaded = useGlobalState((state) => state.splineLoaded);
   const largeScreen = useMediaQuery("(width >= 768px) and (height >= 768px)");
   const largeWidth = useMediaQuery("(width >= 768px)");
   const [desktop, setDesktop] = React.useState(false);
@@ -97,26 +101,36 @@ export default function App() {
 
   return (
     <>
-      {largeWidth &&
-        (desktop ? (
-          <React.Suspense
-            fallback={
-              <img
-                src="images/spline-placeholder.png"
-                alt="Image stylisée d'un Mac book pro"
-                className="fixed top-[50svh] left-[50vw] 2xl:left-[30vw] -translate-x-1/2 -translate-y-1/2"
-              />
-            }
-          >
-            <SplineMacbook />
-          </React.Suspense>
-        ) : (
-          <img
-            src="images/spline-placeholder.png"
-            alt="Image stylisée d'un Mac book pro"
-            className="fixed top-[50svh] left-[50vw] 2xl:left-[30vw] -translate-x-1/2 -translate-y-1/2"
-          />
-        ))}
+      {largeWidth && (
+        <div
+          className={cn(
+            "fixed transition-[top] duration-1000 ease-in-out top-[50svh] left-[50vw] 2xl:left-[30vw]",
+            "-translate-x-1/2 -translate-y-1/2 w-full h-full",
+            {
+              "top-[-50svh]": isCardGameVisible,
+            },
+          )}
+        >
+          {desktop ? (
+            <React.Suspense>
+              {!isSplineLoaded && (
+                <img
+                  src="images/spline-placeholder.png"
+                  alt="Image stylisée d'un Mac book pro"
+                  className="absolute object-cover"
+                />
+              )}
+              <SplineMacbook />
+            </React.Suspense>
+          ) : (
+            <img
+              src="images/spline-placeholder.png"
+              alt="Image stylisée d'un Mac book pro"
+              className="absolute"
+            />
+          )}
+        </div>
+      )}
 
       <Button
         onClick={toggleDarkMode}

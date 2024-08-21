@@ -2,7 +2,14 @@ import React from "react";
 import { bank } from "@/sound.ts";
 
 export const useMusic = (): [muted: boolean, toggle: () => void] => {
-  const [muted, setMuted] = React.useState(bank.music.mute());
+  const [muted, setMuted] = React.useState(
+    localStorage.getItem("muted") === "true",
+  );
+
+  React.useEffect(() => {
+    bank.music.mute(muted);
+    localStorage.setItem("muted", JSON.stringify(muted));
+  }, [muted]);
 
   // Play bank sound while the component is mounted and props.show is true
   React.useEffect(() => {
@@ -14,11 +21,5 @@ export const useMusic = (): [muted: boolean, toggle: () => void] => {
     };
   }, []);
 
-  return [
-    muted,
-    () => {
-      bank.music.mute(!muted);
-      setMuted(!muted);
-    },
-  ];
+  return [muted, () => setMuted(!muted)];
 };

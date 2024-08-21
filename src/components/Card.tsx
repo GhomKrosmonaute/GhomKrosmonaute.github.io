@@ -37,7 +37,9 @@ export const Card = (
             "md:shadow-spotlight md:transition md:ease-in-out md:duration-500",
             "md:hover:shadow-glow-150 md:hover:shadow-primary md:hover:border-b-primary md:hover:backdrop-blur-md",
             // set inclination
-            "md:mdh:hover:transform md:mdh:rotate-2 md:mdh:hover:rotate-0 md:mdh:hover:scale-105",
+            {
+              "rotate-2 scale-95 hover:rotate-0 hover:scale-100": matches,
+            },
           )}
           style={{
             scrollbarWidth: "none",

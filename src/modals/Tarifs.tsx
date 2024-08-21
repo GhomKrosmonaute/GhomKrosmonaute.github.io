@@ -6,9 +6,15 @@ import { Hosting } from "../components/Hosting.tsx";
 import { Button } from "@/components/ui/button.tsx";
 
 import tarifs from "../data/tarifs.json";
+import { useGlobalState } from "@/hooks/useGlobalState.ts";
 
 export const Tarifs = () => {
   const navigate = useNavigate();
+  const setCardGameVisibility = useGlobalState(
+    (state) => state.setCardGameVisibility,
+  );
+
+  setCardGameVisibility(false);
 
   return (
     <Modal modalName="/pricing" big>

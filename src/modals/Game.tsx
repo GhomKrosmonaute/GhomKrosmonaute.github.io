@@ -7,12 +7,18 @@ import { cn } from "@/utils.ts";
 import { useMediaQuery } from "usehooks-ts";
 import { useNavigate } from "react-router-dom";
 import { useCardGame } from "@/hooks/useCardGame.ts";
+import { useGlobalState } from "@/hooks/useGlobalState.ts";
 import { HUD } from "@/components/game/HUD.tsx";
 
 export const Game = (props: React.PropsWithChildren<{ show?: boolean }>) => {
   const cardGame = useCardGame();
   const navigate = useNavigate();
+  const setCardGameVisibility = useGlobalState(
+    (state) => state.setCardGameVisibility,
+  );
   const largeScreen = useMediaQuery("(width >= 768px) and (height >= 768px)");
+
+  setCardGameVisibility(!!props.show);
 
   React.useEffect(() => {
     if (!largeScreen) navigate("/");

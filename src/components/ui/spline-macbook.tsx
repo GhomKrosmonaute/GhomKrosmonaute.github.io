@@ -1,38 +1,25 @@
-import React from "react";
-
 import Spline from "@splinetool/react-spline";
+import { useGlobalState } from "@/hooks/useGlobalState.ts";
 import { cn } from "@/utils.ts";
 
 export const SplineMacbook = () => {
-  const [isLoaded, setIsLoaded] = React.useState(false);
-
-  // set isLoaded to false when the component is mounted
-  React.useEffect(() => {
-    if (isLoaded) setIsLoaded(false);
-  }, []);
+  const [isLoaded, setIsLoaded] = useGlobalState((state) => [
+    state.splineLoaded,
+    state.setSplineLoaded,
+  ]);
 
   return (
-    <>
-      <img
-        src="images/spline-placeholder.png"
-        alt="Image stylisée d'un Mac book pro"
-        className={cn(
-          "fixed top-[50svh] left-[50vw] 2xl:left-[30vw] -translate-x-1/2 -translate-y-1/2",
-          {
-            "opacity-0": isLoaded,
-          },
-        )}
-      />
-      <Spline
-        scene="https://prod.spline.design/jotuSLcx9NOHdvVx/scene.splinecode"
-        className={cn(
-          "fixed top-[50svh] left-[50vw] 2xl:left-[30vw] -translate-x-1/2 -translate-y-1/2",
-          {
-            "opacity-0": !isLoaded,
-          },
-        )}
-        onLoad={() => setIsLoaded(true)}
-      />
-    </>
+    <Spline
+      scene="https://prod.spline.design/jotuSLcx9NOHdvVx/scene.splinecode"
+      className={cn("absolute", {
+        "pointer-events-none": !isLoaded,
+      })}
+      onLoad={() => {
+        if (!isLoaded)
+          setTimeout(() => {
+            setIsLoaded(true);
+          }, 1000);
+      }}
+    />
   );
 };

@@ -5,9 +5,15 @@ import { Modal } from "@/components/Modal.tsx";
 
 import Email from "@/assets/icons/social/email.svg";
 import LinkedIn from "@/assets/icons/social/linkedin.svg";
+import { useGlobalState } from "@/hooks/useGlobalState.ts";
 
 export const Contact = () => {
   const navigate = useNavigate();
+  const setCardGameVisibility = useGlobalState(
+    (state) => state.setCardGameVisibility,
+  );
+
+  setCardGameVisibility(false);
 
   return (
     <Modal modalName="/contact">
