@@ -432,6 +432,8 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
       ${activity.onTrigger}
     })()`);
 
+    await wait();
+
     // remettre l'activité en idle
     set((state) => {
       return {

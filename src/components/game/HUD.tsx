@@ -30,7 +30,7 @@ export const HUD = () => {
 
   return (
     <div className="w-[300px] ml-10 mt-4 space-y-2">
-      <code>CardGame v0.5-beta [WIP]</code>
+      <code>CardGame v0.6-beta [WIP]</code>
       <Gauge
         name="Energie / Points d'action"
         image="images/energy-background.png"
@@ -102,13 +102,14 @@ export const HUD = () => {
       </div>
 
       {game.isGameOver && (
-        <div className="absolute top-0 left-0 w-screen h-screen flex flex-col items-center justify-center gap-4 bg-background/90 z-50 pointer-events-auto">
+        <div className="absolute top-0 left-0 w-screen h-screen flex flex-col items-center justify-center gap-7 bg-background/90 z-50 pointer-events-auto">
           <div className="*:text-6xl *:whitespace-nowrap">
             {game.isWon && (
               <h1 className="text-green-500">Vous avez gagné !</h1>
             )}
             {!game.isWon && <h1 className="text-red-500">Vous avez perdu !</h1>}
           </div>
+
           {game.reason && (
             <p className="text-4xl">
               {
@@ -119,6 +120,44 @@ export const HUD = () => {
                   "soft-lock": "Votre main est injouable...",
                 }[game.reason]
               }
+            </p>
+          )}
+
+          {game.isWon && (
+            <p className="text-center text-2xl">
+              Vous avez gagné en{" "}
+              <span className="text-activity">{game.day}</span> jours avec{" "}
+              <span className="inline-block bg-money text-white px-1">
+                {game.money}M$
+              </span>{" "}
+              et <span className="text-reputation">{game.reputation}</span>{" "}
+              points de réputation ! <br />
+              <span className="block text-4xl mt-5">
+                Score:{" "}
+                <span className="text-activity font-changa">
+                  {
+                    // Plus la partie dure longtemps, plus le score diminue.
+                    // Moins tu perds de réputation, plus le score est élevé.
+                    // Plus tu as d'argent en fin de partie, plus le score est élevé.
+                    // Chaque cumul d'activité augmente le score.
+                    // L'énergie restante augmente légèrement le score.
+                    // Calcul :
+                    Math.max(
+                      0,
+                      game.reputation * 50 +
+                        game.money * 100 +
+                        game.activities.reduce(
+                          (acc, activity) => acc + activity.cumul,
+                          0,
+                        ) *
+                          10 +
+                        game.energy * 10 -
+                        game.day * 10,
+                    ).toLocaleString()
+                  }{" "}
+                  pts
+                </span>
+              </span>
             </p>
           )}
 
