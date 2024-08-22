@@ -90,6 +90,8 @@ export interface Activity {
   onTrigger: string;
   cost: number | string;
   state: "appear" | "idle" | "triggered";
+  cumul: number;
+  max: number;
 }
 
 export interface Effect {
@@ -131,51 +133,6 @@ export type GameCardInfo = (ProjectCardInfo | TechnoCardInfo) & {
 const supportEffects = effects.filter((effect) => effect.type === "support");
 const actionEffects = effects.filter((effect) => effect.type === "action");
 
-const supports = technos.map((techno, i) => {
-  const mapping = map(i, 0, technos.length, 0, supportEffects.length, true);
-  const effect = supportEffects[Math.floor(mapping)];
-
-  return {
-    ...techno,
-    logo: `images/techno/${techno.logo}`,
-    state: "idle" as const,
-    effect: {
-      ...effect,
-      description: formatText(effect.description),
-    },
-  };
-});
-
-const actions = projects.map((project, i) => {
-  const mapping = map(i, 0, projects.length, 0, actionEffects.length, true);
-  const effect = actionEffects[Math.floor(mapping)];
-
-  return {
-    ...project,
-    image: `images/projects/${project.image}`,
-    state: "idle" as const,
-    effect: {
-      ...effect,
-      description: formatText(effect.description),
-    },
-  };
-});
-
-const bonusesAsActions = activities.map((activity) => {
-  return {
-    name: activity.name,
-    image: `images/activities/${activity.image}`,
-    state: "idle" as const,
-    ephemeral: true,
-    effect: {
-      description: "Découvre une activité",
-      onPlayed: `await state.discover("${activity.name}")`,
-      type: "action",
-      cost: activity.cost,
-    },
-  };
-});
-
 function generateInitialState(): Omit<
   CardGameState,
   | "addEnergy"
@@ -183,6 +140,7 @@ function generateInitialState(): Omit<
   | "addMoney"
   | "addDay"
   | "discover"
+  | "triggerActivity"
   | "draw"
   | "drop"
   | "dropAll"
@@ -190,11 +148,52 @@ function generateInitialState(): Omit<
   | "play"
   | "reset"
 > {
-  const deck = shuffle([...supports, ...actions, ...bonusesAsActions], 3);
+  const supports = technos.map((techno, i) => {
+    const mapping = map(i, 0, technos.length, 0, supportEffects.length, true);
+    const effect = supportEffects[Math.floor(mapping)];
 
-  deck.forEach((card) => {
-    card.state = "idle";
+    return {
+      ...techno,
+      logo: `images/techno/${techno.logo}`,
+      state: "idle" as const,
+      effect: {
+        ...effect,
+        description: formatText(effect.description),
+      },
+    };
   });
+
+  const actions = projects.map((project, i) => {
+    const mapping = map(i, 0, projects.length, 0, actionEffects.length, true);
+    const effect = actionEffects[Math.floor(mapping)];
+
+    return {
+      ...project,
+      image: `images/projects/${project.image}`,
+      state: "idle" as const,
+      effect: {
+        ...effect,
+        description: formatText(effect.description),
+      },
+    };
+  });
+
+  const bonusesAsActions = activities.map((activity) => {
+    return {
+      name: activity.name,
+      image: `images/activities/${activity.image}`,
+      state: "idle" as const,
+      ephemeral: !activity.cumulable,
+      effect: {
+        description: "Découvre une activité",
+        onPlayed: `await state.discover("${activity.name}")`,
+        type: "action",
+        cost: activity.cost,
+      },
+    };
+  });
+
+  const deck = shuffle([...supports, ...actions, ...bonusesAsActions], 3);
 
   return {
     reason: null,
@@ -231,6 +230,7 @@ interface CardGameState {
   addMoney: (count: number) => Promise<void>;
   addDay: (count?: number) => Promise<void>;
   discover: (name: string) => Promise<void>;
+  triggerActivity: (name: string) => Promise<void>;
   draw: (
     count?: number,
     options?: Partial<{
@@ -322,51 +322,78 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
 
       for (let i = 0; i < count; i++) {
         for (const activity of state.activities.slice()) {
-          // mettre l'activité en triggered
-          set((state) => {
-            return {
-              activities: state.activities.map((a) => {
-                if (a.name === activity.name) {
-                  return { ...a, state: "triggered" };
-                }
-                return a;
-              }),
-            };
-          });
-
-          await wait();
-
-          await eval(`(async () => {
-            ${activity.onTrigger}
-          })()`);
-
-          // remettre l'activité en idle
-          set((state) => {
-            return {
-              activities: state.activities.map((a) => {
-                if (a.name === activity.name) {
-                  return { ...a, state: "idle" };
-                }
-                return a;
-              }),
-            };
-          });
+          await state.triggerActivity(activity.name);
         }
       }
     }
   },
 
   discover: async (name) => {
-    const activity = activities.find((a) => a.name === name)!;
+    const rawActivity = activities.find((a) => a.name === name)!;
 
     // on joue le son de la banque
     bank.discover.play();
 
-    set((state) => {
-      return {
-        activities: [...state.activities, { ...activity, state: "appear" }],
-      };
-    });
+    let state = getState();
+
+    // si l'activité est déjà découverte, on augmente son cumul
+    if (state.activities.find((a) => a.name === name)) {
+      set((state) => {
+        return {
+          activities: state.activities.map((a) => {
+            if (a.name === name) {
+              return { ...a, cumul: a.cumul + 1 };
+            }
+            return a;
+          }),
+        };
+      });
+    } else {
+      set((state) => {
+        return {
+          activities: [
+            ...state.activities,
+            {
+              ...rawActivity,
+              state: "appear",
+              cumul: 1,
+              max: rawActivity.cumulable ? (rawActivity.max ?? Infinity) : 1,
+            },
+          ],
+        };
+      });
+    }
+
+    if (rawActivity.cumulable) {
+      // on vérifie si la carte qui sert à découvrir cette activité doit passer en éphémère ou non
+
+      state = getState();
+
+      const activity = state.activities.find((a) => a.name === name)!;
+      const pattern = `discover("${name}")`;
+      const card =
+        state.hand.find((c) => c.effect.onPlayed.includes(pattern)) ||
+        state.deck.find((c) => c.effect.onPlayed.includes(pattern)) ||
+        state.discard.find((c) => c.effect.onPlayed.includes(pattern));
+
+      if (card) {
+        set((state) => {
+          return {
+            hand: state.hand.map((c) => {
+              if (c.name === card.name) {
+                return {
+                  ...c,
+                  ephemeral: rawActivity.max
+                    ? activity.cumul >= rawActivity.max - 1
+                    : false,
+                };
+              }
+              return c;
+            }),
+          };
+        });
+      }
+    }
 
     await wait();
 
@@ -375,6 +402,41 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
       return {
         activities: state.activities.map((a) => {
           if (a.name === name) {
+            return { ...a, state: "idle" };
+          }
+          return a;
+        }),
+      };
+    });
+  },
+
+  triggerActivity: async (name) => {
+    const state = getState();
+    const activity = state.activities.find((a) => a.name === name)!;
+
+    // mettre l'activité en triggered
+    set((state) => {
+      return {
+        activities: state.activities.map((a) => {
+          if (a.name === activity.name) {
+            return { ...a, state: "triggered" };
+          }
+          return a;
+        }),
+      };
+    });
+
+    await wait();
+
+    await eval(`(async () => {
+      ${activity.onTrigger}
+    })()`);
+
+    // remettre l'activité en idle
+    set((state) => {
+      return {
+        activities: state.activities.map((a) => {
+          if (a.name === activity.name) {
             return { ...a, state: "idle" };
           }
           return a;

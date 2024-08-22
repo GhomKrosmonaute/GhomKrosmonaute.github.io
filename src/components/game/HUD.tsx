@@ -29,7 +29,7 @@ export const HUD = () => {
   const [helpOpened, openHelp] = React.useState<boolean>(false);
 
   return (
-    <div className="w-min ml-10 mt-4 space-y-2">
+    <div className="w-[300px] ml-10 mt-4 space-y-2">
       <code>CardGame v0.5-beta [WIP]</code>
       <Gauge
         name="Energie / Points d'action"
@@ -45,7 +45,7 @@ export const HUD = () => {
         barColor="bg-pink-500"
       />
 
-      <div className="*:flex *:items-center *:gap-2 space-y-2">
+      <div className="*:flex *:items-center *:gap-2 *:whitespace-nowrap space-y-2">
         <div>
           <Money className="w-6" />{" "}
           <span
@@ -67,22 +67,36 @@ export const HUD = () => {
         </div>
       </div>
 
-      <div className="flex flex-wrap p-2 gap-4">
+      <div className="grid grid-cols-3 p-2 gap-5 relative shrink-0 w-max">
         {game.activities.map((activity, index) => (
-          <div key={index} className="text-sm">
+          <div key={index} className="group/activity shrink-0">
             <img
               src={`images/activities/${activity.image}`}
               alt={activity.name}
               className={cn(
-                "object-cover w-16 h-16 rounded-full pointer-events-auto opacity-0 cursor-pointer",
+                "block object-cover w-16 h-16 aspect-square rounded-full pointer-events-auto opacity-0 cursor-pointer mx-auto",
                 {
                   "opacity-100": activity.state === "idle",
                   "animate-appear": activity.state === "appear",
                   "opacity-100 animate-trigger": activity.state === "triggered",
                 },
               )}
-              title={`${activity.name} - ${activity.description}`}
             />
+            <div className="whitespace-nowrap text-sm text-center">
+              {activity.name}{" "}
+              {activity.cumul === activity.max ? "MAX" : activity.cumul}
+            </div>
+            <div className="hidden group-hover/activity:block absolute right-0 top-1/2 -translate-y-1/2 translate-x-full">
+              <p
+                dangerouslySetInnerHTML={{
+                  __html: formatText(
+                    activity.description
+                      .replace(/@cumul/g, String(activity.cumul))
+                      .replace(/@s/g, activity.cumul > 1 ? "s" : ""),
+                  ),
+                }}
+              />
+            </div>
           </div>
         ))}
       </div>

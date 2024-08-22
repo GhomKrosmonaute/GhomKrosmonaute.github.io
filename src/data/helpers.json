@@ -6,5 +6,7 @@
   "Votre pioche est limitée. Jouez prudemment !",
   "Chaque carte @action jouée ajoute un jour à la partie.",
   "Les cartes @action ont une bannière bleue.",
-  "Lorsque vous n'avez plus d'@energy, puisez dans la @reputation."
+  "Lorsque vous n'avez plus d'@energy, puisez dans la @reputation.",
+  "Les cartes éphémères sont détruites après utilisation.",
+  "Les effets des @activitys sont cumulables !"
 ]
