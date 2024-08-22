@@ -24,7 +24,7 @@ const activities = [
     description: "Pioche @cumul carte@s par jour",
     image: "meditation.png",
     onTrigger: async (state, activity) => {
-      for (let i = 0; i < activity.cumul; i++) await state.draw();
+      await state.draw(activity.cumul);
     },
     cumulable: true,
     max: 3,
@@ -46,7 +46,7 @@ const activities = [
       "Place @cumul carte@s aléatoire@s de la défausse dans le deck par jour",
     image: "recyclage.png",
     onTrigger: async (state, activity) => {
-      for (let i = 0; i < activity.cumul; i++) await state.recycle();
+      await state.recycle(activity.cumul);
     },
     cumulable: true,
     max: 3,

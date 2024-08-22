@@ -55,9 +55,15 @@ const effects = [
     description: "Joue gratuitement la carte la plus à droite de ta main",
     onPlayed: async (state) =>
       await state.play(state.hand[state.hand.length - 1], { free: true }),
-    condition: (state, card) =>
-      state.hand.length > 1 &&
-      state.hand.indexOf(card) !== state.hand.length - 1,
+    condition: (state, card) => {
+      const target = state.hand[state.hand.length - 1];
+
+      return (
+        target.name !== card.name &&
+        (!target.effect.condition ||
+          target.effect.condition(state, state.hand[state.hand.length - 1]))
+      );
+    },
     type: "action",
     cost: 4,
   },

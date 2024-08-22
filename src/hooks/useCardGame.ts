@@ -1,8 +1,8 @@
 import { bank } from "@/sound.ts";
 import { create } from "zustand";
 
-import projects from "../data/projects.json";
 import technos from "../data/techno.json";
+import projects from "../data/projects.json";
 import effects from "../data/effects.ts";
 import activities from "../data/activities.ts";
 
@@ -769,14 +769,19 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
     state = getState();
 
     const isMill = state.deck.length === 0 && state.hand.length === 0;
-    const isSoftLocked = state.hand.every(
-      (c) =>
-        (card.effect.condition && !card.effect.condition(state, card)) ||
-        (typeof c.effect.cost === "number" &&
-          c.effect.cost > state.energy + state.reputation) ||
-        (typeof c.effect.cost === "string" &&
-          Number(c.effect.cost) > state.money),
-    );
+    const isSoftLocked = state.hand.every((c) => {
+      // on vérifie si la condition s'il y en
+      if (c.effect.condition && !c.effect.condition(state, c)) return true;
+
+      // on vérifie si on a assez d'énergie ou de monnaie
+      if (typeof c.effect.cost === "number") {
+        if (c.effect.cost > state.energy + state.reputation) return true;
+      } else {
+        if (Number(c.effect.cost) > state.money) return true;
+      }
+
+      return false;
+    });
 
     if (isMill || isSoftLocked) {
       set({
