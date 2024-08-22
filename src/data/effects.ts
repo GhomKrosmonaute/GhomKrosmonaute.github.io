@@ -1,6 +1,6 @@
 import type { Effect } from "@/hooks/useCardGame.ts";
 
-const effects = [
+const effects: Effect[] = [
   {
     description: "Gagne 10M$",
     onPlayed: async (state) => await state.addMoney(10),
@@ -59,6 +59,7 @@ const effects = [
       const target = state.hand[state.hand.length - 1];
 
       return (
+        target &&
         target.name !== card.name &&
         (!target.effect.condition ||
           target.effect.condition(state, state.hand[state.hand.length - 1]))
@@ -199,6 +200,6 @@ const effects = [
     type: "action",
     cost: "100",
   },
-] satisfies Effect[];
+];
 
 export default effects;

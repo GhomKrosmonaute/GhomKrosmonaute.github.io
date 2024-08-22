@@ -26,7 +26,7 @@ export default defineConfig({
       },
     },
   },
-  // esbuild: {
-  //   keepNames: true,
-  // },
+  esbuild: {
+    keepNames: true,
+  },
 });

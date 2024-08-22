@@ -8,7 +8,7 @@ type RawActivity = Pick<
   cumulable?: boolean;
 };
 
-const activities = [
+const activities: RawActivity[] = [
   {
     name: "Starbucks",
     description: "Rend @cumul @energy@s par jour",
@@ -62,6 +62,6 @@ const activities = [
     cumulable: true,
     cost: "25",
   },
-] satisfies RawActivity[];
+];
 
 export default activities;
