@@ -46,6 +46,7 @@ export function formatActivityText(text: string, cumul: number) {
     .replace(/@cumul/g, `<span style="color: #f59e0b">${cumul}</span>`)
     .replace(/@s/g, cumul > 1 ? "s" : "");
 }
+
 async function wait(ms = 500) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -89,7 +90,7 @@ export function map(
 
 export function isActionCardInfo(
   card: GameCardInfo,
-): card is ActionCardInfo & { state: GameCardState } {
+): card is ActionCardInfo {
   return (card as ActionCardInfo).image !== undefined;
 }
 
@@ -117,6 +118,7 @@ export interface ActionCardInfo {
   name: string;
   image: string;
   effect: Effect;
+  state: GameCardState;
   description?: string;
   detail?: string;
   url?: string;
@@ -126,6 +128,7 @@ export interface SupportCardInfo {
   name: string;
   logo: string;
   effect: Effect;
+  state: GameCardState;
 }
 
 export type GameCardState =
@@ -136,12 +139,19 @@ export type GameCardState =
   | "idle"
   | null;
 
-export type GameCardInfo = (ActionCardInfo | SupportCardInfo) & {
-  state: GameCardState;
-};
+export type GameCardInfo = ActionCardInfo | SupportCardInfo
 
 const supportEffects = effects.filter((effect) => effect.type === "support");
 const actionEffects = effects.filter((effect) => effect.type === "action");
+
+const discoverPriceThreshold = [20, 50, 75]
+
+export function getDiscoverCardPrice(state: Pick<CardGameState, "activities">, card: GameCardInfo) {
+  const index = state.activities.length
+  const priceThreshold = discoverPriceThreshold[index] ?? Infinity
+
+  return Math.min(priceThreshold, Number(card.effect.cost))
+}
 
 function generateInitialState(): Omit<
   CardGameState,
@@ -669,7 +679,13 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
 
     if (!free) {
       const payWith = typeof card.effect.cost === "number" ? "energy" : "money";
-      const cost = Number(card.effect.cost);
+      const isDiscover = card.effect.onPlayed.toString().includes(
+        "await state.discover"
+      )
+
+      const cost = isDiscover
+        ? getDiscoverCardPrice(state, card) 
+        : Number(card.effect.cost);
 
       // on vérifie si on a assez d'énergie (state.energy >= effect.cost)
       if (state[payWith] < cost) {
@@ -784,6 +800,8 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
     });
 
     if (isMill || isSoftLocked) {
+      bank.defeat.play()
+
       set({
         isGameOver: true,
         isWon: false,

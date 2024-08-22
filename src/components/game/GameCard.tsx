@@ -8,6 +8,7 @@ import {
   SupportCardInfo,
   useCardGame,
   isActionCardInfo,
+  getDiscoverCardPrice,
 } from "@/hooks/useCardGame.ts";
 
 import { cn } from "@/utils.ts";
@@ -20,6 +21,7 @@ export const GameCard = (
   props: React.PropsWithoutRef<{ card: GameCardInfo; position: number }>,
 ) => {
   const {
+    activities,
     handSize,
     isAnyCardAnimated,
     isGameOver,
@@ -32,6 +34,7 @@ export const GameCard = (
     const cost = Number(props.card.effect.cost);
 
     return {
+      activities: state.activities,
       handSize: state.hand.length,
       isAnyCardAnimated:
         state.hand.some((card) => card.state !== "idle") ||
@@ -50,6 +53,14 @@ export const GameCard = (
   });
 
   const positionFromCenter = props.position - (handSize - 1) / 2;
+  const isMoneyCost = typeof props.card.effect.cost === "string"
+  const isDiscover = props.card.effect.onPlayed.toString().includes(
+    "await state.discover"
+  )
+
+  const cost = isDiscover
+    ? getDiscoverCardPrice({ activities }, props.card)
+    : Number(props.card.effect.cost)
 
   return (
     <div
@@ -60,7 +71,7 @@ export const GameCard = (
         "-mx-3.5 z-10 hover:z-20 cursor-pointer select-none",
         props.card.state,
         {
-          "grayscale-75":
+          "grayscale":
             isGameOver || !haveEnoughResources || !canTriggerEffect,
           "cursor-not-allowed": isAnyCardAnimated,
           // "translate-y-8": !canTriggerEffect || !haveEnoughResources,
@@ -126,11 +137,11 @@ export const GameCard = (
               transformStyle: "preserve-3d",
             }}
           >
-            {typeof props.card.effect.cost === "number" ? (
+            {!isMoneyCost ? (
               <ValueIcon
                 name="Coût en énergie / points d'action"
                 image="images/energy-background.png"
-                value={props.card.effect.cost}
+                value={cost}
                 iconScale="0.75"
                 style={{
                   transform: "translateZ(5px)",
@@ -139,7 +150,7 @@ export const GameCard = (
               />
             ) : (
               <MoneyIcon
-                value={props.card.effect.cost}
+                value={cost}
                 style={{
                   transform: "translateZ(10px) rotate(-10deg)",
                   transformStyle: "preserve-3d",
