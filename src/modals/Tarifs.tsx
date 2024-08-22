@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button.tsx";
 
 import tarifs from "../data/tarifs.json";
 import { useGlobalState } from "@/hooks/useGlobalState.ts";
-import React from "react";
 
 export const Tarifs = () => {
   const navigate = useNavigate();
