@@ -32,7 +32,7 @@ const Music = React.lazy(() =>
 export default function App() {
   const toggleDarkMode = useDarkMode();
   const isCardGameVisible = useGlobalState((state) => state.isCardGameVisible);
-  const isSplineLoaded = useGlobalState((state) => state.splineLoaded);
+  // const isSplineLoaded = useGlobalState((state) => state.splineLoaded);
   const largeScreen = useMediaQuery("(width >= 768px) and (height >= 768px)");
   const largeWidth = useMediaQuery("(width >= 768px)");
   const [desktop, setDesktop] = React.useState(false);
@@ -113,13 +113,6 @@ export default function App() {
         >
           {desktop ? (
             <React.Suspense>
-              {!isSplineLoaded && (
-                <img
-                  src="images/spline-placeholder.png"
-                  alt="Image stylisée d'un Mac book pro"
-                  className="absolute object-cover"
-                />
-              )}
               <SplineMacbook />
             </React.Suspense>
           ) : (
