@@ -86,7 +86,7 @@ export const HUD = () => {
 
             <div className="h-6 relative">
               <div className="relative">
-                {activity.max && (
+                {activity.max !== Infinity && (
                   <Progress
                     className="absolute -translate-y-2 w-full"
                     barColor="bg-activity"
@@ -103,7 +103,8 @@ export const HUD = () => {
               <h3 className="text-lg">
                 {activity.name}{" "}
                 <span className="text-activity font-changa">
-                  {activity.cumul} {activity.max ? `/ ${activity.max}` : ""}
+                  {activity.cumul}{" "}
+                  {activity.max !== Infinity ? `/ ${activity.max}` : ""}
                 </span>
               </h3>
               <p
