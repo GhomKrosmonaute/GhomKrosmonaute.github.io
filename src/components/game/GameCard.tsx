@@ -58,7 +58,11 @@ export const GameCard = (
         "transition-transform hover:-translate-y-14",
         "-mx-3.5 z-10 hover:z-20 cursor-pointer select-none",
         props.card.state,
-        { grayscale: isGameOver, "cursor-not-allowed": isAnyCardAnimated },
+        {
+          grayscale: isGameOver,
+          "cursor-not-allowed": isAnyCardAnimated,
+          // "translate-y-8": !canTriggerEffect || !haveEnoughResources,
+        },
       )}
       onClick={async () => {
         if (!isAnyCardAnimated && !isGameOver) {

@@ -36,7 +36,7 @@ export const Game = (props: React.PropsWithChildren<{ show?: boolean }>) => {
       </div>
       <div
         className={cn(
-          "absolute flex items-center -translate-x-1/2",
+          "absolute flex items-center -translate-x-1/2 max-w-[100vw]",
           "left-[50vw] transition-[bottom] ease-in-out duration-1000",
           props.show ? "bottom-[-50px]" : "-bottom-full",
         )}

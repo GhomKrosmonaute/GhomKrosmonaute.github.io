@@ -36,8 +36,8 @@ export function formatText(text: string) {
     );
 }
 
-async function wait() {
-  return new Promise((resolve) => setTimeout(resolve, 500));
+async function wait(ms = 500) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function shuffle(cards: GameCardInfo[], times = 1): GameCardInfo[] {
@@ -321,9 +321,12 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
       const state = getState();
 
       for (let i = 0; i < count; i++) {
-        for (const activity of state.activities.slice()) {
-          await state.triggerActivity(activity.name);
-        }
+        await Promise.all(
+          state.activities.slice().map(async (activity, index) => {
+            await wait(250 * index);
+            await state.triggerActivity(activity.name);
+          }),
+        );
       }
     }
   },
