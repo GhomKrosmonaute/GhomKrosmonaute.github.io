@@ -17,11 +17,12 @@ import Deck from "@/assets/icons/deck.svg";
 import Money from "@/assets/icons/money.svg";
 import Day from "@/assets/icons/day.svg";
 
+import { cn } from "@/utils.ts";
+
 import { Gauge } from "@/components/game/Gauge.tsx";
 import { Button } from "@/components/ui/button.tsx";
-
-import { cn } from "@/utils.ts";
 import { Progress } from "@/components/ui/progress.tsx";
+import { Scoreboard } from "@/components/game/Scoreboard.tsx";
 
 export const HUD = () => {
   const game = useCardGame();
@@ -222,6 +223,8 @@ export const HUD = () => {
           )}
         </div>
       </div>
+
+      <Scoreboard />
     </div>
   );
 };
