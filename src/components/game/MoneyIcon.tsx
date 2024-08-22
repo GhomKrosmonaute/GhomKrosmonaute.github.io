@@ -11,7 +11,7 @@ export const MoneyIcon = (
   return (
     <div
       className={cn(
-        "text-2xl font-bold border border-foreground px-1 bg-green-950",
+        "text-2xl font-bold border border-white px-1 bg-money text-white",
         props.className,
       )}
       style={props.style}

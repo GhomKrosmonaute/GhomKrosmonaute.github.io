@@ -8,17 +8,31 @@ import activities from "../data/activities.json";
 
 export const MAX_REPUTATION = 10;
 export const MAX_ENERGY = 20;
-export const MONEY_TO_REACH = 100;
+export const MONEY_TO_REACH = 200;
 
 export function formatText(text: string) {
   return text
+    .replace(/MONEY_TO_REACH/g, String(MONEY_TO_REACH))
+    .replace(/@action(\S*)/g, '<span style="color: #2563eb">Action$1</span>')
     .replace(
-      /@action/g,
-      '<span style="color: hsl(var(--primary))">Action</span>',
+      /@reputation(\S*)/g,
+      '<span style="color: #d946ef">Réputation$1</span>',
+    )
+    .replace(
+      /@activity(\S*)/g,
+      '<span style="color: #f59e0b">Activité$1</span>',
+    )
+    .replace(
+      /@support(\S*)/g,
+      '<span style="background-color: hsla(var(--secondary) / 0.5); color: hsl(var(--secondary-foreground))">Support$1</span>',
+    )
+    .replace(
+      /@energy(\S*)/g,
+      '<span style="color: hsl(var(--primary))">Énergie$1</span>',
     )
     .replace(
       /(\d+M\$)/g,
-      '<span style="display: inline-block; background-color: rgb(5 46 22); padding: 0 4px;">$1</span>',
+      '<span style="display: inline-block; background-color: #022c22; color: white; padding: 0 4px;">$1</span>',
     );
 }
 
@@ -63,7 +77,7 @@ export function map(
   }
 }
 
-export function isProjectCardInfo(
+export function isActionCardInfo(
   card: GameCardInfo,
 ): card is ProjectCardInfo & { state: GameCardState } {
   return (card as ProjectCardInfo).image !== undefined;
@@ -210,7 +224,10 @@ interface CardGameState {
   reputation: number;
   money: number;
   addEnergy: (count: number) => Promise<void>;
-  addReputation: (count: number) => Promise<void>;
+  addReputation: (
+    count: number,
+    options?: { skipGameOverCheck?: boolean },
+  ) => Promise<void>;
   addMoney: (count: number) => Promise<void>;
   addDay: (count?: number) => Promise<void>;
   discover: (name: string) => Promise<void>;
@@ -242,7 +259,7 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
     });
   },
 
-  addReputation: async (count) => {
+  addReputation: async (count, options) => {
     // on joue le son de la banque
     if (count > 0) bank.gain.play();
     else bank.loss.play();
@@ -258,7 +275,11 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
 
     await wait();
 
+    if (options?.skipGameOverCheck) return;
+
     const state = getState();
+
+    if (state.isGameOver) return;
 
     if (state.reputation === 0) {
       // on joue le son de la banque
@@ -548,24 +569,26 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
     // on vérifie si on a assez d'énergie (state.energy >= effect.cost)
     if (state[payWith] < cost) {
       if (payWith === "energy") {
-        // on vérifie si on a assez de réputation (state.reputation >= effect.cost)
+        // on vérifie si on a assez de réputation et d'énergie
         if (state.reputation + state.energy < cost) {
           await cantPlay();
           return;
         }
 
-        // on retire la réputation et on met à zéro l'énergie
-        await state.addReputation(cost - state.energy);
+        // on retire toute l'énergie et on puise dans la réputation pour le reste
+        const missingEnergy = cost - state.energy;
 
         set({ energy: 0 });
+
+        await state.addReputation(-missingEnergy, { skipGameOverCheck: true });
       } else {
         await cantPlay();
         return;
       }
+    } else {
+      // on soustrait le coût de la carte à l'énergie
+      set({ [payWith]: state[payWith] - cost });
     }
-
-    // on soustrait le coût de la carte à l'énergie
-    set({ [payWith]: state[payWith] - cost });
 
     // on joue le son de la banque
     bank.play.play();
@@ -612,6 +635,19 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
     // si la main est vide, on pioche
 
     state = getState();
+
+    if (state.isGameOver) return;
+
+    // vérifier le game over par réputation
+
+    if (state.reputation === 0) {
+      // on joue le son de la banque
+      bank.defeat.play();
+
+      set({ isGameOver: true, isWon: false, reason: "reputation" });
+
+      return;
+    }
 
     if (state.hand.length === 0) {
       await state.draw();

@@ -1,3 +1,5 @@
+const colors = require("tailwindcss/colors");
+
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   darkMode: ["class"],
@@ -58,6 +60,14 @@ module.exports = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+
+        // Game colors
+        action: colors.blue["600"],
+        support: "hsla(var(--secondary) / 0.5)",
+        energy: "hsl(var(--primary))",
+        reputation: colors.fuchsia["500"],
+        money: colors.emerald["950"],
+        activity: colors.amber["500"],
       },
       boxShadow: {
         "glow-20": "0 0 20px var(--tw-shadow-color)",

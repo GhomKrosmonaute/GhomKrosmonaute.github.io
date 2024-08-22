@@ -1,7 +1,7 @@
 [
   {
     "name": "Starbucks",
-    "description": "Rend une énergie par jour",
+    "description": "Rend une @energy par jour",
     "image": "starbucks.png",
     "onTrigger": "await state.addEnergy(1)",
     "cost": "20"

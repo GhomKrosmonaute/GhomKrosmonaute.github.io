@@ -1,10 +1,10 @@
 [
-  "Si vous n'avez plus de réputation, vous perdez la partie.",
+  "Si vous n'avez plus de @reputation, vous perdez la partie.",
   "Si vous ne pouvez plus jouer de carte, vous perdez la partie.",
-  "Si vous obtenez 100M$, vous gagnez la partie.",
+  "Si vous obtenez MONEY_TO_REACHM$, vous gagnez la partie.",
   "Certaines cartes coutent de l'argent pour être jouées.",
   "Votre pioche est limitée. Jouez prudemment !",
   "Chaque carte @action jouée ajoute un jour à la partie.",
-  "Les cartes @action ont une bannière mauve.",
-  "Lorsque vous n'avez plus d'énergie, puisez dans la réputation."
+  "Les cartes @action ont une bannière bleue.",
+  "Lorsque vous n'avez plus d'@energy, puisez dans la @reputation."
 ]

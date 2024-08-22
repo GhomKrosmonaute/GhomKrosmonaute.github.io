@@ -12,7 +12,7 @@
     "cost": 4
   },
   {
-    "description": "Le matin, gagne 10M$. L'après-midi, gagne 2 énergies",
+    "description": "Le matin, gagne 10M$. L'après-midi, gagne 2 @energys",
     "onPlayed": "if (new Date().getHours() < 12) { await state.addMoney(10) } else { await state.addEnergy(2) }",
     "type": "action",
     "cost": 0
@@ -92,7 +92,7 @@
     "cost": 3
   },
   {
-    "description": "Double l'énergie",
+    "description": "Double l'@energy",
     "onPlayed": "await state.addEnergy(state.energy)",
     "type": "action",
     "cost": "10"

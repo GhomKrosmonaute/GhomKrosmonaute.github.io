@@ -127,22 +127,24 @@ export const HUD = () => {
         >
           Recommencer
         </Button>
-        <Question
-          className="h-6 cursor-pointer pointer-events-auto"
-          title={helpers[helpIndex]}
-          onClick={() => openHelp(!helpOpened)}
-          onMouseEnter={() =>
-            setHelpIndex(Math.floor(Math.random() * helpers.length))
-          }
-        />
-        {helpOpened && (
-          <span
-            className="whitespace-nowrap"
-            dangerouslySetInnerHTML={{
-              __html: formatText(helpers[helpIndex]),
-            }}
+
+        <div
+          className="flex items-center gap-2 pointer-events-auto"
+          onMouseEnter={() => setHelpIndex((helpIndex + 1) % helpers.length)}
+        >
+          <Question
+            className="h-6 cursor-pointer"
+            onClick={() => openHelp(!helpOpened)}
           />
-        )}
+          {helpOpened && (
+            <span
+              className="whitespace-nowrap"
+              dangerouslySetInnerHTML={{
+                __html: formatText(helpers[helpIndex]),
+              }}
+            />
+          )}
+        </div>
       </div>
     </div>
   );

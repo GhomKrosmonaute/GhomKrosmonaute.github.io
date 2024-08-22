@@ -1,26 +1,37 @@
 import React from "react";
 
+import "./GameCard.css";
+
 import {
   GameCardInfo,
   ProjectCardInfo,
   TechnoCardInfo,
   useCardGame,
-  isProjectCardInfo,
+  isActionCardInfo,
 } from "@/hooks/useCardGame.ts";
 
 import { cn } from "@/utils.ts";
-import { Tilt } from "./Tilt.tsx";
+import { Tilt } from "@/components/game/Tilt.tsx";
 import { BorderLight } from "@/components/ui/border-light.tsx";
-
-import "./GameCard.css";
 import { ValueIcon } from "@/components/game/ValueIcon.tsx";
 import { MoneyIcon } from "@/components/game/MoneyIcon.tsx";
 
 export const GameCard = (
   props: React.PropsWithoutRef<{ card: GameCardInfo; position: number }>,
 ) => {
-  const { handSize, isAnyCardAnimated, isGameOver, play } = useCardGame(
-    (state) => ({
+  const {
+    handSize,
+    isAnyCardAnimated,
+    isGameOver,
+    play,
+    canTriggerEffect,
+    haveEnoughResources,
+  } = useCardGame((state) => {
+    const payWith =
+      typeof props.card.effect.cost === "number" ? "energy" : "money";
+    const cost = Number(props.card.effect.cost);
+
+    return {
       handSize: state.hand.length,
       isAnyCardAnimated:
         state.hand.some((card) => card.state !== "idle") ||
@@ -28,8 +39,14 @@ export const GameCard = (
           state.activities.some((activity) => activity.state !== "idle")),
       play: state.play,
       isGameOver: state.isGameOver,
-    }),
-  );
+      haveEnoughResources:
+        payWith === "energy"
+          ? state.energy + state.reputation >= cost
+          : state.money >= cost,
+      canTriggerEffect:
+        !props.card.effect.condition || eval(props.card.effect.condition),
+    };
+  });
 
   const positionFromCenter = props.position - (handSize - 1) / 2;
 
@@ -41,6 +58,7 @@ export const GameCard = (
         "transition-transform hover:-translate-y-14",
         "-mx-3.5 z-10 hover:z-20 cursor-pointer select-none",
         props.card.state,
+        { grayscale: isGameOver, "cursor-not-allowed": isAnyCardAnimated },
       )}
       onClick={async () => {
         if (!isAnyCardAnimated && !isGameOver) {
@@ -50,7 +68,7 @@ export const GameCard = (
       onContextMenu={(e) => {
         e.preventDefault();
 
-        if (isProjectCardInfo(props.card) && props.card.url) {
+        if (isActionCardInfo(props.card) && props.card.url) {
           // open new tab with project url
           window.open(props.card.url, "_blank");
         }
@@ -66,17 +84,20 @@ export const GameCard = (
         scale={1.1}
         className={cn(
           "group/game-card transition-shadow duration-200 ease-in-out",
-          "shadow-primary hover:shadow-glow-20",
+          "hover:shadow-glow-20",
           "flex flex-col w-full h-full rounded-md",
           "rounded-md *:shrink-0",
-          { "bg-card": props.card.effect.type === "support" },
+          {
+            "bg-card shadow-primary": props.card.effect.type === "support",
+            "shadow-action": props.card.effect.type === "action",
+          },
         )}
       >
-        {isProjectCardInfo(props.card) && props.card.detail && (
+        {isActionCardInfo(props.card) && props.card.detail && (
           <div
             className={cn(
               "absolute pointer-events-none left-1/2 -top-[10px] -translate-x-1/2 -translate-y-full rounded-2xl bg-card",
-              "px-5 py-2 opacity-0 group-hover/game-card:animate-appear text-sm w-max max-w-full text-center shadow shadow-primary",
+              "px-5 py-2 opacity-0 group-hover/game-card:animate-appear text-sm w-max max-w-full text-center shadow shadow-action",
             )}
           >
             {props.card.detail}
@@ -85,15 +106,17 @@ export const GameCard = (
 
         <div
           className={cn("flex justify-start items-center h-10 rounded-t-md", {
-            "bg-primary": props.card.effect.type === "action",
-            "bg-secondary/50": props.card.effect.type === "support",
+            "bg-action": props.card.effect.type === "action",
+            "bg-support": props.card.effect.type === "support",
           })}
           style={{
             transformStyle: "preserve-3d",
           }}
         >
           <div
-            className="font-changa shrink-0 relative"
+            className={cn("font-changa shrink-0 relative", {
+              grayscale: !haveEnoughResources || !canTriggerEffect,
+            })}
             style={{
               transform: "translateZ(5px) translateX(-15px)",
               transformStyle: "preserve-3d",
@@ -104,6 +127,7 @@ export const GameCard = (
                 name="Coût en énergie / points d'action"
                 image="images/energy-background.png"
                 value={props.card.effect.cost}
+                iconScale="0.75"
                 style={{
                   transform: "translateZ(5px)",
                   transformStyle: "preserve-3d",
@@ -125,6 +149,7 @@ export const GameCard = (
               {
                 "text-sm": props.card.name.length > 20,
                 "text-primary-foreground": props.card.effect.type === "action",
+                "opacity-50": !canTriggerEffect || !haveEnoughResources,
               },
             )}
             style={{
@@ -135,7 +160,7 @@ export const GameCard = (
           </h2>
         </div>
 
-        {isProjectCardInfo(props.card) ? (
+        {isActionCardInfo(props.card) ? (
           <GameCardProject card={props.card} />
         ) : (
           <GameCardTechno card={props.card} />
@@ -146,7 +171,9 @@ export const GameCard = (
           style={{ transformStyle: "preserve-3d" }}
         >
           <p
-            className="py-[10px] px-[15px] text-center"
+            className={cn("py-[10px] px-[15px] text-center", {
+              "grayscale opacity-50": !canTriggerEffect,
+            })}
             style={{
               transform: "translateZ(10px)",
             }}
