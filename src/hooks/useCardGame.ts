@@ -185,7 +185,7 @@ function generateInitialState(): Omit<
       state: "idle" as const,
       ephemeral: !activity.cumulable,
       effect: {
-        description: "Découvre une activité",
+        description: formatText("Découvre une @activity"),
         onPlayed: `await state.discover("${activity.name}")`,
         type: "action",
         cost: activity.cost,

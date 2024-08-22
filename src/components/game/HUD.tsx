@@ -21,6 +21,7 @@ import { Gauge } from "@/components/game/Gauge.tsx";
 import { Button } from "@/components/ui/button.tsx";
 
 import { cn } from "@/utils.ts";
+import { Progress } from "@/components/ui/progress.tsx";
 
 export const HUD = () => {
   const game = useCardGame();
@@ -74,7 +75,7 @@ export const HUD = () => {
               src={`images/activities/${activity.image}`}
               alt={activity.name}
               className={cn(
-                "block object-cover w-16 h-16 aspect-square rounded-full pointer-events-auto opacity-0 cursor-pointer mx-auto",
+                "block object-cover w-16 h-16 aspect-square rounded-full pointer-events-auto opacity-0 cursor-pointer mx-auto ring-activity ring-4",
                 {
                   "opacity-100": activity.state === "idle",
                   "animate-appear": activity.state === "appear",
@@ -82,16 +83,37 @@ export const HUD = () => {
                 },
               )}
             />
-            <div className="whitespace-nowrap text-sm text-center">
-              {activity.name}{" "}
-              {activity.cumul === activity.max ? "MAX" : activity.cumul}
+
+            <div className="h-6 relative">
+              <div className="relative">
+                {activity.max && (
+                  <Progress
+                    className="absolute -translate-y-2 w-full"
+                    barColor="bg-activity"
+                    value={(activity.cumul / activity.max) * 100}
+                  />
+                )}
+                <div className="absolute text-center font-changa left-0 -translate-y-3 aspect-square h-6 rounded-full bg-activity shadow shadow-black">
+                  {activity.cumul}
+                </div>
+              </div>
             </div>
+
             <div className="hidden group-hover/activity:block absolute right-0 top-1/2 -translate-y-1/2 translate-x-full">
+              <h3 className="text-lg">
+                {activity.name}{" "}
+                <span className="text-activity font-changa">
+                  {activity.cumul} {activity.max ? `/ ${activity.max}` : ""}
+                </span>
+              </h3>
               <p
                 dangerouslySetInnerHTML={{
                   __html: formatText(
                     activity.description
-                      .replace(/@cumul/g, String(activity.cumul))
+                      .replace(
+                        /@cumul/g,
+                        `<span style="color: #f59e0b">${activity.cumul}</span>`,
+                      )
                       .replace(/@s/g, activity.cumul > 1 ? "s" : ""),
                   ),
                 }}

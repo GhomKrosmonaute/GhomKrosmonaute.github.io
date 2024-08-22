@@ -18,7 +18,7 @@ export const Contact = () => {
   return (
     <Modal modalName="/contact">
       <div className="space-y-4">
-        <h1 className="text-3xl">Contact</h1>
+        <h1 className="text-3xl text-center md:text-left">Contact</h1>
         <div className="flex flex-col gap-2">
           <a href="mailto: camille.abella@proton.me" target="_blank">
             <code className="flex items-center gap-4 h-min">
@@ -36,7 +36,12 @@ export const Contact = () => {
             </code>
           </a>
         </div>
-        <Button onClick={() => navigate("/pricing")} variant="cta" size="cta">
+        <Button
+          onClick={() => navigate("/pricing")}
+          variant="cta"
+          size="cta"
+          className="mx-auto md:mx-0"
+        >
           Mes tarifs
         </Button>
       </div>

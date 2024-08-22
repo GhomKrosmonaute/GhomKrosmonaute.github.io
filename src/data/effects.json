@@ -92,6 +92,12 @@
     "cost": 3
   },
   {
+    "description": "Pioche autant de carte que d'@activitys découvertes",
+    "onPlayed": "await state.draw(state.activities.length)",
+    "type": "support",
+    "cost": 3
+  },
+  {
     "description": "Double l'@energy",
     "onPlayed": "await state.addEnergy(state.energy)",
     "type": "action",
