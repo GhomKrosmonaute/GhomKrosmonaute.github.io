@@ -135,19 +135,6 @@ export default function App() {
       </Button>
 
       <RouterProvider router={router} />
-
-      {window.location.pathname !== "/" && !largeScreen && (
-        <Button
-          variant="opaque"
-          className="fixed m-4 right-0 bottom-0"
-          onClick={() => {
-            window.location.pathname = "/";
-          }}
-        >
-          {/*<img src={cross} alt="back" />*/}
-          Retour
-        </Button>
-      )}
     </>
   );
 }
