@@ -8,7 +8,6 @@ import {
   SupportCardInfo,
   useCardGame,
   isActionCardInfo,
-  secureCheckCondition,
 } from "@/hooks/useCardGame.ts";
 
 import { cn } from "@/utils.ts";
@@ -44,7 +43,9 @@ export const GameCard = (
         payWith === "energy"
           ? state.energy + state.reputation >= cost
           : state.money >= cost,
-      canTriggerEffect: secureCheckCondition(props.card, state),
+      canTriggerEffect:
+        !props.card.effect.condition ||
+        props.card.effect.condition(state, props.card),
     };
   });
 

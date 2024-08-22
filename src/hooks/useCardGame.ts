@@ -3,34 +3,13 @@ import { create } from "zustand";
 
 import projects from "../data/projects.json";
 import technos from "../data/techno.json";
-import effects from "../data/effects.json";
-import activities from "../data/activities.json";
+import effects from "../data/effects.ts";
+import activities from "../data/activities.ts";
 
 export const MAX_ENERGY = 20;
 export const MAX_HAND_SIZE = 8;
 export const MAX_REPUTATION = 10;
 export const MONEY_TO_REACH = 300;
-
-// @ts-expect-error C'est good
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function securePlay(card: GameCardInfo, state: CardGameState) {
-  await eval(`(async () => { ${card.effect.onPlayed} })()`);
-}
-
-// @ts-expect-error C'est good
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function secureCheckCondition(card: GameCardInfo, state: CardGameState) {
-  return !card.effect.condition || eval(card.effect.condition);
-}
-
-export async function secureActivityTrigger(
-  activity: Activity,
-  // @ts-expect-error C'est good
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  state: CardGameState,
-) {
-  await eval(`(async () => { ${activity.onTrigger} })()`);
-}
 
 export function formatText(text: string) {
   return text
@@ -118,7 +97,7 @@ export interface Activity {
   name: string;
   description: string;
   image: string;
-  onTrigger: string;
+  onTrigger: (state: CardGameState, activity: Activity) => Promise<unknown>;
   cost: number | string;
   state: "appear" | "idle" | "triggered";
   cumul: number;
@@ -127,10 +106,10 @@ export interface Activity {
 
 export interface Effect {
   description: string;
-  onPlayed: string;
+  onPlayed: (state: CardGameState, card: GameCardInfo) => Promise<unknown>;
   type: "action" | "support";
   cost: number | string;
-  condition?: string;
+  condition?: (state: CardGameState, card: GameCardInfo) => boolean;
 }
 
 export interface ActionCardInfo {
@@ -191,7 +170,7 @@ function generateInitialState(): Omit<
         ...effect,
         description: formatText(effect.description),
       },
-    };
+    } satisfies GameCardInfo;
   });
 
   const actions = projects.map((project, i) => {
@@ -206,27 +185,26 @@ function generateInitialState(): Omit<
         ...effect,
         description: formatText(effect.description),
       },
-    };
+    } satisfies GameCardInfo;
   });
 
   const bonusesAsActions = activities.map((activity) => {
     return {
       name: activity.name,
       image: `images/activities/${activity.image}`,
-      state: "idle" as const,
+      state: "idle",
       ephemeral: !activity.cumulable,
       effect: {
         description: formatText(
           `Découvre une @activity. <br/> @activity: ${formatActivityText(activity.description, 1)}`,
-        ), //todo
-        onPlayed: `await state.discover("${activity.name}")`,
-        type: "action" as const,
+        ),
+        onPlayed: async (state) => await state.discover(activity.name),
+        type: "action",
         cost: activity.cost,
-      },
-    };
+      } satisfies Effect,
+    } satisfies GameCardInfo;
   });
 
-  // @ts-expect-error Le typage est bon
   const deck = shuffle([...supports, ...actions, ...bonusesAsActions], 3);
 
   return {
@@ -275,7 +253,7 @@ interface CardGameState {
   drop: (options?: { toDeck?: boolean }) => Promise<void>;
   dropAll: (options?: {
     toDeck?: boolean;
-    type: Effect["type"];
+    type?: Effect["type"];
   }) => Promise<void>;
   recycle: (count?: number) => Promise<void>;
   play: (card: GameCardInfo, options?: { free?: boolean }) => Promise<void>;
@@ -413,7 +391,7 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
 
       if (activity.cumul === activity.max) {
         const card = state.hand.find((c) =>
-          c.effect.onPlayed.includes(`discover("${name}")`),
+          c.effect.onPlayed.toString().includes(`discover("${name}")`),
         )!;
 
         set({
@@ -466,7 +444,7 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
 
     await wait();
 
-    await secureActivityTrigger(activity, state);
+    await activity.onTrigger(state, activity);
 
     await wait();
 
@@ -511,7 +489,7 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
 
         drawn.push(card.name);
 
-        if (hand.length >= MAX_HAND_SIZE) {
+        if (hand.length - 1 >= MAX_HAND_SIZE) {
           discard.push(card);
           discardAdded = true;
         } else {
@@ -683,7 +661,7 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
     };
 
     // on vérifie la condition s'il y en a une (eval(effect.condition))
-    if (secureCheckCondition(card, state)) {
+    if (card.effect.condition && !card.effect.condition(state, card)) {
       await cantPlay();
 
       return;
@@ -753,11 +731,13 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
 
     const effectManagement = async () => {
       // si il ne s'agit que de pioche une carte, on attend avant de piocher
-      if (/^await state.(draw|play)\(.*?\)$/.test(card.effect.onPlayed))
+      if (
+        /^await state.(draw|play)\(.*?\)$/.test(card.effect.onPlayed.toString())
+      )
         await wait();
 
       // on applique l'effet de la carte (toujours via eval)
-      await securePlay(card, state);
+      await card.effect.onPlayed(state, card);
     };
 
     await Promise.all([cardManagement(), effectManagement()]);
@@ -791,7 +771,7 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
     const isMill = state.deck.length === 0 && state.hand.length === 0;
     const isSoftLocked = state.hand.every(
       (c) =>
-        !secureCheckCondition(card, state) ||
+        (card.effect.condition && !card.effect.condition(state, card)) ||
         (typeof c.effect.cost === "number" &&
           c.effect.cost > state.energy + state.reputation) ||
         (typeof c.effect.cost === "string" &&
