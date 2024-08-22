@@ -181,8 +181,8 @@ export const GameCard = (
             dangerouslySetInnerHTML={{ __html: props.card.effect.description }}
           />
 
-          {props.card.ephemeral && (
-            <div className="text-center h-full text-2xl text-muted-foreground/20 font-bold">
+          {props.card.effect.ephemeral && (
+            <div className="text-center h-full text-2xl text-muted-foreground/30 font-bold">
               Éphémère
             </div>
           )}

@@ -17,7 +17,8 @@ const activities: RawActivity[] = [
       await state.addEnergy(activity.cumul);
     },
     cumulable: true,
-    cost: "20",
+    max: 3,
+    cost: "100",
   },
   {
     name: "Méditation",
@@ -28,17 +29,17 @@ const activities: RawActivity[] = [
     },
     cumulable: true,
     max: 3,
-    cost: "20",
+    cost: "100",
   },
   {
     name: "Bourse",
-    description: "Gagne @cumulM$ fois le nombre de cartes en main par jour",
+    description: "Gagne @cumul0% de votre capital par jour",
     image: "bourse.png",
     onTrigger: async (state, activity) => {
-      await state.addMoney(activity.cumul * state.hand.length);
+      await state.addMoney(Math.ceil((activity.cumul / 100) * state.money));
     },
     cumulable: true,
-    cost: "25",
+    cost: "150",
   },
   {
     name: "Recyclage",
@@ -50,7 +51,7 @@ const activities: RawActivity[] = [
     },
     cumulable: true,
     max: 3,
-    cost: "20",
+    cost: "50",
   },
   {
     name: "I.A",
@@ -60,7 +61,40 @@ const activities: RawActivity[] = [
       await state.addMoney(activity.cumul * state.discard.length);
     },
     cumulable: true,
-    cost: "25",
+    cost: "50",
+  },
+  {
+    name: "Sport",
+    description: "Gagne @cumul @reputation@s par jour",
+    image: "sport.png",
+    onTrigger: async (state, activity) => {
+      await state.addReputation(activity.cumul);
+    },
+    cumulable: true,
+    max: 2,
+    cost: 12,
+  },
+  {
+    name: "PC Puissant",
+    description: "Gagne @cumulM$ fois le nombre d'@energy par jour",
+    image: "pc-puissant.png",
+    onTrigger: async (state, activity) => {
+      await state.addMoney(activity.cumul * state.energy);
+    },
+    cumulable: true,
+    max: 2,
+    cost: 12,
+  },
+  {
+    name: "Stagiaire",
+    description: "Gagne @cumulM$ fois le nombre de cartes en main par jour",
+    image: "stagiaire.png",
+    onTrigger: async (state, activity) => {
+      await state.addMoney(activity.cumul * state.hand.length);
+    },
+    cumulable: true,
+    max: 5,
+    cost: "100",
   },
 ];
 

@@ -110,6 +110,7 @@ export interface Effect {
   type: "action" | "support";
   cost: number | string;
   condition?: (state: CardGameState, card: GameCardInfo) => boolean;
+  ephemeral?: boolean;
 }
 
 export interface ActionCardInfo {
@@ -137,7 +138,6 @@ export type GameCardState =
 
 export type GameCardInfo = (ActionCardInfo | SupportCardInfo) & {
   state: GameCardState;
-  ephemeral?: boolean;
 };
 
 const supportEffects = effects.filter((effect) => effect.type === "support");
@@ -193,8 +193,8 @@ function generateInitialState(): Omit<
       name: activity.name,
       image: `images/activities/${activity.image}`,
       state: "idle",
-      ephemeral: !activity.cumulable,
       effect: {
+        ephemeral: !activity.cumulable,
         description: formatText(
           `Découvre une @activity. <br/> @activity: ${formatActivityText(activity.description, 1)}`,
         ),
@@ -717,7 +717,7 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
 
       // la carte va dans la défausse et on retire la carte de la main
       set((state) => ({
-        discard: card.ephemeral
+        discard: card.effect.ephemeral
           ? state.discard
           : shuffle([{ ...card, state: null }, ...state.discard], 3),
         hand: state.hand.filter((c) => c.name !== card.name),

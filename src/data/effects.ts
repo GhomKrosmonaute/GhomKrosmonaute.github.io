@@ -199,6 +199,7 @@ const effects: Effect[] = [
     onPlayed: async (state) => await state.addReputation(10),
     type: "action",
     cost: "100",
+    ephemeral: true,
   },
 ];
 
