@@ -1,1 +1,0 @@
-import{j as t,C as n}from"./react-spline-Gm59yu5V.js";import{u as a,c as d}from"./index-DXtDfTpU.js";const r=()=>{const[e,s]=a(o=>[o.splineLoaded,o.setSplineLoaded]);return t.jsx(n,{scene:"https://prod.spline.design/jotuSLcx9NOHdvVx/scene.splinecode",className:d("absolute",{"pointer-events-none":!e}),onLoad:()=>{e||setTimeout(()=>{s(!0)},1e3)}})};export{r as SplineMacbook};
