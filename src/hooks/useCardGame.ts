@@ -23,6 +23,15 @@ export function secureCheckCondition(card: GameCardInfo, state: CardGameState) {
   return !card.effect.condition || eval(card.effect.condition);
 }
 
+export async function secureActivityTrigger(
+  activity: Activity,
+  // @ts-expect-error C'est good
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  state: CardGameState,
+) {
+  await eval(`(async () => { ${activity.onTrigger} })()`);
+}
+
 export function formatText(text: string) {
   return text
     .replace(/MONEY_TO_REACH/g, String(MONEY_TO_REACH))
@@ -457,9 +466,7 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
 
     await wait();
 
-    await eval(`(async () => {
-      ${activity.onTrigger}
-    })()`);
+    await secureActivityTrigger(activity, state);
 
     await wait();
 
