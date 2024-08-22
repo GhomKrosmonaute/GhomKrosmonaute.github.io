@@ -59,7 +59,7 @@ export const GameCard = (
         "-mx-3.5 z-10 hover:z-20 cursor-pointer select-none",
         props.card.state,
         {
-          grayscale: isGameOver,
+          grayscale: isGameOver || !haveEnoughResources || !canTriggerEffect,
           "cursor-not-allowed": isAnyCardAnimated,
           // "translate-y-8": !canTriggerEffect || !haveEnoughResources,
         },
@@ -118,9 +118,7 @@ export const GameCard = (
           }}
         >
           <div
-            className={cn("font-changa shrink-0 relative", {
-              grayscale: !haveEnoughResources || !canTriggerEffect,
-            })}
+            className="font-changa shrink-0 relative"
             style={{
               transform: "translateZ(5px) translateX(-15px)",
               transformStyle: "preserve-3d",
@@ -153,7 +151,6 @@ export const GameCard = (
               {
                 "text-sm": props.card.name.length > 20,
                 "text-primary-foreground": props.card.effect.type === "action",
-                "opacity-50": !canTriggerEffect || !haveEnoughResources,
               },
             )}
             style={{
@@ -175,9 +172,7 @@ export const GameCard = (
           style={{ transformStyle: "preserve-3d" }}
         >
           <p
-            className={cn("py-[10px] px-[15px] text-center", {
-              "grayscale opacity-50": !canTriggerEffect,
-            })}
+            className="py-[10px] px-[15px] text-center"
             style={{
               transform: "translateZ(10px)",
             }}

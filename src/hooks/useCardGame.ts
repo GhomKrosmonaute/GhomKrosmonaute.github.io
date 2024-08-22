@@ -31,7 +31,7 @@ export function formatText(text: string) {
       '<span style="color: hsl(var(--primary))">Énergie$1</span>',
     )
     .replace(
-      /(\d+M\$)/g,
+      /((?:\d+|<.+>)M\$)/g,
       '<span style="display: inline-block; background-color: #022c22; color: white; padding: 0 4px;">$1</span>',
     );
 }
@@ -367,34 +367,50 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
       });
     }
 
-    if (rawActivity.cumulable) {
+    if (rawActivity.cumulable && rawActivity.max) {
       // on vérifie si la carte qui sert à découvrir cette activité doit passer en éphémère ou non
 
       state = getState();
 
       const activity = state.activities.find((a) => a.name === name)!;
-      const pattern = `discover("${name}")`;
-      const card =
-        state.hand.find((c) => c.effect.onPlayed.includes(pattern)) ||
-        state.deck.find((c) => c.effect.onPlayed.includes(pattern)) ||
-        state.discard.find((c) => c.effect.onPlayed.includes(pattern));
 
-      if (card) {
-        set((state) => {
-          return {
-            hand: state.hand.map((c) => {
-              if (c.name === card.name) {
-                return {
-                  ...c,
-                  ephemeral: rawActivity.max
-                    ? activity.cumul >= rawActivity.max - 1
-                    : false,
-                };
-              }
-              return c;
-            }),
-          };
-        });
+      if (activity.cumul >= activity.max - 1) {
+        const pattern = `discover("${name}")`;
+
+        const found = {
+          hand: state.hand.find((c) => c.effect.onPlayed.includes(pattern)),
+          deck: state.deck.find((c) => c.effect.onPlayed.includes(pattern)),
+          discard: state.discard.find((c) =>
+            c.effect.onPlayed.includes(pattern),
+          ),
+        };
+
+        let card: GameCardInfo | undefined;
+        let from: "hand" | "deck" | "discard" | undefined;
+
+        for (const [key, c] of Object.entries(found)) {
+          if (c) {
+            card = c;
+            from = key as "hand" | "deck" | "discard";
+            break;
+          }
+        }
+
+        if (card && from) {
+          set((state) => {
+            return {
+              [from]: state[from].map((c) => {
+                if (c.name === card.name) {
+                  return {
+                    ...c,
+                    ephemeral: true,
+                  };
+                }
+                return c;
+              }),
+            };
+          });
+        }
       }
     }
 
