@@ -4,8 +4,8 @@ import "./GameCard.css";
 
 import {
   GameCardInfo,
-  ProjectCardInfo,
-  TechnoCardInfo,
+  ActionCardInfo,
+  SupportCardInfo,
   useCardGame,
   isActionCardInfo,
 } from "@/hooks/useCardGame.ts";
@@ -30,6 +30,10 @@ export const GameCard = (
     const payWith =
       typeof props.card.effect.cost === "number" ? "energy" : "money";
     const cost = Number(props.card.effect.cost);
+
+    // @ts-expect-error It is used in the eval function
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const card = props.card;
 
     return {
       handSize: state.hand.length,
@@ -59,7 +63,8 @@ export const GameCard = (
         "-mx-3.5 z-10 hover:z-20 cursor-pointer select-none",
         props.card.state,
         {
-          grayscale: isGameOver || !haveEnoughResources || !canTriggerEffect,
+          "grayscale-75":
+            isGameOver || !haveEnoughResources || !canTriggerEffect,
           "cursor-not-allowed": isAnyCardAnimated,
           // "translate-y-8": !canTriggerEffect || !haveEnoughResources,
         },
@@ -199,7 +204,7 @@ export const GameCard = (
 };
 
 const GameCardProject = (
-  props: React.PropsWithoutRef<{ card: ProjectCardInfo }>,
+  props: React.PropsWithoutRef<{ card: ActionCardInfo }>,
 ) => {
   return (
     <div
@@ -248,7 +253,7 @@ const GameCardProject = (
 const spinners = ["React", "Knex"];
 
 const GameCardTechno = (
-  props: React.PropsWithoutRef<{ card: TechnoCardInfo }>,
+  props: React.PropsWithoutRef<{ card: SupportCardInfo }>,
 ) => {
   return (
     <>

@@ -3,68 +3,95 @@
     "name": "Bot.ts",
     "image": "bot.ts.png",
     "description": "TypeScript framework for building Discord bots",
-    "detail": "Includes a CLI for generating new bots and bot files, actually my biggest project",
+    "detail": "Inclus un CLI pour générer des bots et des fichiers de bot. Actuellement mon projet le plus important.",
     "url": "https://ghom.gitbook.io/bot.ts"
   },
   {
     "name": "CRISPR-Crunch",
     "image": "crispr-crunch.png",
     "description": "Puzzle game about gene editing",
-    "detail": "Made in TypeScript with PixiJS and Booyah with the PlayCurious team",
+    "detail": "Un jeu de puzzle sur l'édition de gènes réalisé avec TypeScript, PixiJS et Booyah avec l'équipe PlayCurious.",
     "url": "https://playcurious.games/our-games/crispr-crunch"
   },
   {
     "name": "Portfolio",
     "image": "portfolio.png",
     "description": "My personal portfolio with a card game",
-    "detail": "Made in TypeScript with React, Vite, Tailwind CSS, Zustand and a lot of passion"
+    "detail": "Mon portfolio réalisé avec TypeScript, React, Vite, Tailwind CSS, Zustand et beaucoup de passion"
   },
   {
     "name": "Les Labs JS",
     "image": "js-labs.png",
     "description": "A Discord server for JavaScript developers I own and manage",
-    "detail": "The best place to learn and share about the JavaScript ecosystem",
+    "detail": "Le meilleur endroit pour apprendre et partager sur l'écosystème JavaScript",
     "url": "https://discord.gg/3vC2XWK"
   },
   {
     "name": "2D Shooter",
     "image": "shooter.png",
     "description": "My first game in TypeScript",
-    "detail": "A simple 2D shooter game with a spaceship and enemies made with p5.js (click \"Play offline\" for test)",
+    "detail": "Un simple jeu de tir 2D avec un vaisseau spatial et des ennemis réalisé avec p5.js en TypeScript",
     "url": "https://github.com/GhomKrosmonaute/TypedShooterGame"
   },
   {
     "name": "Gario",
     "image": "gario.png",
     "description": "A 2D platformer game for showcase",
-    "detail": "A simple 2D platformer game with a character, a level, a life system and a checkpoint system made with p5.js in TypeScript",
+    "detail": "Un simple jeu de plateforme 2D avec un système de checkpoint réalisé avec p5.js en TypeScript",
     "url": "https://github.com/GhomKrosmonaute/Gario"
   },
   {
     "name": "Booyah",
     "image": "booyah.png",
     "description": "A TypeScript game engine",
-    "detail": "A powerful game engine using state machines made in TypeScript by Jesse Himmelstein and forked and improved by me",
+    "detail": "Un moteur de jeu puissant utilisant des machines à états réalisé en TypeScript par Jesse Himmelstein et amélioré par Ghom",
     "url": "https://github.com/GhomKrosmonaute/Booyah"
   },
   {
     "name": "Nano",
     "image": "nano.png",
     "description": "TypeScript library for building modular Discord bots",
-    "detail": "You can use this lib for building Discord bots with a modular and flexible architecture",
+    "detail": "Vous pouvez utiliser cette lib pour construire des bots Discord avec une architecture modulaire et flexible",
     "url": "https://github.com/NanoWorkspace"
   },
   {
     "name": "Sea Rescue",
     "image": "sea-rescue.png",
     "description": "3D game about ocean cleaning",
-    "detail": "Made with TypeScript, Three.js and Booyah with the PlayCurious team",
+    "detail": "Réalisé avec TypeScript, Three.js et Booyah avec l'équipe PlayCurious.",
     "url": "https://playcurious.games/our-games/sea-rescue/"
   },
   {
     "name": "Site Photographe",
     "image": "photo.png",
     "description": "A website for a photographer",
-    "detail": "Made with Next.js, TypeScript, React and Tailwind CSS. Optimized for search engines and performance, including a CMS"
+    "detail": "Rélisé avec Next.js, TypeScript, React et Tailwind CSS. Optimisé pour le référencement et les performances. Inclus un CMS."
+  },
+  {
+    "name": "RedMetrics",
+    "image": "red-metrics.png",
+    "description": "Open source web metrics tool",
+    "detail": "Réalisé avec TypeScript, React, PostgreSQL et Express chez PlayCurious.",
+    "url": "https://github.com/play-curious/RedMetrics2/"
+  },
+  {
+    "name": "WakFight",
+    "image": "wak-fight.png",
+    "description": "RPG fighting Discord bot",
+    "detail": "Mon premier bot Discord RPG basé sur l'univers de Wakfu."
+  },
+  {
+    "name": "Boat Quest",
+    "image": "edenred.png",
+    "description": "2D game about ocean cleaning",
+    "detail": "Réalisé avec TypeScript, PixiJS et Booyah avec l'équipe PlayCurious pour EdenRed.",
+    "url": "https://playcurious.games/our-games/edenred-boat-quest/"
+  },
+  {
+    "name": "Survival RPG",
+    "image": "survival-rpg.png",
+    "description": "Hardcore RPG Discord bot",
+    "detail": "Un bot Discord RPG hardcore en rogue-like.",
+    "url": "https://discord.gg/7N5pJEY"
   }
 ]

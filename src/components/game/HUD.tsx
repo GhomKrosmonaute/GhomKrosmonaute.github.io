@@ -7,6 +7,7 @@ import {
   MONEY_TO_REACH,
   MAX_REPUTATION,
   formatText,
+  formatActivityText,
 } from "@/hooks/useCardGame.ts";
 
 import helpers from "@/data/helpers.json";
@@ -76,11 +77,11 @@ export const HUD = () => {
               src={`images/activities/${activity.image}`}
               alt={activity.name}
               className={cn(
-                "block object-cover w-16 h-16 aspect-square rounded-full pointer-events-auto opacity-0 cursor-pointer mx-auto ring-activity ring-4",
+                "block object-cover w-16 h-16 aspect-square rounded-full pointer-events-auto cursor-pointer mx-auto ring-activity ring-4",
                 {
-                  "opacity-100": activity.state === "idle",
-                  "animate-appear": activity.state === "appear",
-                  "opacity-100 animate-trigger": activity.state === "triggered",
+                  // "": activity.state === "idle",
+                  // "animate-appear": activity.state === "appear",
+                  "animate-trigger": activity.state === "triggered",
                 },
               )}
             />
@@ -100,7 +101,7 @@ export const HUD = () => {
               </div>
             </div>
 
-            <div className="hidden group-hover/activity:block absolute right-0 top-1/2 -translate-y-1/2 translate-x-full">
+            <div className="hidden group-hover/activity:block absolute right-0 top-1/2 -translate-y-1/2 translate-x-full pl-3">
               <h3 className="text-lg">
                 {activity.name}{" "}
                 <span className="text-activity font-changa">
@@ -111,12 +112,7 @@ export const HUD = () => {
               <p
                 dangerouslySetInnerHTML={{
                   __html: formatText(
-                    activity.description
-                      .replace(
-                        /@cumul/g,
-                        `<span style="color: #f59e0b">${activity.cumul}</span>`,
-                      )
-                      .replace(/@s/g, activity.cumul > 1 ? "s" : ""),
+                    formatActivityText(activity.description, activity.cumul),
                   ),
                 }}
               />

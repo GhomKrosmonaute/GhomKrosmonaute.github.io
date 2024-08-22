@@ -23,6 +23,10 @@ module.exports = {
       },
     },
     extend: {
+      grayscale: {
+        50: "50%",
+        75: "75%",
+      },
       screens: {
         mdh: { raw: "(height >= 768px)" },
       },
@@ -83,8 +87,8 @@ module.exports = {
       },
       keyframes: {
         appear: {
-          from: { opacity: 0 },
-          to: { opacity: 1 },
+          from: { opacity: "0 !important" },
+          to: { opacity: "1 !important" },
         },
         "accordion-down": {
           from: { height: "0" },
@@ -156,7 +160,7 @@ module.exports = {
         "border-light-opposed-fast-disappear":
           "border-light-opposed-disappear 1s infinite linear",
         "spin-forward": "spin 3s linear infinite",
-        appear: "appear 0.5s ease-in-out forwards 1s",
+        appear: "appear 0.5s ease-in-out forwards 0.5s",
         trigger: "trigger 0.5s ease-in-out forwards 0.5s",
       },
     },

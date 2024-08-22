@@ -31,6 +31,20 @@
     "cost": 3
   },
   {
+    "description": "Si la @reputation est inférieur à 5, gagne 20M$",
+    "onPlayed": "await state.addMoney(20)",
+    "condition": "state.reputation < 5",
+    "type": "action",
+    "cost": 3
+  },
+  {
+    "description": "Joue gratuitement la carte la plus à droite de ta main",
+    "onPlayed": "await state.play(state.hand[state.hand.length - 1], { free: true })",
+    "condition": "state.hand.length > 1 && state.hand.indexOf(card) !== state.hand.length - 1",
+    "type": "action",
+    "cost": 4
+  },
+  {
     "description": "Pioche une carte",
     "onPlayed": "await state.draw()",
     "condition": "state.deck.length >= 1",
@@ -99,9 +113,40 @@
     "cost": 3
   },
   {
+    "description": "Défausse toutes les cartes @support en main, pioche 2 cartes @action",
+    "onPlayed": "await state.dropAll({ type: 'support' }); await state.draw(2, { type: 'action' })",
+    "type": "support",
+    "cost": 3
+  },
+  {
+    "description": "Défausse toutes les cartes @action en main, pioche 3 cartes",
+    "onPlayed": "await state.dropAll({ type: 'action' }); await state.draw(3)",
+    "type": "support",
+    "cost": 1
+  },
+  {
     "description": "Double l'@energy",
     "onPlayed": "await state.addEnergy(state.energy)",
     "type": "action",
     "cost": "10"
+  },
+  {
+    "description": "Ajoute 4 @energys",
+    "onPlayed": "await state.addEnergy(3)",
+    "type": "action",
+    "cost": "10"
+  },
+  {
+    "description": "Si la @reputation est inférieur à 5, ajoute 5 @energys",
+    "onPlayed": "await state.addEnergy(5)",
+    "condition": "state.reputation < 5",
+    "type": "action",
+    "cost": "5"
+  },
+  {
+    "description": "Remplis la jauge de @reputation",
+    "onPlayed": "await state.addReputation(10)",
+    "type": "action",
+    "cost": "100"
   }
 ]

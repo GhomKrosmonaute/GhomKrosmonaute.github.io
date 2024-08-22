@@ -9,35 +9,43 @@ import activities from "../data/activities.json";
 export const MAX_ENERGY = 20;
 export const MAX_HAND_SIZE = 8;
 export const MAX_REPUTATION = 10;
-export const MONEY_TO_REACH = 200;
+export const MONEY_TO_REACH = 300;
 
 export function formatText(text: string) {
   return text
     .replace(/MONEY_TO_REACH/g, String(MONEY_TO_REACH))
     .replace(/MAX_HAND_SIZE/g, String(MAX_HAND_SIZE))
-    .replace(/@action(\S*)/g, '<span style="color: #2563eb">Action$1</span>')
     .replace(
-      /@reputation(\S*)/g,
+      /@action([^\s.:,]*)/g,
+      '<span style="color: #2563eb">Action$1</span>',
+    )
+    .replace(
+      /@reputation([^\s.:,]*)/g,
       '<span style="color: #d946ef">Réputation$1</span>',
     )
     .replace(
-      /@activity(\S*)/g,
+      /@activity([^\s.:,]*)/g,
       '<span style="color: #f59e0b">Activité$1</span>',
     )
     .replace(
-      /@support(\S*)/g,
-      '<span style="background-color: hsla(var(--secondary) / 0.5); color: hsl(var(--secondary-foreground))">Support$1</span>',
+      /@support([^\s.:,]*)/g,
+      '<span style="display: inline-block; background-color: hsla(var(--secondary) / 0.5); color: hsl(var(--secondary-foreground)); padding: 0 6px; border-radius: 4px">Support$1</span>',
     )
     .replace(
-      /@energy(\S*)/g,
+      /@energy([^\s.:,]*)/g,
       '<span style="color: hsl(var(--primary))">Énergie$1</span>',
     )
     .replace(
-      /((?:\d+|<.+>)M\$)/g,
+      /((?:\d+|<span[^>]*>\d+<\/span>)M\$)/g,
       '<span style="display: inline-block; background-color: #022c22; color: white; padding: 0 4px;">$1</span>',
     );
 }
 
+export function formatActivityText(text: string, cumul: number) {
+  return text
+    .replace(/@cumul/g, `<span style="color: #f59e0b">${cumul}</span>`)
+    .replace(/@s/g, cumul > 1 ? "s" : "");
+}
 async function wait(ms = 500) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -81,8 +89,8 @@ export function map(
 
 export function isActionCardInfo(
   card: GameCardInfo,
-): card is ProjectCardInfo & { state: GameCardState } {
-  return (card as ProjectCardInfo).image !== undefined;
+): card is ActionCardInfo & { state: GameCardState } {
+  return (card as ActionCardInfo).image !== undefined;
 }
 
 export interface Activity {
@@ -99,12 +107,12 @@ export interface Activity {
 export interface Effect {
   description: string;
   onPlayed: string;
-  type: string;
+  type: "action" | "support";
   cost: number | string;
   condition?: string;
 }
 
-export interface ProjectCardInfo {
+export interface ActionCardInfo {
   name: string;
   image: string;
   effect: Effect;
@@ -113,7 +121,7 @@ export interface ProjectCardInfo {
   url?: string;
 }
 
-export interface TechnoCardInfo {
+export interface SupportCardInfo {
   name: string;
   logo: string;
   effect: Effect;
@@ -127,7 +135,7 @@ export type GameCardState =
   | "idle"
   | null;
 
-export type GameCardInfo = (ProjectCardInfo | TechnoCardInfo) & {
+export type GameCardInfo = (ActionCardInfo | SupportCardInfo) & {
   state: GameCardState;
   ephemeral?: boolean;
 };
@@ -187,14 +195,17 @@ function generateInitialState(): Omit<
       state: "idle" as const,
       ephemeral: !activity.cumulable,
       effect: {
-        description: formatText("Découvre une @activity"),
+        description: formatText(
+          `Découvre une @activity. <br/> @activity: ${formatActivityText(activity.description, 1)}`,
+        ), //todo
         onPlayed: `await state.discover("${activity.name}")`,
-        type: "action",
+        type: "action" as const,
         cost: activity.cost,
       },
     };
   });
 
+  // @ts-expect-error Le typage est bon
   const deck = shuffle([...supports, ...actions, ...bonusesAsActions], 3);
 
   return {
@@ -236,14 +247,17 @@ interface CardGameState {
   draw: (
     count?: number,
     options?: Partial<{
-      type: "action" | "support";
+      type: Effect["type"];
       fromDiscardPile: boolean;
     }>,
   ) => Promise<void>;
   drop: (options?: { toDeck?: boolean }) => Promise<void>;
-  dropAll: (options?: { toDeck?: boolean }) => Promise<void>;
+  dropAll: (options?: {
+    toDeck?: boolean;
+    type: Effect["type"];
+  }) => Promise<void>;
   recycle: (count?: number) => Promise<void>;
-  play: (card: GameCardInfo) => Promise<void>;
+  play: (card: GameCardInfo, options?: { free?: boolean }) => Promise<void>;
   reset: () => void;
 }
 
@@ -555,7 +569,10 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
     // on active l'animation de retrait de la carte
     set({
       hand: state.hand.map((c) => {
-        if (c.state === "idle") {
+        if (
+          c.state === "idle" &&
+          (!options?.type || c.effect.type === options.type)
+        ) {
           return { ...c, state: "dropped" };
         }
         return c;
@@ -568,10 +585,17 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
     // les cartes retournent dans le deck et on vide la main
     set((state) => ({
       [toKey]: shuffle(
-        [...state.hand.map((c) => ({ ...c, state: null })), ...state[toKey]],
+        [
+          ...state.hand
+            .filter((c) => !options?.type || c.effect.type === options.type)
+            .map((c) => ({ ...c, state: null })),
+          ...state[toKey],
+        ],
         2,
       ),
-      hand: [],
+      hand: state.hand.filter(
+        (c) => options?.type && c.effect.type !== options.type,
+      ),
     }));
   },
 
@@ -580,7 +604,7 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
    */
   recycle: async (count = 1) => {
     // on joue le son de la banque
-    bank.gain.play();
+    bank.recycle.play();
 
     const state = getState();
 
@@ -606,7 +630,9 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
     });
   },
 
-  play: async (card) => {
+  play: async (card, options) => {
+    const free = !!options?.free;
+
     let state = getState();
 
     const cantPlay = async () => {
@@ -644,37 +670,41 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
       return;
     }
 
-    const payWith = typeof card.effect.cost === "number" ? "energy" : "money";
-    const cost = Number(card.effect.cost);
+    if (!free) {
+      const payWith = typeof card.effect.cost === "number" ? "energy" : "money";
+      const cost = Number(card.effect.cost);
 
-    // on vérifie si on a assez d'énergie (state.energy >= effect.cost)
-    if (state[payWith] < cost) {
-      if (payWith === "energy") {
-        // on vérifie si on a assez de réputation et d'énergie
-        if (state.reputation + state.energy < cost) {
+      // on vérifie si on a assez d'énergie (state.energy >= effect.cost)
+      if (state[payWith] < cost) {
+        if (payWith === "energy") {
+          // on vérifie si on a assez de réputation et d'énergie
+          if (state.reputation + state.energy < cost) {
+            await cantPlay();
+            return;
+          }
+
+          // on retire toute l'énergie et on puise dans la réputation pour le reste
+          const missingEnergy = cost - state.energy;
+
+          set({ energy: 0 });
+
+          await state.addReputation(-missingEnergy, {
+            skipGameOverCheck: true,
+          });
+        } else {
           await cantPlay();
           return;
         }
-
-        // on retire toute l'énergie et on puise dans la réputation pour le reste
-        const missingEnergy = cost - state.energy;
-
-        set({ energy: 0 });
-
-        await state.addReputation(-missingEnergy, { skipGameOverCheck: true });
       } else {
-        await cantPlay();
-        return;
+        // on soustrait le coût de la carte à l'énergie
+        set({ [payWith]: state[payWith] - cost });
       }
-    } else {
-      // on soustrait le coût de la carte à l'énergie
-      set({ [payWith]: state[payWith] - cost });
     }
 
     // on joue le son de la banque
     bank.play.play();
 
-    const thread1 = async () => {
+    const cardManagement = async () => {
       // on active l'animation de retrait de la carte
       set((state) => ({
         hand: state.hand.map((c) => {
@@ -702,15 +732,16 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
       }
     };
 
-    const thread2 = async () => {
+    const effectManagement = async () => {
       // si il ne s'agit que de pioche une carte, on attend avant de piocher
-      if (/^await state.draw(.*?)$/.test(card.effect.onPlayed)) await wait();
+      if (/^await state.(draw|play)\(.*?\)$/.test(card.effect.onPlayed))
+        await wait();
 
       // on applique l'effet de la carte (toujours via eval)
       await eval(`(async () => { ${card.effect.onPlayed} })()`);
     };
 
-    await Promise.all([thread1(), thread2()]);
+    await Promise.all([cardManagement(), effectManagement()]);
 
     // on vérifie si la main est vide
     // si la main est vide, on pioche

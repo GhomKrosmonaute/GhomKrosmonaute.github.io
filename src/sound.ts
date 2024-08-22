@@ -32,6 +32,11 @@ export const bank = {
     volume: 0.2,
     preload: true,
   }),
+  recycle: new Howl({
+    src: ["sounds/recycle.mp3"],
+    volume: 0.4,
+    preload: true,
+  }),
   gain: new Howl({
     src: ["sounds/gain.mp3"],
     volume: 0.4,
