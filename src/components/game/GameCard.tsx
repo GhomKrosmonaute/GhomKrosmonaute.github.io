@@ -150,7 +150,7 @@ export const GameCard = (
               />
             ) : (
               <MoneyIcon
-                value={cost}
+                value={String(cost)}
                 style={{
                   transform: "translateZ(10px) rotate(-10deg)",
                   transformStyle: "preserve-3d",
@@ -188,6 +188,7 @@ export const GameCard = (
             className="py-[10px] px-[15px] text-center"
             style={{
               transform: "translateZ(10px)",
+              transformStyle: "preserve-3d",
             }}
             dangerouslySetInnerHTML={{ __html: props.card.effect.description }}
           />

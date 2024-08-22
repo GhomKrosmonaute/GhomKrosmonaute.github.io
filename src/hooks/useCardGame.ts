@@ -17,27 +17,27 @@ export function formatText(text: string) {
     .replace(/MAX_HAND_SIZE/g, String(MAX_HAND_SIZE))
     .replace(
       /@action([^\s.:,]*)/g,
-      '<span style="color: #2563eb">Action$1</span>',
+      '<span style="color: #2563eb; transform: translateZ(5px);">Action$1</span>',
     )
     .replace(
       /@reputation([^\s.:,]*)/g,
-      '<span style="color: #d946ef">Réputation$1</span>',
+      '<span style="color: #d946ef; transform: translateZ(5px);">Réputation$1</span>',
     )
     .replace(
       /@activity([^\s.:,]*)/g,
-      '<span style="color: #f59e0b">Activité$1</span>',
+      '<span style="color: #f59e0b; transform: translateZ(5px);">Activité$1</span>',
     )
     .replace(
       /@support([^\s.:,]*)/g,
-      '<span style="display: inline-block; background-color: hsla(var(--secondary) / 0.5); color: hsl(var(--secondary-foreground)); padding: 0 6px; border-radius: 4px">Support$1</span>',
+      '<span style="display: inline-block; background-color: hsla(var(--secondary) / 0.5); color: hsl(var(--secondary-foreground)); padding: 0 6px; border-radius: 4px; transform: translateZ(5px);">Support$1</span>',
     )
     .replace(
       /@energy([^\s.:,]*)/g,
-      '<span style="color: hsl(var(--primary))">Énergie$1</span>',
+      '<span style="color: hsl(var(--primary)); transform: translateZ(5px);">Énergie$1</span>',
     )
     .replace(
       /((?:\d+|<span[^>]*>\d+<\/span>)M\$)/g,
-      '<span style="display: inline-block; background-color: #022c22; color: white; padding: 0 4px;">$1</span>',
+      '<span style="display: inline-block; background-color: #022c22; color: white; padding: 0 4px; transform: translateZ(5px);">$1</span>',
     );
 }
 
@@ -144,13 +144,24 @@ export type GameCardInfo = ActionCardInfo | SupportCardInfo
 const supportEffects = effects.filter((effect) => effect.type === "support");
 const actionEffects = effects.filter((effect) => effect.type === "action");
 
-const discoverPriceThreshold = [20, 50, 75]
+const discoverPriceThreshold = {
+  string: ["20", "50", "75"],
+  number: [5, 7, 10],
+}
 
-export function getDiscoverCardPrice(state: Pick<CardGameState, "activities">, card: GameCardInfo) {
+export function getDiscoverCardPrice(
+  state: Pick<CardGameState, "activities">, 
+  card: GameCardInfo
+): number {
   const index = state.activities.length
-  const priceThreshold = discoverPriceThreshold[index] ?? Infinity
+  const priceThreshold = discoverPriceThreshold[
+    typeof card.effect.cost
+  ][index] ?? Infinity
 
-  return Math.min(priceThreshold, Number(card.effect.cost))
+  return Math.min(
+    Number(priceThreshold), 
+    Number(card.effect.cost)
+  )
 }
 
 function generateInitialState(): Omit<
