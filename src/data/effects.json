@@ -94,6 +94,7 @@
   {
     "description": "Pioche autant de carte que d'@activitys découvertes",
     "onPlayed": "await state.draw(state.activities.length)",
+    "condition": "state.activities.length > 0",
     "type": "support",
     "cost": 3
   },

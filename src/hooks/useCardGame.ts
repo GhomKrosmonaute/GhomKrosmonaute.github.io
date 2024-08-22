@@ -6,13 +6,15 @@ import technos from "../data/techno.json";
 import effects from "../data/effects.json";
 import activities from "../data/activities.json";
 
-export const MAX_REPUTATION = 10;
 export const MAX_ENERGY = 20;
+export const MAX_HAND_SIZE = 8;
+export const MAX_REPUTATION = 10;
 export const MONEY_TO_REACH = 200;
 
 export function formatText(text: string) {
   return text
     .replace(/MONEY_TO_REACH/g, String(MONEY_TO_REACH))
+    .replace(/MAX_HAND_SIZE/g, String(MAX_HAND_SIZE))
     .replace(/@action(\S*)/g, '<span style="color: #2563eb">Action$1</span>')
     .replace(
       /@reputation(\S*)/g,
@@ -368,49 +370,31 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
     }
 
     if (rawActivity.cumulable && rawActivity.max) {
-      // on vérifie si la carte qui sert à découvrir cette activité doit passer en éphémère ou non
+      // on vérifie si la carte qui sert à découvrir cette activité doit être supprimée ou non
 
       state = getState();
 
       const activity = state.activities.find((a) => a.name === name)!;
 
-      if (activity.cumul >= activity.max - 1) {
-        const pattern = `discover("${name}")`;
+      if (activity.cumul === activity.max) {
+        const card = state.hand.find((c) =>
+          c.effect.onPlayed.includes(`discover("${name}")`),
+        )!;
 
-        const found = {
-          hand: state.hand.find((c) => c.effect.onPlayed.includes(pattern)),
-          deck: state.deck.find((c) => c.effect.onPlayed.includes(pattern)),
-          discard: state.discard.find((c) =>
-            c.effect.onPlayed.includes(pattern),
-          ),
-        };
+        set({
+          hand: state.hand.map((c) => {
+            if (c.name === card.name) return { ...c, state: "played" };
+            return c;
+          }),
+        });
 
-        let card: GameCardInfo | undefined;
-        let from: "hand" | "deck" | "discard" | undefined;
+        await wait();
 
-        for (const [key, c] of Object.entries(found)) {
-          if (c) {
-            card = c;
-            from = key as "hand" | "deck" | "discard";
-            break;
-          }
-        }
-
-        if (card && from) {
-          set((state) => {
-            return {
-              [from]: state[from].map((c) => {
-                if (c.name === card.name) {
-                  return {
-                    ...c,
-                    ephemeral: true,
-                  };
-                }
-                return c;
-              }),
-            };
-          });
-        }
+        set({
+          hand: state.hand.filter((c) => {
+            return c.name !== card.name;
+          }),
+        });
       }
     }
 
@@ -467,19 +451,21 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
   },
 
   draw: async (count = 1, options) => {
-    // on joue le son de la banque
-    bank.draw.play();
-
     set((state) => {
       const fromKey = options?.fromDiscardPile ? "discard" : "deck";
 
       const hand = state.hand.slice();
+      const discard = state.discard.slice();
+
       const from = state[fromKey].slice().filter((c) => {
         if (options?.type) return c.effect.type === options.type;
         return true;
       });
 
       const drawn: string[] = [];
+
+      let handAdded = false;
+      let discardAdded = false;
 
       for (let i = 0; i < count; i++) {
         if (from.length === 0) {
@@ -491,13 +477,25 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
         card.state = "drawn";
 
         drawn.push(card.name);
-        hand.push(card);
+
+        if (hand.length >= MAX_HAND_SIZE) {
+          discard.push(card);
+          discardAdded = true;
+        } else {
+          hand.push(card);
+          handAdded = true;
+        }
       }
+
+      if (handAdded) bank.draw.play();
+      else if (discardAdded) bank.draw.play();
 
       return {
         hand,
+        discard,
         [fromKey]: shuffle(
           state[fromKey].filter((c) => !drawn.includes(c.name)),
+          2,
         ),
       };
     });

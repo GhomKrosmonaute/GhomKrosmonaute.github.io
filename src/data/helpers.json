@@ -8,5 +8,7 @@
   "Les cartes @action ont une bannière bleue.",
   "Lorsque vous n'avez plus d'@energy, puisez dans la @reputation.",
   "Les cartes éphémères sont détruites après utilisation.",
-  "Les effets des @activitys sont cumulables !"
+  "Les effets des @activitys sont cumulables !",
+  "Vous ne pouvez pas avoir plus de MAX_HAND_SIZE cartes en main.",
+  "Les cartes piochées en trop sont défaussées à la place."
 ]
