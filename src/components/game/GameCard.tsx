@@ -8,6 +8,7 @@ import {
   SupportCardInfo,
   useCardGame,
   isActionCardInfo,
+  secureCheckCondition,
 } from "@/hooks/useCardGame.ts";
 
 import { cn } from "@/utils.ts";
@@ -31,10 +32,6 @@ export const GameCard = (
       typeof props.card.effect.cost === "number" ? "energy" : "money";
     const cost = Number(props.card.effect.cost);
 
-    // @ts-expect-error It is used in the eval function
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const card = props.card;
-
     return {
       handSize: state.hand.length,
       isAnyCardAnimated:
@@ -47,8 +44,7 @@ export const GameCard = (
         payWith === "energy"
           ? state.energy + state.reputation >= cost
           : state.money >= cost,
-      canTriggerEffect:
-        !props.card.effect.condition || eval(props.card.effect.condition),
+      canTriggerEffect: secureCheckCondition(props.card, state),
     };
   });
 

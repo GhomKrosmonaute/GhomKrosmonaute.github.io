@@ -11,6 +11,18 @@ export const MAX_HAND_SIZE = 8;
 export const MAX_REPUTATION = 10;
 export const MONEY_TO_REACH = 300;
 
+// @ts-expect-error C'est good
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function securePlay(card: GameCardInfo, state: CardGameState) {
+  await eval(`(async () => { ${card.effect.onPlayed} })()`);
+}
+
+// @ts-expect-error C'est good
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function secureCheckCondition(card: GameCardInfo, state: CardGameState) {
+  return !card.effect.condition || eval(card.effect.condition);
+}
+
 export function formatText(text: string) {
   return text
     .replace(/MONEY_TO_REACH/g, String(MONEY_TO_REACH))
@@ -664,7 +676,7 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
     };
 
     // on vérifie la condition s'il y en a une (eval(effect.condition))
-    if (card.effect.condition && !eval(card.effect.condition)) {
+    if (secureCheckCondition(card, state)) {
       await cantPlay();
 
       return;
@@ -738,7 +750,7 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
         await wait();
 
       // on applique l'effet de la carte (toujours via eval)
-      await eval(`(async () => { ${card.effect.onPlayed} })()`);
+      await securePlay(card, state);
     };
 
     await Promise.all([cardManagement(), effectManagement()]);
@@ -772,7 +784,7 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
     const isMill = state.deck.length === 0 && state.hand.length === 0;
     const isSoftLocked = state.hand.every(
       (c) =>
-        (c.effect.condition && !eval(c.effect.condition)) ||
+        !secureCheckCondition(card, state) ||
         (typeof c.effect.cost === "number" &&
           c.effect.cost > state.energy + state.reputation) ||
         (typeof c.effect.cost === "string" &&
