@@ -4,24 +4,24 @@ import { create } from "zustand";
 import technos from "../data/techno.json";
 import projects from "../data/projects.json";
 import effects from "../data/effects.ts";
-import activities from "../data/activities.ts";
+import upgrades from "../data/upgrades.ts";
 
 export const MAX_ENERGY = 20;
 export const MAX_HAND_SIZE = 8;
 export const MAX_REPUTATION = 10;
 export const MONEY_TO_REACH = 500;
-export const DISCOVER_PRICE_THRESHOLDS = {
+export const UPGRADE_COST_THRESHOLDS = {
   string: ["20", "50", "75"],
   number: [5, 7, 10],
 };
 
-export function getDiscoverCardPrice(
-  state: Pick<CardGameState, "activities">,
+export function getUpgradeCost(
+  state: CardGameState,
   card: GameCardInfo,
 ): number {
-  const index = state.activities.length;
+  const index = state.upgrades.length;
   const priceThreshold =
-    DISCOVER_PRICE_THRESHOLDS[typeof card.effect.cost as "string" | "number"][
+    UPGRADE_COST_THRESHOLDS[typeof card.effect.cost as "string" | "number"][
       index
     ] ?? Infinity;
 
@@ -52,17 +52,14 @@ export function parseCost(state: CardGameState, card: GameCardInfo) {
   const tempCard = applyNextCardModifiers(state, card);
 
   const payWith = typeof tempCard.effect.cost === "number" ? "energy" : "money";
-  const isDiscover = card.effect.onPlayed
-    .toString()
-    .includes("await state.discover");
 
-  const cost = isDiscover
-    ? getDiscoverCardPrice(state, tempCard)
+  const cost = tempCard.effect.upgrade
+    ? getUpgradeCost(state, tempCard)
     : Number(tempCard.effect.cost);
 
   const canBeBuy = state[payWith] >= cost;
 
-  return { payWith, cost, isDiscover, canBeBuy } as const;
+  return { payWith, cost, canBeBuy } as const;
 }
 
 export function formatText(text: string) {
@@ -78,8 +75,8 @@ export function formatText(text: string) {
       '<span style="color: #d946ef; transform: translateZ(5px);">Réputation$1</span>',
     )
     .replace(
-      /@activity([^\s.:,]*)/g,
-      '<span style="color: #f59e0b; transform: translateZ(5px);">Activité$1</span>',
+      /@upgrade([^\s.:,]*)/g,
+      '<span style="color: #f59e0b; transform: translateZ(5px);">Amélioration$1</span>',
     )
     .replace(
       /@support([^\s.:,]*)/g,
@@ -95,7 +92,7 @@ export function formatText(text: string) {
     );
 }
 
-export function formatActivityText(text: string, cumul: number) {
+export function formatUpgradeText(text: string, cumul: number) {
   return text
     .replace(/@cumul/g, `<span style="color: #f59e0b">${cumul}</span>`)
     .replace(/@s/g, cumul > 1 ? "s" : "");
@@ -146,11 +143,11 @@ export function isActionCardInfo(card: GameCardInfo): card is ActionCardInfo {
   return (card as ActionCardInfo).image !== undefined;
 }
 
-export interface Activity {
+export interface Upgrade {
   name: string;
   description: string;
   image: string;
-  onTrigger: (state: CardGameState, activity: Activity) => Promise<unknown>;
+  onTrigger: (state: CardGameState, upgrade: Upgrade) => Promise<unknown>;
   cost: number | string;
   state: "appear" | "idle" | "triggered";
   cumul: number;
@@ -164,6 +161,7 @@ export interface Effect {
   cost: number | string;
   condition?: (state: CardGameState, card: GameCardInfo) => boolean;
   ephemeral?: boolean;
+  upgrade?: boolean;
 }
 
 export interface ActionCardInfo {
@@ -204,8 +202,8 @@ function generateInitialState(): Omit<
   | "addReputation"
   | "addMoney"
   | "addDay"
-  | "discover"
-  | "triggerActivity"
+  | "upgrade"
+  | "triggerUpgrade"
   | "setNextCardCost"
   | "draw"
   | "drop"
@@ -244,24 +242,25 @@ function generateInitialState(): Omit<
     } satisfies GameCardInfo;
   });
 
-  const bonusesAsActions = activities.map((activity) => {
+  const upgradeActions = upgrades.map((upgrade) => {
     return {
-      name: activity.name,
-      image: `images/activities/${activity.image}`,
+      name: upgrade.name,
+      image: `images/upgrades/${upgrade.image}`,
       state: "idle",
       effect: {
-        ephemeral: !activity.cumulable,
+        upgrade: true,
+        ephemeral: !upgrade.cumulable,
         description: formatText(
-          `Découvre une @activity. <br/> @activity: ${formatActivityText(activity.description, 1)}`,
+          `@upgrade <br/> ${formatUpgradeText(upgrade.description, 1)}`,
         ),
-        onPlayed: async (state) => await state.discover(activity.name),
+        onPlayed: async (state) => await state.upgrade(upgrade.name),
         type: "action",
-        cost: activity.cost,
+        cost: upgrade.cost,
       } satisfies Effect,
     } satisfies GameCardInfo;
   });
 
-  const deck = shuffle([...supports, ...actions, ...bonusesAsActions], 3);
+  const deck = shuffle([...supports, ...actions, ...upgradeActions], 3);
 
   return {
     reason: null,
@@ -270,7 +269,7 @@ function generateInitialState(): Omit<
     deck: deck.slice(7),
     hand: deck.slice(0, 7),
     discard: [],
-    activities: [],
+    upgrades: [],
     nextCardModifiers: [],
     day: 1,
     energy: MAX_ENERGY,
@@ -286,7 +285,7 @@ interface CardGameState {
   deck: GameCardInfo[];
   hand: GameCardInfo[];
   discard: GameCardInfo[];
-  activities: Activity[];
+  upgrades: Upgrade[];
   nextCardModifiers: CardModifier[];
   day: number;
   energy: number;
@@ -299,8 +298,8 @@ interface CardGameState {
   ) => Promise<void>;
   addMoney: (count: number) => Promise<void>;
   addDay: (count?: number) => Promise<void>;
-  discover: (name: string) => Promise<void>;
-  triggerActivity: (name: string) => Promise<void>;
+  upgrade: (name: string) => Promise<void>;
+  triggerUpgrade: (name: string) => Promise<void>;
   setNextCardCost: (
     callback: (cost: number | string) => number | string,
   ) => Promise<void>;
@@ -398,28 +397,28 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
 
       for (let i = 0; i < count; i++) {
         await Promise.all(
-          state.activities.slice().map(async (activity, index) => {
+          state.upgrades.slice().map(async (upgrade, index) => {
             await wait(250 * index);
-            await state.triggerActivity(activity.name);
+            await state.triggerUpgrade(upgrade.name);
           }),
         );
       }
     }
   },
 
-  discover: async (name) => {
-    const rawActivity = activities.find((a) => a.name === name)!;
+  upgrade: async (name) => {
+    const rawUpgrades = upgrades.find((a) => a.name === name)!;
 
     // on joue le son de la banque
-    bank.discover.play();
+    bank.upgrade.play();
 
     let state = getState();
 
     // si l'activité est déjà découverte, on augmente son cumul
-    if (state.activities.find((a) => a.name === name)) {
+    if (state.upgrades.find((a) => a.name === name)) {
       set((state) => {
         return {
-          activities: state.activities.map((a) => {
+          upgrades: state.upgrades.map((a) => {
             if (a.name === name) {
               return { ...a, cumul: a.cumul + 1 };
             }
@@ -430,29 +429,29 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
     } else {
       set((state) => {
         return {
-          activities: [
-            ...state.activities,
+          upgrades: [
+            ...state.upgrades,
             {
-              ...rawActivity,
+              ...rawUpgrades,
               state: "appear",
               cumul: 1,
-              max: rawActivity.cumulable ? (rawActivity.max ?? Infinity) : 1,
+              max: rawUpgrades.cumulable ? (rawUpgrades.max ?? Infinity) : 1,
             },
           ],
         };
       });
     }
 
-    if (rawActivity.cumulable && rawActivity.max) {
+    if (rawUpgrades.cumulable && rawUpgrades.max) {
       // on vérifie si la carte qui sert à découvrir cette activité doit être supprimée ou non
 
       state = getState();
 
-      const activity = state.activities.find((a) => a.name === name)!;
+      const upgrade = state.upgrades.find((a) => a.name === name)!;
 
-      if (activity.cumul === activity.max) {
+      if (upgrade.cumul === upgrade.max) {
         const card = state.hand.find((c) =>
-          c.effect.onPlayed.toString().includes(`discover("${name}")`),
+          c.effect.onPlayed.toString().includes(`upgrade("${name}")`),
         )!;
 
         set({
@@ -477,7 +476,7 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
     // remet l'activité en idle
     set((state) => {
       return {
-        activities: state.activities.map((a) => {
+        upgrades: state.upgrades.map((a) => {
           if (a.name === name) {
             return { ...a, state: "idle" };
           }
@@ -487,15 +486,15 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
     });
   },
 
-  triggerActivity: async (name) => {
+  triggerUpgrade: async (name) => {
     const state = getState();
-    const activity = state.activities.find((a) => a.name === name)!;
+    const upgrade = state.upgrades.find((a) => a.name === name)!;
 
     // mettre l'activité en triggered
     set((state) => {
       return {
-        activities: state.activities.map((a) => {
-          if (a.name === activity.name) {
+        upgrades: state.upgrades.map((a) => {
+          if (a.name === upgrade.name) {
             return { ...a, state: "triggered" };
           }
           return a;
@@ -505,15 +504,15 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
 
     await wait();
 
-    await activity.onTrigger(state, activity);
+    await upgrade.onTrigger(state, upgrade);
 
     await wait();
 
     // remettre l'activité en idle
     set((state) => {
       return {
-        activities: state.activities.map((a) => {
-          if (a.name === activity.name) {
+        upgrades: state.upgrades.map((a) => {
+          if (a.name === upgrade.name) {
             return { ...a, state: "idle" };
           }
           return a;

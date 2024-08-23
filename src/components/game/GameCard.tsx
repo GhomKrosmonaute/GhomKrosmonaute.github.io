@@ -32,8 +32,8 @@ export const GameCard = (
       handSize: state.hand.length,
       isAnyCardAnimated:
         state.hand.some((card) => card.state !== "idle") ||
-        (state.activities.length > 0 &&
-          state.activities.some((activity) => activity.state !== "idle")),
+        (state.upgrades.length > 0 &&
+          state.upgrades.some((upgrade) => upgrade.state !== "idle")),
       play: state.play,
       isGameOver: state.isGameOver,
       parsedCost: parseCost(state, props.card),

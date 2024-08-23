@@ -7,7 +7,7 @@ import {
   MONEY_TO_REACH,
   MAX_REPUTATION,
   formatText,
-  formatActivityText,
+  formatUpgradeText,
 } from "@/hooks/useCardGame.ts";
 
 import helpers from "@/data/helpers.json";
@@ -71,48 +71,48 @@ export const HUD = () => {
       </div>
 
       <div className="grid grid-cols-3 p-2 gap-5 relative shrink-0 w-max">
-        {game.activities.map((activity, index) => (
-          <div key={index} className="group/activity shrink-0">
+        {game.upgrades.map((upgrade, index) => (
+          <div key={index} className="group/upgrade shrink-0">
             <img
-              src={`images/activities/${activity.image}`}
-              alt={activity.name}
+              src={`images/upgrades/${upgrade.image}`}
+              alt={upgrade.name}
               className={cn(
-                "block object-cover w-16 h-16 aspect-square rounded-full pointer-events-auto cursor-pointer mx-auto ring-activity ring-4",
+                "block object-cover w-16 h-16 aspect-square rounded-full pointer-events-auto cursor-pointer mx-auto ring-upgrade ring-4",
                 {
-                  // "": activity.state === "idle",
-                  // "animate-appear": activity.state === "appear",
-                  "animate-trigger": activity.state === "triggered",
+                  // "": upgrade.state === "idle",
+                  // "animate-appear": upgrade.state === "appear",
+                  "animate-trigger": upgrade.state === "triggered",
                 },
               )}
             />
 
             <div className="h-6 relative">
               <div className="relative">
-                {activity.max !== Infinity && (
+                {upgrade.max !== Infinity && (
                   <Progress
                     className="absolute -translate-y-2 w-full"
-                    barColor="bg-activity"
-                    value={(activity.cumul / activity.max) * 100}
+                    barColor="bg-upgrade"
+                    value={(upgrade.cumul / upgrade.max) * 100}
                   />
                 )}
-                <div className="absolute text-center font-changa left-0 -translate-y-3 aspect-square h-6 rounded-full bg-activity shadow shadow-black">
-                  {activity.cumul}
+                <div className="absolute text-center font-changa left-0 -translate-y-3 aspect-square h-6 rounded-full bg-upgrade shadow shadow-black">
+                  {upgrade.cumul}
                 </div>
               </div>
             </div>
 
-            <div className="hidden group-hover/activity:block absolute right-0 top-1/2 -translate-y-1/2 translate-x-full pl-3">
+            <div className="hidden group-hover/upgrade:block absolute right-0 top-1/2 -translate-y-1/2 translate-x-full pl-3">
               <h3 className="text-lg">
-                {activity.name}{" "}
-                <span className="text-activity font-changa">
-                  {activity.cumul}{" "}
-                  {activity.max !== Infinity ? `/ ${activity.max}` : ""}
+                {upgrade.name}{" "}
+                <span className="text-upgrade font-changa">
+                  {upgrade.cumul}{" "}
+                  {upgrade.max !== Infinity ? `/ ${upgrade.max}` : ""}
                 </span>
               </h3>
               <p
                 dangerouslySetInnerHTML={{
                   __html: formatText(
-                    formatActivityText(activity.description, activity.cumul),
+                    formatUpgradeText(upgrade.description, upgrade.cumul),
                   ),
                 }}
               />
@@ -146,7 +146,7 @@ export const HUD = () => {
           {game.isWon && (
             <p className="text-center text-2xl">
               Vous avez gagné en{" "}
-              <span className="text-activity">{game.day}</span> jours avec{" "}
+              <span className="text-upgrade">{game.day}</span> jours avec{" "}
               <span className="inline-block bg-money text-white px-1">
                 {game.money}M$
               </span>{" "}
@@ -154,7 +154,7 @@ export const HUD = () => {
               points de réputation ! <br />
               <span className="block text-4xl mt-5">
                 Score:{" "}
-                <span className="text-activity font-changa">
+                <span className="text-upgrade font-changa">
                   {
                     // Plus la partie dure longtemps, plus le score diminue.
                     // Moins tu perds de réputation, plus le score est élevé.
@@ -166,8 +166,8 @@ export const HUD = () => {
                       0,
                       game.reputation * 50 +
                         game.money * 100 +
-                        game.activities.reduce(
-                          (acc, activity) => acc + activity.cumul,
+                        game.upgrades.reduce(
+                          (acc, upgrade) => acc + upgrade.cumul,
                           0,
                         ) *
                           10 +

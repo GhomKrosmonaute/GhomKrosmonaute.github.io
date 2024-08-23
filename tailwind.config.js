@@ -71,7 +71,7 @@ module.exports = {
         energy: "hsl(var(--primary))",
         reputation: colors.fuchsia["500"],
         money: colors.emerald["950"],
-        activity: colors.amber["500"],
+        upgrade: colors.amber["500"],
       },
       boxShadow: {
         "glow-20": "0 0 20px var(--tw-shadow-color)",

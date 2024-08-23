@@ -27,8 +27,8 @@ export const bank = {
     src: ["sounds/draw.mp3"],
     preload: true,
   }),
-  discover: new Howl({
-    src: ["sounds/discover.mp3"],
+  upgrade: new Howl({
+    src: ["sounds/upgrade.mp3"],
     volume: 0.2,
     preload: true,
   }),

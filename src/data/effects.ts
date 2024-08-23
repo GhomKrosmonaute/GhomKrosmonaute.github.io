@@ -150,11 +150,11 @@ const effects: Effect[] = [
     cost: 3,
   },
   {
-    description: "Pioche autant de carte que d'@activitys découvertes",
+    description: "Pioche autant de carte que d'@upgrades découvertes",
     onPlayed: async (state) => {
-      await state.draw(state.activities.length);
+      await state.draw(state.upgrades.length);
     },
-    condition: (state) => state.activities.length > 0,
+    condition: (state) => state.upgrades.length > 0,
     type: "support",
     cost: 3,
   },

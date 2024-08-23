@@ -15,7 +15,7 @@ export const Scoreboard: React.FC = () => {
               <tr
                 key={i}
                 className={cn({
-                  "text-activity": i === 0,
+                  "text-upgrade": i === 0,
                   "text-zinc-400": i === 1,
                   "text-orange-600": i === 2,
                 })}

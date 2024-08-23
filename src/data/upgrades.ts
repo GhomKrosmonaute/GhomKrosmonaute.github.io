@@ -1,20 +1,20 @@
-import type { Activity } from "@/hooks/useCardGame.ts";
+import type { Upgrade } from "@/hooks/useCardGame.ts";
 
-type RawActivity = Pick<
-  Activity,
+type RawUpgrade = Pick<
+  Upgrade,
   "name" | "description" | "image" | "onTrigger" | "cost"
 > & {
   max?: number;
   cumulable?: boolean;
 };
 
-const activities: RawActivity[] = [
+const upgrades: RawUpgrade[] = [
   {
     name: "Starbucks",
     description: "Rend @cumul @energy@s par jour",
     image: "starbucks.png",
-    onTrigger: async (state, activity) => {
-      await state.addEnergy(activity.cumul);
+    onTrigger: async (state, upgrade) => {
+      await state.addEnergy(upgrade.cumul);
     },
     cumulable: true,
     max: 3,
@@ -24,8 +24,8 @@ const activities: RawActivity[] = [
     name: "Méditation",
     description: "Pioche @cumul carte@s par jour",
     image: "meditation.png",
-    onTrigger: async (state, activity) => {
-      await state.draw(activity.cumul);
+    onTrigger: async (state, upgrade) => {
+      await state.draw(upgrade.cumul);
     },
     cumulable: true,
     max: 3,
@@ -35,8 +35,8 @@ const activities: RawActivity[] = [
     name: "Bourse",
     description: "Gagne @cumul0% de votre capital par jour",
     image: "bourse.png",
-    onTrigger: async (state, activity) => {
-      await state.addMoney(Math.ceil((activity.cumul / 100) * state.money));
+    onTrigger: async (state, upgrade) => {
+      await state.addMoney(Math.ceil((upgrade.cumul / 100) * state.money));
     },
     cumulable: true,
     cost: "150",
@@ -46,8 +46,8 @@ const activities: RawActivity[] = [
     description:
       "Place @cumul carte@s aléatoire@s de la défausse dans le deck par jour",
     image: "recyclage.png",
-    onTrigger: async (state, activity) => {
-      await state.recycle(activity.cumul);
+    onTrigger: async (state, upgrade) => {
+      await state.recycle(upgrade.cumul);
     },
     cumulable: true,
     max: 3,
@@ -57,8 +57,8 @@ const activities: RawActivity[] = [
     name: "I.A",
     description: "Gagne @cumulM$ fois le nombre de carte en défausse par jour",
     image: "ia.png",
-    onTrigger: async (state, activity) => {
-      await state.addMoney(activity.cumul * state.discard.length);
+    onTrigger: async (state, upgrade) => {
+      await state.addMoney(upgrade.cumul * state.discard.length);
     },
     cumulable: true,
     cost: "50",
@@ -67,8 +67,8 @@ const activities: RawActivity[] = [
     name: "Sport",
     description: "Gagne @cumul @reputation@s par jour",
     image: "sport.png",
-    onTrigger: async (state, activity) => {
-      await state.addReputation(activity.cumul, { skipGameOverCheck: true });
+    onTrigger: async (state, upgrade) => {
+      await state.addReputation(upgrade.cumul, { skipGameOverCheck: true });
     },
     cumulable: true,
     max: 2,
@@ -78,8 +78,8 @@ const activities: RawActivity[] = [
     name: "PC Puissant",
     description: "Gagne @cumulM$ fois le nombre d'@energy par jour",
     image: "pc-puissant.png",
-    onTrigger: async (state, activity) => {
-      await state.addMoney(activity.cumul * state.energy);
+    onTrigger: async (state, upgrade) => {
+      await state.addMoney(upgrade.cumul * state.energy);
     },
     cumulable: true,
     max: 2,
@@ -89,8 +89,8 @@ const activities: RawActivity[] = [
     name: "Stagiaire",
     description: "Gagne @cumulM$ fois le nombre de cartes en main par jour",
     image: "stagiaire.png",
-    onTrigger: async (state, activity) => {
-      await state.addMoney(activity.cumul * state.hand.length);
+    onTrigger: async (state, upgrade) => {
+      await state.addMoney(upgrade.cumul * state.hand.length);
     },
     cumulable: true,
     max: 5,
@@ -98,4 +98,4 @@ const activities: RawActivity[] = [
   },
 ];
 
-export default activities;
+export default upgrades;
