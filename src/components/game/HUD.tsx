@@ -168,6 +168,15 @@ export const HUD = () => {
               Recommencer
             </Button>
           </div>
+
+          {game.isWon && (
+            <a
+              href="https://buymeacoffee.com/ghom"
+              className="block px-3 py-2 animate-bounce border-2 border-upgrade/50 rounded-lg"
+            >
+              Buy me a coffee ☕️
+            </a>
+          )}
         </div>
       )}
 
