@@ -1,7 +1,7 @@
 import React from "react";
-
-import scores from "@/data/scores.json";
 import { cn } from "@/utils.ts";
+import scores from "@/data/scores.json";
+import Trophy from "@/assets/icons/trophy.svg";
 
 export const Scoreboard: React.FC = () => {
   return (
@@ -20,6 +20,19 @@ export const Scoreboard: React.FC = () => {
                   "text-orange-600": i === 2,
                 })}
               >
+                <td>
+                  {i < 3 ? (
+                    <Trophy
+                      className={cn("w-4", {
+                        "text-upgrade": i === 0,
+                        "text-zinc-400": i === 1,
+                        "text-orange-600": i === 2,
+                      })}
+                    />
+                  ) : (
+                    ""
+                  )}
+                </td>
                 <th># {i + 1}</th>
                 <th className="text-left">{score.name}</th>
                 <td>{score.score.toLocaleString()} pts</td>

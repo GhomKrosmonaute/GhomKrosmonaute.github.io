@@ -14,8 +14,9 @@ import helpers from "@/data/helpers.json";
 
 import Question from "@/assets/icons/question.svg";
 import Discard from "@/assets/icons/discard.svg";
-import Deck from "@/assets/icons/deck.svg";
+import Score from "@/assets/icons/score.svg";
 import Money from "@/assets/icons/money.svg";
+import Deck from "@/assets/icons/deck.svg";
 import Day from "@/assets/icons/day.svg";
 
 import { cn } from "@/utils.ts";
@@ -58,6 +59,12 @@ export const HUD = () => {
               ),
             }}
           />
+        </div>
+        <div>
+          <Score className="w-6" /> Score:{" "}
+          <span className="text-upgrade font-changa">
+            {game.score.toLocaleString("fr")} pts
+          </span>
         </div>
         <div>
           <Day className="w-6" /> Jour: {game.day}
@@ -155,27 +162,7 @@ export const HUD = () => {
               <span className="block text-4xl mt-5">
                 Score:{" "}
                 <span className="text-upgrade font-changa">
-                  {
-                    // Plus la partie dure longtemps, plus le score diminue.
-                    // Moins tu perds de réputation, plus le score est élevé.
-                    // Plus tu as d'argent en fin de partie, plus le score est élevé.
-                    // Chaque cumul d'activité augmente le score.
-                    // L'énergie restante augmente légèrement le score.
-                    // Calcul :
-                    Math.max(
-                      0,
-                      game.reputation * 50 +
-                        game.money * 100 +
-                        game.upgrades.reduce(
-                          (acc, upgrade) => acc + upgrade.cumul,
-                          0,
-                        ) *
-                          10 +
-                        game.energy * 10 -
-                        game.day * 10,
-                    ).toLocaleString()
-                  }{" "}
-                  pts
+                  {game.score.toLocaleString("fr")} pts
                 </span>
               </span>
             </p>

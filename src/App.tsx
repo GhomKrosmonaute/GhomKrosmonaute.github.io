@@ -63,7 +63,7 @@ export default function App() {
               <>
                 <Home />
                 {largeScreen && (
-                  <React.Suspense fallback="Loading...">
+                  <React.Suspense>
                     <Game show={false} />
                   </React.Suspense>
                 )}
@@ -85,7 +85,7 @@ export default function App() {
                   <>
                     <Home inGame />
                     {largeScreen && (
-                      <React.Suspense fallback="Loading...">
+                      <React.Suspense>
                         <Game show={true} />
                         <Music />
                       </React.Suspense>

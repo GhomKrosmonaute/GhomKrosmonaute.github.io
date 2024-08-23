@@ -28,6 +28,8 @@ export const GameCard = (
     canTriggerEffect,
     parsedCost,
   } = useCardGame((state) => {
+    const parsedCost = parseCost(state, props.card);
+
     return {
       handSize: state.hand.length,
       isAnyCardAnimated:
@@ -36,7 +38,7 @@ export const GameCard = (
           state.upgrades.some((upgrade) => upgrade.state !== "idle")),
       play: state.play,
       isGameOver: state.isGameOver,
-      parsedCost: parseCost(state, props.card),
+      parsedCost,
       canTriggerEffect:
         !props.card.effect.condition ||
         props.card.effect.condition(state, props.card),
@@ -119,7 +121,7 @@ export const GameCard = (
               transformStyle: "preserve-3d",
             }}
           >
-            {parsedCost.payWith === "energy" ? (
+            {parsedCost.needs === "energy" ? (
               <ValueIcon
                 name="Coût en énergie / points d'action"
                 image="images/energy-background.png"

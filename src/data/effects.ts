@@ -166,7 +166,7 @@ const effects: Effect[] = [
       await state.draw(2, { filter: (card) => card.effect.type === "action" });
     },
     condition: (state) =>
-      state.hand.some((card) => card.effect.type === "support"),
+      state.hand.filter((card) => card.effect.type === "support").length > 1,
     type: "support",
     cost: 3,
   },
@@ -195,11 +195,16 @@ const effects: Effect[] = [
   {
     description: "Divise le prix de la prochaine carte jouée par 2",
     onPlayed: async (state) =>
-      await state.setNextCardCost((cost) =>
-        typeof cost === "number"
-          ? Math.ceil(cost / 2)
-          : String(Math.ceil(Number(cost) / 2)),
-      ),
+      await state.addNextCardModifier((card) => ({
+        ...card,
+        effect: {
+          ...card.effect,
+          cost:
+            typeof card.effect.cost === "number"
+              ? Math.ceil(card.effect.cost / 2)
+              : String(Math.ceil(Number(card.effect.cost) / 2)),
+        },
+      })),
     type: "support",
     cost: 3,
   },

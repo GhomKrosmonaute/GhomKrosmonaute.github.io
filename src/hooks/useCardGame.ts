@@ -42,24 +42,39 @@ export function applyNextCardModifiers(
 ) {
   const clone = cloneSomething(card);
 
-  return state.nextCardModifiers.reduce(
+  const modifiers = state.nextCardModifiers.slice();
+
+  if (card.effect.upgrade) {
+    modifiers.unshift((card) => {
+      if (card.effect.upgrade) {
+        return {
+          ...card,
+          effect: {
+            ...card.effect,
+            cost: getUpgradeCost(state, card),
+          },
+        };
+      }
+      return card;
+    });
+  }
+
+  return modifiers.reduce(
     (card, modifier) => modifier(card as GameCardInfo),
     clone,
   );
 }
 
 export function parseCost(state: CardGameState, card: GameCardInfo) {
+  const needs = typeof card.effect.cost === "number" ? "energy" : "money";
   const tempCard = applyNextCardModifiers(state, card);
+  const cost = Number(tempCard.effect.cost);
+  const canBeBuy =
+    needs === "money"
+      ? state[needs] >= cost
+      : state[needs] + state.reputation >= cost;
 
-  const payWith = typeof tempCard.effect.cost === "number" ? "energy" : "money";
-
-  const cost = tempCard.effect.upgrade
-    ? getUpgradeCost(state, tempCard)
-    : Number(tempCard.effect.cost);
-
-  const canBeBuy = state[payWith] >= cost;
-
-  return { payWith, cost, canBeBuy } as const;
+  return { needs, cost, canBeBuy } as const;
 }
 
 export function formatText(text: string) {
@@ -198,13 +213,14 @@ const actionEffects = effects.filter((effect) => effect.type === "action");
 
 function generateInitialState(): Omit<
   CardGameState,
+  | "updateScore"
   | "addEnergy"
   | "addReputation"
   | "addMoney"
   | "addDay"
   | "upgrade"
   | "triggerUpgrade"
-  | "setNextCardCost"
+  | "addNextCardModifier"
   | "draw"
   | "drop"
   | "dropAll"
@@ -263,6 +279,7 @@ function generateInitialState(): Omit<
   const deck = shuffle([...supports, ...actions, ...upgradeActions], 3);
 
   return {
+    score: 0,
     reason: null,
     isWon: false,
     isGameOver: false,
@@ -287,10 +304,12 @@ interface CardGameState {
   discard: GameCardInfo[];
   upgrades: Upgrade[];
   nextCardModifiers: CardModifier[];
+  score: number;
   day: number;
   energy: number;
   reputation: number;
   money: number;
+  updateScore: () => void;
   addEnergy: (count: number) => Promise<void>;
   addReputation: (
     count: number,
@@ -300,9 +319,10 @@ interface CardGameState {
   addDay: (count?: number) => Promise<void>;
   upgrade: (name: string) => Promise<void>;
   triggerUpgrade: (name: string) => Promise<void>;
-  setNextCardCost: (
-    callback: (cost: number | string) => number | string,
-  ) => Promise<void>;
+  addNextCardModifier: (
+    callback: (card: GameCardInfo) => GameCardInfo,
+    options?: { before?: boolean },
+  ) => unknown;
   draw: (
     count?: number,
     options?: Partial<{
@@ -322,6 +342,27 @@ interface CardGameState {
 
 export const useCardGame = create<CardGameState>((set, getState) => ({
   ...generateInitialState(),
+
+  updateScore: () => {
+    // Plus la partie dure longtemps, plus le score diminue.
+    // Moins tu perds de réputation, plus le score est élevé.
+    // Plus tu as d'argent en fin de partie, plus le score est élevé.
+    // Chaque cumul d'activité augmente le score.
+    // L'énergie restante augmente légèrement le score.
+    // Calcul :
+
+    set((state) => ({
+      score: Math.max(
+        0,
+        state.reputation * 100 +
+          state.money * 100 +
+          state.upgrades.reduce((acc, upgrade) => acc + upgrade.cumul, 0) *
+            100 +
+          state.energy * 50 -
+          state.day * 75,
+      ),
+    }));
+  },
 
   addEnergy: async (count) => {
     // on joue le son de la banque
@@ -521,21 +562,12 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
     });
   },
 
-  setNextCardCost: async (callback) => {
+  addNextCardModifier: async (callback, options) => {
     set((state) => {
       return {
-        nextCardModifiers: [
-          ...state.nextCardModifiers,
-          (card) => {
-            return {
-              ...card,
-              effect: {
-                ...card.effect,
-                cost: callback(card.effect.cost),
-              },
-            };
-          },
-        ],
+        nextCardModifiers: options?.before
+          ? [callback, ...state.nextCardModifiers]
+          : [...state.nextCardModifiers, callback],
       };
     });
   },
@@ -742,11 +774,11 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
     }
 
     if (!free) {
-      const { payWith, cost, canBeBuy } = parseCost(state, card);
+      const { needs, cost } = parseCost(state, card);
 
       // on vérifie si on a assez de ressources
-      if (!canBeBuy) {
-        if (payWith === "energy") {
+      if (state[needs] < cost) {
+        if (needs === "energy") {
           // on vérifie si on a assez de réputation et d'énergie
           if (state.reputation + state.energy < cost) {
             await cantPlay();
@@ -767,7 +799,7 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
         }
       } else {
         // on soustrait le coût de la carte à l'énergie
-        set({ [payWith]: state[payWith] - cost });
+        set({ [needs]: state[needs] - cost });
       }
     }
 
@@ -812,6 +844,9 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
 
       // on applique l'effet de la carte (toujours via eval)
       await card.effect.onPlayed(state, card);
+
+      // on met à jour le score
+      state.updateScore();
     };
 
     await Promise.all([cardManagement(), effectManagement()]);
@@ -830,6 +865,9 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
       bank.defeat.play();
 
       set({ isGameOver: true, isWon: false, reason: "reputation" });
+
+      // on met à jour le score
+      state.updateScore();
 
       return;
     }
@@ -860,6 +898,9 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
         reason: isMill ? "mill" : "soft-lock",
       });
     }
+
+    // on met à jour le score
+    state.updateScore();
   },
 
   reset: () => {
