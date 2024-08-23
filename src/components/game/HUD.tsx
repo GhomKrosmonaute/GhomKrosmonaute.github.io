@@ -34,7 +34,7 @@ export const HUD = () => {
 
   return (
     <div className="w-[300px] ml-10 mt-4 space-y-2">
-      <code>CardGame v0.6-beta [WIP]</code>
+      <code>CardGame v1-stable [WIP]</code>
       <Gauge
         name="Energie / Points d'action"
         image="images/energy-background.png"
