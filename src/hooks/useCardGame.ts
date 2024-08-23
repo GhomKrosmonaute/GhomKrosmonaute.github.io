@@ -79,6 +79,18 @@ export function parseCost(state: CardGameState, card: GameCardInfo) {
 
 export function formatText(text: string) {
   return text
+
+    .replace(
+      /(\(.+?\))/g,
+      `<span style="position: relative; transform-style: preserve-3d">
+        <span style="
+          display: inline-block; 
+          position: absolute; 
+          font-size: 12px; 
+          white-space: nowrap;
+          transform: rotate(5deg) translateX(-50%) translateY(-30%) translateZ(10px);">$1</span>
+      </span>`,
+    )
     .replace(/MONEY_TO_REACH/g, String(MONEY_TO_REACH))
     .replace(/MAX_HAND_SIZE/g, String(MAX_HAND_SIZE))
     .replace(
@@ -175,6 +187,7 @@ export interface Effect {
   type: "action" | "support";
   cost: number | string;
   condition?: (state: CardGameState, card: GameCardInfo) => boolean;
+  waitBeforePlay?: boolean;
   ephemeral?: boolean;
   upgrade?: boolean;
 }
@@ -406,7 +419,7 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
   },
 
   addMoney: async (count) => {
-    // on joue le son de la banque
+    // todo: jouer le son de l'encaissement
     if (count > 0) bank.gain.play();
 
     set((state) => {
@@ -491,8 +504,8 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
       const upgrade = state.upgrades.find((a) => a.name === name)!;
 
       if (upgrade.cumul === upgrade.max) {
-        const card = state.hand.find((c) =>
-          c.effect.onPlayed.toString().includes(`upgrade("${name}")`),
+        const card = state.hand.find(
+          (c) => c.effect.upgrade && c.name === name,
         )!;
 
         set({
@@ -563,6 +576,9 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
   },
 
   addNextCardModifier: async (callback, options) => {
+    // todo: jouer le son du jackpot
+    bank.gain.play();
+
     set((state) => {
       return {
         nextCardModifiers: options?.before
@@ -837,10 +853,7 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
 
     const effectManagement = async () => {
       // si il ne s'agit que de pioche une carte, on attend avant de piocher
-      if (
-        /^await state.(draw|play)\(.*?\)$/.test(card.effect.onPlayed.toString())
-      )
-        await wait();
+      if (card.effect.waitBeforePlay) await wait();
 
       // on applique l'effet de la carte (toujours via eval)
       await card.effect.onPlayed(state, card);

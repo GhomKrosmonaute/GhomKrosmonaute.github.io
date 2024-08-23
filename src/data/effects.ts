@@ -26,12 +26,11 @@ const effects: Effect[] = [
     cost: 0,
   },
   {
-    description: "Gagne 10M$ fois le nombre de cartes @action en main",
+    description:
+      "Gagne 10M$ fois le nombre de cartes @action en main en comptant celle-ci",
     onPlayed: async (state) => {
       await state.addMoney(
-        10 *
-          (state.hand.filter((card) => card.effect.type === "action").length -
-            1),
+        10 * state.hand.filter((card) => card.effect.type === "action").length,
       );
     },
     type: "action",
@@ -67,6 +66,7 @@ const effects: Effect[] = [
     },
     type: "action",
     cost: 4,
+    waitBeforePlay: true,
   },
   {
     description: "Pioche une carte",
@@ -74,6 +74,7 @@ const effects: Effect[] = [
     condition: (state) => state.deck.length >= 1,
     type: "support",
     cost: 1,
+    waitBeforePlay: true,
   },
   {
     description: "Pioche 2 cartes",
@@ -81,6 +82,7 @@ const effects: Effect[] = [
     condition: (state) => state.deck.length >= 2,
     type: "support",
     cost: 2,
+    waitBeforePlay: true,
   },
   {
     description: "Si tu as moins de 4 cartes en main, pioche 2 cartes",
@@ -88,6 +90,7 @@ const effects: Effect[] = [
     condition: (state) => state.hand.length < 4 && state.deck.length >= 2,
     type: "support",
     cost: 1,
+    waitBeforePlay: true,
   },
   {
     description: "Pioche une carte @action",
@@ -97,6 +100,7 @@ const effects: Effect[] = [
       state.deck.some((card) => card.effect.type === "action"),
     type: "support",
     cost: 2,
+    waitBeforePlay: true,
   },
   {
     description:
@@ -108,6 +112,7 @@ const effects: Effect[] = [
       state.deck.some((card) => card.effect.type === "action"),
     type: "support",
     cost: 1,
+    waitBeforePlay: true,
   },
   {
     description: "Défausse une carte aléatoire, pioche une carte et gagne 10M$",
@@ -119,6 +124,7 @@ const effects: Effect[] = [
     condition: (state) => state.hand.length >= 2,
     type: "support",
     cost: 0,
+    waitBeforePlay: true,
   },
   {
     description: "Renvoie une carte aléatoire dans la pioche, pioche une carte",
@@ -129,15 +135,17 @@ const effects: Effect[] = [
     condition: (state) => state.hand.length >= 2,
     type: "support",
     cost: 0,
+    waitBeforePlay: true,
   },
   {
-    description: "Défausse toutes les cartes en main, pioche 5 cartes",
+    description: "Défausse les cartes en main, pioche 5 cartes",
     onPlayed: async (state) => {
       await state.dropAll();
       await state.draw(5);
     },
     type: "support",
     cost: 0,
+    waitBeforePlay: true,
   },
   {
     description:
@@ -148,6 +156,7 @@ const effects: Effect[] = [
     },
     type: "support",
     cost: 3,
+    waitBeforePlay: true,
   },
   {
     description: "Pioche autant de carte que d'@upgrades découvertes",
@@ -157,10 +166,11 @@ const effects: Effect[] = [
     condition: (state) => state.upgrades.length > 0,
     type: "support",
     cost: 3,
+    waitBeforePlay: true,
   },
   {
     description:
-      "Défausse toutes les cartes @support en main (1 minimum), pioche 2 cartes @action",
+      "Défausse les cartes @support en main (min 1), pioche 2 cartes @action",
     onPlayed: async (state) => {
       await state.dropAll({ filter: (card) => card.effect.type === "support" });
       await state.draw(2, { filter: (card) => card.effect.type === "action" });
@@ -169,10 +179,10 @@ const effects: Effect[] = [
       state.hand.filter((card) => card.effect.type === "support").length > 1,
     type: "support",
     cost: 3,
+    waitBeforePlay: true,
   },
   {
-    description:
-      "Défausse toutes les cartes @action en main (1 minimum), pioche 3 cartes",
+    description: "Défausse les cartes @action en main (min 1), pioche 3 cartes",
     onPlayed: async (state) => {
       await state.dropAll({ filter: (card) => card.effect.type === "action" });
       await state.draw(3);
@@ -181,6 +191,7 @@ const effects: Effect[] = [
       state.hand.some((card) => card.effect.type === "action"),
     type: "support",
     cost: 1,
+    waitBeforePlay: true,
   },
   {
     description: "Pioche 2 cartes qui coûtent de l'@energy",
@@ -191,6 +202,7 @@ const effects: Effect[] = [
       state.deck.some((c) => typeof c.effect.cost === "number"),
     type: "support",
     cost: 3,
+    waitBeforePlay: true,
   },
   {
     description: "Divise le prix de la prochaine carte jouée par 2",
