@@ -1,24 +1,56 @@
 import React from "react";
 import { cn } from "@/utils.ts";
+import { useCardGame } from "@/hooks/useCardGame.ts";
 
 export const ValueIcon = (props: {
   value: number;
-  name: string;
-  image: string;
+  type: "energy" | "reputation";
   iconScale?: number | string;
   textColor?: string;
   className?: string;
   style?: React.CSSProperties;
+  isCost?: boolean;
 }) => {
+  const energy = useCardGame((state) => state.energy);
+
   return (
     <div className={cn("relative", props.className)} style={props.style}>
-      <img
-        src={props.image}
-        alt={`${props.name} background image`}
-        title={props.name}
-        className="pointer-events-auto"
-        style={{ scale: props.iconScale }}
-      />
+      {props.type === "energy" ? (
+        !props.isCost || energy >= props.value ? (
+          <img
+            src="images/energy-background.png"
+            alt={`Energie background image`}
+            title={props.isCost ? "Coût en énergie" : "Energie"}
+            className="pointer-events-auto"
+            style={{ scale: props.iconScale }}
+          />
+        ) : energy > 0 ? (
+          <img
+            src="images/enerputation-background.png"
+            alt={`Energie background image`}
+            title={props.isCost ? "Coût en énergie" : "Energie"}
+            className="pointer-events-auto"
+            style={{ scale: props.iconScale }}
+          />
+        ) : (
+          <img
+            src="images/reputation-background.png"
+            alt={`Reputation background image`}
+            title="Coût en réputation"
+            className="pointer-events-auto"
+            style={{ scale: props.iconScale }}
+          />
+        )
+      ) : (
+        <img
+          src="images/reputation-background.png"
+          alt={`Reputation background image`}
+          title="Réputation"
+          className="pointer-events-auto"
+          style={{ scale: props.iconScale }}
+        />
+      )}
+
       <div
         className={cn(
           "absolute top-1/2 left-1/2 font-bold text-[1.8em] text-white pointer-events-none box-content",

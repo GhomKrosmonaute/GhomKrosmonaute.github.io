@@ -2,6 +2,9 @@ import React from "react";
 
 import "./GameCard.css";
 
+import QuoteLeft from "@/assets/icons/quote-left.svg";
+import QuoteRight from "@/assets/icons/quote-right.svg";
+
 import {
   GameCardInfo,
   ActionCardInfo,
@@ -98,10 +101,16 @@ export const GameCard = (
           <div
             className={cn(
               "absolute pointer-events-none left-1/2 -top-[10px] -translate-x-1/2 -translate-y-full rounded-2xl bg-card",
-              "px-5 py-2 opacity-0 group-hover/game-card:animate-appear text-sm w-max max-w-full text-center shadow shadow-action",
+              "p-2 w-max max-w-full shadow shadow-action",
+              "transition-opacity duration-200 ease-in-out delay-1000 opacity-0 group-hover/game-card:opacity-100",
+              "flex gap-1",
             )}
           >
-            {props.card.detail}
+            <QuoteLeft className="w-10" />
+            <div className="flex-grow text-sm text-left">
+              {props.card.detail}
+            </div>
+            <QuoteRight className="w-10 self-end" />
           </div>
         )}
 
@@ -123,8 +132,8 @@ export const GameCard = (
           >
             {parsedCost.needs === "energy" ? (
               <ValueIcon
-                name="Coût en énergie / points d'action"
-                image="images/energy-background.png"
+                isCost
+                type="energy"
                 value={parsedCost.cost}
                 iconScale="0.75"
                 style={{

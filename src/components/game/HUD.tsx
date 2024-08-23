@@ -35,15 +35,9 @@ export const HUD = () => {
   return (
     <div className="w-[300px] ml-10 mt-4 space-y-2">
       <code>CardGame v1-stable [WIP]</code>
+      <Gauge type="energy" value={game.energy} max={MAX_ENERGY} />
       <Gauge
-        name="Energie / Points d'action"
-        image="images/energy-background.png"
-        value={game.energy}
-        max={MAX_ENERGY}
-      />
-      <Gauge
-        name="Réputation"
-        image="images/reputation-background.png"
+        type="reputation"
         value={game.reputation}
         max={MAX_REPUTATION}
         barColor="bg-pink-500"

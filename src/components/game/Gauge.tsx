@@ -2,8 +2,7 @@ import { Progress } from "@/components/ui/progress.tsx";
 import { ValueIcon } from "@/components/game/ValueIcon.tsx";
 
 export const Gauge = (props: {
-  name: string;
-  image: string;
+  type: "energy" | "reputation";
   className?: string;
   value: number;
   max: number;
@@ -14,8 +13,7 @@ export const Gauge = (props: {
   return (
     <div className="flex items-center h-7 w-[250px]">
       <ValueIcon
-        name={props.name}
-        image={props.image}
+        type={props.type}
         value={props.value}
         iconScale={props.iconScale}
         textColor={props.textColor}
