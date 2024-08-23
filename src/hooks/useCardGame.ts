@@ -390,7 +390,8 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
 
   addReputation: async (count, options) => {
     // on joue le son de la banque
-    if (count > 0) bank.gain.play();
+    if (count === 10) bank.powerUp.play();
+    else if (count > 0) bank.gain.play();
     else bank.loss.play();
 
     set((state) => {
@@ -413,14 +414,14 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
     if (state.reputation === 0) {
       // on joue le son de la banque
       bank.defeat.play();
+      bank.music.fade(0.7, 0, 1000);
 
       set({ isGameOver: true, isWon: false, reason: "reputation" });
     }
   },
 
   addMoney: async (count) => {
-    // todo: jouer le son de l'encaissement
-    if (count > 0) bank.gain.play();
+    if (count > 0) bank.cashing.play();
 
     set((state) => {
       const money = state.money + count;
@@ -576,8 +577,7 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
   },
 
   addNextCardModifier: async (callback, options) => {
-    // todo: jouer le son du jackpot
-    bank.gain.play();
+    bank.powerUp.play();
 
     set((state) => {
       return {
@@ -876,6 +876,7 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
     if (state.reputation === 0) {
       // on joue le son de la banque
       bank.defeat.play();
+      bank.music.fade(0.7, 0, 1000);
 
       set({ isGameOver: true, isWon: false, reason: "reputation" });
 
@@ -904,6 +905,7 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
 
     if (isMill || isSoftLocked) {
       bank.defeat.play();
+      bank.music.fade(0.7, 0, 1000);
 
       set({
         isGameOver: true,

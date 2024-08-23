@@ -170,7 +170,7 @@ const effects: Effect[] = [
   },
   {
     description:
-      "Défausse les cartes @support en main (min 1), pioche 2 cartes @action",
+      "Défausse les cartes @support en main(min 1), pioche 2 cartes @action",
     onPlayed: async (state) => {
       await state.dropAll({ filter: (card) => card.effect.type === "support" });
       await state.draw(2, { filter: (card) => card.effect.type === "action" });
@@ -182,7 +182,7 @@ const effects: Effect[] = [
     waitBeforePlay: true,
   },
   {
-    description: "Défausse les cartes @action en main (min 1), pioche 3 cartes",
+    description: "Défausse les cartes @action en main(min 1), pioche 3 cartes",
     onPlayed: async (state) => {
       await state.dropAll({ filter: (card) => card.effect.type === "action" });
       await state.draw(3);

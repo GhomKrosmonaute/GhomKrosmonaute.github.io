@@ -37,6 +37,11 @@ export const bank = {
     volume: 0.4,
     preload: true,
   }),
+  cashing: new Howl({
+    src: ["sounds/cashing.mp3"],
+    volume: 0.7,
+    preload: true,
+  }),
   gain: new Howl({
     src: ["sounds/gain.mp3"],
     volume: 0.4,
@@ -45,6 +50,11 @@ export const bank = {
   loss: new Howl({
     src: ["sounds/loss.mp3"],
     volume: 1,
+    preload: true,
+  }),
+  powerUp: new Howl({
+    src: ["sounds/power-up.mp3"],
+    volume: 0.5,
     preload: true,
   }),
   victory: new Howl({
