@@ -2,6 +2,8 @@ import React, { useMemo } from "react";
 import DeviceDetector from "device-detector-js";
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
 
+import "./App.css";
+
 import { Button } from "@/components/ui/button.tsx";
 
 import { useMediaQuery } from "usehooks-ts";
@@ -101,6 +103,19 @@ export default function App() {
 
   return (
     <>
+      {largeWidth && (
+        <>
+          <img
+            src="images/background.svg"
+            className="fixed top-0 left-0 w-screen h-screen object-cover pointer-events-none bg-primary opacity-50"
+          />
+
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="jumbo absolute -inset-[10px] opacity-50"></div>
+          </div>
+        </>
+      )}
+
       {largeWidth && (
         <div
           className={cn(
