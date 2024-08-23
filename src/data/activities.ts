@@ -68,7 +68,7 @@ const activities: RawActivity[] = [
     description: "Gagne @cumul @reputation@s par jour",
     image: "sport.png",
     onTrigger: async (state, activity) => {
-      await state.addReputation(activity.cumul);
+      await state.addReputation(activity.cumul, { skipGameOverCheck: true });
     },
     cumulable: true,
     max: 2,

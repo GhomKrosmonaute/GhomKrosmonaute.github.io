@@ -54,7 +54,7 @@ export const bank = {
   }),
   defeat: new Howl({
     src: ["sounds/defeat.wav"],
-    volume: 1,
+    volume: 0.5,
     preload: true,
   }),
 };

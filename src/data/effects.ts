@@ -91,7 +91,8 @@ const effects: Effect[] = [
   },
   {
     description: "Pioche une carte @action",
-    onPlayed: async (state) => await state.draw(1, { type: "action" }),
+    onPlayed: async (state) =>
+      await state.draw(1, { filter: (card) => card.effect.type === "action" }),
     condition: (state) =>
       state.deck.some((card) => card.effect.type === "action"),
     type: "support",
@@ -100,7 +101,8 @@ const effects: Effect[] = [
   {
     description:
       "Si tu n'as pas de carte @action en main, pioche une carte @action",
-    onPlayed: async (state) => await state.draw(1, { type: "action" }),
+    onPlayed: async (state) =>
+      await state.draw(1, { filter: (card) => card.effect.type === "action" }),
     condition: (state) =>
       state.hand.every((card) => card.effect.type !== "action") &&
       state.deck.some((card) => card.effect.type === "action"),
@@ -158,22 +160,48 @@ const effects: Effect[] = [
   },
   {
     description:
-      "Défausse toutes les cartes @support en main, pioche 2 cartes @action",
+      "Défausse toutes les cartes @support en main (1 minimum), pioche 2 cartes @action",
     onPlayed: async (state) => {
-      await state.dropAll({ type: "support" });
-      await state.draw(2, { type: "action" });
+      await state.dropAll({ filter: (card) => card.effect.type === "support" });
+      await state.draw(2, { filter: (card) => card.effect.type === "action" });
     },
+    condition: (state) =>
+      state.hand.some((card) => card.effect.type === "support"),
     type: "support",
     cost: 3,
   },
   {
-    description: "Défausse toutes les cartes @action en main, pioche 3 cartes",
+    description:
+      "Défausse toutes les cartes @action en main (1 minimum), pioche 3 cartes",
     onPlayed: async (state) => {
-      await state.dropAll({ type: "action" });
+      await state.dropAll({ filter: (card) => card.effect.type === "action" });
       await state.draw(3);
     },
+    condition: (state) =>
+      state.hand.some((card) => card.effect.type === "action"),
     type: "support",
     cost: 1,
+  },
+  {
+    description: "Pioche 2 cartes qui coûtent de l'@energy",
+    onPlayed: async (state) => {
+      await state.draw(2, { filter: (c) => typeof c.effect.cost === "number" });
+    },
+    condition: (state) =>
+      state.deck.some((c) => typeof c.effect.cost === "number"),
+    type: "support",
+    cost: 3,
+  },
+  {
+    description: "Divise le prix de la prochaine carte jouée par 2",
+    onPlayed: async (state) =>
+      await state.setNextCardCost((cost) =>
+        typeof cost === "number"
+          ? Math.ceil(cost / 2)
+          : String(Math.ceil(Number(cost) / 2)),
+      ),
+    type: "support",
+    cost: 3,
   },
   {
     description: "Double l'@energy",

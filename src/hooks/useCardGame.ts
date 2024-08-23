@@ -9,7 +9,61 @@ import activities from "../data/activities.ts";
 export const MAX_ENERGY = 20;
 export const MAX_HAND_SIZE = 8;
 export const MAX_REPUTATION = 10;
-export const MONEY_TO_REACH = 300;
+export const MONEY_TO_REACH = 500;
+export const DISCOVER_PRICE_THRESHOLDS = {
+  string: ["20", "50", "75"],
+  number: [5, 7, 10],
+};
+
+export function getDiscoverCardPrice(
+  state: Pick<CardGameState, "activities">,
+  card: GameCardInfo,
+): number {
+  const index = state.activities.length;
+  const priceThreshold =
+    DISCOVER_PRICE_THRESHOLDS[typeof card.effect.cost as "string" | "number"][
+      index
+    ] ?? Infinity;
+
+  return Math.min(Number(priceThreshold), Number(card.effect.cost));
+}
+
+export function cloneSomething<T>(something: T): T {
+  return JSON.parse(
+    JSON.stringify(something, (_key, value) =>
+      typeof value === "function" ? undefined : value,
+    ),
+  );
+}
+
+export function applyNextCardModifiers(
+  state: CardGameState,
+  card: GameCardInfo,
+) {
+  const clone = cloneSomething(card);
+
+  return state.nextCardModifiers.reduce(
+    (card, modifier) => modifier(card as GameCardInfo),
+    clone,
+  );
+}
+
+export function parseCost(state: CardGameState, card: GameCardInfo) {
+  const tempCard = applyNextCardModifiers(state, card);
+
+  const payWith = typeof tempCard.effect.cost === "number" ? "energy" : "money";
+  const isDiscover = card.effect.onPlayed
+    .toString()
+    .includes("await state.discover");
+
+  const cost = isDiscover
+    ? getDiscoverCardPrice(state, tempCard)
+    : Number(tempCard.effect.cost);
+
+  const canBeBuy = state[payWith] >= cost;
+
+  return { payWith, cost, isDiscover, canBeBuy } as const;
+}
 
 export function formatText(text: string) {
   return text
@@ -88,9 +142,7 @@ export function map(
   }
 }
 
-export function isActionCardInfo(
-  card: GameCardInfo,
-): card is ActionCardInfo {
+export function isActionCardInfo(card: GameCardInfo): card is ActionCardInfo {
   return (card as ActionCardInfo).image !== undefined;
 }
 
@@ -139,30 +191,12 @@ export type GameCardState =
   | "idle"
   | null;
 
-export type GameCardInfo = ActionCardInfo | SupportCardInfo
+export type GameCardInfo = ActionCardInfo | SupportCardInfo;
+
+export type CardModifier = (card: GameCardInfo) => GameCardInfo;
 
 const supportEffects = effects.filter((effect) => effect.type === "support");
 const actionEffects = effects.filter((effect) => effect.type === "action");
-
-const discoverPriceThreshold = {
-  string: ["20", "50", "75"],
-  number: [5, 7, 10],
-}
-
-export function getDiscoverCardPrice(
-  state: Pick<CardGameState, "activities">, 
-  card: GameCardInfo
-): number {
-  const index = state.activities.length
-  const priceThreshold = discoverPriceThreshold[
-    typeof card.effect.cost
-  ][index] ?? Infinity
-
-  return Math.min(
-    Number(priceThreshold), 
-    Number(card.effect.cost)
-  )
-}
 
 function generateInitialState(): Omit<
   CardGameState,
@@ -172,6 +206,7 @@ function generateInitialState(): Omit<
   | "addDay"
   | "discover"
   | "triggerActivity"
+  | "setNextCardCost"
   | "draw"
   | "drop"
   | "dropAll"
@@ -236,6 +271,7 @@ function generateInitialState(): Omit<
     hand: deck.slice(0, 7),
     discard: [],
     activities: [],
+    nextCardModifiers: [],
     day: 1,
     energy: MAX_ENERGY,
     reputation: MAX_REPUTATION,
@@ -251,6 +287,7 @@ interface CardGameState {
   hand: GameCardInfo[];
   discard: GameCardInfo[];
   activities: Activity[];
+  nextCardModifiers: CardModifier[];
   day: number;
   energy: number;
   reputation: number;
@@ -264,17 +301,20 @@ interface CardGameState {
   addDay: (count?: number) => Promise<void>;
   discover: (name: string) => Promise<void>;
   triggerActivity: (name: string) => Promise<void>;
+  setNextCardCost: (
+    callback: (cost: number | string) => number | string,
+  ) => Promise<void>;
   draw: (
     count?: number,
     options?: Partial<{
-      type: Effect["type"];
       fromDiscardPile: boolean;
+      filter: (card: GameCardInfo) => boolean;
     }>,
   ) => Promise<void>;
   drop: (options?: { toDeck?: boolean }) => Promise<void>;
   dropAll: (options?: {
     toDeck?: boolean;
-    type?: Effect["type"];
+    filter?: (card: GameCardInfo) => boolean;
   }) => Promise<void>;
   recycle: (count?: number) => Promise<void>;
   play: (card: GameCardInfo, options?: { free?: boolean }) => Promise<void>;
@@ -482,6 +522,25 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
     });
   },
 
+  setNextCardCost: async (callback) => {
+    set((state) => {
+      return {
+        nextCardModifiers: [
+          ...state.nextCardModifiers,
+          (card) => {
+            return {
+              ...card,
+              effect: {
+                ...card.effect,
+                cost: callback(card.effect.cost),
+              },
+            };
+          },
+        ],
+      };
+    });
+  },
+
   draw: async (count = 1, options) => {
     set((state) => {
       const fromKey = options?.fromDiscardPile ? "discard" : "deck";
@@ -490,7 +549,7 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
       const discard = state.discard.slice();
 
       const from = state[fromKey].slice().filter((c) => {
-        if (options?.type) return c.effect.type === options.type;
+        if (options?.filter) return options.filter(c);
         return true;
       });
 
@@ -587,10 +646,7 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
     // on active l'animation de retrait de la carte
     set({
       hand: state.hand.map((c) => {
-        if (
-          c.state === "idle" &&
-          (!options?.type || c.effect.type === options.type)
-        ) {
+        if (c.state === "idle" && (!options?.filter || options.filter(c))) {
           return { ...c, state: "dropped" };
         }
         return c;
@@ -605,15 +661,13 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
       [toKey]: shuffle(
         [
           ...state.hand
-            .filter((c) => !options?.type || c.effect.type === options.type)
+            .filter((c) => !options?.filter || options.filter(c))
             .map((c) => ({ ...c, state: null })),
           ...state[toKey],
         ],
         2,
       ),
-      hand: state.hand.filter(
-        (c) => options?.type && c.effect.type !== options.type,
-      ),
+      hand: state.hand.filter((c) => options?.filter && !options.filter(c)),
     }));
   },
 
@@ -689,17 +743,10 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
     }
 
     if (!free) {
-      const payWith = typeof card.effect.cost === "number" ? "energy" : "money";
-      const isDiscover = card.effect.onPlayed.toString().includes(
-        "await state.discover"
-      )
+      const { payWith, cost, canBeBuy } = parseCost(state, card);
 
-      const cost = isDiscover
-        ? getDiscoverCardPrice(state, card) 
-        : Number(card.effect.cost);
-
-      // on vérifie si on a assez d'énergie (state.energy >= effect.cost)
-      if (state[payWith] < cost) {
+      // on vérifie si on a assez de ressources
+      if (!canBeBuy) {
         if (payWith === "energy") {
           // on vérifie si on a assez de réputation et d'énergie
           if (state.reputation + state.energy < cost) {
@@ -731,6 +778,7 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
     const cardManagement = async () => {
       // on active l'animation de retrait de la carte
       set((state) => ({
+        nextCardModifiers: [],
         hand: state.hand.map((c) => {
           if (c.name === card.name) {
             return { ...c, state: "played" };
@@ -800,18 +848,12 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
       // on vérifie si la condition s'il y en
       if (c.effect.condition && !c.effect.condition(state, c)) return true;
 
-      // on vérifie si on a assez d'énergie ou de monnaie
-      if (typeof c.effect.cost === "number") {
-        if (c.effect.cost > state.energy + state.reputation) return true;
-      } else {
-        if (Number(c.effect.cost) > state.money) return true;
-      }
-
-      return false;
+      // on vérifie si on a assez de resources
+      return !parseCost(state, c).canBeBuy;
     });
 
     if (isMill || isSoftLocked) {
-      bank.defeat.play()
+      bank.defeat.play();
 
       set({
         isGameOver: true,

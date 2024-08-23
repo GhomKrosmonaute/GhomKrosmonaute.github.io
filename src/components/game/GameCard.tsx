@@ -8,7 +8,7 @@ import {
   SupportCardInfo,
   useCardGame,
   isActionCardInfo,
-  getDiscoverCardPrice,
+  parseCost,
 } from "@/hooks/useCardGame.ts";
 
 import { cn } from "@/utils.ts";
@@ -21,20 +21,14 @@ export const GameCard = (
   props: React.PropsWithoutRef<{ card: GameCardInfo; position: number }>,
 ) => {
   const {
-    activities,
     handSize,
     isAnyCardAnimated,
     isGameOver,
     play,
     canTriggerEffect,
-    haveEnoughResources,
+    parsedCost,
   } = useCardGame((state) => {
-    const payWith =
-      typeof props.card.effect.cost === "number" ? "energy" : "money";
-    const cost = Number(props.card.effect.cost);
-
     return {
-      activities: state.activities,
       handSize: state.hand.length,
       isAnyCardAnimated:
         state.hand.some((card) => card.state !== "idle") ||
@@ -42,10 +36,7 @@ export const GameCard = (
           state.activities.some((activity) => activity.state !== "idle")),
       play: state.play,
       isGameOver: state.isGameOver,
-      haveEnoughResources:
-        payWith === "energy"
-          ? state.energy + state.reputation >= cost
-          : state.money >= cost,
+      parsedCost: parseCost(state, props.card),
       canTriggerEffect:
         !props.card.effect.condition ||
         props.card.effect.condition(state, props.card),
@@ -53,14 +44,6 @@ export const GameCard = (
   });
 
   const positionFromCenter = props.position - (handSize - 1) / 2;
-  const isMoneyCost = typeof props.card.effect.cost === "string"
-  const isDiscover = props.card.effect.onPlayed.toString().includes(
-    "await state.discover"
-  )
-
-  const cost = isDiscover
-    ? getDiscoverCardPrice({ activities }, props.card)
-    : Number(props.card.effect.cost)
 
   return (
     <div
@@ -71,8 +54,7 @@ export const GameCard = (
         "-mx-3.5 z-10 hover:z-20 cursor-pointer select-none",
         props.card.state,
         {
-          "grayscale":
-            isGameOver || !haveEnoughResources || !canTriggerEffect,
+          grayscale: isGameOver || !parsedCost.canBeBuy || !canTriggerEffect,
           "cursor-not-allowed": isAnyCardAnimated,
           // "translate-y-8": !canTriggerEffect || !haveEnoughResources,
         },
@@ -137,11 +119,11 @@ export const GameCard = (
               transformStyle: "preserve-3d",
             }}
           >
-            {!isMoneyCost ? (
+            {parsedCost.payWith === "energy" ? (
               <ValueIcon
                 name="Coût en énergie / points d'action"
                 image="images/energy-background.png"
-                value={cost}
+                value={parsedCost.cost}
                 iconScale="0.75"
                 style={{
                   transform: "translateZ(5px)",
@@ -150,7 +132,7 @@ export const GameCard = (
               />
             ) : (
               <MoneyIcon
-                value={String(cost)}
+                value={String(parsedCost.cost)}
                 style={{
                   transform: "translateZ(10px) rotate(-10deg)",
                   transformStyle: "preserve-3d",

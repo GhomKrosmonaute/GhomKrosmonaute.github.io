@@ -50,5 +50,37 @@
   {
     "name": "Git",
     "logo": "git.png"
+  },
+  {
+    "name": "Processing",
+    "logo": "processing.webp"
+  },
+  {
+    "name": "p5.js",
+    "logo": "p5.png"
+  },
+  {
+    "name": "Strapi",
+    "logo": "strapi.png"
+  },
+  {
+    "name": "Windows",
+    "logo": "windows.png"
+  },
+  {
+    "name": "MacOS",
+    "logo": "macos.png"
+  },
+  {
+    "name": "Linux",
+    "logo": "linux.png"
+  },
+  {
+    "name": "Jetbrains",
+    "logo": "jetbrains.webp"
+  },
+  {
+    "name": "Ruby",
+    "logo": "ruby.png"
   }
 ]
