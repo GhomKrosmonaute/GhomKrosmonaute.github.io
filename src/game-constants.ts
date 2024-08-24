@@ -22,3 +22,13 @@ export const ENERGY_TO_MONEY = 5;
  * 4 Reputation = 40 Energy
  */
 export const REPUTATION_TO_ENERGY = 10;
+
+export const TRIGGER_EVENTS = {
+  eachDay: ["Chaque jour", "par jour"],
+  eachTurn: ["A chaque carte jouée", "par carte"],
+  emptyHand: ["Quand votre main est vide", "chaque fois que la main est vide"],
+  reputationDeclines: [
+    "Quand votre réputation baisse",
+    "à chaque baisse de réputation",
+  ],
+} as const;

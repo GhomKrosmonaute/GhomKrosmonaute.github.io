@@ -7,12 +7,68 @@ import {
   MONEY_TO_REACH,
   UPGRADE_COST_THRESHOLDS,
   MAX_HAND_SIZE,
+  TRIGGER_EVENTS,
 } from "@/game-constants.ts";
 
 import technos from "../data/techno.json";
 import projects from "../data/projects.json";
 import effects from "../data/effects.ts";
 import upgrades from "../data/upgrades.ts";
+
+export interface Upgrade {
+  name: string;
+  description: string;
+  image: string;
+  triggerEvent: TriggerEvent;
+  condition?: (state: CardGameState, upgrade: Upgrade) => boolean;
+  onTrigger: (state: CardGameState, upgrade: Upgrade) => Promise<unknown>;
+  cost: number | string;
+  state: "appear" | "idle" | "triggered";
+  cumul: number;
+  max: number;
+}
+
+export interface Effect {
+  description: string;
+  onPlayed: (state: CardGameState, card: GameCardInfo) => Promise<unknown>;
+  type: "action" | "support";
+  cost: number | string;
+  condition?: (state: CardGameState, card: GameCardInfo) => boolean;
+  waitBeforePlay?: boolean;
+  ephemeral?: boolean;
+  upgrade?: boolean;
+}
+
+export interface ActionCardInfo {
+  name: string;
+  image: string;
+  effect: Effect;
+  state: GameCardState;
+  description?: string;
+  detail?: string;
+  url?: string;
+}
+
+export interface SupportCardInfo {
+  name: string;
+  logo: string;
+  effect: Effect;
+  state: GameCardState;
+}
+
+export type GameCardState =
+  | "played"
+  | "dropped"
+  | "drawn"
+  | "unauthorized"
+  | "idle"
+  | null;
+
+export type GameCardInfo = ActionCardInfo | SupportCardInfo;
+
+export type CardModifier = (card: GameCardInfo) => GameCardInfo;
+
+export type TriggerEvent = keyof typeof TRIGGER_EVENTS;
 
 export function rankColor(rank: number) {
   return {
@@ -186,57 +242,6 @@ export function map(
 export function isActionCardInfo(card: GameCardInfo): card is ActionCardInfo {
   return (card as ActionCardInfo).image !== undefined;
 }
-
-export interface Upgrade {
-  name: string;
-  description: string;
-  image: string;
-  onTrigger: (state: CardGameState, upgrade: Upgrade) => Promise<unknown>;
-  cost: number | string;
-  state: "appear" | "idle" | "triggered";
-  cumul: number;
-  max: number;
-}
-
-export interface Effect {
-  description: string;
-  onPlayed: (state: CardGameState, card: GameCardInfo) => Promise<unknown>;
-  type: "action" | "support";
-  cost: number | string;
-  condition?: (state: CardGameState, card: GameCardInfo) => boolean;
-  waitBeforePlay?: boolean;
-  ephemeral?: boolean;
-  upgrade?: boolean;
-}
-
-export interface ActionCardInfo {
-  name: string;
-  image: string;
-  effect: Effect;
-  state: GameCardState;
-  description?: string;
-  detail?: string;
-  url?: string;
-}
-
-export interface SupportCardInfo {
-  name: string;
-  logo: string;
-  effect: Effect;
-  state: GameCardState;
-}
-
-export type GameCardState =
-  | "played"
-  | "dropped"
-  | "drawn"
-  | "unauthorized"
-  | "idle"
-  | null;
-
-export type GameCardInfo = ActionCardInfo | SupportCardInfo;
-
-export type CardModifier = (card: GameCardInfo) => GameCardInfo;
 
 const supportEffects = effects.filter((effect) => effect.type === "support");
 const actionEffects = effects.filter((effect) => effect.type === "action");

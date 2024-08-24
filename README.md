@@ -4,7 +4,7 @@
 
 # Price rules
 
-Applied on [effects.ts](./src/data/effects.ts). These rules are used to calculate the price of a card.
+Applied on [effects.ts](./src/data/effects.ts). These rules are used to calculate the price of a card. 
 
 - 1 energy = 5M$ (exchange rate: x5)
 - 1 reputation = 10 energy (exchange rate: x10)
@@ -19,3 +19,21 @@ Applied on [effects.ts](./src/data/effects.ts). These rules are used to calculat
 - send to deck = -1 energy
 - send all to deck = 0 energy
 - middle effect = 4 energy
+- recycle = 1 energy
+
+For the price rules of [upgrades.ts](./src/data/upgrades.ts), we just need to add a time parameter for the calculation 
+over a period with all statistics set to average. But it's the same!
+
+- game days average = 10
+- 1 period = 10 days
+- upgrade cumul average = 2
+- energy average = 10
+- reputation average = 5
+- upgrade count average = 3
+- card cost average = 3
+- hand size average = 4
+- discard size average = 10
+- deck size average = 10
+- action card called in period = 10 (logic.)
+- total card called in period = 20
+- for infinite cumul, we just double the period
