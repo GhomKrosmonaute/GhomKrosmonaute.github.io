@@ -90,10 +90,10 @@ export const GameCard = (
           "group/game-card transition-shadow duration-200 ease-in-out",
           "hover:shadow-glow-20",
           "flex flex-col w-full h-full rounded-md",
-          "rounded-md *:shrink-0",
+          "rounded-md *:shrink-0 shadow-primary",
           {
-            "bg-card shadow-primary": props.card.effect.type === "support",
-            "shadow-action": props.card.effect.type === "action",
+            "bg-card/80": props.card.effect.type === "support",
+            // "shadow-action": props.card.effect.type === "action",
           },
         )}
       >
@@ -115,10 +115,13 @@ export const GameCard = (
         )}
 
         <div
-          className={cn("flex justify-start items-center h-10 rounded-t-md", {
-            "bg-action": props.card.effect.type === "action",
-            "bg-support": props.card.effect.type === "support",
-          })}
+          className={cn(
+            "relative flex justify-start items-center h-10 rounded-t-md",
+            {
+              "bg-action": props.card.effect.type === "action",
+              "bg-support/50": props.card.effect.type === "support",
+            },
+          )}
           style={{
             transformStyle: "preserve-3d",
           }}
@@ -153,10 +156,13 @@ export const GameCard = (
           </div>
           <h2
             className={cn(
-              "whitespace-nowrap overflow-hidden text-ellipsis shrink-0 flex-grow",
+              "absolute left-0 w-full text-center whitespace-nowrap overflow-hidden text-ellipsis shrink-0 flex-grow text-xl font-changa",
               {
+                "left-3 text-lg": parsedCost.needs === "money",
+                "left-7": parsedCost.needs === "money" && parsedCost.cost > 99,
                 "text-sm": props.card.name.length > 20,
-                "text-primary-foreground": props.card.effect.type === "action",
+                "text-action-foreground": props.card.effect.type === "action",
+                "text-support-foreground": props.card.effect.type === "support",
               },
             )}
             style={{
@@ -174,7 +180,10 @@ export const GameCard = (
         )}
 
         <div
-          className="bg-card flex-grow rounded-b-md"
+          className={cn(
+            "flex-grow rounded-b-md",
+            props.card.effect.type === "action" && "bg-card/80",
+          )}
           style={{ transformStyle: "preserve-3d" }}
         >
           <p

@@ -1,9 +1,4 @@
-import React from "react";
-
 import { cn } from "@/utils.ts";
-
-import { useMediaQuery } from "usehooks-ts";
-import { useNavigate } from "react-router-dom";
 
 import { useCardGame } from "@/hooks/useCardGame.ts";
 import { useGlobalState } from "@/hooks/useGlobalState.ts";
@@ -15,41 +10,23 @@ import { GameOver } from "@/components/game/GameOver.tsx";
 import { GameCard } from "@/components/game/GameCard.tsx";
 import { Scoreboard } from "@/components/game/Scoreboard.tsx";
 
-export const Game = (props: React.PropsWithChildren<{ show?: boolean }>) => {
+export const Game = () => {
   const cardGame = useCardGame();
-  const navigate = useNavigate();
-  const setCardGameVisibility = useGlobalState(
-    (state) => state.setCardGameVisibility,
-  );
-  const largeScreen = useMediaQuery("(width >= 768px) and (height >= 768px)");
-
-  setCardGameVisibility(!!props.show);
-
-  React.useEffect(() => {
-    if (!largeScreen) navigate("/");
-  }, [largeScreen, navigate]);
+  const show = useGlobalState((state) => state.isCardGameVisible);
 
   return (
     <>
-      <div
-        className={cn(
-          "absolute w-full transition-opacity ease-in-out duration-500 pointer-events-none opacity-0",
-          props.show ? "opacity-100" : "opacity-0",
-        )}
-      >
-        <GameOver />
-      </div>
-
-      <Helpers show={!!props.show} />
-      <Upgrades show={!!props.show} />
-      <Scoreboard show={!!props.show} />
-      <GameValues show={!!props.show} />
+      <Helpers show={show} />
+      <Upgrades show={show} />
+      <Scoreboard show={show} />
+      <GameValues show={show} />
+      <GameOver show={show} />
 
       <div
         className={cn(
           "absolute flex items-center -translate-x-1/2 max-w-[100vw]",
           "left-[50vw] transition-[bottom] ease-in-out duration-1000",
-          props.show ? "bottom-[-50px]" : "-bottom-full",
+          show ? "bottom-[-50px]" : "-bottom-full",
         )}
       >
         {cardGame.hand

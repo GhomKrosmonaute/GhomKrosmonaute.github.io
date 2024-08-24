@@ -1,16 +1,17 @@
-import { Button, buttonVariants } from "@/components/ui/button.tsx";
 import { formatText, rankColor, useCardGame } from "@/hooks/useCardGame.ts";
-import { useNavigate } from "react-router-dom";
+import { useGlobalState } from "@/hooks/useGlobalState.ts";
 
 import scores from "@/data/scores.json";
 import helpers from "@/data/helpers.json";
 
+import { Button, buttonVariants } from "@/components/ui/button.tsx";
 import { Stats } from "@/components/game/Stat.tsx";
 import { Tilt } from "@/components/game/Tilt.tsx";
 import { cn } from "@/utils.ts";
 
-export const GameOver = () => {
-  const navigate = useNavigate();
+export const GameOver = (props: { show: boolean }) => {
+  const setVisible = useGlobalState((state) => state.setCardGameVisibility);
+
   const game = useCardGame((state) => ({
     isGameOver: state.isGameOver,
     isWon: state.isWon,
@@ -24,11 +25,11 @@ export const GameOver = () => {
     .findIndex(({ score }) => game.score >= score);
 
   return (
-    <>
+    <div className={cn("absolute w-full", props.show ? "block" : "hidden")}>
       {game.isGameOver && (
         <div className="absolute top-0 left-0 w-screen h-screen flex flex-col items-center justify-center bg-background/90 z-50 pointer-events-auto">
           <div className="flex flex-col items-center justify-center gap-7">
-            <Tilt className="flex flex-col" max={10} reverse>
+            <Tilt className="flex flex-col select-none" max={10} reverse>
               <div className="font-amsterdam capitalize text-9xl w-fit">
                 Game Over
               </div>
@@ -143,7 +144,7 @@ export const GameOver = () => {
 
             <div className="flex gap-4">
               <Button
-                onClick={() => navigate("/")}
+                onClick={() => setVisible(false)}
                 variant={game.isWon && rank !== -1 ? "opaque" : "default"}
               >
                 Quitter
@@ -175,6 +176,6 @@ export const GameOver = () => {
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 };

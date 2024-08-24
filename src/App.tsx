@@ -24,7 +24,7 @@ const SplineMacbook = React.lazy(() =>
 );
 
 const Game = React.lazy(() =>
-  import("./modals/Game.tsx").then((mod) => ({ default: mod.Game })),
+  import("@/modals/Game.tsx").then((mod) => ({ default: mod.Game })),
 );
 
 const Music = React.lazy(() =>
@@ -57,62 +57,35 @@ export default function App() {
 
   const router = useMemo(
     () =>
-      createBrowserRouter(
-        [
-          {
-            path: "/",
-            element: (
-              <>
-                <Home />
-                {largeScreen && (
-                  <React.Suspense>
-                    <Game show={false} />
-                  </React.Suspense>
-                )}
-              </>
-            ),
-          },
-          {
-            path: "/contact",
-            element: <Contact />,
-          },
-          {
-            path: "/pricing",
-            element: <Tarifs />,
-          },
-          largeScreen
-            ? {
-                path: "/card-game",
-                element: (
-                  <>
-                    <Home inGame />
-                    {largeScreen && (
-                      <React.Suspense>
-                        <Game show={true} />
-                        <Music />
-                      </React.Suspense>
-                    )}
-                  </>
-                ),
-              }
-            : null,
-        ].filter((route) => !!route),
-      ),
-    [largeScreen],
+      createBrowserRouter([
+        {
+          path: "/",
+          element: <Home />,
+        },
+        {
+          path: "/contact",
+          element: <Contact />,
+        },
+        {
+          path: "/pricing",
+          element: <Tarifs />,
+        },
+      ]),
+    [],
   );
 
   return (
     <>
       {largeWidth && (
         <>
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="jumbo absolute -inset-[10px]"></div>
+          </div>
+
           <img
             src="images/background.svg"
-            className="fixed top-0 left-0 w-screen h-screen object-cover pointer-events-none bg-primary opacity-80"
+            className="fixed top-0 left-0 w-screen h-screen object-cover pointer-events-none bg-primary opacity-70"
           />
-
-          <div className="absolute inset-0 overflow-hidden">
-            <div className="jumbo absolute -inset-[10px] opacity-20"></div>
-          </div>
         </>
       )}
 
@@ -150,6 +123,13 @@ export default function App() {
       </Button>
 
       <RouterProvider router={router} />
+
+      {largeScreen && (
+        <React.Suspense>
+          <Game />
+          <Music />
+        </React.Suspense>
+      )}
     </>
   );
 }

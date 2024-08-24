@@ -36,14 +36,24 @@ export const Contact = () => {
             </code>
           </a>
         </div>
-        <Button
-          onClick={() => navigate("/pricing")}
-          variant="cta"
-          size="cta"
-          className="mx-auto md:mx-0"
-        >
-          Mes tarifs
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            className="hidden md:block"
+            onClick={() => {
+              navigate("/");
+            }}
+          >
+            Retour
+          </Button>
+          <Button
+            onClick={() => navigate("/pricing")}
+            variant="cta"
+            size="cta"
+            className="mx-auto md:mx-0"
+          >
+            Mes tarifs
+          </Button>
+        </div>
       </div>
     </Modal>
   );

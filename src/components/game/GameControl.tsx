@@ -1,11 +1,15 @@
 import { Button } from "@/components/ui/button.tsx";
-import { useNavigate } from "react-router-dom";
-import { useCardGame } from "@/hooks/useCardGame.ts";
+
 import { cn } from "@/utils.ts";
+
+import { useCardGame } from "@/hooks/useCardGame.ts";
+import { useGlobalState } from "@/hooks/useGlobalState.ts";
 
 export const GameControl = (props: { show: boolean; delay: boolean }) => {
   const reset = useCardGame((state) => state.reset);
-  const navigate = useNavigate();
+  const exit = useGlobalState(
+    (state) => () => state.setCardGameVisibility(false),
+  );
 
   return (
     <div
@@ -18,7 +22,7 @@ export const GameControl = (props: { show: boolean; delay: boolean }) => {
       )}
     >
       <div className="flex gap-2">
-        <Button onClick={() => navigate("/")} variant="default">
+        <Button onClick={() => exit()} variant="default">
           Revenir à l'accueil
         </Button>
         <Button onClick={() => reset()} variant="default">

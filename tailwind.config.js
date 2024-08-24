@@ -67,12 +67,21 @@ module.exports = {
         },
 
         // Game colors
-        action: colors.blue["600"],
-        support: "hsla(var(--secondary) / 0.5)",
-        energy: "hsl(var(--primary))",
-        reputation: colors.fuchsia["500"],
-        money: colors.emerald["950"],
-        upgrade: colors.amber["500"],
+        action: {
+          DEFAULT: "hsl(var(--action))",
+          foreground: "hsl(var(--action-foreground))",
+        },
+        support: {
+          DEFAULT: "hsl(var(--support))",
+          foreground: "hsl(var(--support-foreground))",
+        },
+        energy: "hsl(var(--energy))",
+        reputation: "hsl(var(--reputation))",
+        upgrade: "hsl(var(--upgrade))",
+        money: {
+          DEFAULT: "hsl(var(--money))",
+          foreground: "hsl(var(--money-foreground))",
+        },
       },
       boxShadow: {
         "glow-20": "0 0 20px var(--tw-shadow-color)",

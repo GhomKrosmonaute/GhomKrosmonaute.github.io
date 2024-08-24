@@ -1,12 +1,14 @@
+import React from "react";
+
 import { useCardGame } from "@/hooks/useCardGame.ts";
 
 import { MAX_ENERGY, MAX_REPUTATION } from "@/game-constants.ts";
 
+import { GameControl } from "@/components/game/GameControl.tsx";
 import { Gauge } from "@/components/game/Gauge.tsx";
 import { Stats } from "@/components/game/Stat.tsx";
 import { Card } from "@/components/Card.tsx";
-import { GameControl } from "@/components/game/GameControl.tsx";
-import React from "react";
+
 import { cn } from "@/utils.ts";
 
 export const GameValues = (props: { show: boolean }) => {
