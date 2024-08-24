@@ -2,15 +2,12 @@ import React from "react";
 
 import Money from "@/assets/icons/money.svg";
 import { cn } from "@/utils.ts";
-import {
-  formatText,
-  MONEY_TO_REACH,
-  useCardGame,
-} from "@/hooks/useCardGame.ts";
+import { formatText, useCardGame } from "@/hooks/useCardGame.ts";
 import Score from "@/assets/icons/score.svg";
 import Day from "@/assets/icons/day.svg";
 import Deck from "@/assets/icons/deck.svg";
 import Discard from "@/assets/icons/discard.svg";
+import { MONEY_TO_REACH } from "@/game-constants.ts";
 
 export const Stat = (props: {
   name: string;

@@ -144,13 +144,16 @@ export const GameOver = () => {
             <div className="flex gap-4">
               <Button
                 onClick={() => navigate("/")}
-                variant={rank !== -1 ? "opaque" : "default"}
+                variant={game.isWon && rank !== -1 ? "opaque" : "default"}
               >
                 Quitter
               </Button>
               <Button
                 onClick={() => game.reset()}
-                variant={rank === -1 ? "opaque" : "default"}
+                variant={
+                  game.isWon ? (rank === -1 ? "opaque" : "default") : "cta"
+                }
+                size={game.isWon ? "default" : "cta"}
               >
                 Recommencer
               </Button>

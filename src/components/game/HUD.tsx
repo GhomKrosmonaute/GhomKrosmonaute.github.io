@@ -1,8 +1,5 @@
-import {
-  useCardGame,
-  MAX_ENERGY,
-  MAX_REPUTATION,
-} from "@/hooks/useCardGame.ts";
+import { useCardGame } from "@/hooks/useCardGame.ts";
+import { MAX_ENERGY, MAX_REPUTATION } from "@/game-constants.ts";
 
 import { Button } from "@/components/ui/button.tsx";
 import { Scoreboard } from "@/components/game/Scoreboard.tsx";

@@ -107,11 +107,11 @@ export default function App() {
         <>
           <img
             src="images/background.svg"
-            className="fixed top-0 left-0 w-screen h-screen object-cover pointer-events-none bg-primary opacity-50"
+            className="fixed top-0 left-0 w-screen h-screen object-cover pointer-events-none bg-primary opacity-80"
           />
 
           <div className="absolute inset-0 overflow-hidden">
-            <div className="jumbo absolute -inset-[10px] opacity-50"></div>
+            <div className="jumbo absolute -inset-[10px] opacity-20"></div>
           </div>
         </>
       )}

@@ -248,20 +248,7 @@ const actionEffects = effects.filter((effect) => effect.type === "action");
 
 function generateInitialState(): Omit<
   CardGameState,
-  | "updateScore"
-  | "addEnergy"
-  | "addReputation"
-  | "addMoney"
-  | "addDay"
-  | "upgrade"
-  | "triggerUpgrade"
-  | "addNextCardModifier"
-  | "draw"
-  | "drop"
-  | "dropAll"
-  | "recycle"
-  | "play"
-  | "reset"
+  keyof ReturnType<typeof cardGameMethods>
 > {
   const supports = technos.map((techno, i) => {
     const mapping = map(i, 0, technos.length, 0, supportEffects.length, true);
@@ -354,6 +341,7 @@ interface CardGameState {
   addDay: (count?: number) => Promise<void>;
   upgrade: (name: string) => Promise<void>;
   triggerUpgrade: (name: string) => Promise<void>;
+  triggerUpgradeEvent: (event: TriggerEvent) => Promise<void>;
   addNextCardModifier: (
     callback: (card: GameCardInfo) => GameCardInfo,
     options?: { before?: boolean },
@@ -375,257 +363,405 @@ interface CardGameState {
   reset: () => void;
 }
 
-export const useCardGame = create<CardGameState>((set, getState) => ({
-  ...generateInitialState(),
+function cardGameMethods(
+  set: (
+    partial:
+      | CardGameState
+      | Partial<CardGameState>
+      | ((state: CardGameState) => CardGameState | Partial<CardGameState>),
+    replace?: boolean | undefined,
+  ) => void,
+  getState: () => CardGameState,
+) {
+  return {
+    updateScore: () => {
+      // Plus la partie dure longtemps, plus le score diminue.
+      // Moins tu perds de réputation, plus le score est élevé.
+      // Plus tu as d'argent en fin de partie, plus le score est élevé.
+      // Chaque cumul d'activité augmente le score.
+      // L'énergie restante augmente légèrement le score.
+      // Calcul :
 
-  updateScore: () => {
-    // Plus la partie dure longtemps, plus le score diminue.
-    // Moins tu perds de réputation, plus le score est élevé.
-    // Plus tu as d'argent en fin de partie, plus le score est élevé.
-    // Chaque cumul d'activité augmente le score.
-    // L'énergie restante augmente légèrement le score.
-    // Calcul :
-
-    set((state) => ({
-      score: Math.max(
-        0,
-        state.reputation * 100 +
-          state.money * 100 +
-          state.upgrades.reduce((acc, upgrade) => acc + upgrade.cumul, 0) *
-            100 +
-          state.energy * 50 -
-          state.day * 75,
-      ),
-    }));
-  },
-
-  addEnergy: async (count) => {
-    // on joue le son de la banque
-    bank.gain.play();
-
-    set((state) => {
-      return {
-        energy: Math.max(0, Math.min(MAX_ENERGY, state.energy + count)),
-      };
-    });
-  },
-
-  addReputation: async (count, options) => {
-    // on joue le son de la banque
-    if (count === 10) bank.powerUp.play();
-    else if (count > 0) bank.gain.play();
-    else bank.loss.play();
-
-    set((state) => {
-      return {
-        reputation: Math.max(
+      set((state) => ({
+        score: Math.max(
           0,
-          Math.min(MAX_REPUTATION, state.reputation + count),
+          state.reputation * 100 +
+            state.money * 100 +
+            state.upgrades.reduce((acc, upgrade) => acc + upgrade.cumul, 0) *
+              100 +
+            state.energy * 50 -
+            state.day * 75,
         ),
-      };
-    });
+      }));
+    },
 
-    await wait();
-
-    if (options?.skipGameOverCheck) return;
-
-    const state = getState();
-
-    if (state.isGameOver) return;
-
-    if (state.reputation === 0) {
+    addEnergy: async (count) => {
       // on joue le son de la banque
-      bank.defeat.play();
-      bank.music.fade(0.7, 0, 1000);
+      bank.gain.play();
 
-      set({ isGameOver: true, isWon: false, reason: "reputation" });
-    }
-  },
+      set((state) => {
+        return {
+          energy: Math.max(0, Math.min(MAX_ENERGY, state.energy + count)),
+        };
+      });
+    },
 
-  addMoney: async (count) => {
-    if (count > 0) bank.cashing.play();
-
-    set((state) => {
-      const money = state.money + count;
-
-      return { money };
-    });
-
-    await wait();
-
-    const state = getState();
-
-    if (state.money >= MONEY_TO_REACH) {
+    addReputation: async (count, options) => {
       // on joue le son de la banque
-      bank.victory.play();
+      if (count === 10) bank.powerUp.play();
+      else if (count > 0) bank.gain.play();
+      else bank.loss.play();
 
-      set({ isGameOver: true, isWon: true });
-    }
-  },
+      set((state) => {
+        return {
+          reputation: Math.max(
+            0,
+            Math.min(MAX_REPUTATION, state.reputation + count),
+          ),
+        };
+      });
 
-  addDay: async (count = 1) => {
-    set((state) => ({
-      day: state.day + count,
-    }));
+      await wait();
 
-    if (count > 0) {
-      // appliquer les effets de fin de journée
+      if (options?.skipGameOverCheck) return;
+
       const state = getState();
 
-      for (let i = 0; i < count; i++) {
-        await Promise.all(
-          state.upgrades.slice().map(async (upgrade, index) => {
-            await wait(250 * index);
-            await state.triggerUpgrade(upgrade.name);
-          }),
-        );
+      if (state.isGameOver) return;
+
+      if (state.reputation === 0) {
+        // on joue le son de la banque
+        bank.defeat.play();
+        bank.music.fade(0.7, 0, 1000);
+
+        set({ isGameOver: true, isWon: false, reason: "reputation" });
       }
-    }
-  },
+    },
 
-  upgrade: async (name) => {
-    const rawUpgrades = upgrades.find((a) => a.name === name)!;
+    addMoney: async (count) => {
+      if (count > 0) bank.cashing.play();
 
-    // on joue le son de la banque
-    bank.upgrade.play();
+      set((state) => {
+        const money = state.money + count;
 
-    let state = getState();
+        return { money };
+      });
 
-    // si l'activité est déjà découverte, on augmente son cumul
-    if (state.upgrades.find((a) => a.name === name)) {
+      await wait();
+
+      const state = getState();
+
+      if (state.money >= MONEY_TO_REACH) {
+        // on joue le son de la banque
+        bank.victory.play();
+
+        set({ isGameOver: true, isWon: true });
+      }
+    },
+
+    addDay: async (count = 1) => {
+      set((state) => ({
+        day: state.day + count,
+      }));
+
+      if (count > 0) {
+        // appliquer les effets de fin de journée
+        const state = getState();
+
+        for (let i = 0; i < count; i++) {
+          state.triggerUpgradeEvent("eachDay");
+        }
+      }
+    },
+
+    upgrade: async (name) => {
+      const rawUpgrades = upgrades.find((a) => a.name === name)!;
+
+      // on joue le son de la banque
+      bank.upgrade.play();
+
+      let state = getState();
+
+      // si l'activité est déjà découverte, on augmente son cumul
+      if (state.upgrades.find((a) => a.name === name)) {
+        set((state) => {
+          return {
+            upgrades: state.upgrades.map((a) => {
+              if (a.name === name) {
+                return { ...a, cumul: a.cumul + 1 };
+              }
+              return a;
+            }),
+          };
+        });
+      } else {
+        set((state) => {
+          return {
+            upgrades: [
+              ...state.upgrades,
+              {
+                ...rawUpgrades,
+                state: "appear",
+                cumul: 1,
+                max: rawUpgrades.cumulable ? (rawUpgrades.max ?? Infinity) : 1,
+              },
+            ],
+          };
+        });
+      }
+
+      if (rawUpgrades.cumulable && rawUpgrades.max) {
+        // on vérifie si la carte qui sert à découvrir cette activité doit être supprimée ou non
+
+        state = getState();
+
+        const upgrade = state.upgrades.find((a) => a.name === name)!;
+
+        if (upgrade.cumul === upgrade.max) {
+          const card = state.hand.find(
+            (c) => c.effect.upgrade && c.name === name,
+          )!;
+
+          set({
+            hand: state.hand.map((c) => {
+              if (c.name === card.name) return { ...c, state: "played" };
+              return c;
+            }),
+          });
+
+          await wait();
+
+          set({
+            hand: state.hand.filter((c) => {
+              return c.name !== card.name;
+            }),
+          });
+        }
+      }
+
+      await wait();
+
+      // remet l'activité en idle
       set((state) => {
         return {
           upgrades: state.upgrades.map((a) => {
             if (a.name === name) {
-              return { ...a, cumul: a.cumul + 1 };
+              return { ...a, state: "idle" };
             }
             return a;
           }),
         };
       });
-    } else {
-      set((state) => {
-        return {
-          upgrades: [
-            ...state.upgrades,
-            {
-              ...rawUpgrades,
-              state: "appear",
-              cumul: 1,
-              max: rawUpgrades.cumulable ? (rawUpgrades.max ?? Infinity) : 1,
-            },
-          ],
-        };
-      });
-    }
+    },
 
-    if (rawUpgrades.cumulable && rawUpgrades.max) {
-      // on vérifie si la carte qui sert à découvrir cette activité doit être supprimée ou non
-
-      state = getState();
-
+    triggerUpgrade: async (name) => {
+      const state = getState();
       const upgrade = state.upgrades.find((a) => a.name === name)!;
 
-      if (upgrade.cumul === upgrade.max) {
-        const card = state.hand.find(
-          (c) => c.effect.upgrade && c.name === name,
-        )!;
-
-        set({
-          hand: state.hand.map((c) => {
-            if (c.name === card.name) return { ...c, state: "played" };
-            return c;
+      // mettre l'activité en triggered
+      set((state) => {
+        return {
+          upgrades: state.upgrades.map((a) => {
+            if (a.name === upgrade.name) {
+              return { ...a, state: "triggered" };
+            }
+            return a;
           }),
-        });
-
-        await wait();
-
-        set({
-          hand: state.hand.filter((c) => {
-            return c.name !== card.name;
-          }),
-        });
-      }
-    }
-
-    await wait();
-
-    // remet l'activité en idle
-    set((state) => {
-      return {
-        upgrades: state.upgrades.map((a) => {
-          if (a.name === name) {
-            return { ...a, state: "idle" };
-          }
-          return a;
-        }),
-      };
-    });
-  },
-
-  triggerUpgrade: async (name) => {
-    const state = getState();
-    const upgrade = state.upgrades.find((a) => a.name === name)!;
-
-    // mettre l'activité en triggered
-    set((state) => {
-      return {
-        upgrades: state.upgrades.map((a) => {
-          if (a.name === upgrade.name) {
-            return { ...a, state: "triggered" };
-          }
-          return a;
-        }),
-      };
-    });
-
-    await wait();
-
-    await upgrade.onTrigger(state, upgrade);
-
-    await wait();
-
-    // remettre l'activité en idle
-    set((state) => {
-      return {
-        upgrades: state.upgrades.map((a) => {
-          if (a.name === upgrade.name) {
-            return { ...a, state: "idle" };
-          }
-          return a;
-        }),
-      };
-    });
-  },
-
-  addNextCardModifier: async (callback, options) => {
-    bank.powerUp.play();
-
-    set((state) => {
-      return {
-        nextCardModifiers: options?.before
-          ? [callback, ...state.nextCardModifiers]
-          : [...state.nextCardModifiers, callback],
-      };
-    });
-  },
-
-  draw: async (count = 1, options) => {
-    set((state) => {
-      const fromKey = options?.fromDiscardPile ? "discard" : "deck";
-
-      const hand = state.hand.slice();
-      const discard = state.discard.slice();
-
-      const from = state[fromKey].slice().filter((c) => {
-        if (options?.filter) return options.filter(c);
-        return true;
+        };
       });
 
-      const drawn: string[] = [];
+      await wait();
 
-      let handAdded = false;
-      let discardAdded = false;
+      await upgrade.onTrigger(state, upgrade);
+
+      await wait();
+
+      // remettre l'activité en idle
+      set((state) => {
+        return {
+          upgrades: state.upgrades.map((a) => {
+            if (a.name === upgrade.name) {
+              return { ...a, state: "idle" };
+            }
+            return a;
+          }),
+        };
+      });
+    },
+
+    triggerUpgradeEvent: async (event: TriggerEvent) => {
+      const state = getState();
+
+      await Promise.all(
+        state.upgrades
+          .slice()
+          .filter(
+            (upgrade) =>
+              upgrade.triggerEvent === event &&
+              (!upgrade.condition || upgrade.condition(state, upgrade)),
+          )
+          .map(async (upgrade, index) => {
+            await wait(250 * index);
+            await state.triggerUpgrade(upgrade.name);
+          }),
+      );
+    },
+
+    addNextCardModifier: async (callback, options) => {
+      bank.powerUp.play();
+
+      set((state) => {
+        return {
+          nextCardModifiers: options?.before
+            ? [callback, ...state.nextCardModifiers]
+            : [...state.nextCardModifiers, callback],
+        };
+      });
+    },
+
+    draw: async (count = 1, options) => {
+      set((state) => {
+        const fromKey = options?.fromDiscardPile ? "discard" : "deck";
+
+        const hand = state.hand.slice();
+        const discard = state.discard.slice();
+
+        const from = state[fromKey].slice().filter((c) => {
+          if (options?.filter) return options.filter(c);
+          return true;
+        });
+
+        const drawn: string[] = [];
+
+        let handAdded = false;
+        let discardAdded = false;
+
+        for (let i = 0; i < count; i++) {
+          if (from.length === 0) {
+            break;
+          }
+
+          const card = from.pop()!;
+
+          card.state = "drawn";
+
+          drawn.push(card.name);
+
+          if (hand.length - 1 >= MAX_HAND_SIZE) {
+            discard.push(card);
+            discardAdded = true;
+          } else {
+            hand.push(card);
+            handAdded = true;
+          }
+        }
+
+        if (handAdded) bank.draw.play();
+        else if (discardAdded) bank.draw.play();
+
+        return {
+          hand,
+          discard,
+          [fromKey]: shuffle(
+            state[fromKey].filter((c) => !drawn.includes(c.name)),
+            2,
+          ),
+        };
+      });
+
+      await wait();
+
+      // on passe la main en idle
+      set((state) => ({
+        hand: state.hand.map((c) => {
+          return { ...c, state: "idle" };
+        }),
+      }));
+    },
+
+    drop: async (options) => {
+      const toKey = options?.toDeck ? "deck" : "discard";
+
+      // on joue le son de la banque
+      bank.drop.play();
+
+      const state = getState();
+
+      const hand = state.hand.slice().filter((c) => c.state === "idle");
+
+      const index = Math.floor(Math.random() * hand.length);
+
+      const card = hand[index];
+
+      // on active l'animation de retrait de la carte
+      set({
+        hand: state.hand.map((c) => {
+          if (c.name === card.name) {
+            return { ...c, state: "dropped" };
+          }
+          return c;
+        }),
+      });
+
+      // on attend la fin de l'animation
+      await wait();
+
+      // la carte retourne dans le deck et on retire la carte de la main
+      set((state) => ({
+        hand: state.hand.filter((c) => c.name !== card.name),
+        [toKey]: shuffle([{ ...card, state: null }, ...state[toKey]], 2),
+      }));
+    },
+
+    dropAll: async (options) => {
+      const toKey = options?.toDeck ? "deck" : "discard";
+
+      // on joue le son de la banque
+      bank.drop.play();
+
+      const state = getState();
+
+      // on active l'animation de retrait de la carte
+      set({
+        hand: state.hand.map((c) => {
+          if (c.state === "idle" && (!options?.filter || options.filter(c))) {
+            return { ...c, state: "dropped" };
+          }
+          return c;
+        }),
+      });
+
+      // on attend la fin de l'animation
+      await wait();
+
+      // les cartes retournent dans le deck et on vide la main
+      set((state) => ({
+        [toKey]: shuffle(
+          [
+            ...state.hand
+              .filter((c) => !options?.filter || options.filter(c))
+              .map((c) => ({ ...c, state: null })),
+            ...state[toKey],
+          ],
+          2,
+        ),
+        hand: state.hand.filter((c) => options?.filter && !options.filter(c)),
+      }));
+    },
+
+    /**
+     * Place des cartes de la défausse dans le deck
+     */
+    recycle: async (count = 1) => {
+      // on joue le son de la banque
+      bank.recycle.play();
+
+      const state = getState();
+
+      const from = state.discard.slice();
+      const to = state.deck.slice();
+
+      const recycled: string[] = [];
 
       for (let i = 0; i < count; i++) {
         if (from.length === 0) {
@@ -634,316 +770,196 @@ export const useCardGame = create<CardGameState>((set, getState) => ({
 
         const card = from.pop()!;
 
-        card.state = "drawn";
-
-        drawn.push(card.name);
-
-        if (hand.length - 1 >= MAX_HAND_SIZE) {
-          discard.push(card);
-          discardAdded = true;
-        } else {
-          hand.push(card);
-          handAdded = true;
-        }
+        recycled.push(card.name);
+        to.push(card);
       }
 
-      if (handAdded) bank.draw.play();
-      else if (discardAdded) bank.draw.play();
+      set({
+        deck: shuffle(to),
+        discard: state.discard.filter((c) => !recycled.includes(c.name)),
+      });
+    },
 
-      return {
-        hand,
-        discard,
-        [fromKey]: shuffle(
-          state[fromKey].filter((c) => !drawn.includes(c.name)),
-          2,
-        ),
+    play: async (card, options) => {
+      const free = !!options?.free;
+
+      let state = getState();
+
+      const cantPlay = async () => {
+        // jouer le son de la banque
+        bank.unauthorized.play();
+
+        // activer l'animation can't play
+        set({
+          hand: state.hand.map((c) => {
+            if (c.name === card.name) {
+              return { ...c, state: "unauthorized" };
+            }
+            return c;
+          }),
+        });
+
+        // on attend la fin de l'animation
+        await wait();
+
+        // on remet la carte en idle
+        set({
+          hand: state.hand.map((c) => {
+            if (c.name === card.name) {
+              return { ...c, state: "idle" };
+            }
+            return c;
+          }),
+        });
       };
-    });
 
-    await wait();
+      // on vérifie la condition s'il y en a une (eval(effect.condition))
+      if (card.effect.condition && !card.effect.condition(state, card)) {
+        await cantPlay();
 
-    // on passe la main en idle
-    set((state) => ({
-      hand: state.hand.map((c) => {
-        return { ...c, state: "idle" };
-      }),
-    }));
-  },
-
-  drop: async (options) => {
-    const toKey = options?.toDeck ? "deck" : "discard";
-
-    // on joue le son de la banque
-    bank.drop.play();
-
-    const state = getState();
-
-    const hand = state.hand.slice().filter((c) => c.state === "idle");
-
-    const index = Math.floor(Math.random() * hand.length);
-
-    const card = hand[index];
-
-    // on active l'animation de retrait de la carte
-    set({
-      hand: state.hand.map((c) => {
-        if (c.name === card.name) {
-          return { ...c, state: "dropped" };
-        }
-        return c;
-      }),
-    });
-
-    // on attend la fin de l'animation
-    await wait();
-
-    // la carte retourne dans le deck et on retire la carte de la main
-    set((state) => ({
-      hand: state.hand.filter((c) => c.name !== card.name),
-      [toKey]: shuffle([{ ...card, state: null }, ...state[toKey]], 2),
-    }));
-  },
-
-  dropAll: async (options) => {
-    const toKey = options?.toDeck ? "deck" : "discard";
-
-    // on joue le son de la banque
-    bank.drop.play();
-
-    const state = getState();
-
-    // on active l'animation de retrait de la carte
-    set({
-      hand: state.hand.map((c) => {
-        if (c.state === "idle" && (!options?.filter || options.filter(c))) {
-          return { ...c, state: "dropped" };
-        }
-        return c;
-      }),
-    });
-
-    // on attend la fin de l'animation
-    await wait();
-
-    // les cartes retournent dans le deck et on vide la main
-    set((state) => ({
-      [toKey]: shuffle(
-        [
-          ...state.hand
-            .filter((c) => !options?.filter || options.filter(c))
-            .map((c) => ({ ...c, state: null })),
-          ...state[toKey],
-        ],
-        2,
-      ),
-      hand: state.hand.filter((c) => options?.filter && !options.filter(c)),
-    }));
-  },
-
-  /**
-   * Place des cartes de la défausse dans le deck
-   */
-  recycle: async (count = 1) => {
-    // on joue le son de la banque
-    bank.recycle.play();
-
-    const state = getState();
-
-    const from = state.discard.slice();
-    const to = state.deck.slice();
-
-    const recycled: string[] = [];
-
-    for (let i = 0; i < count; i++) {
-      if (from.length === 0) {
-        break;
+        return;
       }
 
-      const card = from.pop()!;
+      if (!free) {
+        const { needs, cost } = parseCost(state, card);
 
-      recycled.push(card.name);
-      to.push(card);
-    }
+        // on vérifie si on a assez de ressources
+        if (state[needs] < cost) {
+          if (needs === "energy") {
+            // on vérifie si on a assez de réputation et d'énergie
+            if (state.reputation + state.energy < cost) {
+              await cantPlay();
+              return;
+            }
 
-    set({
-      deck: shuffle(to),
-      discard: state.discard.filter((c) => !recycled.includes(c.name)),
-    });
-  },
+            // on retire toute l'énergie et on puise dans la réputation pour le reste
+            const missingEnergy = cost - state.energy;
 
-  play: async (card, options) => {
-    const free = !!options?.free;
+            set({ energy: 0 });
 
-    let state = getState();
-
-    const cantPlay = async () => {
-      // jouer le son de la banque
-      bank.unauthorized.play();
-
-      // activer l'animation can't play
-      set({
-        hand: state.hand.map((c) => {
-          if (c.name === card.name) {
-            return { ...c, state: "unauthorized" };
-          }
-          return c;
-        }),
-      });
-
-      // on attend la fin de l'animation
-      await wait();
-
-      // on remet la carte en idle
-      set({
-        hand: state.hand.map((c) => {
-          if (c.name === card.name) {
-            return { ...c, state: "idle" };
-          }
-          return c;
-        }),
-      });
-    };
-
-    // on vérifie la condition s'il y en a une (eval(effect.condition))
-    if (card.effect.condition && !card.effect.condition(state, card)) {
-      await cantPlay();
-
-      return;
-    }
-
-    if (!free) {
-      const { needs, cost } = parseCost(state, card);
-
-      // on vérifie si on a assez de ressources
-      if (state[needs] < cost) {
-        if (needs === "energy") {
-          // on vérifie si on a assez de réputation et d'énergie
-          if (state.reputation + state.energy < cost) {
+            await state.addReputation(-missingEnergy, {
+              skipGameOverCheck: true,
+            });
+          } else {
             await cantPlay();
             return;
           }
-
-          // on retire toute l'énergie et on puise dans la réputation pour le reste
-          const missingEnergy = cost - state.energy;
-
-          set({ energy: 0 });
-
-          await state.addReputation(-missingEnergy, {
-            skipGameOverCheck: true,
-          });
         } else {
-          await cantPlay();
-          return;
+          // on soustrait le coût de la carte à l'énergie
+          set({ [needs]: state[needs] - cost });
         }
-      } else {
-        // on soustrait le coût de la carte à l'énergie
-        set({ [needs]: state[needs] - cost });
       }
-    }
 
-    // on joue le son de la banque
-    bank.play.play();
-
-    const cardManagement = async () => {
-      // on active l'animation de retrait de la carte
-      set((state) => ({
-        nextCardModifiers: [],
-        hand: state.hand.map((c) => {
-          if (c.name === card.name) {
-            return { ...c, state: "played" };
-          }
-          return c;
-        }),
-      }));
-
-      // on attend la fin de l'animation
-      await wait();
-
-      // la carte va dans la défausse et on retire la carte de la main
-      set((state) => ({
-        discard: card.effect.ephemeral
-          ? state.discard
-          : shuffle([{ ...card, state: null }, ...state.discard], 3),
-        hand: state.hand.filter((c) => c.name !== card.name),
-      }));
-
-      // on change de jour si besoin
-      if (card.effect.type === "action") {
-        await state.addDay();
-      }
-    };
-
-    const effectManagement = async () => {
-      // si il ne s'agit que de pioche une carte, on attend avant de piocher
-      if (card.effect.waitBeforePlay) await wait();
-
-      // on applique l'effet de la carte (toujours via eval)
-      await card.effect.onPlayed(state, card);
-
-      // on met à jour le score
-      state.updateScore();
-    };
-
-    await Promise.all([cardManagement(), effectManagement()]);
-
-    // on vérifie si la main est vide
-    // si la main est vide, on pioche
-
-    state = getState();
-
-    if (state.isGameOver) return;
-
-    // vérifier le game over par réputation
-
-    if (state.reputation === 0) {
       // on joue le son de la banque
-      bank.defeat.play();
-      bank.music.fade(0.7, 0, 1000);
+      bank.play.play();
 
-      set({ isGameOver: true, isWon: false, reason: "reputation" });
+      const cardManagement = async () => {
+        // on active l'animation de retrait de la carte
+        set((state) => ({
+          nextCardModifiers: [],
+          hand: state.hand.map((c) => {
+            if (c.name === card.name) {
+              return { ...c, state: "played" };
+            }
+            return c;
+          }),
+        }));
+
+        // on attend la fin de l'animation
+        await wait();
+
+        // la carte va dans la défausse et on retire la carte de la main
+        set((state) => ({
+          discard: card.effect.ephemeral
+            ? state.discard
+            : shuffle([{ ...card, state: null }, ...state.discard], 3),
+          hand: state.hand.filter((c) => c.name !== card.name),
+        }));
+
+        // on change de jour si besoin
+        if (card.effect.type === "action") {
+          await state.addDay();
+        }
+      };
+
+      const effectManagement = async () => {
+        // si il ne s'agit que de pioche une carte, on attend avant de piocher
+        if (card.effect.waitBeforePlay) await wait();
+
+        // on applique l'effet de la carte (toujours via eval)
+        await card.effect.onPlayed(state, card);
+
+        // on met à jour le score
+        state.updateScore();
+      };
+
+      await Promise.all([cardManagement(), effectManagement()]);
+
+      // on vérifie si la main est vide
+      // si la main est vide, on pioche
+
+      state = getState();
+
+      if (state.isGameOver) return;
+
+      // vérifier le game over par réputation
+
+      if (state.reputation === 0) {
+        // on joue le son de la banque
+        bank.defeat.play();
+        bank.music.fade(0.7, 0, 1000);
+
+        set({ isGameOver: true, isWon: false, reason: "reputation" });
+
+        // on met à jour le score
+        state.updateScore();
+
+        return;
+      }
+
+      if (state.hand.length === 0) {
+        await state.draw();
+      }
+
+      // vérifier si le jeu est soft lock
+
+      state = getState();
+
+      const isMill = state.deck.length === 0 && state.hand.length === 0;
+      const isSoftLocked = state.hand.every((c) => {
+        // on vérifie si la condition s'il y en
+        if (c.effect.condition && !c.effect.condition(state, c)) return true;
+
+        // on vérifie si on a assez de resources
+        return !parseCost(state, c).canBeBuy;
+      });
+
+      if (isMill || isSoftLocked) {
+        bank.defeat.play();
+        bank.music.fade(0.7, 0, 1000);
+
+        set({
+          isGameOver: true,
+          isWon: false,
+          reason: isMill ? "mill" : "soft-lock",
+        });
+      }
 
       // on met à jour le score
       state.updateScore();
+    },
 
-      return;
-    }
+    reset: () => {
+      set(generateInitialState());
 
-    if (state.hand.length === 0) {
-      await state.draw();
-    }
+      bank.music.stop();
+      bank.music.play();
+    },
+  } satisfies Partial<CardGameState>;
+}
 
-    // vérifier si le jeu est soft lock
+export const useCardGame = create<CardGameState>((set, getState) => ({
+  ...generateInitialState(),
 
-    state = getState();
-
-    const isMill = state.deck.length === 0 && state.hand.length === 0;
-    const isSoftLocked = state.hand.every((c) => {
-      // on vérifie si la condition s'il y en
-      if (c.effect.condition && !c.effect.condition(state, c)) return true;
-
-      // on vérifie si on a assez de resources
-      return !parseCost(state, c).canBeBuy;
-    });
-
-    if (isMill || isSoftLocked) {
-      bank.defeat.play();
-      bank.music.fade(0.7, 0, 1000);
-
-      set({
-        isGameOver: true,
-        isWon: false,
-        reason: isMill ? "mill" : "soft-lock",
-      });
-    }
-
-    // on met à jour le score
-    state.updateScore();
-  },
-
-  reset: () => {
-    set(generateInitialState());
-
-    bank.music.stop();
-    bank.music.play();
-  },
+  ...cardGameMethods(set, getState),
 }));

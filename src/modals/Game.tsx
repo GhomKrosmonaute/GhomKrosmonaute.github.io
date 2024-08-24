@@ -29,8 +29,8 @@ export const Game = (props: React.PropsWithChildren<{ show?: boolean }>) => {
     <>
       <div
         className={cn(
-          "absolute w-full transition-[left] ease-in-out duration-500 pointer-events-none",
-          props.show ? "left-0" : "-left-full",
+          "absolute w-full transition-all ease-in-out duration-500 pointer-events-none opacity-0 delay-500",
+          props.show ? "left-0 opacity-100" : "-left-full opacity-0",
         )}
       >
         <HUD />
