@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Card } from "@/components/Card.tsx";
 import { Button } from "@/components/ui/button.tsx";
+import { CenterCard } from "@/components/CenterCard.tsx";
 
 export const Modal = (
   props: React.PropsWithChildren<{
@@ -14,7 +14,7 @@ export const Modal = (
 
   return (
     <>
-      <Card
+      <CenterCard
         big={props.big}
         style={props.style}
         onClose={() => {
@@ -22,7 +22,7 @@ export const Modal = (
         }}
       >
         {props.children}
-      </Card>
+      </CenterCard>
       <Button
         variant="opaque"
         className="md:mdh:hidden fixed m-4 right-0 bottom-0 z-50"

@@ -5,17 +5,18 @@ import { Button } from "@/components/ui/button.tsx";
 
 import { useMediaQuery } from "usehooks-ts";
 import { useNavigate } from "react-router-dom";
-import { Card } from "@/components/Card.tsx";
+import { CenterCard } from "@/components/CenterCard.tsx";
 
 export const Home = (props: { inGame?: boolean }) => {
   const navigate = useNavigate();
   const largeScreen = useMediaQuery("(width >= 768px) and (height >= 768px)");
 
   return (
-    <Card
+    <CenterCard
       style={{
-        transition: "transform 1s ease-in-out",
-        transform: props.inGame ? "translate(-50%, -100%)" : undefined,
+        opacity: props.inGame ? 0 : 1,
+        transition: "opacity 0.5s ease-in-out, transform 0.5s ease-in-out",
+        transform: props.inGame ? "translate(0%, -150%) scale(0.7)" : undefined,
       }}
     >
       <Heading />
@@ -28,7 +29,7 @@ export const Home = (props: { inGame?: boolean }) => {
             onClick={() => navigate(props.inGame ? "/" : "/card-game")}
             onKeyDown={(e) => e.key === "Escape" && navigate("/")}
           >
-            {props.inGame ? "Stop" : "Jouer"}
+            Jouer
           </Button>
         )}
         <Button onClick={() => navigate("/pricing")}>Tarifs</Button>
@@ -36,6 +37,6 @@ export const Home = (props: { inGame?: boolean }) => {
           Contact
         </Button>
       </div>
-    </Card>
+    </CenterCard>
   );
 };

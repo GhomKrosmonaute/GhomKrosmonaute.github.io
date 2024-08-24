@@ -50,7 +50,7 @@ const upgrades: RawUpgrade[] = [
   {
     name: "Bourse",
     triggerEvent: "eachDay",
-    description: "Gagne @cumul0% de votre capital",
+    description: "Gagne @cumul fois 10% de votre capital",
     image: "bourse.png",
     condition: (state) => state.money > 0,
     onTrigger: async (state, upgrade) => {

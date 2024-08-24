@@ -1,15 +1,19 @@
 import React from "react";
 
-import { GameCard } from "../components/game/GameCard.tsx";
-
 import { cn } from "@/utils.ts";
 
 import { useMediaQuery } from "usehooks-ts";
 import { useNavigate } from "react-router-dom";
+
 import { useCardGame } from "@/hooks/useCardGame.ts";
 import { useGlobalState } from "@/hooks/useGlobalState.ts";
-import { HUD } from "@/components/game/HUD.tsx";
+
+import { GameValues } from "@/components/game/GameValues.tsx";
+import { Helpers } from "@/components/game/Helpers.tsx";
+import { Upgrades } from "@/components/game/Upgrades.tsx";
 import { GameOver } from "@/components/game/GameOver.tsx";
+import { GameCard } from "@/components/game/GameCard.tsx";
+import { Scoreboard } from "@/components/game/Scoreboard.tsx";
 
 export const Game = (props: React.PropsWithChildren<{ show?: boolean }>) => {
   const cardGame = useCardGame();
@@ -29,13 +33,18 @@ export const Game = (props: React.PropsWithChildren<{ show?: boolean }>) => {
     <>
       <div
         className={cn(
-          "absolute w-full transition-all ease-in-out duration-500 pointer-events-none opacity-0 delay-500",
-          props.show ? "left-0 opacity-100" : "-left-full opacity-0",
+          "absolute w-full transition-opacity ease-in-out duration-500 pointer-events-none opacity-0",
+          props.show ? "opacity-100" : "opacity-0",
         )}
       >
-        <HUD />
         <GameOver />
       </div>
+
+      <Helpers show={!!props.show} />
+      <Upgrades show={!!props.show} />
+      <Scoreboard show={!!props.show} />
+      <GameValues show={!!props.show} />
+
       <div
         className={cn(
           "absolute flex items-center -translate-x-1/2 max-w-[100vw]",

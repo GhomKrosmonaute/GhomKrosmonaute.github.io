@@ -1,64 +1,82 @@
-import { cn } from "@/utils.ts";
-import { Progress } from "@/components/ui/progress.tsx";
 import {
   formatText,
   formatUpgradeText,
   useCardGame,
 } from "@/hooks/useCardGame.ts";
 
-export const Upgrades = () => {
+import { cn } from "@/utils.ts";
+
+import { Progress } from "@/components/ui/progress.tsx";
+import { Card } from "@/components/Card.tsx";
+
+export const Upgrades = (props: { show: boolean }) => {
   const upgrades = useCardGame((state) => state.upgrades);
 
   return (
-    <div className="grid grid-cols-3 p-2 gap-5 relative shrink-0 w-max">
-      {upgrades.map((upgrade, index) => (
-        <div key={index} className="group/upgrade shrink-0">
-          <img
-            src={`images/upgrades/${upgrade.image}`}
-            alt={upgrade.name}
-            className={cn(
-              "block object-cover w-16 h-16 aspect-square rounded-full pointer-events-auto cursor-pointer mx-auto ring-upgrade ring-4",
-              {
-                // "": upgrade.state === "idle",
-                // "animate-appear": upgrade.state === "appear",
-                "animate-trigger": upgrade.state === "triggered",
-              },
-            )}
-          />
+    <div
+      className={cn(
+        "absolute w-full -top-full left-0 transition-all ease-in-out duration-500 pointer-events-none",
+        {
+          "top-0": props.show && upgrades.length > 0,
+        },
+      )}
+    >
+      <div
+        className={cn(
+          "mx-auto w-fit h-fit -translate-y-1/2 flex justify-center rounded-3xl border-8 border-t-0 border-upgrade bg-card/50 shadow shadow-black/50",
+        )}
+      >
+        <div className="flex p-5 gap-10 relative shrink-0 w-max  translate-y-1/2">
+          {upgrades.map((upgrade, index) => (
+            <div key={index} className="group/upgrade shrink-0 relative">
+              <img
+                src={`images/upgrades/${upgrade.image}`}
+                alt={upgrade.name}
+                className={cn(
+                  "block object-cover w-16 h-16 aspect-square rounded-full pointer-events-auto cursor-pointer mx-auto ring-upgrade ring-4",
+                  {
+                    // "": upgrade.state === "idle",
+                    // "animate-appear": upgrade.state === "appear",
+                    "animate-trigger": upgrade.state === "triggered",
+                  },
+                )}
+              />
 
-          <div className="h-6 relative">
-            <div className="relative">
-              {upgrade.max !== Infinity && (
-                <Progress
-                  className="absolute -translate-y-2 w-full"
-                  barColor="bg-upgrade"
-                  value={(upgrade.cumul / upgrade.max) * 100}
-                />
-              )}
-              <div className="absolute text-center font-changa left-0 -translate-y-3 aspect-square h-6 rounded-full bg-upgrade shadow shadow-black">
-                {upgrade.cumul}
+              <div className="h-6 relative">
+                <div className="relative">
+                  {upgrade.max !== Infinity && (
+                    <Progress
+                      className="absolute -translate-y-2 w-full"
+                      barColor="bg-upgrade"
+                      value={(upgrade.cumul / upgrade.max) * 100}
+                    />
+                  )}
+                  <div className="absolute text-center font-changa left-0 -translate-y-3 aspect-square h-6 rounded-full bg-upgrade shadow shadow-black">
+                    {upgrade.cumul}
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
 
-          <div className="hidden group-hover/upgrade:block absolute right-0 top-1/2 -translate-y-1/2 translate-x-full pl-3">
-            <h3 className="text-lg">
-              {upgrade.name}{" "}
-              <span className="text-upgrade font-changa">
-                {upgrade.cumul}{" "}
-                {upgrade.max !== Infinity ? `/ ${upgrade.max}` : ""}
-              </span>
-            </h3>
-            <p
-              dangerouslySetInnerHTML={{
-                __html: formatText(
-                  formatUpgradeText(upgrade.description, upgrade.cumul),
-                ),
-              }}
-            />
-          </div>
+              <Card className="hidden group-hover/upgrade:block absolute left-1/2 bottom-0 translate-y-full -translate-x-1/2 w-max max-w-[300px]">
+                <h3 className="text-xl">
+                  {upgrade.name}{" "}
+                  <span className="text-upgrade font-bold">
+                    {upgrade.cumul}
+                    {upgrade.max !== Infinity ? `/${upgrade.max}` : ""}
+                  </span>
+                </h3>
+                <p
+                  dangerouslySetInnerHTML={{
+                    __html: formatText(
+                      formatUpgradeText(upgrade.description, upgrade.cumul),
+                    ),
+                  }}
+                />
+              </Card>
+            </div>
+          ))}
         </div>
-      ))}
+      </div>
     </div>
   );
 };
