@@ -77,6 +77,7 @@
     --money: 155 100% 23%;
     --money-foreground: 0 0% 94%;
     --upgrade: 38 92% 50%;
+    --image-foil: 293 100% 60%;
   }
 
   .dark {
@@ -89,6 +90,7 @@
     --money: 166 91% 9%;
     --money-foreground: 0 0% 94%;
     --upgrade: 38 92% 50%;
+    --image-foil: 320 100% 88%;
   }
 
   @font-face {

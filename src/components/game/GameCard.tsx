@@ -15,7 +15,7 @@ import {
 } from "@/hooks/useCardGame.ts";
 
 import { cn } from "@/utils.ts";
-import { Tilt } from "@/components/game/Tilt.tsx";
+import { Tilt, TiltFoil } from "@/components/game/Tilt.tsx";
 import { BorderLight } from "@/components/ui/border-light.tsx";
 import { ValueIcon } from "@/components/game/ValueIcon.tsx";
 import { MoneyIcon } from "@/components/game/MoneyIcon.tsx";
@@ -89,8 +89,8 @@ export const GameCard = (
         className={cn(
           "group/game-card transition-shadow duration-200 ease-in-out",
           "hover:shadow-glow-20",
-          "flex flex-col w-full h-full rounded-md",
-          "rounded-md *:shrink-0 shadow-primary",
+          "flex flex-col w-full h-full rounded-xl",
+          "*:shrink-0 shadow-primary",
           {
             "bg-card/80": props.card.effect.type === "support",
             // "shadow-action": props.card.effect.type === "action",
@@ -116,7 +116,7 @@ export const GameCard = (
 
         <div
           className={cn(
-            "relative flex justify-start items-center h-10 rounded-t-md",
+            "relative flex justify-start items-center h-10 rounded-t-xl",
             {
               "bg-action": props.card.effect.type === "action",
               "bg-support/50": props.card.effect.type === "support",
@@ -182,7 +182,7 @@ export const GameCard = (
 
         <div
           className={cn(
-            "flex-grow rounded-b-md",
+            "flex-grow rounded-b-xl",
             props.card.effect.type === "action" && "bg-card/80",
           )}
           style={{ transformStyle: "preserve-3d" }}
@@ -210,6 +210,8 @@ export const GameCard = (
           disappearOnCorners
           opposed
         />
+
+        <TiltFoil />
       </Tilt>
     </div>
   );

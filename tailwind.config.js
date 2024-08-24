@@ -78,6 +78,7 @@ module.exports = {
         energy: "hsl(var(--energy))",
         reputation: "hsl(var(--reputation))",
         upgrade: "hsl(var(--upgrade))",
+        "image-foil": "hsl(var(--foil))",
         money: {
           DEFAULT: "hsl(var(--money))",
           foreground: "hsl(var(--money-foreground))",

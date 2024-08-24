@@ -1,6 +1,12 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React from "react";
 import { useHover } from "usehooks-ts";
 import { cn } from "@/utils.ts";
+
+const TiltContext = React.createContext<{
+  degX: number;
+  degY: number;
+  isHovered: boolean;
+}>({ degX: 0, degY: 0, isHovered: false });
 
 interface TiltProps {
   max?: number; // Inclinaison maximale en degrés
@@ -25,11 +31,13 @@ export const Tilt: React.FC<TiltProps> = ({
   children,
   style,
 }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const containerRef = React.useRef<HTMLDivElement>(null);
   const isHovered = useHover(containerRef);
-  const [styleState, setStyle] = useState<React.CSSProperties>({});
+  const [styleState, setStyle] = React.useState<React.CSSProperties>({});
+  const [degX, setDegX] = React.useState(0);
+  const [degY, setDegY] = React.useState(0);
 
-  const handleMouseMove = useCallback(
+  const handleMouseMove = React.useCallback(
     (e: MouseEvent) => {
       if (containerRef.current) {
         const rect = containerRef.current.getBoundingClientRect();
@@ -40,6 +48,9 @@ export const Tilt: React.FC<TiltProps> = ({
 
         const rotateX = ((y - centerY) / centerY) * max;
         const rotateY = ((x - centerX) / centerX) * max;
+
+        setDegX(reverse ? rotateX : -rotateX);
+        setDegY(reverse ? -rotateY : rotateY);
 
         setStyle({
           ...constantStyle,
@@ -55,7 +66,10 @@ export const Tilt: React.FC<TiltProps> = ({
     [max, perspective, reverse, scale],
   );
 
-  const handleMouseLeave = useCallback(() => {
+  const handleMouseLeave = React.useCallback(() => {
+    setDegX(0);
+    setDegY(0);
+
     setStyle({
       ...constantStyle,
       transition: "transform 0.5s ease-in-out",
@@ -63,7 +77,7 @@ export const Tilt: React.FC<TiltProps> = ({
     });
   }, []);
 
-  useEffect(() => {
+  React.useEffect(() => {
     const container = containerRef.current;
 
     if (isHovered) {
@@ -94,7 +108,33 @@ export const Tilt: React.FC<TiltProps> = ({
         ...style,
       }}
     >
-      {children}
+      <TiltContext.Provider value={{ degX, degY, isHovered }}>
+        {children}
+      </TiltContext.Provider>
+    </div>
+  );
+};
+
+export const TiltFoil: React.FC = () => {
+  const tiltContext = React.useContext(TiltContext);
+
+  return (
+    <div className="dark:opacity-70 absolute w-full h-full">
+      <div
+        className="absolute w-full h-full rounded-xl transition-opacity duration-500 ease-out"
+        style={{
+          opacity: tiltContext.isHovered ? "50%" : "20%",
+          backgroundImage:
+            "linear-gradient(110deg,transparent 25%, hsla(var(--image-foil) / 0.6) 48%, hsla(var(--image-foil) / 0.3) 52%,transparent 75%)",
+          backgroundPositionX: `${50 + tiltContext.degY + -tiltContext.degX}%`,
+          backgroundPositionY: `50%`,
+          backgroundSize: "200% 200%",
+          // backgroundBlendMode: "multiply",
+          // mixBlendMode: "multiply",
+          backgroundRepeat: "no-repeat",
+          transform: "translateZ(0px)",
+        }}
+      />
     </div>
   );
 };
