@@ -158,9 +158,10 @@ export const GameCard = (
             className={cn(
               "absolute left-0 w-full text-center whitespace-nowrap overflow-hidden text-ellipsis shrink-0 flex-grow text-xl font-changa",
               {
-                "left-3 text-lg": parsedCost.needs === "money",
+                "left-3 text-lg":
+                  parsedCost.needs === "money" && props.card.name.length > 7,
                 "left-7": parsedCost.needs === "money" && parsedCost.cost > 99,
-                "text-sm": props.card.name.length > 20,
+                "text-md": props.card.name.length > 11,
                 "text-action-foreground": props.card.effect.type === "action",
                 "text-support-foreground": props.card.effect.type === "support",
               },
