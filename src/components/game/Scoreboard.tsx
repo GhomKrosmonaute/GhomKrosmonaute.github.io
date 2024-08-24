@@ -2,6 +2,7 @@ import React from "react";
 import { cn } from "@/utils.ts";
 import scores from "@/data/scores.json";
 import Trophy from "@/assets/icons/trophy.svg";
+import { rankColor } from "@/hooks/useCardGame.ts";
 
 export const Scoreboard: React.FC = () => {
   return (
@@ -12,26 +13,9 @@ export const Scoreboard: React.FC = () => {
           {scores
             .sort((a, b) => b.score - a.score)
             .map((score, i) => (
-              <tr
-                key={i}
-                className={cn({
-                  "text-upgrade": i === 0,
-                  "text-zinc-400": i === 1,
-                  "text-orange-600": i === 2,
-                })}
-              >
+              <tr key={i} className={cn(rankColor(i))}>
                 <td>
-                  {i < 3 ? (
-                    <Trophy
-                      className={cn("w-4", {
-                        "text-upgrade": i === 0,
-                        "text-zinc-400": i === 1,
-                        "text-orange-600": i === 2,
-                      })}
-                    />
-                  ) : (
-                    ""
-                  )}
+                  {i < 3 ? <Trophy className={cn("w-4", rankColor(i))} /> : ""}
                 </td>
                 <th># {i + 1}</th>
                 <th className="text-left">{score.name}</th>

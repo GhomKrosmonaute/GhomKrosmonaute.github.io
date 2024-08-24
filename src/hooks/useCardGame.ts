@@ -1,19 +1,26 @@
 import { bank } from "@/sound.ts";
 import { create } from "zustand";
 
+import {
+  MAX_ENERGY,
+  MAX_REPUTATION,
+  MONEY_TO_REACH,
+  UPGRADE_COST_THRESHOLDS,
+  MAX_HAND_SIZE,
+} from "@/game-constants.ts";
+
 import technos from "../data/techno.json";
 import projects from "../data/projects.json";
 import effects from "../data/effects.ts";
 import upgrades from "../data/upgrades.ts";
 
-export const MAX_ENERGY = 20;
-export const MAX_HAND_SIZE = 8;
-export const MAX_REPUTATION = 10;
-export const MONEY_TO_REACH = 500;
-export const UPGRADE_COST_THRESHOLDS = {
-  string: ["20", "50", "75"],
-  number: [5, 7, 10],
-};
+export function rankColor(rank: number) {
+  return {
+    "text-upgrade": rank === 0,
+    "text-zinc-400": rank === 1,
+    "text-orange-600": rank === 2,
+  };
+}
 
 export function getUpgradeCost(
   state: CardGameState,
@@ -115,7 +122,17 @@ export function formatText(text: string) {
     )
     .replace(
       /((?:\d+|<span[^>]*>\d+<\/span>)M\$)/g,
-      '<span style="display: inline-block; background-color: #022c22; color: white; padding: 0 4px; transform: translateZ(5px);">$1</span>',
+      `<span 
+        style="display: inline-block; 
+        background-color: #022c22; 
+        color: white; 
+        padding: 0 4px; 
+        border: 1px white solid; 
+        transform: translateZ(5px); 
+        font-family: Changa, sans-serif;"
+      >
+        $1
+      </span>`,
     );
 }
 

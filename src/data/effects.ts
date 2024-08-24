@@ -1,23 +1,25 @@
 import type { Effect } from "@/hooks/useCardGame.ts";
 
+import { ENERGY_TO_MONEY, REPUTATION_TO_ENERGY } from "@/game-constants.ts";
+
 const effects: Effect[] = [
   {
-    description: "Gagne 10M$",
-    onPlayed: async (state) => await state.addMoney(10),
+    description: `Gagne ${2 * ENERGY_TO_MONEY}M$`,
+    onPlayed: async (state) => await state.addMoney(2 * ENERGY_TO_MONEY),
     type: "action",
     cost: 2,
   },
   {
-    description: "Gagne 20M$",
-    onPlayed: async (state) => await state.addMoney(20),
+    description: `Gagne ${4 * ENERGY_TO_MONEY}M$`,
+    onPlayed: async (state) => await state.addMoney(4 * ENERGY_TO_MONEY),
     type: "action",
     cost: 4,
   },
   {
-    description: "Le matin, gagne 10M$. L'après-midi, gagne 2 @energys",
+    description: `Le matin, gagne ${2 * ENERGY_TO_MONEY}M$. L'après-midi, gagne 2 @energys`,
     onPlayed: async (state) => {
       if (new Date().getHours() < 12) {
-        await state.addMoney(10);
+        await state.addMoney(2 * ENERGY_TO_MONEY);
       } else {
         await state.addEnergy(2);
       }
@@ -26,29 +28,30 @@ const effects: Effect[] = [
     cost: 0,
   },
   {
-    description:
-      "Gagne 10M$ fois le nombre de cartes @action en main en comptant celle-ci",
+    description: `Gagne ${2 * ENERGY_TO_MONEY}M$ fois le nombre de cartes @action en main en comptant celle-ci`,
     onPlayed: async (state) => {
       await state.addMoney(
-        10 * state.hand.filter((card) => card.effect.type === "action").length,
+        2 *
+          ENERGY_TO_MONEY *
+          state.hand.filter((card) => card.effect.type === "action").length,
       );
     },
     type: "action",
     cost: 4,
   },
   {
-    description: "Si le dark mode est activé, gagne 20M$",
-    onPlayed: async (state) => await state.addMoney(20),
+    description: `Si le dark mode est activé, gagne ${4 * ENERGY_TO_MONEY}M$`,
+    onPlayed: async (state) => await state.addMoney(4 * ENERGY_TO_MONEY),
     condition: () => localStorage.getItem("theme") === "dark",
     type: "action",
     cost: 3,
   },
   {
-    description: "Si la @reputation est inférieur à 5, gagne 20M$",
-    onPlayed: async (state) => await state.addMoney(20),
+    description: `Si la @reputation est inférieur à 5, gagne ${4 * ENERGY_TO_MONEY}M$`,
+    onPlayed: async (state) => await state.addMoney(4 * ENERGY_TO_MONEY),
     condition: (state) => state.reputation < 5,
     type: "action",
-    cost: 3,
+    cost: 2,
   },
   {
     description: "Joue gratuitement la carte la plus à droite de ta main",
@@ -65,7 +68,7 @@ const effects: Effect[] = [
       );
     },
     type: "action",
-    cost: 4,
+    cost: 4, // ~ middle cost
     waitBeforePlay: true,
   },
   {
@@ -79,15 +82,15 @@ const effects: Effect[] = [
   {
     description: "Pioche 2 cartes",
     onPlayed: async (state) => await state.draw(2),
-    condition: (state) => state.deck.length >= 2,
+    condition: (state) => state.deck.length >= 1,
     type: "support",
     cost: 2,
     waitBeforePlay: true,
   },
   {
-    description: "Si tu as moins de 4 cartes en main, pioche 2 cartes",
+    description: "Si tu as moins de 5 cartes en main, pioche 2 cartes",
     onPlayed: async (state) => await state.draw(2),
-    condition: (state) => state.hand.length < 4 && state.deck.length >= 2,
+    condition: (state) => state.hand.length < 5 && state.deck.length >= 1,
     type: "support",
     cost: 1,
     waitBeforePlay: true,
@@ -115,15 +118,15 @@ const effects: Effect[] = [
     waitBeforePlay: true,
   },
   {
-    description: "Défausse une carte aléatoire, pioche une carte et gagne 10M$",
+    description: `Défausse une carte aléatoire, pioche une carte et gagne ${2 * ENERGY_TO_MONEY}M$`, // -2 +1 +2 = +1
     onPlayed: async (state) => {
       await state.drop();
       await state.draw();
-      await state.addMoney(10);
+      await state.addMoney(2 * ENERGY_TO_MONEY);
     },
-    condition: (state) => state.hand.length >= 2,
+    condition: (state) => state.hand.length >= 2 && state.deck.length >= 1,
     type: "support",
-    cost: 0,
+    cost: 1,
     waitBeforePlay: true,
   },
   {
@@ -143,8 +146,9 @@ const effects: Effect[] = [
       await state.dropAll();
       await state.draw(5);
     },
+    condition: (state) => state.deck.length >= 1,
     type: "support",
-    cost: 0,
+    cost: 1,
     waitBeforePlay: true,
   },
   {
@@ -155,7 +159,7 @@ const effects: Effect[] = [
       await state.draw(5);
     },
     type: "support",
-    cost: 3,
+    cost: 5,
     waitBeforePlay: true,
   },
   {
@@ -163,14 +167,14 @@ const effects: Effect[] = [
     onPlayed: async (state) => {
       await state.draw(state.upgrades.length);
     },
-    condition: (state) => state.upgrades.length > 0,
+    condition: (state) => state.upgrades.length > 0 && state.deck.length >= 1,
     type: "support",
     cost: 3,
     waitBeforePlay: true,
   },
   {
     description:
-      "Défausse les cartes @support en main(min 1), pioche 2 cartes @action",
+      "Défausse les cartes @support en main(min 1), pioche 2 cartes @action", // -3 + 4 = +1
     onPlayed: async (state) => {
       await state.dropAll({ filter: (card) => card.effect.type === "support" });
       await state.draw(2, { filter: (card) => card.effect.type === "action" });
@@ -178,7 +182,7 @@ const effects: Effect[] = [
     condition: (state) =>
       state.hand.filter((card) => card.effect.type === "support").length > 1,
     type: "support",
-    cost: 3,
+    cost: 1,
     waitBeforePlay: true,
   },
   {
@@ -190,7 +194,7 @@ const effects: Effect[] = [
     condition: (state) =>
       state.hand.some((card) => card.effect.type === "action"),
     type: "support",
-    cost: 1,
+    cost: 0,
     waitBeforePlay: true,
   },
   {
@@ -201,11 +205,11 @@ const effects: Effect[] = [
     condition: (state) =>
       state.deck.some((c) => typeof c.effect.cost === "number"),
     type: "support",
-    cost: 3,
+    cost: 4,
     waitBeforePlay: true,
   },
   {
-    description: "Divise le prix de la prochaine carte jouée par 2",
+    description: "Divise le prix de la prochaine carte jouée par 2", // 4 (middle effect) - 1 (easy condition) = 3
     onPlayed: async (state) =>
       await state.addNextCardModifier((card) => ({
         ...card,
@@ -221,29 +225,29 @@ const effects: Effect[] = [
     cost: 3,
   },
   {
-    description: "Double l'@energy",
+    description: "Double l'@energy", // as middle effect
     onPlayed: async (state) => await state.addEnergy(state.energy),
     type: "action",
-    cost: "10",
+    cost: "20",
   },
   {
     description: "Ajoute 4 @energys",
-    onPlayed: async (state) => await state.addEnergy(3),
+    onPlayed: async (state) => await state.addEnergy(4),
     type: "action",
-    cost: "10",
+    cost: String(4 * ENERGY_TO_MONEY),
   },
   {
-    description: "Si la @reputation est inférieur à 5, ajoute 5 @energys",
+    description: "Si la @reputation est inférieur à 5, ajoute 5 @energys", // -2 + 5 = +3
     onPlayed: async (state) => await state.addEnergy(5),
     condition: (state) => state.reputation < 5,
     type: "action",
-    cost: "5",
+    cost: String(3 * ENERGY_TO_MONEY),
   },
   {
-    description: "Remplis la jauge de @reputation",
+    description: "Remplis la jauge de @reputation", // middle score of reputation = 5 (parce qu'elle n'est jamais vide)
     onPlayed: async (state) => await state.addReputation(10),
     type: "action",
-    cost: "100",
+    cost: String(5 * REPUTATION_TO_ENERGY * ENERGY_TO_MONEY),
     ephemeral: true,
   },
 ];

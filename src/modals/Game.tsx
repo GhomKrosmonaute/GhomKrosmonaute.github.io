@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { useCardGame } from "@/hooks/useCardGame.ts";
 import { useGlobalState } from "@/hooks/useGlobalState.ts";
 import { HUD } from "@/components/game/HUD.tsx";
+import { GameOver } from "@/components/game/GameOver.tsx";
 
 export const Game = (props: React.PropsWithChildren<{ show?: boolean }>) => {
   const cardGame = useCardGame();
@@ -33,6 +34,7 @@ export const Game = (props: React.PropsWithChildren<{ show?: boolean }>) => {
         )}
       >
         <HUD />
+        <GameOver />
       </div>
       <div
         className={cn(

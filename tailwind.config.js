@@ -14,6 +14,7 @@ module.exports = {
     fontFamily: {
       changa: ["Changa", "sans-serif"],
       zain: ["Zain", "sans-serif"],
+      amsterdam: ['"New Amsterdam"', "sans-serif"],
     },
     container: {
       center: true,
