@@ -27,7 +27,7 @@ export const GameOver = (props: { show: boolean }) => {
   return (
     <div className={cn("absolute w-full", props.show ? "block" : "hidden")}>
       {game.isGameOver && (
-        <div className="absolute top-0 left-0 w-screen h-screen flex flex-col items-center justify-center bg-background/90 z-50 pointer-events-auto">
+        <div className="absolute top-0 left-0 w-screen h-screen flex flex-col items-center justify-center bg-background/90 z-40 pointer-events-auto">
           <div className="flex flex-col items-center justify-center gap-7">
             <Tilt className="flex flex-col select-none" max={10} reverse>
               <div className="font-amsterdam capitalize text-9xl w-fit">

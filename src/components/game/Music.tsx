@@ -13,7 +13,7 @@ export const Music = () => {
         onClick={toggle}
         variant="icon"
         size="icon"
-        className="absolute top-0 right-12 m-4"
+        className="absolute top-0 right-12 m-4 z-50"
       >
         {muted ? <Muted /> : <Sound />}
       </Button>
