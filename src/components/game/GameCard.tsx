@@ -19,10 +19,21 @@ import { Tilt, TiltFoil } from "@/components/game/Tilt.tsx";
 import { BorderLight } from "@/components/ui/border-light.tsx";
 import { ValueIcon } from "@/components/game/ValueIcon.tsx";
 import { MoneyIcon } from "@/components/game/MoneyIcon.tsx";
+import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
 
 export const GameCard = (
   props: React.PropsWithoutRef<{ card: GameCardInfo; position: number }>,
 ) => {
+  const { shadows, perspective, animation, transparency, blur, tilt } =
+    useQualitySettings((state) => ({
+      blur: state.cardBlur,
+      shadows: state.shadows,
+      perspective: state.cardPerspective,
+      animation: state.cardAnimation,
+      transparency: state.transparency,
+      tilt: state.cardTilt,
+    }));
+
   const {
     handSize,
     isAnyCardAnimated,
@@ -56,10 +67,10 @@ export const GameCard = (
       className={cn(
         "game-card",
         "relative w-[calc(630px/3)] h-[calc(880px/3)]",
-        "transition-transform hover:-translate-y-14",
+        "hover:-translate-y-14",
         "-mx-3.5 z-10 hover:z-20 cursor-pointer select-none",
-        props.card.state,
         {
+          [cn("transition-transform", props.card.state)]: animation,
           grayscale: isGameOver || !parsedCost.canBeBuy || !canTriggerEffect,
           "cursor-not-allowed": isAnyCardAnimated,
           // "translate-y-8": !canTriggerEffect || !haveEnoughResources,
@@ -81,19 +92,26 @@ export const GameCard = (
       style={{
         marginBottom: `${20 - Math.abs(positionFromCenter) * 5}px`, // temporaire, peut causer des problèmes
         rotate: `${positionFromCenter * 2}deg`,
-        transitionDuration: "0.3s",
-        transitionTimingFunction: "ease-in-out",
+        transitionDuration: animation ? "0.3s" : "0",
+        transitionTimingFunction: animation ? "ease-in-out" : "linear",
       }}
     >
       <Tilt
         scale={1.1}
         className={cn(
-          "group/game-card transition-shadow duration-200 ease-in-out",
-          "hover:shadow-glow-20",
-          "flex flex-col w-full h-full rounded-xl",
-          "*:shrink-0 shadow-primary",
+          "group/game-card",
           {
-            "bg-card/80": props.card.effect.type === "support",
+            "transition-shadow duration-200 ease-in-out hover:shadow-glow-20 shadow-primary":
+              shadows,
+          },
+          "flex flex-col w-full h-full rounded-xl",
+          "*:shrink-0",
+          {
+            [cn({
+              "bg-card/80": transparency,
+              "bg-card": !transparency,
+              "backdrop-blur-sm": blur && transparency,
+            })]: props.card.effect.type === "support",
             // "shadow-action": props.card.effect.type === "action",
           },
         )}
@@ -102,9 +120,15 @@ export const GameCard = (
           <div
             className={cn(
               "absolute pointer-events-none left-1/2 -top-[10px] -translate-x-1/2 -translate-y-full rounded-2xl bg-card",
-              "p-2 w-max max-w-full shadow shadow-action",
-              "transition-opacity duration-200 ease-in-out delay-1000 opacity-0 group-hover/game-card:opacity-100",
-              "flex gap-1",
+              "p-2 w-max max-w-full gap-1",
+              {
+                "shadow shadow-action": shadows,
+                "transition-opacity duration-200 ease-in-out delay-1000":
+                  animation,
+                "opacity-0 group-hover/game-card:opacity-100 flex":
+                  transparency,
+                "hidden group-hover/game-card:flex": !transparency,
+              },
             )}
           >
             <QuoteLeft className="w-10" />
@@ -115,23 +139,38 @@ export const GameCard = (
           </div>
         )}
 
+        {perspective && tilt && (
+          <div
+            className={cn("absolute w-full h-full rounded-xl", {
+              "bg-card/80": transparency,
+              "bg-card": !transparency,
+            })}
+            style={{
+              transform: "translateZ(-20px)",
+            }}
+          />
+        )}
+
         <div
           className={cn(
             "relative flex justify-start items-center h-10 rounded-t-xl",
             {
               "bg-action": props.card.effect.type === "action",
-              "bg-support/50": props.card.effect.type === "support",
+              [cn({
+                "bg-support/50": transparency,
+                "bg-support": !transparency,
+              })]: props.card.effect.type === "support",
             },
           )}
           style={{
-            transformStyle: "preserve-3d",
+            transformStyle: perspective ? "preserve-3d" : "flat",
           }}
         >
           <div
             className="font-changa shrink-0 relative"
             style={{
-              transform: "translateZ(5px) translateX(-15px)",
-              transformStyle: "preserve-3d",
+              transform: `${perspective ? "translateZ(5px)" : ""} translateX(-15px)`,
+              transformStyle: perspective ? "preserve-3d" : "flat",
             }}
           >
             {parsedCost.needs === "energy" ? (
@@ -141,16 +180,16 @@ export const GameCard = (
                 value={parsedCost.cost}
                 iconScale="0.75"
                 style={{
-                  transform: "translateZ(5px)",
-                  transformStyle: "preserve-3d",
+                  transform: perspective ? "translateZ(5px)" : "none",
+                  transformStyle: perspective ? "preserve-3d" : "flat",
                 }}
               />
             ) : (
               <MoneyIcon
                 value={String(parsedCost.cost)}
                 style={{
-                  transform: "translateZ(10px) rotate(-10deg)",
-                  transformStyle: "preserve-3d",
+                  transform: `${perspective ? "translateZ(10px)" : ""} rotate(-10deg)`,
+                  transformStyle: perspective ? "preserve-3d" : "flat",
                 }}
               />
             )}
@@ -168,7 +207,7 @@ export const GameCard = (
               },
             )}
             style={{
-              transform: "translateZ(5px)",
+              transform: perspective ? "translateZ(5px)" : "none",
             }}
           >
             {props.card.name}
@@ -184,21 +223,30 @@ export const GameCard = (
         <div
           className={cn(
             "flex-grow rounded-b-xl",
-            props.card.effect.type === "action" && "bg-card/80",
+            props.card.effect.type === "action" && {
+              "backdrop-blur-sm": blur && transparency,
+              "bg-card/80": transparency,
+              "bg-card": !transparency,
+            },
           )}
-          style={{ transformStyle: "preserve-3d" }}
+          style={{ transformStyle: perspective ? "preserve-3d" : "flat" }}
         >
           <p
             className="py-[10px] px-[15px] text-center"
             style={{
-              transform: "translateZ(10px)",
-              transformStyle: "preserve-3d",
+              transform: perspective ? "translateZ(10px)" : "none",
+              transformStyle: perspective ? "preserve-3d" : "flat",
             }}
             dangerouslySetInnerHTML={{ __html: props.card.effect.description }}
           />
 
           {props.card.effect.ephemeral && (
-            <div className="text-center h-full text-2xl text-muted-foreground/30 font-bold">
+            <div
+              className={cn("text-center h-full text-2xl font-bold", {
+                "text-muted-foreground/30": transparency,
+                "text-muted-foreground": !transparency,
+              })}
+            >
               Éphémère
             </div>
           )}
@@ -221,20 +269,29 @@ export const GameCard = (
 const GameCardProject = (
   props: React.PropsWithoutRef<{ card: ActionCardInfo }>,
 ) => {
+  const { shadows, perspective, transparency, animation } = useQualitySettings(
+    (state) => ({
+      shadows: state.shadows,
+      perspective: state.cardPerspective,
+      transparency: state.transparency,
+      animation: state.cardAnimation,
+    }),
+  );
+
   return (
     <div
-      className="group/image"
+      className="group/image relative pointer-events-auto"
       style={{
-        transformStyle: "preserve-3d",
+        transformStyle: perspective ? "preserve-3d" : "flat",
       }}
     >
       <div
         className={cn(
-          "inset-shadow",
+          { "inset-shadow": shadows },
           "relative flex justify-center items-center",
         )}
         style={{
-          transformStyle: "preserve-3d",
+          transformStyle: perspective ? "preserve-3d" : "flat",
         }}
       >
         <img
@@ -242,7 +299,7 @@ const GameCardProject = (
           alt={`Illustration du projet "${props.card.name}"`}
           className="w-full aspect-video object-cover"
           style={{
-            transform: "translateZ(-15px)",
+            transform: perspective ? "translateZ(-15px)" : "none",
           }}
         />
       </div>
@@ -250,12 +307,14 @@ const GameCardProject = (
       {props.card.description && (
         <div
           className={cn(
-            "transition-opacity duration-1000 group-hover/image:opacity-0",
-            "absolute bottom-0 w-full h-1/3 bg-background/50",
-            "flex justify-center items-center",
+            "bottom-0 absolute w-full h-1/3 flex justify-center items-center",
+            {
+              "transition-opacity duration-1000": animation,
+              "group-hover/image:opacity-0 bg-background/50": transparency,
+            },
           )}
           style={{
-            transform: "translateZ(-5px)",
+            transform: perspective ? "translateZ(-5px)" : "none",
           }}
         >
           <p className="text-sm text-center">"{props.card.description}"</p>
@@ -270,21 +329,25 @@ const spinners = ["React", "Knex"];
 const GameCardTechno = (
   props: React.PropsWithoutRef<{ card: SupportCardInfo }>,
 ) => {
+  const { perspective, animation } = useQualitySettings((state) => ({
+    perspective: state.cardPerspective,
+    animation: state.cardAnimation,
+  }));
+
   return (
     <>
       <div
         className="flex justify-center items-center mt-4"
         style={{
-          transform: "translateZ(20px)",
+          transform: perspective ? "translateZ(20px)" : "none",
         }}
       >
         <img
           src={props.card.logo}
           alt={`Logo de la techno "${props.card.name}"`}
           className={cn("w-2/3 object-contain aspect-square", {
-            "group-hover/game-card:animate-spin-forward": spinners.includes(
-              props.card.name,
-            ),
+            "group-hover/game-card:animate-spin-forward":
+              animation && spinners.includes(props.card.name),
           })}
         />
       </div>

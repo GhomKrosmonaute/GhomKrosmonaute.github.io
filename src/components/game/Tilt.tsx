@@ -1,6 +1,7 @@
 import React from "react";
 import { useHover } from "usehooks-ts";
 import { cn } from "@/utils.ts";
+import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
 
 const TiltContext = React.createContext<{
   degX: number;
@@ -31,6 +32,9 @@ export const Tilt: React.FC<TiltProps> = ({
   children,
   style,
 }) => {
+  const enabled = useQualitySettings(
+    (state) => state.cardTilt && state.cardAnimation,
+  );
   const containerRef = React.useRef<HTMLDivElement>(null);
   const isHovered = useHover(containerRef);
   const [styleState, setStyle] = React.useState<React.CSSProperties>({});
@@ -99,6 +103,14 @@ export const Tilt: React.FC<TiltProps> = ({
     };
   }, [max, reverse, scale, perspective, isHovered]);
 
+  if (!enabled) {
+    return (
+      <div className={className} style={style}>
+        {children}
+      </div>
+    );
+  }
+
   return (
     <div
       ref={containerRef}
@@ -117,6 +129,11 @@ export const Tilt: React.FC<TiltProps> = ({
 
 export const TiltFoil: React.FC = () => {
   const tiltContext = React.useContext(TiltContext);
+  const enabled = useQualitySettings((state) => state.cardFoil);
+
+  if (!enabled) {
+    return <></>;
+  }
 
   return (
     <div

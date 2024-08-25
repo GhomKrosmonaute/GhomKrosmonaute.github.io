@@ -1,4 +1,5 @@
 import { formatText, rankColor, useCardGame } from "@/hooks/useCardGame.ts";
+import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
 import { useGlobalState } from "@/hooks/useGlobalState.ts";
 
 import scores from "@/data/scores.json";
@@ -10,6 +11,11 @@ import { Tilt } from "@/components/game/Tilt.tsx";
 import { cn } from "@/utils.ts";
 
 export const GameOver = (props: { show: boolean }) => {
+  const { shadows, transparency, animation } = useQualitySettings((state) => ({
+    shadows: state.shadows,
+    animation: state.cardAnimation,
+    transparency: state.transparency,
+  }));
   const setVisible = useGlobalState((state) => state.setCardGameVisibility);
 
   const game = useCardGame((state) => ({
@@ -27,7 +33,15 @@ export const GameOver = (props: { show: boolean }) => {
   return (
     <div className={cn("absolute w-full", props.show ? "block" : "hidden")}>
       {game.isGameOver && (
-        <div className="absolute top-0 left-0 w-screen h-screen flex flex-col items-center justify-center bg-background/90 z-40 pointer-events-auto">
+        <div
+          className={cn(
+            "absolute top-0 left-0 w-screen h-screen flex flex-col items-center justify-center z-40 pointer-events-auto",
+            {
+              "bg-background/90": transparency,
+              "bg-background": !transparency,
+            },
+          )}
+        >
           <div className="flex flex-col items-center justify-center gap-7">
             <Tilt className="flex flex-col select-none" max={10} reverse>
               <div className="font-amsterdam capitalize text-9xl w-fit">
@@ -61,7 +75,14 @@ export const GameOver = (props: { show: boolean }) => {
             {game.isWon ? (
               <div className="grid grid-cols-2 gap-4">
                 <Stats className="*:h-10 text-3xl" />
-                <div className="p-5 space-y-2 rounded-2xl bg-background shadow-md shadow-foreground/20">
+                <div
+                  className={cn(
+                    "p-5 space-y-2 rounded-2xl bg-background shadow-md",
+                    {
+                      "shadow-foreground/20": shadows && transparency,
+                    },
+                  )}
+                >
                   {rank >= 0 ? (
                     <>
                       <div className="text-3xl">
@@ -123,15 +144,23 @@ export const GameOver = (props: { show: boolean }) => {
                     }
                   })
                   .map((helper, i) => (
-                    <div className="transition-transform duration-500 ease-in-out transform hover:scale-110">
+                    <div
+                      className={cn("transform hover:scale-110", {
+                        "transition-transform duration-500 ease-in-out":
+                          animation,
+                      })}
+                    >
                       <p
                         key={i}
-                        className={cn("animate-trigger hover:text-foreground", {
-                          "delay-0": i === 0,
-                          "delay-100": i === 1,
-                          "delay-200": i === 2,
-                          "delay-300": i === 3,
-                          "delay-400": i === 4,
+                        className={cn("hover:text-foreground", {
+                          [cn("animate-trigger", {
+                            "delay-0": i === 0,
+                            "delay-100": i === 1,
+                            "delay-200": i === 2,
+                            "delay-300": i === 3,
+                            "delay-500": i === 4,
+                            "delay-700": i === 5,
+                          })]: animation,
                         })}
                         dangerouslySetInnerHTML={{
                           __html: formatText(helper),
@@ -159,7 +188,7 @@ export const GameOver = (props: { show: boolean }) => {
                 Recommencer
               </Button>
               {game.isWon && (
-                <div className="animate-bounce">
+                <div className={cn({ "animate-bounce": animation })}>
                   <a
                     href="https://buymeacoffee.com/ghom"
                     target="_blank"

@@ -5,6 +5,7 @@ import { cn } from "@/utils.ts";
 import { useMediaQuery } from "usehooks-ts";
 import { Card } from "@/components/Card.tsx";
 import { Button } from "@/components/ui/button.tsx";
+import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
 
 export const CenterCard = (
   props: React.PropsWithChildren<{
@@ -15,6 +16,9 @@ export const CenterCard = (
   }>,
 ) => {
   const matches = useMediaQuery("(width >= 768px) and (height >= 768px)");
+  const { shadows } = useQualitySettings((state) => ({
+    shadows: state.shadows,
+  }));
 
   return (
     <>
@@ -34,8 +38,12 @@ export const CenterCard = (
           className={cn(
             "rounded-none overflow-scroll border-none",
             "md:h-auto md:rounded-md md:border-2 md:overflow-hidden",
-            "md:shadow-spotlight md:transition md:ease-in-out md:duration-500",
-            "md:hover:shadow-glow-150 md:hover:shadow-primary md:hover:border-b-primary md:hover:backdrop-blur-md",
+            " md:transition md:ease-in-out md:duration-500",
+            {
+              "md:shadow-spotlight md:hover:shadow-glow-150 md:hover:shadow-primary":
+                shadows,
+            },
+            " md:hover:border-b-primary md:hover:backdrop-blur-md",
             // set inclination
             {
               "rotate-2 scale-95 hover:rotate-0 hover:scale-100": matches,

@@ -1,6 +1,7 @@
 import React from "react";
 
 import { useCardGame } from "@/hooks/useCardGame.ts";
+import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
 
 import { MAX_ENERGY, MAX_REPUTATION } from "@/game-constants.ts";
 
@@ -12,6 +13,11 @@ import { Card } from "@/components/Card.tsx";
 import { cn } from "@/utils.ts";
 
 export const GameValues = (props: { show: boolean }) => {
+  const { shadows, animation } = useQualitySettings((state) => ({
+    shadows: state.shadows,
+    animation: state.cardAnimation,
+  }));
+
   const [delayControl, setDelayControl] = React.useState(true);
   const [delayDiv, setDelayDiv] = React.useState(false);
 
@@ -36,18 +42,27 @@ export const GameValues = (props: { show: boolean }) => {
 
   return (
     <div
-      className={cn(
-        "absolute top-20 left-3 -translate-x-[110%] transition-transform duration-500 ease-in-out",
-        {
-          "delay-500": delayDiv,
-          "translate-x-0": props.show,
-        },
-      )}
+      className={cn("absolute top-20 left-3 -translate-x-[110%]", {
+        "transition-transform duration-500 ease-in-out": animation,
+        "delay-500": delayDiv && animation,
+        "translate-x-0": props.show,
+      })}
     >
-      <div className="absolute bg-upgrade shadow shadow-black/50 w-10 h-4 left-0 top-5 -translate-x-full" />
-      <div className="absolute bg-upgrade shadow shadow-black/50 w-10 h-4 left-0 bottom-5 -translate-x-full" />
+      <div
+        className={cn(
+          "absolute bg-upgrade w-10 h-4 left-0 top-5 -translate-x-full",
+          { "shadow shadow-black/50": shadows },
+        )}
+      />
+      <div
+        className={cn(
+          "absolute bg-upgrade w-10 h-4 left-0 bottom-5 -translate-x-full",
+          { "shadow shadow-black/50": shadows },
+        )}
+      />
 
       <GameControl show={props.show} delay={delayControl} />
+
       <Card className="space-y-2">
         <div className="text-3xl text-center">Game values</div>
         <Gauge type="energy" value={game.energy} max={MAX_ENERGY} />

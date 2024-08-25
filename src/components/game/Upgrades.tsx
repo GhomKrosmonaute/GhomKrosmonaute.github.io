@@ -8,22 +8,32 @@ import { cn } from "@/utils.ts";
 
 import { Progress } from "@/components/ui/progress.tsx";
 import { Card } from "@/components/Card.tsx";
+import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
 
 export const Upgrades = (props: { show: boolean }) => {
+  const quality = useQualitySettings((state) => ({
+    shadows: state.shadows,
+    animation: state.cardAnimation,
+    transparency: state,
+  }));
+
   const upgrades = useCardGame((state) => state.upgrades);
 
   return (
     <div
-      className={cn(
-        "absolute w-full -top-full left-0 transition-all ease-in-out duration-500 pointer-events-none",
-        {
-          "top-0": props.show && upgrades.length > 0,
-        },
-      )}
+      className={cn("absolute w-full -top-full left-0 pointer-events-none", {
+        "transition-all ease-in-out duration-500": quality.animation,
+        "top-0": props.show && upgrades.length > 0,
+      })}
     >
       <div
         className={cn(
-          "mx-auto w-fit h-fit -translate-y-1/2 flex justify-center rounded-3xl border-8 border-t-0 border-upgrade bg-card/50 shadow shadow-black/50",
+          "mx-auto w-fit h-fit -translate-y-1/2 flex justify-center rounded-3xl border-8 border-t-0 border-upgrade",
+          {
+            "shadow shadow-black/50": quality.shadows && quality.transparency,
+            "bg-card/50": quality.transparency,
+            "bg-card": !quality.transparency,
+          },
         )}
       >
         <div className="flex p-5 gap-10 relative shrink-0 w-max  translate-y-1/2">
@@ -37,7 +47,10 @@ export const Upgrades = (props: { show: boolean }) => {
                   {
                     // "": upgrade.state === "idle",
                     // "animate-appear": upgrade.state === "appear",
-                    "animate-trigger": upgrade.state === "triggered",
+                    "animate-trigger":
+                      upgrade.state === "triggered" && quality.animation,
+                    "ring-foreground":
+                      upgrade.state === "triggered" && !quality.animation,
                   },
                 )}
               />
@@ -51,7 +64,12 @@ export const Upgrades = (props: { show: boolean }) => {
                       value={(upgrade.cumul / upgrade.max) * 100}
                     />
                   )}
-                  <div className="absolute text-center font-changa left-0 -translate-y-3 aspect-square h-6 rounded-full bg-upgrade shadow shadow-black">
+                  <div
+                    className={cn(
+                      "absolute text-center font-changa left-0 -translate-y-3 aspect-square h-6 rounded-full bg-upgrade",
+                      { "shadow shadow-black": quality.shadows },
+                    )}
+                  >
                     {upgrade.cumul}
                   </div>
                 </div>

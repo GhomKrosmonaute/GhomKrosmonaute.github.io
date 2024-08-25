@@ -16,6 +16,7 @@ import { Contact } from "./modals/Contact.tsx";
 import Theme from "@/assets/icons/theme.svg";
 import { cn } from "@/utils.ts";
 import { useGlobalState } from "@/hooks/useGlobalState.ts";
+import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
 
 const SplineMacbook = React.lazy(() =>
   import("@/components/ui/spline-macbook.tsx").then((mod) => ({
@@ -29,6 +30,10 @@ const Game = React.lazy(() =>
 
 export default function App() {
   const toggleDarkMode = useDarkMode();
+  const { godRays, animation } = useQualitySettings((state) => ({
+    godRays: state.godRays,
+    animation: state.cardAnimation,
+  }));
   const isCardGameVisible = useGlobalState((state) => state.isCardGameVisible);
   // const isSplineLoaded = useGlobalState((state) => state.splineLoaded);
   const largeScreen = useMediaQuery("(width >= 768px) and (height >= 768px)");
@@ -74,9 +79,11 @@ export default function App() {
     <>
       {largeWidth && (
         <>
-          <div className="absolute inset-0 overflow-hidden">
-            <div className="jumbo absolute -inset-[10px]"></div>
-          </div>
+          {godRays && (
+            <div className="absolute inset-0 overflow-hidden">
+              <div className="jumbo absolute -inset-[10px]"></div>
+            </div>
+          )}
 
           <img
             src="images/background.svg"
@@ -88,14 +95,15 @@ export default function App() {
       {largeWidth && (
         <div
           className={cn(
-            "fixed transition-[top] duration-1000 ease-in-out top-[50svh] left-[50vw] 2xl:left-[30vw]",
+            { "transition-[top] duration-1000 ease-in-out": animation },
+            "fixed top-[50svh] left-[50vw] 2xl:left-[30vw]",
             "-translate-x-1/2 -translate-y-1/2 w-full h-full",
             {
               "top-[-50svh]": isCardGameVisible,
             },
           )}
         >
-          {desktop ? (
+          {desktop && animation ? (
             <React.Suspense>
               <SplineMacbook />
             </React.Suspense>

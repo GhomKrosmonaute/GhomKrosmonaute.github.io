@@ -1,5 +1,6 @@
 import React from "react";
 import { cn } from "@/utils";
+import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
 
 const groupHover = [
   "group-hover/card:opacity-100",
@@ -21,14 +22,22 @@ export interface BorderLightProps {
 export const BorderLight = (
   props: React.ComponentProps<"div"> & BorderLightProps,
 ) => {
+  const shadows = useQualitySettings((state) => state.shadows);
+  const activated = useQualitySettings(
+    (state) => state.borderLights && state.transparency,
+  );
+
   const currentGroup = props.groupName
     ? groupHover.filter((x) => x.includes(props.groupName!))
     : [];
 
+  if (!activated || !shadows) return <></>;
+
   return (
     <div
       className={cn(
-        "absolute shadow-glow-10 pointer-events-none",
+        "absolute pointer-events-none",
+        { "shadow-glow-10": shadows },
         "w-1/5 min-w-5 h-1 rounded-[50%] opacity-100",
         {
           [`md:opacity-0 ${currentGroup[0]}`]:

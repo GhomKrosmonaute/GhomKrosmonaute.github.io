@@ -19,19 +19,47 @@ import {
 
 import { useCardGame } from "@/hooks/useCardGame.ts";
 import { useGlobalState } from "@/hooks/useGlobalState.ts";
+import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
 
 import { settings } from "@/game-settings.ts";
 import { GAME_ADVANTAGE } from "@/game-constants.ts";
+import { Checkbox } from "@/components/ui/checkbox.tsx";
+
+const translations = {
+  noob: "Débutant",
+  easy: "Facile",
+  normal: "Normal",
+  hard: "Difficile",
+  veteran: "Vétéran",
+  shadows: "Ombres",
+  transparency: "Transparence",
+  borderLights: "Lumières de bordure",
+  godRays: "Rayons lumineux",
+  cardBlur: "Flou de transparence",
+  cardTilt: "Inclinaisons",
+  cardFoil: "Reflets et textures",
+  cardAnimation: "Animations",
+  cardPerspective: "Profondeur",
+};
 
 export const Settings = (props: { show: boolean }) => {
   const score = useCardGame((state) => state.score);
   const toggleSettings = useGlobalState((state) => state.toggleSettings);
+  const quality = useQualitySettings();
 
   const [difficulty, setDifficulty] = React.useState(settings.difficulty);
 
   const apply = React.useCallback(() => {
     // Apply settings
-    localStorage.setItem("settings", JSON.stringify({ difficulty }));
+    localStorage.setItem(
+      "settings",
+      JSON.stringify({
+        difficulty,
+        quality: JSON.parse(
+          localStorage.getItem("settings") ?? JSON.stringify(settings),
+        ).quality,
+      }),
+    );
 
     if (difficulty !== settings.difficulty) window.location.reload();
     else toggleSettings();
@@ -40,15 +68,19 @@ export const Settings = (props: { show: boolean }) => {
   return (
     <div
       className={cn(
-        "absolute top-0 left-0 w-full h-full z-40 bg-background/80",
-        "flex items-center justify-center opacity-0 pointer-events-none",
-        "transition-opacity duration-500 ease-in-out",
-        { "opacity-100 pointer-events-auto": props.show },
+        "absolute top-0 left-0 w-full h-full z-40",
+        "flex items-center justify-center pointer-events-none",
+        {
+          "transition-opacity duration-500 ease-in-out": quality.cardAnimation,
+          "opacity-0 bg-background/80": quality.transparency,
+          hidden: !quality.transparency,
+          "opacity-100 flex pointer-events-auto": props.show,
+        },
       )}
     >
       <Card className="space-y-4">
         <div className="text-3xl">Settings</div>
-        <div className="grid *:space-y-4">
+        <div className="flex gap-10 *:space-y-4 *:border *:rounded-xl *:py-4 *:px-6">
           <div>
             <div className="text-2xl">Difficulté</div>
             <RadioGroup
@@ -61,17 +93,40 @@ export const Settings = (props: { show: boolean }) => {
               {Object.keys(GAME_ADVANTAGE).map((key) => (
                 <Label className="flex items-center gap-2 py-2" key={key}>
                   <RadioGroupItem value={key} />
-                  {key}
+                  {translations[key as keyof typeof GAME_ADVANTAGE]}
                 </Label>
               ))}
             </RadioGroup>
+          </div>
+          <div>
+            <div className="text-2xl">Qualité</div>
+            <div className="grid grid-cols-2 grid-rows-5">
+              {Object.keys(settings.quality).map((key) => (
+                <Label
+                  className="flex items-center gap-2 py-2 select-none odd:pr-5"
+                  key={key}
+                >
+                  <Checkbox
+                    defaultChecked={
+                      quality[key as keyof typeof quality] as boolean
+                    }
+                    onCheckedChange={(value) =>
+                      quality.update({ [key]: value })
+                    }
+                  />
+                  {translations[key as keyof typeof translations]}
+                </Label>
+              ))}
+            </div>
           </div>
         </div>
 
         {score > 0 && difficulty !== settings.difficulty ? (
           <AlertDialog>
             <AlertDialogTrigger>
-              <Button>Appliquer</Button>
+              <Button variant="cta" size="cta">
+                Appliquer
+              </Button>
             </AlertDialogTrigger>
             <AlertDialogContent className="w-fit">
               <AlertDialogHeader>
@@ -90,7 +145,9 @@ export const Settings = (props: { show: boolean }) => {
             </AlertDialogContent>
           </AlertDialog>
         ) : (
-          <Button onClick={apply}>Appliquer</Button>
+          <Button variant="cta" size="cta" onClick={apply}>
+            Appliquer
+          </Button>
         )}
       </Card>
     </div>

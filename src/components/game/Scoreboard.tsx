@@ -3,8 +3,10 @@ import scores from "@/data/scores.json";
 import Trophy from "@/assets/icons/trophy.svg";
 import { rankColor } from "@/hooks/useCardGame.ts";
 import { Card } from "@/components/Card.tsx";
+import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
 
 export const Scoreboard = (props: { show: boolean }) => {
+  const shadows = useQualitySettings((state) => state.shadows);
   return (
     <div
       className={cn(
@@ -15,8 +17,22 @@ export const Scoreboard = (props: { show: boolean }) => {
         },
       )}
     >
-      <div className="absolute bg-upgrade shadow shadow-black/50 w-10 h-4 right-0 top-5 translate-x-full" />
-      <div className="absolute bg-upgrade shadow shadow-black/50 w-10 h-4 right-0 bottom-5 translate-x-full" />
+      <div
+        className={cn(
+          "absolute bg-upgrade w-10 h-4 right-0 top-5 translate-x-full",
+          {
+            "shadow shadow-black/50": shadows,
+          },
+        )}
+      />
+      <div
+        className={cn(
+          "absolute bg-upgrade w-10 h-4 right-0 bottom-5 translate-x-full",
+          {
+            "shadow shadow-black/50": shadows,
+          },
+        )}
+      />
       <Card>
         <div className="space-y-3 pointer-events-auto flex flex-col items-center">
           <div className="text-3xl">Scoreboard</div>
