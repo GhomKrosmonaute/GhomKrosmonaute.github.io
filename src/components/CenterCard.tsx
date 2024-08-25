@@ -16,8 +16,9 @@ export const CenterCard = (
   }>,
 ) => {
   const matches = useMediaQuery("(width >= 768px) and (height >= 768px)");
-  const { shadows } = useQualitySettings((state) => ({
+  const quality = useQualitySettings((state) => ({
     shadows: state.shadows,
+    animations: state.cardAnimation,
   }));
 
   return (
@@ -38,15 +39,17 @@ export const CenterCard = (
           className={cn(
             "rounded-none overflow-scroll border-none",
             "md:h-auto md:rounded-md md:border-2 md:overflow-hidden",
-            " md:transition md:ease-in-out md:duration-500",
             {
+              "md:transition md:ease-in-out md:duration-500":
+                quality.animations,
               "md:shadow-spotlight md:hover:shadow-glow-150 md:hover:shadow-primary":
-                shadows,
+                quality.shadows,
             },
-            " md:hover:border-b-primary md:hover:backdrop-blur-md",
+            "md:hover:border-b-primary md:hover:backdrop-blur-md",
             // set inclination
             {
-              "rotate-2 scale-95 hover:rotate-0 hover:scale-100": matches,
+              "rotate-2 scale-95 hover:rotate-0 hover:scale-100":
+                matches && quality.animations,
             },
           )}
           style={{

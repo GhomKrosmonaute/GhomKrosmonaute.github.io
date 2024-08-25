@@ -6,16 +6,17 @@ import { Card } from "@/components/Card.tsx";
 import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
 
 export const Scoreboard = (props: { show: boolean }) => {
-  const shadows = useQualitySettings((state) => state.shadows);
+  const { shadows, animation } = useQualitySettings((state) => ({
+    shadows: state.shadows,
+    animation: state.cardAnimation,
+  }));
+
   return (
     <div
-      className={cn(
-        "absolute right-3 top-16",
-        "w-fit translate-x-[110%] transition-transform duration-500 ease-in-out",
-        {
-          "translate-x-0": props.show,
-        },
-      )}
+      className={cn("absolute right-3 top-16 w-fit translate-x-[110%]", {
+        "transition-transform duration-500 ease-in-out": animation,
+        "translate-x-0": props.show,
+      })}
     >
       <div
         className={cn(

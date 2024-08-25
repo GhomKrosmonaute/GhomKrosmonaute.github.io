@@ -7,9 +7,11 @@ import { CenterCard } from "@/components/CenterCard.tsx";
 import { useMediaQuery } from "usehooks-ts";
 import { useNavigate } from "react-router-dom";
 import { useGlobalState } from "@/hooks/useGlobalState.ts";
+import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
 
 export const Home = () => {
   const navigate = useNavigate();
+  const animation = useQualitySettings((state) => state.cardAnimation);
   const largeScreen = useMediaQuery("(width >= 768px) and (height >= 768px)");
   const [isCardGameVisible, setCardGameVisibility] = useGlobalState((state) => [
     state.isCardGameVisible,
@@ -20,7 +22,9 @@ export const Home = () => {
     <CenterCard
       style={{
         opacity: isCardGameVisible ? 0 : 1,
-        transition: "opacity 0.5s ease-in-out, transform 0.5s ease-in-out",
+        transition: animation
+          ? "opacity 0.5s ease-in-out, transform 0.5s ease-in-out"
+          : "none",
         transform: isCardGameVisible
           ? "translate(0%, -150%) scale(0.7)"
           : undefined,

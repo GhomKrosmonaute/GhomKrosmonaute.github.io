@@ -2,6 +2,7 @@ import { cn } from "@/utils.ts";
 
 import { useCardGame } from "@/hooks/useCardGame.ts";
 import { useGlobalState } from "@/hooks/useGlobalState.ts";
+import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
 
 import { GameValues } from "@/components/game/GameValues.tsx";
 import { Helpers } from "@/components/game/Helpers.tsx";
@@ -15,6 +16,9 @@ import { CornerIcons } from "@/components/game/CornerIcons.tsx";
 import { Settings } from "@/components/game/Settings.tsx";
 
 export const Game = () => {
+  const quality = useQualitySettings((state) => ({
+    animations: state.cardAnimation,
+  }));
   const cardGame = useCardGame();
   const [show, showSettings] = useGlobalState((state) => [
     state.isCardGameVisible,
@@ -36,8 +40,11 @@ export const Game = () => {
 
       <div
         className={cn(
-          "absolute flex items-center -translate-x-1/2 max-w-[100vw]",
-          "left-[50vw] transition-[bottom] ease-in-out duration-1000",
+          "absolute flex items-center -translate-x-1/2 max-w-[100vw] left-[50vw]",
+          {
+            " transition-[bottom] ease-in-out duration-1000":
+              quality.animations,
+          },
           show ? "bottom-[-50px]" : "-bottom-full",
         )}
       >

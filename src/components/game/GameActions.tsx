@@ -7,9 +7,11 @@ import { Button } from "@/components/ui/button.tsx";
 import { ValueIcon } from "@/components/game/ValueIcon.tsx";
 
 import { useCardGame, isGameOver, wait } from "@/hooks/useCardGame.ts";
+import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
 
 export const GameActions = (props: { show: boolean }) => {
   const game = useCardGame();
+  const animation = useQualitySettings((state) => state.cardAnimation);
 
   const disabled =
     game.energy + game.reputation < INFINITE_DRAW_COST ||
@@ -20,8 +22,10 @@ export const GameActions = (props: { show: boolean }) => {
     <div
       className={cn(
         "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0",
-        "transition-opacity duration-500 ease-in-out",
-        { "opacity-100": props.show },
+        {
+          "transition-opacity duration-500 ease-in-out": animation,
+          "opacity-100": props.show,
+        },
       )}
     >
       <Card className="space-y-4">
