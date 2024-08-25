@@ -8,7 +8,13 @@ import {
   UPGRADE_COST_THRESHOLDS,
   MAX_HAND_SIZE,
   TRIGGER_EVENTS,
+  INFINITE_DRAW_COST,
+  REPUTATION_TO_ENERGY,
+  ENERGY_TO_MONEY,
 } from "@/game-constants.ts";
+
+import { metadata } from "@/game-metadata.ts";
+import { settings } from "@/game-settings.ts";
 
 import technos from "../data/techno.json";
 import projects from "../data/projects.json";
@@ -30,10 +36,10 @@ export interface Upgrade {
 
 export interface Effect {
   description: string;
-  onPlayed: (state: CardGameState, card: GameCardInfo) => Promise<unknown>;
   type: "action" | "support";
   cost: number | string;
   condition?: (state: CardGameState, card: GameCardInfo) => boolean;
+  onPlayed: (state: CardGameState, card: GameCardInfo) => Promise<unknown>;
   waitBeforePlay?: boolean;
   ephemeral?: boolean;
   upgrade?: boolean;
@@ -69,6 +75,81 @@ export type GameCardInfo = ActionCardInfo | SupportCardInfo;
 export type CardModifier = (card: GameCardInfo) => GameCardInfo;
 
 export type TriggerEvent = keyof typeof TRIGGER_EVENTS;
+
+export type GameOverReason = "mill" | "soft-lock" | "reputation" | null;
+
+interface CardGameState {
+  operationInProgress: Record<string, boolean>;
+  setOperationInProgress: (operation: string, value: boolean) => void;
+  reason: GameOverReason;
+  isWon: boolean;
+  isGameOver: boolean;
+  deck: GameCardInfo[];
+  hand: GameCardInfo[];
+  discard: GameCardInfo[];
+  upgrades: Upgrade[];
+  nextCardModifiers: CardModifier[];
+  score: number;
+  day: number;
+  energy: number;
+  reputation: number;
+  money: number;
+  updateScore: () => void;
+  addEnergy: (
+    count: number,
+    options?: { skipGameOverCheck?: boolean },
+  ) => Promise<void>;
+  addReputation: (
+    count: number,
+    options?: { skipGameOverCheck?: boolean },
+  ) => Promise<void>;
+  addMoney: (count: number) => Promise<void>;
+  addDay: (count?: number) => Promise<void>;
+  upgrade: (name: string) => Promise<void>;
+  triggerUpgrade: (name: string) => Promise<void>;
+  triggerUpgradeEvent: (event: TriggerEvent) => Promise<void>;
+  addNextCardModifier: (
+    callback: (card: GameCardInfo) => GameCardInfo,
+    options?: { before?: boolean },
+  ) => unknown;
+  draw: (
+    count?: number,
+    options?: Partial<{
+      fromDiscardPile: boolean;
+      filter: (card: GameCardInfo) => boolean;
+    }>,
+  ) => Promise<void>;
+  drop: (options?: { toDeck?: boolean }) => Promise<void>;
+  dropAll: (options?: {
+    toDeck?: boolean;
+    filter?: (card: GameCardInfo) => boolean;
+  }) => Promise<void>;
+  recycle: (count?: number) => Promise<void>;
+  play: (card: GameCardInfo, options?: { free?: boolean }) => Promise<void>;
+  win: () => void;
+  gameOver: (reason: GameOverReason) => void;
+  reset: () => void;
+}
+
+export function isGameOver(state: CardGameState): GameOverReason | false {
+  if (state.reputation === 0) return "reputation";
+  if (state.deck.length === 0 && state.hand.length === 0) return "mill";
+  if (
+    state.hand.every((c) => {
+      // on vérifie si la condition s'il y en
+      if (c.effect.condition && !c.effect.condition(state, c)) return true;
+
+      // on vérifie si on a assez de resources
+      return !parseCost(state, c).canBeBuy;
+    }) &&
+    (state.reputation + state.energy < INFINITE_DRAW_COST ||
+      state.hand.length >= MAX_HAND_SIZE ||
+      state.deck.length === 0)
+  )
+    return "soft-lock";
+
+  return false;
+}
 
 export function rankColor(rank: number) {
   return {
@@ -201,7 +282,7 @@ export function formatUpgradeText(text: string, cumul: number) {
     .replace(/@s/g, cumul > 1 ? "s" : "");
 }
 
-async function wait(ms = 500) {
+export async function wait(ms = 500) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
@@ -253,6 +334,67 @@ function generateInitialState(): Omit<
   CardGameState,
   keyof ReturnType<typeof cardGameMethods>
 > {
+  const saveMetadata = localStorage.getItem("card-game-metadata");
+  const saveDifficulty =
+    localStorage.getItem("card-game-difficulty") ?? "normal";
+  const save = localStorage.getItem("card-game");
+
+  if (
+    save &&
+    JSON.stringify(metadata) === saveMetadata &&
+    settings.difficulty === saveDifficulty
+  ) {
+    return JSON.parse(save, (key, value) => {
+      switch (key) {
+        case "discard":
+        case "deck":
+        case "hand":
+          return value.map((card: GameCardInfo) => {
+            return {
+              ...card,
+              state: "idle",
+              effect: {
+                ...card.effect,
+                onPlayed: card.effect.upgrade
+                  ? async (state) => await state.upgrade(card.name)
+                  : effects.find(
+                      (effect) =>
+                        formatText(effect.description) ===
+                        card.effect.description,
+                    )?.onPlayed,
+                condition: effects.find(
+                  (effect) =>
+                    formatText(effect.description) === card.effect.description,
+                )?.condition,
+              },
+            } as GameCardInfo;
+          });
+        case "upgrades":
+          return value.map((upgrade: Upgrade) => {
+            return {
+              ...upgrade,
+              state: "idle",
+              onTrigger: upgrades.find((u) => u.name === upgrade.name)
+                ?.onTrigger,
+              condition: upgrades.find((u) => u.name === upgrade.name)
+                ?.condition,
+            } as Upgrade;
+          });
+        case "nextCardModifiers":
+          return value.map((modifier: string) => {
+            return eval(modifier);
+          });
+        case "operationInProgress":
+          return {};
+      }
+
+      return value;
+    });
+  }
+
+  localStorage.setItem("card-game-metadata", JSON.stringify(metadata));
+  localStorage.setItem("card-game-difficulty", settings.difficulty);
+
   const supports = technos.map((techno, i) => {
     const mapping = map(i, 0, technos.length, 0, supportEffects.length, true);
     const effect = supportEffects[Math.floor(mapping)];
@@ -304,6 +446,7 @@ function generateInitialState(): Omit<
   const deck = shuffle([...supports, ...actions, ...upgradeActions], 3);
 
   return {
+    operationInProgress: {},
     score: 0,
     reason: null,
     isWon: false,
@@ -320,52 +463,6 @@ function generateInitialState(): Omit<
   };
 }
 
-interface CardGameState {
-  reason: "mill" | "soft-lock" | "reputation" | null;
-  isWon: boolean;
-  isGameOver: boolean;
-  deck: GameCardInfo[];
-  hand: GameCardInfo[];
-  discard: GameCardInfo[];
-  upgrades: Upgrade[];
-  nextCardModifiers: CardModifier[];
-  score: number;
-  day: number;
-  energy: number;
-  reputation: number;
-  money: number;
-  updateScore: () => void;
-  addEnergy: (count: number) => Promise<void>;
-  addReputation: (
-    count: number,
-    options?: { skipGameOverCheck?: boolean },
-  ) => Promise<void>;
-  addMoney: (count: number) => Promise<void>;
-  addDay: (count?: number) => Promise<void>;
-  upgrade: (name: string) => Promise<void>;
-  triggerUpgrade: (name: string) => Promise<void>;
-  triggerUpgradeEvent: (event: TriggerEvent) => Promise<void>;
-  addNextCardModifier: (
-    callback: (card: GameCardInfo) => GameCardInfo,
-    options?: { before?: boolean },
-  ) => unknown;
-  draw: (
-    count?: number,
-    options?: Partial<{
-      fromDiscardPile: boolean;
-      filter: (card: GameCardInfo) => boolean;
-    }>,
-  ) => Promise<void>;
-  drop: (options?: { toDeck?: boolean }) => Promise<void>;
-  dropAll: (options?: {
-    toDeck?: boolean;
-    filter?: (card: GameCardInfo) => boolean;
-  }) => Promise<void>;
-  recycle: (count?: number) => Promise<void>;
-  play: (card: GameCardInfo, options?: { free?: boolean }) => Promise<void>;
-  reset: () => void;
-}
-
 function cardGameMethods(
   set: (
     partial:
@@ -377,6 +474,15 @@ function cardGameMethods(
   getState: () => CardGameState,
 ) {
   return {
+    setOperationInProgress: (operation: string, value: boolean) => {
+      set((state) => ({
+        operationInProgress: {
+          ...state.operationInProgress,
+          [operation]: value,
+        },
+      }));
+    },
+
     updateScore: () => {
       // Plus la partie dure longtemps, plus le score diminue.
       // Moins tu perds de réputation, plus le score est élevé.
@@ -386,27 +492,40 @@ function cardGameMethods(
       // Calcul :
 
       set((state) => ({
-        score: Math.max(
-          0,
-          state.reputation * 100 +
-            state.money * 100 +
+        score: Math.floor(
+          state.energy +
+            state.reputation * REPUTATION_TO_ENERGY +
+            state.money / ENERGY_TO_MONEY +
             state.upgrades.reduce((acc, upgrade) => acc + upgrade.cumul, 0) *
-              100 +
-            state.energy * 50 -
-            state.day * 75,
+              10 *
+              (50 / state.day) *
+              100,
         ),
       }));
     },
 
-    addEnergy: async (count) => {
-      // on joue le son de la banque
-      bank.gain.play();
+    addEnergy: async (count, options) => {
+      if (count > 0) {
+        // on joue le son de la banque
+        bank.gain.play();
 
-      set((state) => {
-        return {
-          energy: Math.max(0, Math.min(MAX_ENERGY, state.energy + count)),
-        };
-      });
+        set((state) => {
+          return {
+            energy: Math.max(0, Math.min(MAX_ENERGY, state.energy + count)),
+          };
+        });
+      } else if (count < 0) {
+        const state = getState();
+
+        // on retire toute l'énergie et on puise dans la réputation pour le reste
+        const missingEnergy = Math.abs(count) - state.energy;
+
+        set({ energy: 0 });
+
+        await state.addReputation(-missingEnergy, {
+          skipGameOverCheck: options?.skipGameOverCheck,
+        });
+      }
     },
 
     addReputation: async (count, options) => {
@@ -455,16 +574,17 @@ function cardGameMethods(
       const state = getState();
 
       if (state.money >= MONEY_TO_REACH) {
-        // on joue le son de la banque
-        bank.victory.play();
-
-        set({ isGameOver: true, isWon: true });
+        state.win();
       }
     },
 
     addDay: async (count = 1) => {
       set((state) => ({
         day: state.day + count,
+        operationInProgress: {
+          ...state.operationInProgress,
+          day: true,
+        },
       }));
 
       if (count > 0) {
@@ -472,12 +592,26 @@ function cardGameMethods(
         const state = getState();
 
         for (let i = 0; i < count; i++) {
-          state.triggerUpgradeEvent("eachDay");
+          await state.triggerUpgradeEvent("eachDay");
         }
       }
+
+      set((state) => ({
+        operationInProgress: {
+          ...state.operationInProgress,
+          day: false,
+        },
+      }));
     },
 
     upgrade: async (name) => {
+      set((state) => ({
+        operationInProgress: {
+          ...state.operationInProgress,
+          [`upgrade ${name}`]: true,
+        },
+      }));
+
       const rawUpgrades = upgrades.find((a) => a.name === name)!;
 
       // on joue le son de la banque
@@ -553,6 +687,10 @@ function cardGameMethods(
             }
             return a;
           }),
+          operationInProgress: {
+            ...state.operationInProgress,
+            [`upgrade ${name}`]: false,
+          },
         };
       });
     },
@@ -570,6 +708,10 @@ function cardGameMethods(
             }
             return a;
           }),
+          operationInProgress: {
+            ...state.operationInProgress,
+            [`trigger ${name}`]: true,
+          },
         };
       });
 
@@ -588,12 +730,23 @@ function cardGameMethods(
             }
             return a;
           }),
+          operationInProgress: {
+            ...state.operationInProgress,
+            [`trigger ${name}`]: false,
+          },
         };
       });
     },
 
     triggerUpgradeEvent: async (event: TriggerEvent) => {
       const state = getState();
+
+      set((state) => ({
+        operationInProgress: {
+          ...state.operationInProgress,
+          [`trigger ${event}`]: true,
+        },
+      }));
 
       await Promise.all(
         state.upgrades
@@ -608,6 +761,13 @@ function cardGameMethods(
             await state.triggerUpgrade(upgrade.name);
           }),
       );
+
+      set((state) => ({
+        operationInProgress: {
+          ...state.operationInProgress,
+          [`trigger ${event}`]: false,
+        },
+      }));
     },
 
     addNextCardModifier: async (callback, options) => {
@@ -650,7 +810,7 @@ function cardGameMethods(
 
           drawn.push(card.name);
 
-          if (hand.length - 1 >= MAX_HAND_SIZE) {
+          if (hand.length >= MAX_HAND_SIZE) {
             discard.push(card);
             discardAdded = true;
           } else {
@@ -669,6 +829,10 @@ function cardGameMethods(
             state[fromKey].filter((c) => !drawn.includes(c.name)),
             2,
           ),
+          operationInProgress: {
+            ...state.operationInProgress,
+            draw: true,
+          },
         };
       });
 
@@ -679,6 +843,10 @@ function cardGameMethods(
         hand: state.hand.map((c) => {
           return { ...c, state: "idle" };
         }),
+        operationInProgress: {
+          ...state.operationInProgress,
+          draw: false,
+        },
       }));
     },
 
@@ -704,6 +872,10 @@ function cardGameMethods(
           }
           return c;
         }),
+        operationInProgress: {
+          ...state.operationInProgress,
+          drop: true,
+        },
       });
 
       // on attend la fin de l'animation
@@ -713,6 +885,10 @@ function cardGameMethods(
       set((state) => ({
         hand: state.hand.filter((c) => c.name !== card.name),
         [toKey]: shuffle([{ ...card, state: null }, ...state[toKey]], 2),
+        operationInProgress: {
+          ...state.operationInProgress,
+          drop: false,
+        },
       }));
     },
 
@@ -732,6 +908,10 @@ function cardGameMethods(
           }
           return c;
         }),
+        operationInProgress: {
+          ...state.operationInProgress,
+          dropAll: true,
+        },
       });
 
       // on attend la fin de l'animation
@@ -749,6 +929,10 @@ function cardGameMethods(
           2,
         ),
         hand: state.hand.filter((c) => options?.filter && !options.filter(c)),
+        operationInProgress: {
+          ...state.operationInProgress,
+          dropAll: false,
+        },
       }));
     },
 
@@ -835,14 +1019,7 @@ function cardGameMethods(
               return;
             }
 
-            // on retire toute l'énergie et on puise dans la réputation pour le reste
-            const missingEnergy = cost - state.energy;
-
-            set({ energy: 0 });
-
-            await state.addReputation(-missingEnergy, {
-              skipGameOverCheck: true,
-            });
+            await state.addEnergy(-cost, { skipGameOverCheck: true });
           } else {
             await cantPlay();
             return;
@@ -852,6 +1029,13 @@ function cardGameMethods(
           set({ [needs]: state[needs] - cost });
         }
       }
+
+      set((state) => ({
+        operationInProgress: {
+          ...state.operationInProgress,
+          play: true,
+        },
+      }));
 
       // on joue le son de la banque
       bank.play.play();
@@ -903,56 +1087,44 @@ function cardGameMethods(
 
       state = getState();
 
-      if (state.isGameOver) return;
-
-      // vérifier le game over par réputation
-
-      if (state.reputation === 0) {
-        // on joue le son de la banque
-        bank.defeat.play();
-        bank.music.fade(0.7, 0, 1000);
-
-        set({ isGameOver: true, isWon: false, reason: "reputation" });
-
-        // on met à jour le score
-        state.updateScore();
-
-        return;
-      }
-
       if (state.hand.length === 0) {
         await state.draw();
       }
 
-      // vérifier si le jeu est soft lock
-
-      state = getState();
-
-      const isMill = state.deck.length === 0 && state.hand.length === 0;
-      const isSoftLocked = state.hand.every((c) => {
-        // on vérifie si la condition s'il y en
-        if (c.effect.condition && !c.effect.condition(state, c)) return true;
-
-        // on vérifie si on a assez de resources
-        return !parseCost(state, c).canBeBuy;
-      });
-
-      if (isMill || isSoftLocked) {
-        bank.defeat.play();
-        bank.music.fade(0.7, 0, 1000);
-
-        set({
-          isGameOver: true,
-          isWon: false,
-          reason: isMill ? "mill" : "soft-lock",
-        });
+      if (isGameOver(getState())) {
+        await wait(2000);
       }
 
-      // on met à jour le score
-      state.updateScore();
+      set((state) => ({
+        operationInProgress: {
+          ...state.operationInProgress,
+          play: false,
+        },
+      }));
+    },
+
+    win: () => {
+      bank.victory.play();
+
+      set({ isGameOver: true, isWon: true });
+    },
+
+    gameOver: (reason) => {
+      bank.defeat.play();
+      bank.music.fade(0.7, 0, 1000);
+
+      set({
+        isGameOver: true,
+        isWon: false,
+        reason,
+      });
     },
 
     reset: () => {
+      localStorage.removeItem("card-game-metadata");
+      localStorage.removeItem("card-game-difficulty");
+      localStorage.removeItem("card-game");
+
       set(generateInitialState());
 
       bank.music.stop();
@@ -963,6 +1135,36 @@ function cardGameMethods(
 
 export const useCardGame = create<CardGameState>((set, getState) => ({
   ...generateInitialState(),
-
   ...cardGameMethods(set, getState),
 }));
+
+useCardGame.subscribe((state, prevState) => {
+  // on met à jour le score
+  if (
+    state.reputation !== prevState.reputation ||
+    state.money !== prevState.money ||
+    state.upgrades !== prevState.upgrades ||
+    state.energy !== prevState.energy ||
+    state.day !== prevState.day
+  )
+    state.updateScore();
+
+  localStorage.setItem(
+    "card-game",
+    JSON.stringify(state, (key, value) => {
+      if (typeof value === "function" && !(key in state))
+        return value.toString();
+      return value;
+    }),
+  );
+
+  // on vérifie si le jeu est fini
+  if (
+    Object.values(state.operationInProgress).every((v) => !v) &&
+    !state.isGameOver
+  ) {
+    const reason = isGameOver(state);
+
+    if (reason) state.gameOver(reason);
+  }
+});

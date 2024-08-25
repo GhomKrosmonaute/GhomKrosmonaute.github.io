@@ -1,10 +1,15 @@
 import type { Upgrade } from "@/hooks/useCardGame.ts";
 import {
   ENERGY_TO_MONEY,
+  GAME_ADVANTAGE,
   MAX_ENERGY,
   MAX_REPUTATION,
   TRIGGER_EVENTS,
 } from "@/game-constants.ts";
+
+import { settings } from "@/game-settings.ts";
+
+const advantage = GAME_ADVANTAGE[settings.difficulty];
 
 type RawUpgrade = Pick<
   Upgrade,
@@ -32,7 +37,7 @@ const upgrades: RawUpgrade[] = [
     },
     cumulable: true,
     max: 3,
-    cost: String(20 * ENERGY_TO_MONEY), // 10 days * 2 cumul * 1 energy = 20
+    cost: String(Math.max(0, 20 - advantage) * ENERGY_TO_MONEY), // 10 days * 2 cumul * 1 energy = 20
   },
   {
     name: "Méditation",
@@ -45,7 +50,7 @@ const upgrades: RawUpgrade[] = [
     },
     cumulable: true,
     max: 3,
-    cost: String(20 * ENERGY_TO_MONEY), // 10 days * 2 cumul * 1 energy (for draw) = 20
+    cost: String(Math.max(0, 20 - advantage) * ENERGY_TO_MONEY), // 10 days * 2 cumul * 1 energy (for draw) = 20
   },
   {
     name: "Bourse",
@@ -57,7 +62,7 @@ const upgrades: RawUpgrade[] = [
       await state.addMoney(Math.ceil((upgrade.cumul / 100) * state.money));
     },
     cumulable: true,
-    cost: String(8 * ENERGY_TO_MONEY), // 20 days (for infinite cumul) * 2 cumul * 1/5 energy = 20
+    cost: String(Math.max(0, 8 - advantage) * ENERGY_TO_MONEY), // 20 days (for infinite cumul) * 2 cumul * 1/5 energy = 20
   },
   {
     name: "Recyclage",
@@ -70,7 +75,7 @@ const upgrades: RawUpgrade[] = [
     },
     cumulable: true,
     max: 3,
-    cost: String(20 * ENERGY_TO_MONEY), // 10 days * 2 cumul * 1 energy (for recycle) = 20
+    cost: String(Math.max(0, 20 - advantage) * ENERGY_TO_MONEY), // 10 days * 2 cumul * 1 energy (for recycle) = 20
   },
   {
     name: "I.A",
@@ -82,7 +87,7 @@ const upgrades: RawUpgrade[] = [
       await state.addMoney(upgrade.cumul * state.discard.length);
     },
     cumulable: true,
-    cost: String(80 * ENERGY_TO_MONEY), // 20 days (for infinite cumul) * 2 cumul * 1/5 energy * 10 (discard average) = 20
+    cost: String(Math.max(0, 80 - advantage) * ENERGY_TO_MONEY), // 20 days (for infinite cumul) * 2 cumul * 1/5 energy * 10 (discard average) = 20
   },
   {
     name: "Sport",
@@ -95,7 +100,7 @@ const upgrades: RawUpgrade[] = [
     },
     cumulable: true,
     max: 2,
-    cost: 20, // 10 days * 2 cumul * 1 (for reputation) = 20
+    cost: Math.max(0, 20 - advantage), // 10 days * 2 cumul * 1 (for reputation) = 20
   },
   {
     name: "PC Puissant",
@@ -108,7 +113,7 @@ const upgrades: RawUpgrade[] = [
     },
     cumulable: true,
     max: 2,
-    cost: String(40 * ENERGY_TO_MONEY), // 10 days * 2 cumul * 10 (for energy average) * 1/5 (money) = 40
+    cost: String(Math.max(0, 40 - advantage) * ENERGY_TO_MONEY), // 10 days * 2 cumul * 10 (for energy average) * 1/5 (money) = 40
   },
   {
     name: "Stagiaire",
@@ -121,7 +126,7 @@ const upgrades: RawUpgrade[] = [
     },
     cumulable: true,
     max: 5,
-    cost: String(20 * ENERGY_TO_MONEY), // 10 days * 2 cumul * 5 (for hand average) * 1/5 (money) = 20
+    cost: String(Math.max(0, 20 - advantage) * ENERGY_TO_MONEY), // 10 days * 2 cumul * 5 (for hand average) * 1/5 (money) = 20
   },
 ];
 

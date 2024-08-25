@@ -38,7 +38,8 @@ export const GameCard = (
       isAnyCardAnimated:
         state.hand.some((card) => card.state !== "idle") ||
         (state.upgrades.length > 0 &&
-          state.upgrades.some((upgrade) => upgrade.state !== "idle")),
+          state.upgrades.some((upgrade) => upgrade.state !== "idle")) ||
+        Object.values(state.operationInProgress).some((o) => o),
       play: state.play,
       isGameOver: state.isGameOver,
       parsedCost,

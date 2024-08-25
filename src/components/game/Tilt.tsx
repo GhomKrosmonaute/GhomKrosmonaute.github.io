@@ -119,7 +119,23 @@ export const TiltFoil: React.FC = () => {
   const tiltContext = React.useContext(TiltContext);
 
   return (
-    <div className="dark:opacity-70 absolute w-full h-full">
+    <div
+      className="dark:opacity-70 absolute w-full h-full"
+      style={{ transformStyle: "flat" }}
+    >
+      <div
+        className={cn(
+          "absolute w-full h-full rounded-xl transition-opacity duration-500 ease-out",
+          "bg-[url('/images/texture-black.png')] dark:bg-[url('/images/texture-white.png')]",
+        )}
+        style={{
+          opacity: tiltContext.isHovered ? "15%" : "10%",
+          backgroundRepeat: "repeat",
+          mixBlendMode: "multiply",
+          maskImage: "radial-gradient(circle, black 0%, transparent 75%)",
+          maskPosition: `${Math.floor(tiltContext.degX * 10)}% ${Math.floor(tiltContext.degY * 10)}%`,
+        }}
+      />
       <div
         className="absolute w-full h-full rounded-xl transition-opacity duration-500 ease-out"
         style={{
@@ -132,7 +148,7 @@ export const TiltFoil: React.FC = () => {
           // backgroundBlendMode: "multiply",
           // mixBlendMode: "multiply",
           backgroundRepeat: "no-repeat",
-          transform: "translateZ(0px)",
+          mixBlendMode: "multiply",
         }}
       />
     </div>

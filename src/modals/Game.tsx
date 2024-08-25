@@ -9,10 +9,17 @@ import { Upgrades } from "@/components/game/Upgrades.tsx";
 import { GameOver } from "@/components/game/GameOver.tsx";
 import { GameCard } from "@/components/game/GameCard.tsx";
 import { Scoreboard } from "@/components/game/Scoreboard.tsx";
+import { GameActions } from "@/components/game/GameActions.tsx";
+import { GameDebug } from "@/components/game/GameDebug.tsx";
+import { CornerIcons } from "@/components/game/CornerIcons.tsx";
+import { Settings } from "@/components/game/Settings.tsx";
 
 export const Game = () => {
   const cardGame = useCardGame();
-  const show = useGlobalState((state) => state.isCardGameVisible);
+  const [show, showSettings] = useGlobalState((state) => [
+    state.isCardGameVisible,
+    state.settingsVisible,
+  ]);
 
   return (
     <>
@@ -21,6 +28,11 @@ export const Game = () => {
       <Scoreboard show={show} />
       <GameValues show={show} />
       <GameOver show={show} />
+      <GameActions show={show} />
+      <CornerIcons show={show} />
+      <Settings show={show && showSettings} />
+
+      {process.env.NODE_ENV === "development" && <GameDebug />}
 
       <div
         className={cn(

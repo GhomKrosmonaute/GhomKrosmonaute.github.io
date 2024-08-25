@@ -27,10 +27,6 @@ const Game = React.lazy(() =>
   import("@/modals/Game.tsx").then((mod) => ({ default: mod.Game })),
 );
 
-const Music = React.lazy(() =>
-  import("@/components/game/Music.tsx").then((mod) => ({ default: mod.Music })),
-);
-
 export default function App() {
   const toggleDarkMode = useDarkMode();
   const isCardGameVisible = useGlobalState((state) => state.isCardGameVisible);
@@ -127,7 +123,6 @@ export default function App() {
       {largeScreen && (
         <React.Suspense>
           <Game />
-          <Music />
         </React.Suspense>
       )}
     </>

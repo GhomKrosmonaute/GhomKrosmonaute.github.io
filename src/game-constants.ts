@@ -1,7 +1,15 @@
+export const GAME_ADVANTAGE = {
+  noob: 4,
+  easy: 3,
+  normal: 2,
+  hard: 1,
+  veteran: 0,
+};
 export const MAX_ENERGY = 20;
 export const MAX_HAND_SIZE = 8;
 export const MAX_REPUTATION = 10;
 export const MONEY_TO_REACH = 500;
+export const INFINITE_DRAW_COST = 5;
 export const UPGRADE_COST_THRESHOLDS = {
   string: ["20", "50", "75"],
   number: [5, 7, 10],
