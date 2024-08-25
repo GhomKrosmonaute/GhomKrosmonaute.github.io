@@ -11,6 +11,7 @@ import {
   INFINITE_DRAW_COST,
   REPUTATION_TO_ENERGY,
   ENERGY_TO_MONEY,
+  GAME_ADVANTAGE,
 } from "@/game-constants.ts";
 
 import { metadata } from "@/game-metadata.ts";
@@ -499,7 +500,8 @@ function cardGameMethods(
             state.upgrades.reduce((acc, upgrade) => acc + upgrade.cumul, 0) *
               10 *
               (50 / state.day) *
-              100,
+              100 *
+              (1 + Object.keys(GAME_ADVANTAGE).indexOf(settings.difficulty)),
         ),
       }));
     },
