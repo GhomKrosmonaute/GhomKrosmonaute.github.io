@@ -17,6 +17,7 @@ export const CenterCard = (
 ) => {
   const matches = useMediaQuery("(width >= 768px) and (height >= 768px)");
   const quality = useQualitySettings((state) => ({
+    blur: state.cardBlur,
     shadows: state.shadows,
     animations: state.cardAnimation,
   }));
@@ -45,9 +46,10 @@ export const CenterCard = (
               "md:shadow-spotlight md:hover:shadow-glow-150 md:hover:shadow-primary":
                 quality.shadows,
             },
-            "md:hover:border-b-primary md:hover:backdrop-blur-md",
+            "md:hover:border-b-primary",
             // set inclination
             {
+              "md:hover:backdrop-blur-md": quality.blur,
               "rotate-2 scale-95 hover:rotate-0 hover:scale-100":
                 matches && quality.animations,
             },

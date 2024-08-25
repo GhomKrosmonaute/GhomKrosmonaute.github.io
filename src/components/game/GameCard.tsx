@@ -24,7 +24,7 @@ import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
 export const GameCard = (
   props: React.PropsWithoutRef<{ card: GameCardInfo; position: number }>,
 ) => {
-  const { shadows, perspective, animation, transparency, blur, tilt } =
+  const { shadows, perspective, animation, transparency, tilt } =
     useQualitySettings((state) => ({
       blur: state.cardBlur,
       shadows: state.shadows,
@@ -110,7 +110,6 @@ export const GameCard = (
             [cn({
               "bg-card/80": transparency,
               "bg-card": !transparency,
-              "backdrop-blur-sm": blur && transparency,
             })]: props.card.effect.type === "support",
             // "shadow-action": props.card.effect.type === "action",
           },
@@ -144,6 +143,7 @@ export const GameCard = (
             className={cn("absolute w-full h-full rounded-xl", {
               "bg-card/80": transparency,
               "bg-card": !transparency,
+              // "backdrop-blur-sm": blur && transparency,
             })}
             style={{
               transform: "translateZ(-20px)",
@@ -224,7 +224,7 @@ export const GameCard = (
           className={cn(
             "flex-grow rounded-b-xl",
             props.card.effect.type === "action" && {
-              "backdrop-blur-sm": blur && transparency,
+              // "backdrop-blur-sm": blur && transparency,
               "bg-card/80": transparency,
               "bg-card": !transparency,
             },
