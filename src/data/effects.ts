@@ -392,6 +392,7 @@ const effects: Effect[] = (
         state.hand.some((card) => Number(card.effect.cost) > 0),
       type: "support",
       cost: Math.max(0, MAX_HAND_SIZE - advantage),
+      ephemeral: true,
     },
     {
       description: `${advantage > 4 ? `Ajoute ${advantage - 4} @energy${advantage > 5 ? "s" : ""}` : "D"}ouble l'@energy`, // as middle effect

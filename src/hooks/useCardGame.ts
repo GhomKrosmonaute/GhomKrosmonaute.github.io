@@ -799,14 +799,12 @@ function cardGameMethods(
             (!upgrade.condition || upgrade.condition(state, upgrade)),
         );
 
-      let i = 0;
-
-      for (const upgrade of upgrades) {
-        await wait(250 * i);
-        await state.triggerUpgrade(upgrade.name);
-
-        i++;
-      }
+      await Promise.all(
+        upgrades.map(async (upgrade, i) => {
+          await wait(250 * i);
+          await state.triggerUpgrade(upgrade.name);
+        }),
+      );
 
       state = getState();
 

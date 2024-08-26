@@ -95,13 +95,13 @@ export const GameOver = (props: { show: boolean }) => {
               <div className="grid grid-cols-2 gap-4">
                 <Stats className="*:h-10 text-3xl" />
                 <div
-                  className={cn(
-                    "p-5 space-y-2 rounded-2xl bg-background shadow-md",
-                    {
-                      "shadow-foreground/20":
-                        quality.shadows && quality.transparency,
-                    },
-                  )}
+                  className={cn("p-5 space-y-2 rounded-2xl bg-card shadow-md", {
+                    "shadow-foreground/20":
+                      quality.shadows && quality.transparency,
+
+                    "bg-card/50": quality.transparency,
+                    "bg-card": !quality.transparency,
+                  })}
                 >
                   {rank >= 0 ? (
                     <>
@@ -229,12 +229,22 @@ export const GameOver = (props: { show: boolean }) => {
 
             {game.isWon && (
               <div
-                className={cn({ "animate-bounce w-full": quality.animation })}
+                className={cn({
+                  "animate-bounce w-full hover:duration-500": quality.animation,
+                })}
               >
                 <a
                   href="https://buymeacoffee.com/ghom"
                   target="_blank"
-                  className="text-xl block mx-auto w-[300px] text-center border-2 border-upgrade rounded-xl py-3"
+                  className={cn(
+                    "text-xl block mx-auto w-[300px] text-center border-2 border-upgrade rounded-xl py-3",
+                    {
+                      "transition-colors duration-500 ease-in-out":
+                        quality.animation,
+                      "bg-card/50 hover:bg-card": quality.transparency,
+                      "bg-card": !quality.transparency,
+                    },
+                  )}
                 >
                   Buy me a coffee ☕️
                 </a>

@@ -18,8 +18,8 @@ export const Card = (
       {...props}
       className={cn(
         {
-          "bg-card/70": quality.transparency,
-          "bg-card": !quality.transparency,
+          "bg-background/70": quality.transparency,
+          "bg-background": !quality.transparency,
           "backdrop-blur-xl": quality.cardBlur && quality.transparency,
         },
         "border-b-secondary-foreground border-r-primary p-10 rounded-md overflow-hidden",

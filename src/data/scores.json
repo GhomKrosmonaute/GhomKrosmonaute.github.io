@@ -1,18 +1,27 @@
 [
   {
     "name": "ฟ- ק\uD835\uDD86†/⑳ -ж",
-    "score": 38120
+    "score": 38120,
+    "mode": "hard"
   },
   {
     "name": "Ghom",
-    "score": 37980
+    "score": 37980,
+    "mode": "hard"
   },
   {
     "name": "Makushi",
-    "score": 44000
+    "score": 44000,
+    "mode": "hard"
   },
   {
     "name": "Xibalba",
-    "score": 24050
+    "score": 24050,
+    "mode": "hard"
+  },
+  {
+    "name": "Mel-Andrew",
+    "score": 71213,
+    "mode": "normal"
   }
 ]

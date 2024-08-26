@@ -6,9 +6,10 @@ import { Card } from "@/components/Card.tsx";
 import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
 
 export const Scoreboard = (props: { show: boolean }) => {
-  const { shadows, animation } = useQualitySettings((state) => ({
+  const { shadows, animation, transparency } = useQualitySettings((state) => ({
     shadows: state.shadows,
     animation: state.animations,
+    transparency: state.transparency,
   }));
 
   return (
@@ -37,29 +38,49 @@ export const Scoreboard = (props: { show: boolean }) => {
       <Card>
         <div className="space-y-3 pointer-events-auto flex flex-col items-center">
           <div className="text-3xl">Scoreboard</div>
-          <table>
-            <tbody>
-              {scores
-                .sort((a, b) => b.score - a.score)
-                .map((score, i) => (
-                  <tr
-                    key={i}
-                    className={cn("*:whitespace-nowrap", rankColor(i))}
-                  >
-                    <td>
-                      {i < 3 ? (
-                        <Trophy className={cn("w-4", rankColor(i))} />
-                      ) : (
-                        ""
-                      )}
-                    </td>
-                    <th># {i + 1}</th>
-                    <th className="text-left">{score.name}</th>
-                    <td>{score.score.toLocaleString()} pts</td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
+          <div
+            className={cn("rounded-xl p-5", {
+              "bg-card/40": transparency,
+              "bg-card": !transparency,
+            })}
+          >
+            <table>
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>Rank</th>
+                  <th>Name</th>
+                  <th>Score</th>
+                  <th>Mode</th>
+                </tr>
+              </thead>
+              <tbody>
+                {scores
+                  .sort((a, b) => b.score - a.score)
+                  .map((score, i) => (
+                    <tr
+                      key={i}
+                      className={cn("*:whitespace-nowrap", rankColor(i))}
+                    >
+                      <td>
+                        {i < 3 ? (
+                          <Trophy className={cn("w-4", rankColor(i))} />
+                        ) : (
+                          ""
+                        )}
+                      </td>
+                      <th># {i + 1}</th>
+                      <th className="text-left drop-shadow-md shadow-black">
+                        {score.name}
+                      </th>
+                      <td>{score.score.toLocaleString()} pts</td>
+                      <td>{score.mode}</td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+
           <p className="text-muted-foreground text-sm bg-muted py-1 px-2 rounded-md whitespace-nowrap">
             Si vous avez un meilleur score, vous pouvez me le <br />
             soumettre en me contactant sur Discord ou LinkedIn !

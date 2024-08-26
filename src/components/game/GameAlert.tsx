@@ -16,13 +16,10 @@ export const GameAlert = (props: { show?: boolean }) => {
 
   return (
     <div
-      className={cn(
-        "absolute right-10 -translate-x-1/2 top-[55%] rotate-3 z-30",
-        {
-          "animate-pulse duration-700":
-            quality.animations && quality.transparency,
-        },
-      )}
+      className={cn("absolute right-0 -translate-x-8 top-[60%] rotate-3", {
+        "animate-pulse duration-700":
+          quality.animations && quality.transparency,
+      })}
     >
       <div
         className={cn("text-3xl flex items-center gap-2 pointer-events-none", {

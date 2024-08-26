@@ -30,9 +30,9 @@ export const Game = () => {
     <>
       <Helpers show={show} />
       <Upgrades show={show} />
+      <GameAlert show={show} />
       <Scoreboard show={show} />
       <GameValues show={show} />
-      <GameAlert show={show} />
       <GameOver show={show} />
       <GameActions show={show} />
       <CornerIcons show={show} />

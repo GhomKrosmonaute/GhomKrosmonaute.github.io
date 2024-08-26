@@ -108,7 +108,7 @@ export const GameCard = (
           "*:shrink-0",
           {
             [cn({
-              "bg-card/80": transparency,
+              "bg-card/60": transparency,
               "bg-card": !transparency,
             })]: props.card.effect.type === "support",
             // "shadow-action": props.card.effect.type === "action",
@@ -141,7 +141,7 @@ export const GameCard = (
         {perspective && tilt && (
           <div
             className={cn("absolute w-full h-full rounded-xl", {
-              "bg-card/80": transparency,
+              "bg-card/60": transparency,
               "bg-card": !transparency,
               // "backdrop-blur-sm": blur && transparency,
             })}
@@ -228,7 +228,7 @@ export const GameCard = (
             "flex-grow rounded-b-xl",
             props.card.effect.type === "action" && {
               // "backdrop-blur-sm": blur && transparency,
-              "bg-card/80": transparency,
+              "bg-card/60": transparency,
               "bg-card": !transparency,
             },
           )}
@@ -344,13 +344,13 @@ const GameCardTechno = (
       <div
         className="flex justify-center items-center mt-4"
         style={{
-          transform: perspective ? "translateZ(20px)" : "none",
+          transform: perspective ? "translateZ(15px)" : "none",
         }}
       >
         <img
           src={props.card.logo}
           alt={`Logo de la techno "${props.card.name}"`}
-          className={cn("w-2/3 object-contain aspect-square", {
+          className={cn("w-2/3 object-contain aspect-video", {
             "group-hover/game-card:animate-spin-forward":
               animation && spinners.includes(props.card.name),
           })}

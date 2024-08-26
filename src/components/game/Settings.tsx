@@ -89,7 +89,15 @@ export const Settings = (props: { show: boolean }) => {
 
       <Card className="space-y-4 z-40">
         <div className="text-3xl">Settings</div>
-        <div className="flex gap-5 *:space-y-4 *:border *:rounded-xl *:py-4 *:px-6">
+        <div
+          className={cn(
+            "flex gap-5 *:space-y-4 *:border *:rounded-xl *:py-4 *:px-6",
+            {
+              "*:bg-card/30": quality.transparency,
+              "*:bg-card": !quality.transparency,
+            },
+          )}
+        >
           <div>
             <div className="text-2xl">Difficulté</div>
             <RadioGroup
