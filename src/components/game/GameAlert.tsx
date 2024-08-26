@@ -11,13 +11,13 @@ export const GameAlert = (props: { show?: boolean }) => {
   }));
 
   const game = useCardGame((state) => ({
-    handOverflow: state.hand.length > MAX_HAND_SIZE,
+    handOverflow: state.hand.length >= MAX_HAND_SIZE,
   }));
 
   return (
     <div
       className={cn(
-        "absolute right-10 -translate-x-1/2 top-1/2 rotate-3 z-30",
+        "absolute right-10 -translate-x-1/2 top-[55%] rotate-3 z-30",
         {
           "animate-pulse duration-700":
             quality.animations && quality.transparency,

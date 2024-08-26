@@ -17,10 +17,11 @@ import {
 import { metadata } from "@/game-metadata.ts";
 import { settings } from "@/game-settings.ts";
 
-import technos from "../data/techno.json";
-import projects from "../data/projects.json";
-import effects from "../data/effects.ts";
-import upgrades from "../data/upgrades.ts";
+import technos from "@/data/techno.json";
+import projects from "@/data/projects.json";
+import effects from "@/data/effects.ts";
+import upgrades from "@/data/upgrades.ts";
+import cardModifiers from "@/data/cardModifiers.ts";
 
 export interface Upgrade {
   name: string;
@@ -40,6 +41,11 @@ export interface Effect {
   description: string;
   type: "action" | "support";
   cost: number | string;
+  template?: (
+    state: CardGameState,
+    card: GameCardInfo,
+    condition: boolean,
+  ) => string;
   condition?: (state: CardGameState, card: GameCardInfo) => boolean;
   onPlayed: (state: CardGameState, card: GameCardInfo) => Promise<unknown>;
   waitBeforePlay?: boolean;
@@ -80,6 +86,8 @@ export type CardModifier = {
   once?: boolean;
 };
 
+export type CardModifierIndice = [name: string, params: unknown[]];
+
 export type TriggerEvent = keyof typeof TRIGGER_EVENTS;
 
 export type GameOverReason = "mill" | "soft-lock" | "reputation" | null;
@@ -99,12 +107,13 @@ interface CardGameState {
   hand: GameCardInfo[];
   discard: GameCardInfo[];
   upgrades: Upgrade[];
-  cardModifiers: CardModifier[];
+  cardModifiers: CardModifierIndice[];
   score: number;
   day: number;
   energy: number;
   reputation: number;
   money: number;
+  dangerouslyUpdate: (partial: Partial<CardGameState>) => void;
   updateScore: () => void;
   addEnergy: (count: number, options?: BaseGameMethodOptions) => Promise<void>;
   addReputation: (
@@ -119,8 +128,9 @@ interface CardGameState {
     event: TriggerEvent,
     options?: BaseGameMethodOptions,
   ) => Promise<void>;
-  addCardModifier: (
-    callback: CardModifier,
+  addCardModifier: <CardModifierName extends keyof typeof cardModifiers>(
+    name: CardModifierName,
+    params: Parameters<(typeof cardModifiers)[CardModifierName]>,
     options?: { before?: boolean },
   ) => unknown;
   draw: (
@@ -131,9 +141,9 @@ interface CardGameState {
         filter: (card: GameCardInfo) => boolean;
       }>,
   ) => Promise<void>;
-  drop: (options?: { toDeck?: boolean }) => Promise<void>;
-  dropAll: (options?: {
+  discardCard: (options?: {
     toDeck?: boolean;
+    random?: boolean;
     filter?: (card: GameCardInfo) => boolean;
   }) => Promise<void>;
   removeCard: (name: string) => void;
@@ -200,22 +210,25 @@ export function cloneSomething<T>(something: T): T {
   );
 }
 
-export function applyNextCardModifiers(
+export function applyCardModifiers(
   state: CardGameState,
   card: GameCardInfo,
-): { card: GameCardInfo; appliedModifiers: CardModifier[] } {
+): { card: GameCardInfo; appliedModifiers: CardModifierIndice[] } {
   const clone = cloneSomething(card);
   const modifiers = state.cardModifiers.slice();
 
   return modifiers.reduce<{
     card: GameCardInfo;
-    appliedModifiers: CardModifier[];
+    appliedModifiers: CardModifierIndice[];
   }>(
-    (previousValue, modifier) => {
-      return !modifier.condition || modifier.condition(clone, state)
+    (previousValue, indice) => {
+      const modifier = reviveCardModifier(indice);
+
+      return !modifier.condition ||
+        modifier.condition(previousValue.card, state)
         ? {
-            card: modifier.use(clone, state),
-            appliedModifiers: [...previousValue.appliedModifiers, modifier],
+            card: modifier.use(previousValue.card, state),
+            appliedModifiers: [...previousValue.appliedModifiers, indice],
           }
         : previousValue;
     },
@@ -224,11 +237,8 @@ export function applyNextCardModifiers(
 }
 
 export function parseCost(state: CardGameState, card: GameCardInfo) {
-  const needs = typeof card.effect.cost === "number" ? "energy" : "money";
-  const { card: tempCard, appliedModifiers } = applyNextCardModifiers(
-    state,
-    card,
-  );
+  const { card: tempCard, appliedModifiers } = applyCardModifiers(state, card);
+  const needs = typeof tempCard.effect.cost === "number" ? "energy" : "money";
   const cost = Number(tempCard.effect.cost);
   const canBeBuy =
     needs === "money"
@@ -344,46 +354,46 @@ export function isActionCardInfo(card: GameCardInfo): card is ActionCardInfo {
   return (card as ActionCardInfo).image !== undefined;
 }
 
+function reviveCardModifier(indice: CardModifierIndice): CardModifier {
+  // @ts-expect-error C'est normal
+  return cardModifiers[indice[0]](...indice[1]);
+}
+
 function parseSave(save: string) {
   return JSON.parse(save, (key, value) => {
-    switch (key) {
-      case "discard":
-      case "deck":
-      case "hand":
-        return value.map((card: GameCardInfo) => {
-          return {
-            ...card,
-            state: "idle",
-            effect: {
-              ...card.effect,
-              onPlayed: card.effect.upgrade
-                ? async (state) => await state.upgrade(card.name)
-                : effects[card.effect.index]?.onPlayed,
-              condition: effects[card.effect.index]?.condition,
-            },
-          } as GameCardInfo;
-        });
-      case "upgrades":
-        return value.map((upgrade: Upgrade) => {
-          return {
-            ...upgrade,
-            state: "idle",
-            onTrigger: upgrades.find((u) => u.name === upgrade.name)?.onTrigger,
-            condition: upgrades.find((u) => u.name === upgrade.name)?.condition,
-          } as Upgrade;
-        });
-      case "cardModifiers":
-        return value.map(
-          (modifier: { condition: string; use: string; once: boolean }) => {
+    if (typeof value === "object") {
+      switch (key) {
+        case "discard":
+        case "deck":
+        case "hand":
+          return value.map((card: GameCardInfo) => {
             return {
-              once: modifier.once,
-              condition: eval(modifier.condition),
-              use: eval(modifier.use),
-            } satisfies CardModifier;
-          },
-        );
-      case "operationInProgress":
-        return {};
+              ...card,
+              state: "idle",
+              effect: {
+                ...card.effect,
+                template: effects[card.effect.index]?.template,
+                onPlayed: card.effect.upgrade
+                  ? async (state) => await state.upgrade(card.name)
+                  : effects[card.effect.index]?.onPlayed,
+                condition: effects[card.effect.index]?.condition,
+              },
+            } as GameCardInfo;
+          });
+        case "upgrades":
+          return value.map((upgrade: Upgrade) => {
+            return {
+              ...upgrade,
+              state: "idle",
+              onTrigger: upgrades.find((u) => u.name === upgrade.name)
+                ?.onTrigger,
+              condition: upgrades.find((u) => u.name === upgrade.name)
+                ?.condition,
+            } as Upgrade;
+          });
+        case "operationInProgress":
+          return {};
+      }
     }
 
     return value;
@@ -479,23 +489,7 @@ function generateInitialState(): Omit<
     hand: deck.slice(0, 7),
     discard: [],
     upgrades: [],
-    cardModifiers: [
-      {
-        condition: (card) => !!card.effect.upgrade,
-        use: (card, state) => {
-          if (card.effect.upgrade) {
-            return {
-              ...card,
-              effect: {
-                ...card.effect,
-                cost: getUpgradeCost(state, card),
-              },
-            };
-          }
-          return card;
-        },
-      },
-    ],
+    cardModifiers: [["upgrade cost threshold", []]],
     day: 1,
     energy: MAX_ENERGY,
     reputation: MAX_REPUTATION,
@@ -514,6 +508,8 @@ function cardGameMethods(
   getState: () => CardGameState,
 ) {
   return {
+    dangerouslyUpdate: (partial: Partial<CardGameState>) => set(partial),
+
     setOperationInProgress: (operation: string, value: boolean) => {
       set((state) => ({
         operationInProgress: {
@@ -821,14 +817,16 @@ function cardGameMethods(
       state.setOperationInProgress(`trigger ${event}`, false);
     },
 
-    addCardModifier: async (cardModifier, options) => {
+    addCardModifier: async (name, params, options) => {
       bank.powerUp.play();
+
+      const indice = [name, params] as unknown as CardModifierIndice;
 
       set((state) => {
         return {
           cardModifiers: options?.before
-            ? [cardModifier, ...state.cardModifiers]
-            : [...state.cardModifiers, cardModifier],
+            ? [indice, ...state.cardModifiers]
+            : [...state.cardModifiers, indice],
         };
       });
     },
@@ -905,7 +903,7 @@ function cardGameMethods(
       state.setOperationInProgress("draw", false);
     },
 
-    drop: async (options) => {
+    discardCard: async (options) => {
       const toKey = options?.toDeck ? "deck" : "discard";
 
       // on joue le son de la banque
@@ -913,60 +911,27 @@ function cardGameMethods(
 
       const state = getState();
 
-      const hand = state.hand.slice().filter((c) => c.state === "idle");
+      state.setOperationInProgress("discard", true);
 
-      const index = Math.floor(Math.random() * hand.length);
+      const hand = state.hand
+        .slice()
+        .filter(
+          (c) =>
+            c.state !== "played" && (!options?.filter || options.filter(c)),
+        );
 
-      const card = hand[index];
+      const dropped = options?.random
+        ? [hand[Math.floor(Math.random() * state.hand.length)]]
+        : hand;
 
-      // on active l'animation de retrait de la carte
+      // on active l'animation de retrait des cartes
       set({
         hand: state.hand.map((c) => {
-          if (c.name === card.name) {
+          if (dropped.some((d) => d.name === c.name)) {
             return { ...c, state: "dropped" };
           }
           return c;
         }),
-        operationInProgress: {
-          ...state.operationInProgress,
-          drop: true,
-        },
-      });
-
-      // on attend la fin de l'animation
-      await wait();
-
-      // la carte retourne dans le deck et on retire la carte de la main
-      set((state) => ({
-        hand: state.hand.filter((c) => c.name !== card.name),
-        [toKey]: shuffle([{ ...card, state: null }, ...state[toKey]], 2),
-        operationInProgress: {
-          ...state.operationInProgress,
-          drop: false,
-        },
-      }));
-    },
-
-    dropAll: async (options) => {
-      const toKey = options?.toDeck ? "deck" : "discard";
-
-      // on joue le son de la banque
-      bank.drop.play();
-
-      const state = getState();
-
-      // on active l'animation de retrait de la carte
-      set({
-        hand: state.hand.map((c) => {
-          if (c.state === "idle" && (!options?.filter || options.filter(c))) {
-            return { ...c, state: "dropped" };
-          }
-          return c;
-        }),
-        operationInProgress: {
-          ...state.operationInProgress,
-          dropAll: true,
-        },
       });
 
       // on attend la fin de l'animation
@@ -977,16 +942,16 @@ function cardGameMethods(
         [toKey]: shuffle(
           [
             ...state.hand
-              .filter((c) => !options?.filter || options.filter(c))
+              .filter((c) => dropped.some((d) => d.name === c.name))
               .map((c) => ({ ...c, state: null })),
             ...state[toKey],
           ],
           2,
         ),
-        hand: state.hand.filter((c) => options?.filter && !options.filter(c)),
+        hand: state.hand.filter((c) => !dropped.some((d) => d.name === c.name)),
         operationInProgress: {
           ...state.operationInProgress,
-          dropAll: false,
+          discard: false,
         },
       }));
     },
@@ -1136,10 +1101,16 @@ function cardGameMethods(
             ? state.discard
             : shuffle([{ ...card, state: null }, ...state.discard], 3),
           hand: state.hand.filter((c) => c.name !== card.name),
-          cardModifiers: state.cardModifiers.filter(
-            (modifier) =>
-              !modifier.once || !appliedModifiers.includes(modifier),
-          ),
+          cardModifiers: state.cardModifiers.filter((indice) => {
+            const modifier = reviveCardModifier(indice);
+
+            return (
+              // s'il n'est pas unique
+              !modifier.once ||
+              // sinon s'il a été appliqué
+              !appliedModifiers.some((m) => m.toString() === indice.toString())
+            );
+          }),
         }));
 
         // on change de jour si besoin
@@ -1231,22 +1202,56 @@ useCardGame.subscribe((state, prevState) => {
   localStorage.setItem(
     "card-game",
     JSON.stringify(state, (key, value) => {
-      if (typeof value === "function" && !(key in state))
-        return value.toString();
+      if (typeof value === "function" && !(key in state)) return undefined;
       return value;
     }),
   );
 
-  // on vérifie si le jeu est fini
-  if (
-    !state.infinityMode &&
-    Object.values(state.operationInProgress).every((v) => !v)
-  ) {
-    if (!state.isWon && state.money >= MONEY_TO_REACH) state.win();
-    else if (!state.isGameOver) {
-      const reason = isGameOver(state);
+  // si aucune opération n'est en cours
+  if (Object.values(state.operationInProgress).every((v) => !v)) {
+    // on vérifie si le jeu est fini
+    if (!state.infinityMode) {
+      if (!state.isWon && state.money >= MONEY_TO_REACH) state.win();
+      else if (!state.isGameOver) {
+        const reason = isGameOver(state);
 
-      if (reason) state.gameOver(reason);
+        if (reason) state.gameOver(reason);
+      }
     }
+
+    // const cardWithTemplate = state.hand.filter((card) => card.effect.template);
+    // const changed: [string, string][] = [];
+    //
+    // for (const card of cardWithTemplate) {
+    //   const template = card.effect.template!(
+    //     state,
+    //     card,
+    //     !card.effect.condition || card.effect.condition(state, card),
+    //   );
+    //
+    //   if (!card.effect.description.includes(`<template>${template}</template>`))
+    //     changed.push([card.name, template]);
+    // }
+    //
+    // if (changed.length > 0) {
+    //   state.dangerouslyUpdate({
+    //     hand: state.hand.map((card) => {
+    //       const template = changed.find(([name]) => name === card.name)?.[1];
+    //       if (template) {
+    //         return {
+    //           ...card,
+    //           effect: {
+    //             ...card.effect,
+    //             description: card.effect.description.replace(
+    //               /<template>.+?<\/template>/,
+    //               `<template>${template}</template>`,
+    //             ),
+    //           },
+    //         };
+    //       }
+    //       return card;
+    //     }),
+    //   });
+    // }
   }
 });

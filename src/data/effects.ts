@@ -109,6 +109,37 @@ const effects: Effect[] = (
       waitBeforePlay: true,
     },
     {
+      description:
+        "Défausse la carte la plus à droite de ta main, gagne son coût en @energy", // <template></template>
+      // template: (state, _, cond) => {
+      //   if (!cond) return "";
+      //
+      //   const target = state.hand[state.hand.length - 1];
+      //   const cost =
+      //     typeof target.effect.cost === "string"
+      //       ? Math.ceil(Number(target.effect.cost) / ENERGY_TO_MONEY)
+      //       : target.effect.cost;
+      //
+      //   return `(${cost} @energy${cost > 1 ? "s" : ""})`;
+      // },
+      onPlayed: async (state) => {
+        const target = state.hand[state.hand.length - 1];
+        await state.discardCard({
+          filter: (card) => card.name === target.name,
+        });
+        const cost =
+          typeof target.effect.cost === "string"
+            ? Math.ceil(Number(target.effect.cost) / ENERGY_TO_MONEY)
+            : target.effect.cost;
+        await state.addEnergy(cost, { skipGameOverPause: true });
+      },
+      condition: (state, card) =>
+        state.hand.length >= 1 &&
+        state.hand.indexOf(card) !== state.hand.length - 1,
+      type: "action",
+      cost: 0,
+    },
+    {
       description: `Pioche ${1 + advantage} carte${advantage > 0 ? "s" : ""}`,
       onPlayed: async (state) =>
         await state.draw(1 + advantage, { skipGameOverPause: true }),
@@ -190,7 +221,7 @@ const effects: Effect[] = (
     {
       description: `Défausse une carte aléatoire, pioche ${advantage >= 1 ? 2 : "une"} carte${advantage > 1 ? "s" : ""} et gagne ${(2 + advantage - 1) * ENERGY_TO_MONEY}M$`, // -2 +1 +2 = +1
       onPlayed: async (state) => {
-        await state.drop();
+        await state.discardCard({ random: true });
         await state.draw(advantage >= 1 ? 2 : 1, { skipGameOverPause: true });
         await state.addMoney((2 + advantage - 1) * ENERGY_TO_MONEY, {
           skipGameOverPause: true,
@@ -204,7 +235,7 @@ const effects: Effect[] = (
     {
       description: `Renvoie une carte aléatoire dans la pioche, pioche ${advantage >= 1 ? 1 + advantage : "une"} carte${advantage >= 1 ? "s" : ""}`,
       onPlayed: async (state) => {
-        await state.drop({ toDeck: true });
+        await state.discardCard({ toDeck: true, random: true });
         await state.draw(advantage >= 1 ? 1 + advantage : 1, {
           skipGameOverPause: true,
         });
@@ -217,7 +248,7 @@ const effects: Effect[] = (
     {
       description: `Défausse les cartes en main, pioche ${5 + advantage} cartes`,
       onPlayed: async (state) => {
-        await state.dropAll();
+        await state.discardCard();
         await state.draw(5 + advantage, { skipGameOverPause: true });
       },
       condition: (state) => state.deck.length >= 1,
@@ -230,7 +261,7 @@ const effects: Effect[] = (
         advantage > 5 ? 5 + (advantage - 5) : 5
       } cartes`,
       onPlayed: async (state) => {
-        await state.dropAll({ toDeck: true });
+        await state.discardCard({ toDeck: true });
         await state.draw(advantage > 5 ? 5 + (advantage - 5) : 5, {
           skipGameOverPause: true,
         });
@@ -262,7 +293,7 @@ const effects: Effect[] = (
         advantage > 0 ? ` et gagne ${advantage * ENERGY_TO_MONEY}M$` : ""
       }`, // -3 + 4 = +1
       onPlayed: async (state) => {
-        await state.dropAll({
+        await state.discardCard({
           filter: (card) => card.effect.type === "support",
         });
         await state.draw(2, {
@@ -285,7 +316,7 @@ const effects: Effect[] = (
     {
       description: `Défausse les cartes @action en main(min 1), pioche ${3 + advantage} cartes`,
       onPlayed: async (state) => {
-        await state.dropAll({
+        await state.discardCard({
           filter: (card) => card.effect.type === "action",
         });
         await state.draw(3 + advantage, { skipGameOverPause: true });
@@ -325,20 +356,7 @@ const effects: Effect[] = (
           : ""
       }`, // 4 (middle effect) - 1 (easy condition) = 3
       onPlayed: async (state) => {
-        state.addCardModifier({
-          once: true,
-          condition: (card) => Number(card.effect.cost) > 1,
-          use: (card) => ({
-            ...card,
-            effect: {
-              ...card.effect,
-              cost:
-                typeof card.effect.cost === "number"
-                  ? Math.ceil(card.effect.cost / 2)
-                  : String(Math.ceil(Number(card.effect.cost) / 2)),
-            },
-          }),
-        });
+        state.addCardModifier("next card half cost", []);
 
         if (advantage > 3) {
           await state.addEnergy(advantage - 3, { skipGameOverPause: true });
@@ -351,19 +369,7 @@ const effects: Effect[] = (
       description:
         "La prochaine carte qui coûte de l'argent coûte maintenant de l'@energy",
       onPlayed: async (state) => {
-        state.addCardModifier({
-          once: true,
-          condition: (card) =>
-            typeof card.effect.cost === "string" &&
-            Number(card.effect.cost) > 0,
-          use: (card) => ({
-            ...card,
-            effect: {
-              ...card.effect,
-              cost: Math.ceil(Number(card.effect.cost) / ENERGY_TO_MONEY),
-            },
-          }),
-        });
+        state.addCardModifier("next money card cost energy", []);
       },
       type: "support",
       cost: 0,
@@ -373,37 +379,19 @@ const effects: Effect[] = (
         1 + advantage
       } @energys ou de ${1 + advantage * ENERGY_TO_MONEY}M$`,
       onPlayed: async (state, card) => {
-        const handCards = state.hand.filter(
-          (c) => c.name !== card.name && Number(card.effect.cost) > 0,
-        );
+        const handCardNames = state.hand
+          .filter((c) => c.name !== card.name && Number(card.effect.cost) > 0)
+          .map((c) => c.name);
 
-        state.addCardModifier({
-          once: true,
-          condition: (card) =>
-            ((hand) => hand.includes(card))(handCards.slice()),
-          use: (card) => ({
-            ...card,
-            effect: {
-              ...card.effect,
-              cost: (typeof card.effect.cost === "string" ? String : Number)(
-                Math.max(
-                  0,
-                  Number(card.effect.cost) -
-                    (1 +
-                      advantage *
-                        (typeof card.effect.cost === "string"
-                          ? ENERGY_TO_MONEY
-                          : 1)),
-                ),
-              ),
-            },
-          }),
-        });
+        state.addCardModifier("lowers price of hand cards", [
+          handCardNames,
+          1 + advantage,
+        ]);
       },
       condition: (state) =>
         state.hand.some((card) => Number(card.effect.cost) > 0),
       type: "support",
-      cost: Math.floor(MAX_HAND_SIZE / 2),
+      cost: Math.max(0, MAX_HAND_SIZE - advantage),
     },
     {
       description: `${advantage > 4 ? `Ajoute ${advantage - 4} @energy${advantage > 5 ? "s" : ""}` : "D"}ouble l'@energy`, // as middle effect

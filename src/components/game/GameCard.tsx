@@ -240,7 +240,9 @@ export const GameCard = (
               transform: perspective ? "translateZ(10px)" : "none",
               transformStyle: perspective ? "preserve-3d" : "flat",
             }}
-            dangerouslySetInnerHTML={{ __html: props.card.effect.description }}
+            dangerouslySetInnerHTML={{
+              __html: props.card.effect.description,
+            }}
           />
 
           {props.card.effect.ephemeral && (
