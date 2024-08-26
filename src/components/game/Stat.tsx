@@ -1,13 +1,18 @@
 import React from "react";
 
-import Money from "@/assets/icons/money.svg";
 import { cn } from "@/utils.ts";
 import { formatText, useCardGame } from "@/hooks/useCardGame.ts";
-import Score from "@/assets/icons/score.svg";
-import Day from "@/assets/icons/day.svg";
-import Deck from "@/assets/icons/deck.svg";
-import Discard from "@/assets/icons/discard.svg";
+
+import Day from "@/assets/icons/game/day.svg";
+import Deck from "@/assets/icons/game/deck.svg";
+import Money from "@/assets/icons/game/money.svg";
+import Score from "@/assets/icons/game/score.svg";
+import Discard from "@/assets/icons/game/discard.svg";
+import Settings from "@/assets/icons/settings.svg";
+import Infinity from "@/assets/icons/game/infinity.svg";
+
 import { MONEY_TO_REACH } from "@/game-constants.ts";
+import { settings, translations } from "@/game-settings.ts";
 
 export const Stat = (props: {
   name: string;
@@ -17,8 +22,8 @@ export const Stat = (props: {
   return (
     <div>
       <props.icon className="h-full self-center" />
-      <span className="inline-block whitespace-nowrap">
-        <span>{props.name}</span>: {props.value}
+      <span className="inline-flex items-baseline whitespace-nowrap gap-2">
+        <span>{props.name} :</span> {props.value}
       </span>
     </div>
   );
@@ -31,12 +36,13 @@ export const Stats = (props: { className?: string; verbose?: boolean }) => {
     day: state.day,
     deck: state.deck,
     discard: state.discard,
+    infinity: state.infinityMode,
   }));
 
   return (
     <div
       className={cn(
-        "flex flex-col gap-2 items-start *:flex *:items-baseline *:gap-2 *:h-20 text-6xl text-left",
+        "flex flex-col gap-2 items-start *:flex *:items-center *:gap-2 *:h-20 text-6xl text-left",
         props.className,
       )}
     >
@@ -68,6 +74,18 @@ export const Stats = (props: { className?: string; verbose?: boolean }) => {
           <Stat icon={Deck} name="Deck" value={game.deck.length} />
           <Stat icon={Discard} name="Défausse" value={game.discard.length} />
         </>
+      )}
+      <Stat
+        icon={Settings}
+        name="Mode"
+        value={
+          <span className="capitalize">
+            {translations[settings.difficulty]}
+          </span>
+        }
+      />
+      {game.infinity && (
+        <Stat icon={Infinity} name="Mode infini" value="Activé" />
       )}
     </div>
   );

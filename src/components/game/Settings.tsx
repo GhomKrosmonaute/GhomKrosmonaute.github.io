@@ -22,27 +22,15 @@ import { useCardGame } from "@/hooks/useCardGame.ts";
 import { useGlobalState } from "@/hooks/useGlobalState.ts";
 import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
 
-import { Difficulty, QualityOptions, settings } from "@/game-settings.ts";
+import {
+  Difficulty,
+  QualityOptions,
+  settings,
+  translations,
+} from "@/game-settings.ts";
 import { GAME_ADVANTAGE } from "@/game-constants.ts";
 
 import Warning from "@/assets/icons/warning.svg";
-
-const translations: Record<keyof QualityOptions | Difficulty, string> = {
-  noob: "Débutant",
-  easy: "Facile",
-  normal: "Normal",
-  hard: "Difficile",
-  veteran: "Vétéran",
-  shadows: "Ombres",
-  transparency: "Transparence",
-  borderLights: "Lumières de bordure",
-  godRays: "Rayons lumineux",
-  blur: "Flou de transparence",
-  tilt: "Inclinaisons",
-  foil: "Reflets et textures",
-  animations: "Animations",
-  perspective: "Profondeur",
-};
 
 export const Settings = (props: { show: boolean }) => {
   const score = useCardGame((state) => state.score);

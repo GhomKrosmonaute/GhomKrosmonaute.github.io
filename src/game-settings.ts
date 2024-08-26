@@ -58,3 +58,20 @@ export const settings: Settings = JSON.parse(
       : JSON.stringify(defaultSettings)
     : JSON.stringify(defaultSettings),
 );
+
+export const translations: Record<keyof QualityOptions | Difficulty, string> = {
+  noob: "Débutant",
+  easy: "Facile",
+  normal: "Normal",
+  hard: "Difficile",
+  veteran: "Vétéran",
+  shadows: "Ombres",
+  transparency: "Transparence",
+  borderLights: "Lumières de bordure",
+  godRays: "Rayons lumineux",
+  blur: "Flou de transparence",
+  tilt: "Inclinaisons",
+  foil: "Reflets et textures",
+  animations: "Animations",
+  perspective: "Profondeur",
+};

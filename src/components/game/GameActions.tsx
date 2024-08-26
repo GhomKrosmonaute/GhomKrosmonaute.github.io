@@ -10,6 +10,8 @@ import { useCardGame, isGameOver, wait } from "@/hooks/useCardGame.ts";
 import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
 import { bank } from "@/sound.ts";
 
+import upgrades from "@/data/upgrades.ts";
+
 export const GameActions = (props: { show: boolean }) => {
   const game = useCardGame();
   const animation = useQualitySettings((state) => state.animations);
@@ -57,6 +59,39 @@ export const GameActions = (props: { show: boolean }) => {
           />{" "}
           Piocher une carte
         </Button>
+        {process.env.NODE_ENV === "development" && (
+          <>
+            <Button
+              className="text-upgrade"
+              onClick={async () => {
+                game.upgrades = [];
+
+                for (const raw of upgrades) {
+                  if (raw.cumulable) {
+                    for (let i = 0; i < (raw.max ?? 10); i++) {
+                      await game.upgrade(raw.name);
+                    }
+                  } else {
+                    await game.upgrade(raw.name);
+                  }
+                }
+              }}
+            >
+              Toutes les améliorations
+            </Button>
+            <div className="flex">
+              <Button className="text-green-500" onClick={() => game.win()}>
+                Win
+              </Button>
+              <Button
+                className="text-red-500"
+                onClick={() => game.gameOver("reputation")}
+              >
+                Lose
+              </Button>
+            </div>
+          </>
+        )}
       </Card>
     </div>
   );

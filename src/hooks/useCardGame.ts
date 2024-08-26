@@ -2,16 +2,16 @@ import { bank, music, musicId } from "@/sound.ts";
 import { create } from "zustand";
 
 import {
-  MAX_ENERGY,
-  MAX_REPUTATION,
-  MONEY_TO_REACH,
-  UPGRADE_COST_THRESHOLDS,
-  MAX_HAND_SIZE,
-  TRIGGER_EVENTS,
-  INFINITE_DRAW_COST,
-  REPUTATION_TO_ENERGY,
   ENERGY_TO_MONEY,
   GAME_ADVANTAGE,
+  INFINITE_DRAW_COST,
+  MAX_ENERGY,
+  MAX_HAND_SIZE,
+  MAX_REPUTATION,
+  MONEY_TO_REACH,
+  REPUTATION_TO_ENERGY,
+  TRIGGER_EVENTS,
+  UPGRADE_COST_THRESHOLDS,
 } from "@/game-constants.ts";
 
 import { metadata } from "@/game-metadata.ts";
@@ -36,6 +36,7 @@ export interface Upgrade {
 }
 
 export interface Effect {
+  index: number;
   description: string;
   type: "action" | "support";
   cost: number | string;
@@ -93,6 +94,7 @@ interface CardGameState {
   reason: GameOverReason;
   isWon: boolean;
   isGameOver: boolean;
+  infinityMode: boolean;
   deck: GameCardInfo[];
   hand: GameCardInfo[];
   discard: GameCardInfo[];
@@ -134,6 +136,7 @@ interface CardGameState {
     toDeck?: boolean;
     filter?: (card: GameCardInfo) => boolean;
   }) => Promise<void>;
+  removeCard: (name: string) => void;
   recycle: (count?: number) => Promise<void>;
   play: (
     card: GameCardInfo,
@@ -142,6 +145,7 @@ interface CardGameState {
   win: () => void;
   gameOver: (reason: GameOverReason) => void;
   reset: () => void;
+  continue: () => void;
 }
 
 export function isGameOver(state: CardGameState): GameOverReason | false {
@@ -175,14 +179,17 @@ export function rankColor(rank: number) {
 export function getUpgradeCost(
   state: CardGameState,
   card: GameCardInfo,
-): number {
+): number | string {
   const index = state.upgrades.length;
+
   const priceThreshold =
     UPGRADE_COST_THRESHOLDS[typeof card.effect.cost as "string" | "number"][
       index
     ] ?? Infinity;
 
-  return Math.min(Number(priceThreshold), Number(card.effect.cost));
+  return (typeof card.effect.cost == "string" ? String : Number)(
+    Math.min(Number(priceThreshold), Number(card.effect.cost)),
+  );
 }
 
 export function cloneSomething<T>(something: T): T {
@@ -205,9 +212,9 @@ export function applyNextCardModifiers(
     appliedModifiers: CardModifier[];
   }>(
     (previousValue, modifier) => {
-      return !modifier.condition || modifier.condition(card, state)
+      return !modifier.condition || modifier.condition(clone, state)
         ? {
-            card: modifier.use(card, state),
+            card: modifier.use(clone, state),
             appliedModifiers: [...previousValue.appliedModifiers, modifier],
           }
         : previousValue;
@@ -337,6 +344,52 @@ export function isActionCardInfo(card: GameCardInfo): card is ActionCardInfo {
   return (card as ActionCardInfo).image !== undefined;
 }
 
+function parseSave(save: string) {
+  return JSON.parse(save, (key, value) => {
+    switch (key) {
+      case "discard":
+      case "deck":
+      case "hand":
+        return value.map((card: GameCardInfo) => {
+          return {
+            ...card,
+            state: "idle",
+            effect: {
+              ...card.effect,
+              onPlayed: card.effect.upgrade
+                ? async (state) => await state.upgrade(card.name)
+                : effects[card.effect.index]?.onPlayed,
+              condition: effects[card.effect.index]?.condition,
+            },
+          } as GameCardInfo;
+        });
+      case "upgrades":
+        return value.map((upgrade: Upgrade) => {
+          return {
+            ...upgrade,
+            state: "idle",
+            onTrigger: upgrades.find((u) => u.name === upgrade.name)?.onTrigger,
+            condition: upgrades.find((u) => u.name === upgrade.name)?.condition,
+          } as Upgrade;
+        });
+      case "cardModifiers":
+        return value.map(
+          (modifier: { condition: string; use: string; once: boolean }) => {
+            return {
+              once: modifier.once,
+              condition: eval(modifier.condition),
+              use: eval(modifier.use),
+            } satisfies CardModifier;
+          },
+        );
+      case "operationInProgress":
+        return {};
+    }
+
+    return value;
+  });
+}
+
 const supportEffects = effects.filter((effect) => effect.type === "support");
 const actionEffects = effects.filter((effect) => effect.type === "action");
 
@@ -358,52 +411,7 @@ function generateInitialState(): Omit<
     JSON.stringify(metadata) === saveMetadata &&
     settings.difficulty === saveDifficulty
   ) {
-    return JSON.parse(save, (key, value) => {
-      switch (key) {
-        case "discard":
-        case "deck":
-        case "hand":
-          return value.map((card: GameCardInfo) => {
-            return {
-              ...card,
-              state: "idle",
-              effect: {
-                ...card.effect,
-                onPlayed: card.effect.upgrade
-                  ? async (state) => await state.upgrade(card.name)
-                  : effects.find(
-                      (effect) =>
-                        formatText(effect.description) ===
-                        card.effect.description,
-                    )?.onPlayed,
-                condition: effects.find(
-                  (effect) =>
-                    formatText(effect.description) === card.effect.description,
-                )?.condition,
-              },
-            } as GameCardInfo;
-          });
-        case "upgrades":
-          return value.map((upgrade: Upgrade) => {
-            return {
-              ...upgrade,
-              state: "idle",
-              onTrigger: upgrades.find((u) => u.name === upgrade.name)
-                ?.onTrigger,
-              condition: upgrades.find((u) => u.name === upgrade.name)
-                ?.condition,
-            } as Upgrade;
-          });
-        case "nextCardModifiers":
-          return value.map((modifier: string) => {
-            return eval(modifier);
-          });
-        case "operationInProgress":
-          return {};
-      }
-
-      return value;
-    });
+    return parseSave(save);
   }
 
   localStorage.setItem("card-game-metadata", JSON.stringify(metadata));
@@ -445,6 +453,7 @@ function generateInitialState(): Omit<
       image: `images/upgrades/${upgrade.image}`,
       state: "idle",
       effect: {
+        index: -1,
         upgrade: true,
         ephemeral: !upgrade.cumulable,
         description: formatText(
@@ -453,7 +462,7 @@ function generateInitialState(): Omit<
         onPlayed: async (state) => await state.upgrade(upgrade.name),
         type: "action",
         cost: upgrade.cost,
-      } satisfies Effect,
+      },
     } satisfies GameCardInfo;
   });
 
@@ -465,6 +474,7 @@ function generateInitialState(): Omit<
     reason: null,
     isWon: false,
     isGameOver: false,
+    infinityMode: false,
     deck: deck.slice(7),
     hand: deck.slice(0, 7),
     discard: [],
@@ -704,24 +714,16 @@ function cardGameMethods(
         const upgrade = state.upgrades.find((a) => a.name === name)!;
 
         if (upgrade.cumul === upgrade.max) {
-          const card = state.hand.find(
-            (c) => c.effect.upgrade && c.name === name,
-          )!;
-
           set({
             hand: state.hand.map((c) => {
-              if (c.name === card.name) return { ...c, state: "played" };
+              if (c.name === name) return { ...c, state: "played" };
               return c;
             }),
           });
 
-          await wait();
+          await wait(1000);
 
-          set({
-            hand: state.hand.filter((c) => {
-              return c.name !== card.name;
-            }),
-          });
+          state.removeCard(name);
         }
       }
 
@@ -749,42 +751,38 @@ function cardGameMethods(
       const upgrade = state.upgrades.find((a) => a.name === name)!;
 
       // mettre l'activité en triggered
-      set((state) => {
-        return {
-          upgrades: state.upgrades.map((a) => {
-            if (a.name === upgrade.name) {
-              return { ...a, state: "triggered" };
-            }
-            return a;
-          }),
-          operationInProgress: {
-            ...state.operationInProgress,
-            [`trigger ${name}`]: true,
-          },
-        };
-      });
+      set((state) => ({
+        upgrades: state.upgrades.map((a) => {
+          if (a.name === upgrade.name) {
+            return { ...a, state: "triggered" };
+          }
+          return a;
+        }),
+        operationInProgress: {
+          ...state.operationInProgress,
+          [`trigger ${name}`]: true,
+        },
+      }));
 
       await wait();
 
-      await upgrade.onTrigger(state, upgrade);
+      await upgrade.onTrigger(getState(), upgrade);
 
       await wait();
 
       // remettre l'activité en idle
-      set((state) => {
-        return {
-          upgrades: state.upgrades.map((a) => {
-            if (a.name === upgrade.name) {
-              return { ...a, state: "idle" };
-            }
-            return a;
-          }),
-          operationInProgress: {
-            ...state.operationInProgress,
-            [`trigger ${name}`]: false,
-          },
-        };
-      });
+      set((state) => ({
+        upgrades: state.upgrades.map((a) => {
+          if (a.name === upgrade.name) {
+            return { ...a, state: "idle" };
+          }
+          return a;
+        }),
+        operationInProgress: {
+          ...state.operationInProgress,
+          [`trigger ${name}`]: false,
+        },
+      }));
     },
 
     triggerUpgradeEvent: async (event, options) => {
@@ -797,19 +795,22 @@ function cardGameMethods(
         },
       }));
 
-      await Promise.all(
-        state.upgrades
-          .slice()
-          .filter(
-            (upgrade) =>
-              upgrade.triggerEvent === event &&
-              (!upgrade.condition || upgrade.condition(state, upgrade)),
-          )
-          .map(async (upgrade, index) => {
-            await wait(250 * index);
-            await state.triggerUpgrade(upgrade.name);
-          }),
-      );
+      const upgrades = state.upgrades
+        .slice()
+        .filter(
+          (upgrade) =>
+            upgrade.triggerEvent === event &&
+            (!upgrade.condition || upgrade.condition(state, upgrade)),
+        );
+
+      let i = 0;
+
+      for (const upgrade of upgrades) {
+        await wait(250 * i);
+        await state.triggerUpgrade(upgrade.name);
+
+        i++;
+      }
 
       state = getState();
 
@@ -990,6 +991,19 @@ function cardGameMethods(
       }));
     },
 
+    removeCard: (name) => {
+      const from = ["discard", "deck", "hand"] as const;
+
+      set((state) => ({
+        ...from.reduce((acc, key) => {
+          return {
+            ...acc,
+            [key]: state[key].filter((c) => c.name !== name),
+          };
+        }, {} as Partial<CardGameState>),
+      }));
+    },
+
     /**
      * Place des cartes de la défausse dans le deck
      */
@@ -1123,7 +1137,8 @@ function cardGameMethods(
             : shuffle([{ ...card, state: null }, ...state.discard], 3),
           hand: state.hand.filter((c) => c.name !== card.name),
           cardModifiers: state.cardModifiers.filter(
-            (modifier) => !appliedModifiers.includes(modifier) && modifier.once,
+            (modifier) =>
+              !modifier.once || !appliedModifiers.includes(modifier),
           ),
         }));
 
@@ -1163,7 +1178,6 @@ function cardGameMethods(
     },
 
     win: () => {
-      bank.victory.play();
       music.fade(0.5, 0, 500, musicId);
 
       set({ isGameOver: true, isWon: true });
@@ -1186,6 +1200,14 @@ function cardGameMethods(
       localStorage.removeItem("card-game");
 
       set(generateInitialState());
+    },
+
+    continue: () => {
+      set({
+        infinityMode: true,
+        isGameOver: false,
+        isWon: false,
+      });
     },
   } satisfies Partial<CardGameState>;
 }
@@ -1216,7 +1238,10 @@ useCardGame.subscribe((state, prevState) => {
   );
 
   // on vérifie si le jeu est fini
-  if (Object.values(state.operationInProgress).every((v) => !v)) {
+  if (
+    !state.infinityMode &&
+    Object.values(state.operationInProgress).every((v) => !v)
+  ) {
     if (!state.isWon && state.money >= MONEY_TO_REACH) state.win();
     else if (!state.isGameOver) {
       const reason = isGameOver(state);

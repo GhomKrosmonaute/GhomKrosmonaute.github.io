@@ -30,13 +30,23 @@ export const Upgrades = (props: { show: boolean }) => {
         className={cn(
           "mx-auto w-fit h-fit -translate-y-1/2 flex justify-center rounded-3xl border-8 border-t-0 border-upgrade",
           {
+            "-translate-y-1/3": upgrades.length > 5,
+            "-translate-y-[25%]": upgrades.length > 10,
             "shadow shadow-black/50": quality.shadows && quality.transparency,
             "bg-card/50": quality.transparency,
             "bg-card": !quality.transparency,
           },
         )}
       >
-        <div className="flex p-5 gap-10 relative shrink-0 w-max  translate-y-1/2">
+        <div
+          className={cn(
+            "flex p-5 gap-10 gap-y-0 relative shrink-0 w-max translate-y-1/2",
+            {
+              "translate-y-1/3 grid grid-cols-5": upgrades.length > 5,
+              "translate-y-[25%]": upgrades.length > 10,
+            },
+          )}
+        >
           {upgrades.map((upgrade, index) => (
             <div key={index} className="group/upgrade shrink-0 relative">
               <img
@@ -75,7 +85,7 @@ export const Upgrades = (props: { show: boolean }) => {
                 </div>
               </div>
 
-              <Card className="hidden group-hover/upgrade:block absolute left-1/2 bottom-0 translate-y-full -translate-x-1/2 w-max max-w-[300px]">
+              <Card className="hidden group-hover/upgrade:block absolute left-1/2 bottom-0 translate-y-full -translate-x-1/2 w-max max-w-[300px] z-50">
                 <h3 className="text-xl">
                   {upgrade.name}{" "}
                   <span className="text-upgrade font-bold">

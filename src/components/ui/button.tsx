@@ -15,6 +15,7 @@ const buttonVariants = cva(
     "text-center leading-6 text-secondary-foreground whitespace-nowrap",
     "transition-all duration-200",
     "hover:shadow-glow-20 shadow-secondary",
+    "cursor-pointer hover:cursor-pointer",
   ),
   {
     variants: {

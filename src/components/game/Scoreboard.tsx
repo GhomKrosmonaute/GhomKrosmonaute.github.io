@@ -1,6 +1,6 @@
 import { cn } from "@/utils.ts";
 import scores from "@/data/scores.json";
-import Trophy from "@/assets/icons/trophy.svg";
+import Trophy from "@/assets/icons/game/trophy.svg";
 import { rankColor } from "@/hooks/useCardGame.ts";
 import { Card } from "@/components/Card.tsx";
 import { useQualitySettings } from "@/hooks/useQualitySettings.ts";

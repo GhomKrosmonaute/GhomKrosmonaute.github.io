@@ -4,7 +4,6 @@ export const music = new Howl({
   src: ["sounds/music.mp3"],
   volume: 0.5,
   loop: true,
-  preload: true,
 });
 
 export const musicId = music.play();

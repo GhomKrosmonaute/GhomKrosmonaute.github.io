@@ -1,18 +1,24 @@
+import React from "react";
+
 import { formatText, rankColor, useCardGame } from "@/hooks/useCardGame.ts";
 import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
 import { useGlobalState } from "@/hooks/useGlobalState.ts";
 
+import { settings } from "@/game-settings.ts";
+
 import scores from "@/data/scores.json";
 import helpers from "@/data/helpers.json";
 
-import { Button, buttonVariants } from "@/components/ui/button.tsx";
+import { Button } from "@/components/ui/button.tsx";
 import { Stats } from "@/components/game/Stat.tsx";
 import { Tilt } from "@/components/game/Tilt.tsx";
 import { cn } from "@/utils.ts";
-import { settings } from "@/game-settings.ts";
+
+import { confettiFireworks } from "@/components/ui/confetti";
+import { bank } from "@/sound.ts";
 
 export const GameOver = (props: { show: boolean }) => {
-  const { shadows, transparency, animation } = useQualitySettings((state) => ({
+  const quality = useQualitySettings((state) => ({
     shadows: state.shadows,
     animation: state.animations,
     transparency: state.transparency,
@@ -29,25 +35,33 @@ export const GameOver = (props: { show: boolean }) => {
     reason: state.reason,
     score: state.score,
     reset: state.reset,
+    continue: state.continue,
   }));
 
   const rank = scores
     .sort((a, b) => b.score - a.score)
     .findIndex(({ score }) => game.score >= score);
 
+  React.useEffect(() => {
+    if (game.isGameOver && game.isWon && quality.animation && props.show) {
+      bank.victory.play();
+      confettiFireworks();
+    }
+  }, [game.isGameOver, game.isWon, quality.animation, props.show]);
+
   return (
-    <div className={cn("absolute w-full", props.show ? "block" : "hidden")}>
+    <div className={props.show ? "block" : "hidden"}>
       {game.isGameOver && (
         <div
           className={cn(
             "absolute top-0 left-0 w-screen h-screen flex flex-col items-center justify-center z-30 pointer-events-auto",
             {
-              "bg-background/90": transparency,
-              "bg-background": !transparency,
+              "bg-background/90": quality.transparency,
+              "bg-background": !quality.transparency,
             },
           )}
         >
-          <div className="flex flex-col items-center justify-center gap-7">
+          <div className="flex flex-col items-center justify-center gap-10">
             <Tilt className="flex flex-col select-none" max={10} reverse>
               <div className="font-amsterdam capitalize text-9xl w-fit">
                 Game Over
@@ -84,7 +98,8 @@ export const GameOver = (props: { show: boolean }) => {
                   className={cn(
                     "p-5 space-y-2 rounded-2xl bg-background shadow-md",
                     {
-                      "shadow-foreground/20": shadows && transparency,
+                      "shadow-foreground/20":
+                        quality.shadows && quality.transparency,
                     },
                   )}
                 >
@@ -166,7 +181,7 @@ export const GameOver = (props: { show: boolean }) => {
                     <div
                       className={cn("transform hover:scale-110", {
                         "transition-transform duration-500 ease-in-out":
-                          animation,
+                          quality.animation,
                       })}
                     >
                       <p
@@ -179,7 +194,7 @@ export const GameOver = (props: { show: boolean }) => {
                             "delay-300": i === 3,
                             "delay-500": i === 4,
                             "delay-700": i === 5,
-                          })]: animation,
+                          })]: quality.animation,
                         })}
                         dangerouslySetInnerHTML={{
                           __html: formatText(helper),
@@ -191,36 +206,40 @@ export const GameOver = (props: { show: boolean }) => {
             )}
 
             <div className="flex gap-4">
-              <Button
-                onClick={() => setVisible(false)}
-                variant={game.isWon && rank !== -1 ? "opaque" : "default"}
-              >
+              <Button onClick={() => setVisible(false)} variant={"default"}>
                 Quitter
               </Button>
               <Button
                 onClick={() => game.reset()}
-                variant={
-                  game.isWon ? (rank === -1 ? "opaque" : "default") : "cta"
-                }
+                variant={game.isWon ? "default" : "cta"}
                 size={game.isWon ? "default" : "cta"}
               >
-                Recommencer
+                {!game.isWon ? "Recommencer" : "Nouvelle partie"}
               </Button>
               {game.isWon && (
-                <div className={cn({ "animate-bounce": animation })}>
-                  <a
-                    href="https://buymeacoffee.com/ghom"
-                    target="_blank"
-                    className={buttonVariants({
-                      variant: "cta",
-                      size: "cta",
-                    })}
-                  >
-                    Buy me a coffee ☕️
-                  </a>
-                </div>
+                <Button
+                  onClick={() => game.continue()}
+                  variant="cta"
+                  size="cta"
+                >
+                  Mode infini
+                </Button>
               )}
             </div>
+
+            {game.isWon && (
+              <div
+                className={cn({ "animate-bounce w-full": quality.animation })}
+              >
+                <a
+                  href="https://buymeacoffee.com/ghom"
+                  target="_blank"
+                  className="text-xl block mx-auto w-[300px] text-center border-2 border-upgrade rounded-xl py-3"
+                >
+                  Buy me a coffee ☕️
+                </a>
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -14,6 +14,7 @@ import { GameActions } from "@/components/game/GameActions.tsx";
 import { GameDebug } from "@/components/game/GameDebug.tsx";
 import { CornerIcons } from "@/components/game/CornerIcons.tsx";
 import { Settings } from "@/components/game/Settings.tsx";
+import { GameAlert } from "@/components/game/GameAlert.tsx";
 
 export const Game = () => {
   const quality = useQualitySettings((state) => ({
@@ -31,6 +32,7 @@ export const Game = () => {
       <Upgrades show={show} />
       <Scoreboard show={show} />
       <GameValues show={show} />
+      <GameAlert show={show} />
       <GameOver show={show} />
       <GameActions show={show} />
       <CornerIcons show={show} />
