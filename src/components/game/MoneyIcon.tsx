@@ -8,6 +8,8 @@ export const MoneyIcon = (
     style?: React.CSSProperties;
   }>,
 ) => {
+  if (props.value === "0") return <></>;
+
   return (
     <div
       className={cn(

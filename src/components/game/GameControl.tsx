@@ -7,7 +7,7 @@ import { useGlobalState } from "@/hooks/useGlobalState.ts";
 import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
 
 export const GameControl = (props: { show: boolean; delay: boolean }) => {
-  const animation = useQualitySettings((state) => state.cardAnimation);
+  const animation = useQualitySettings((state) => state.animations);
   const reset = useCardGame((state) => state.reset);
   const exit = useGlobalState(
     (state) => () => state.setCardGameVisibility(false),

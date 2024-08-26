@@ -11,7 +11,7 @@ import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
 export const CornerIcons = (props: { show: boolean }) => {
   const [muted, toggleMusic] = useMusic();
   const [animation, transparency] = useQualitySettings((state) => [
-    state.cardAnimation,
+    state.animations,
     state.transparency,
   ]);
 

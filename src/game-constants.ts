@@ -11,8 +11,8 @@ export const MAX_REPUTATION = 10;
 export const MONEY_TO_REACH = 500;
 export const INFINITE_DRAW_COST = 5;
 export const UPGRADE_COST_THRESHOLDS = {
-  string: ["20", "50", "75"],
-  number: [5, 7, 10],
+  string: ["20", "50", "75", "100", "150"],
+  number: [5, 7, 10, 15],
 };
 
 /**

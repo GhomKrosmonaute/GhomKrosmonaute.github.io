@@ -1,13 +1,17 @@
 import { Howl } from "howler";
 
+export const music = new Howl({
+  src: ["sounds/music.mp3"],
+  volume: 0.5,
+  loop: true,
+  preload: true,
+});
+
+export const musicId = music.play();
+
+music.stop(musicId);
+
 export const bank = {
-  music: new Howl({
-    src: ["sounds/music.mp3"],
-    volume: 0.7,
-    loop: true,
-    preload: true,
-    autoplay: true,
-  }),
   unauthorized: new Howl({
     src: ["sounds/unauthorized.mp3"],
     volume: 0.4,

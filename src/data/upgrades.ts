@@ -33,7 +33,7 @@ const upgrades: RawUpgrade[] = [
     image: "starbucks.png",
     condition: (state) => state.energy < MAX_ENERGY,
     onTrigger: async (state, upgrade) => {
-      await state.addEnergy(upgrade.cumul);
+      await state.addEnergy(upgrade.cumul, { skipGameOverPause: true });
     },
     cumulable: true,
     max: 3,
@@ -46,7 +46,7 @@ const upgrades: RawUpgrade[] = [
     image: "meditation.png",
     condition: (state) => state.deck.length > 0,
     onTrigger: async (state, upgrade) => {
-      await state.draw(upgrade.cumul);
+      await state.draw(upgrade.cumul, { skipGameOverPause: true });
     },
     cumulable: true,
     max: 3,
@@ -59,7 +59,9 @@ const upgrades: RawUpgrade[] = [
     image: "bourse.png",
     condition: (state) => state.money > 0,
     onTrigger: async (state, upgrade) => {
-      await state.addMoney(Math.ceil((upgrade.cumul / 100) * state.money));
+      await state.addMoney(Math.ceil((upgrade.cumul / 100) * state.money), {
+        skipGameOverPause: true,
+      });
     },
     cumulable: true,
     cost: String(Math.max(0, 8 - advantage) * ENERGY_TO_MONEY), // 20 days (for infinite cumul) * 2 cumul * 1/5 energy = 20
@@ -84,7 +86,9 @@ const upgrades: RawUpgrade[] = [
     image: "ia.png",
     condition: (state) => state.discard.length > 0,
     onTrigger: async (state, upgrade) => {
-      await state.addMoney(upgrade.cumul * state.discard.length);
+      await state.addMoney(upgrade.cumul * state.discard.length, {
+        skipGameOverPause: true,
+      });
     },
     cumulable: true,
     cost: String(Math.max(0, 80 - advantage) * ENERGY_TO_MONEY), // 20 days (for infinite cumul) * 2 cumul * 1/5 energy * 10 (discard average) = 20
@@ -96,7 +100,7 @@ const upgrades: RawUpgrade[] = [
     image: "sport.png",
     condition: (state) => state.reputation < MAX_REPUTATION,
     onTrigger: async (state, upgrade) => {
-      await state.addReputation(upgrade.cumul, { skipGameOverCheck: true });
+      await state.addReputation(upgrade.cumul, { skipGameOverPause: true });
     },
     cumulable: true,
     max: 2,
@@ -109,7 +113,9 @@ const upgrades: RawUpgrade[] = [
     image: "pc-puissant.png",
     condition: (state) => state.energy > 0,
     onTrigger: async (state, upgrade) => {
-      await state.addMoney(upgrade.cumul * state.energy);
+      await state.addMoney(upgrade.cumul * state.energy, {
+        skipGameOverPause: true,
+      });
     },
     cumulable: true,
     max: 2,
@@ -122,7 +128,9 @@ const upgrades: RawUpgrade[] = [
     image: "stagiaire.png",
     condition: (state) => state.hand.length > 0,
     onTrigger: async (state, upgrade) => {
-      await state.addMoney(upgrade.cumul * state.hand.length);
+      await state.addMoney(upgrade.cumul * state.hand.length, {
+        skipGameOverPause: true,
+      });
     },
     cumulable: true,
     max: 5,

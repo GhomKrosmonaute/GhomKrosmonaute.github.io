@@ -24,7 +24,7 @@ export const BorderLight = (
 ) => {
   const shadows = useQualitySettings((state) => state.shadows);
   const activated = useQualitySettings(
-    (state) => state.borderLights && state.transparency && state.cardAnimation,
+    (state) => state.borderLights && state.transparency && state.animations,
   );
 
   const currentGroup = props.groupName

@@ -13,7 +13,7 @@ import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
 export const Upgrades = (props: { show: boolean }) => {
   const quality = useQualitySettings((state) => ({
     shadows: state.shadows,
-    animation: state.cardAnimation,
+    animation: state.animations,
     transparency: state,
   }));
 

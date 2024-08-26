@@ -11,7 +11,7 @@ import { cn } from "@/utils.ts";
 
 export const Helpers = (props: { show: boolean }) => {
   const { animation, shadow, transparency } = useQualitySettings((state) => ({
-    animation: state.cardAnimation,
+    animation: state.animations,
     transparency: state.transparency,
     shadow: state.shadows,
   }));

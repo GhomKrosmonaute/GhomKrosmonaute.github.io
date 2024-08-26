@@ -8,10 +8,11 @@ import { ValueIcon } from "@/components/game/ValueIcon.tsx";
 
 import { useCardGame, isGameOver, wait } from "@/hooks/useCardGame.ts";
 import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
+import { bank } from "@/sound.ts";
 
 export const GameActions = (props: { show: boolean }) => {
   const game = useCardGame();
-  const animation = useQualitySettings((state) => state.cardAnimation);
+  const animation = useQualitySettings((state) => state.animations);
 
   const disabled =
     game.energy + game.reputation < INFINITE_DRAW_COST ||
@@ -34,8 +35,14 @@ export const GameActions = (props: { show: boolean }) => {
           className={cn("flex justify-start gap-2", { grayscale: disabled })}
           onClick={async () => {
             game.setOperationInProgress("infinity-draw", true);
-            await game.addEnergy(-INFINITE_DRAW_COST);
-            await game.draw();
+            bank.play.play();
+            await game.addEnergy(-INFINITE_DRAW_COST, {
+              skipGameOverPause: true,
+            });
+            await game.draw(1, { skipGameOverPause: true });
+            await game.triggerUpgradeEvent("eachDay", {
+              skipGameOverPause: true,
+            });
             if (isGameOver(game)) await wait(2000);
             game.setOperationInProgress("infinity-draw", false);
           }}

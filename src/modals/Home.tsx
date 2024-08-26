@@ -11,7 +11,7 @@ import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
 
 export const Home = () => {
   const navigate = useNavigate();
-  const animation = useQualitySettings((state) => state.cardAnimation);
+  const animation = useQualitySettings((state) => state.animations);
   const largeScreen = useMediaQuery("(width >= 768px) and (height >= 768px)");
   const [isCardGameVisible, setCardGameVisibility] = useGlobalState((state) => [
     state.isCardGameVisible,

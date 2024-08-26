@@ -8,7 +8,7 @@ import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
 export const Scoreboard = (props: { show: boolean }) => {
   const { shadows, animation } = useQualitySettings((state) => ({
     shadows: state.shadows,
-    animation: state.cardAnimation,
+    animation: state.animations,
   }));
 
   return (

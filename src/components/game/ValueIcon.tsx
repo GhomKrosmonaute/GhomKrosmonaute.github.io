@@ -13,6 +13,8 @@ export const ValueIcon = (props: {
 }) => {
   const energy = useCardGame((state) => state.energy);
 
+  if (props.isCost && props.value === 0) return <></>;
+
   return (
     <div className={cn("relative", props.className)} style={props.style}>
       {props.type === "energy" ? (

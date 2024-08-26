@@ -17,7 +17,7 @@ import { Settings } from "@/components/game/Settings.tsx";
 
 export const Game = () => {
   const quality = useQualitySettings((state) => ({
-    animations: state.cardAnimation,
+    animations: state.animations,
   }));
   const cardGame = useCardGame();
   const [show, showSettings] = useGlobalState((state) => [

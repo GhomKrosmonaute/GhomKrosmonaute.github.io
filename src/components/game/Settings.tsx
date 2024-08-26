@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useMemo } from "react";
 
 import { cn } from "@/utils.ts";
 import { Card } from "@/components/Card.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Label } from "@/components/ui/label.tsx";
+import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
 import {
   AlertDialog,
@@ -21,11 +22,12 @@ import { useCardGame } from "@/hooks/useCardGame.ts";
 import { useGlobalState } from "@/hooks/useGlobalState.ts";
 import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
 
-import { settings } from "@/game-settings.ts";
+import { Difficulty, QualityOptions, settings } from "@/game-settings.ts";
 import { GAME_ADVANTAGE } from "@/game-constants.ts";
-import { Checkbox } from "@/components/ui/checkbox.tsx";
 
-const translations = {
+import Warning from "@/assets/icons/warning.svg";
+
+const translations: Record<keyof QualityOptions | Difficulty, string> = {
   noob: "Débutant",
   easy: "Facile",
   normal: "Normal",
@@ -35,11 +37,11 @@ const translations = {
   transparency: "Transparence",
   borderLights: "Lumières de bordure",
   godRays: "Rayons lumineux",
-  cardBlur: "Flou de transparence",
-  cardTilt: "Inclinaisons",
-  cardFoil: "Reflets et textures",
-  cardAnimation: "Animations",
-  cardPerspective: "Profondeur",
+  blur: "Flou de transparence",
+  tilt: "Inclinaisons",
+  foil: "Reflets et textures",
+  animations: "Animations",
+  perspective: "Profondeur",
 };
 
 export const Settings = (props: { show: boolean }) => {
@@ -49,6 +51,17 @@ export const Settings = (props: { show: boolean }) => {
 
   const [difficulty, setDifficulty] = React.useState(settings.difficulty);
 
+  const unsaved = useMemo(
+    () => difficulty !== settings.difficulty,
+    [difficulty],
+  );
+
+  const needReload = useMemo(
+    () =>
+      quality.animations !== settings.quality.animations ||
+      difficulty !== settings.difficulty,
+    [quality, difficulty],
+  );
   const apply = React.useCallback(() => {
     // Apply settings
     localStorage.setItem(
@@ -61,26 +74,34 @@ export const Settings = (props: { show: boolean }) => {
       }),
     );
 
-    if (difficulty !== settings.difficulty) window.location.reload();
+    if (needReload) window.location.reload();
     else toggleSettings();
-  }, [difficulty, toggleSettings]);
+  }, [difficulty, needReload, toggleSettings]);
 
   return (
     <div
       className={cn(
-        "absolute top-0 left-0 w-full h-full z-40",
+        "absolute top-0 left-0 w-full h-full z-30",
         "flex items-center justify-center pointer-events-none",
         {
-          "transition-opacity duration-500 ease-in-out": quality.cardAnimation,
+          "transition-opacity duration-500 ease-in-out": quality.animations,
           "opacity-0 bg-background/80": quality.transparency,
           hidden: !quality.transparency,
           "opacity-100 flex pointer-events-auto": props.show,
         },
       )}
     >
-      <Card className="space-y-4">
+      <div
+        onClick={toggleSettings}
+        className={cn("absolute w-full h-full left-0 top-0", {
+          "pointer-events-auto": props.show,
+          "pointer-events-none": !props.show,
+        })}
+      />
+
+      <Card className="space-y-4 z-40">
         <div className="text-3xl">Settings</div>
-        <div className="flex gap-10 *:space-y-4 *:border *:rounded-xl *:py-4 *:px-6">
+        <div className="flex gap-5 *:space-y-4 *:border *:rounded-xl *:py-4 *:px-6">
           <div>
             <div className="text-2xl">Difficulté</div>
             <RadioGroup
@@ -93,7 +114,7 @@ export const Settings = (props: { show: boolean }) => {
               {Object.keys(GAME_ADVANTAGE).map((key) => (
                 <Label className="flex items-center gap-2 py-2" key={key}>
                   <RadioGroupItem value={key} />
-                  {translations[key as keyof typeof GAME_ADVANTAGE]}
+                  {translations[key as Difficulty]}
                 </Label>
               ))}
             </RadioGroup>
@@ -108,47 +129,66 @@ export const Settings = (props: { show: boolean }) => {
                 >
                   <Checkbox
                     defaultChecked={
-                      quality[key as keyof typeof quality] as boolean
+                      quality[key as keyof QualityOptions] as boolean
                     }
                     onCheckedChange={(value) =>
                       quality.update({ [key]: value })
                     }
                   />
-                  {translations[key as keyof typeof translations]}
+                  {translations[key as keyof QualityOptions]}
                 </Label>
               ))}
             </div>
           </div>
         </div>
 
-        {score > 0 && difficulty !== settings.difficulty ? (
-          <AlertDialog>
-            <AlertDialogTrigger>
-              <Button variant="cta" size="cta">
-                Appliquer
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent className="w-fit">
-              <AlertDialogHeader>
-                <AlertDialogTitle className="text-2xl">
-                  Une partie est en cours !
-                </AlertDialogTitle>
-                <AlertDialogDescription>
-                  Cette action va réinitialiser votre partie. <br />
-                  Êtes-vous sûr de vouloir continuer ?
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={apply}>Continue</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        ) : (
-          <Button variant="cta" size="cta" onClick={apply}>
-            Appliquer
-          </Button>
-        )}
+        <div className="flex gap-5">
+          {score > 0 && needReload ? (
+            <AlertDialog>
+              <AlertDialogTrigger>
+                <Button
+                  variant={unsaved ? "cta" : "default"}
+                  disabled={!unsaved}
+                  size="cta"
+                >
+                  Appliquer
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent className="w-fit">
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="text-2xl">
+                    Une partie est en cours !
+                  </AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Cette action va réinitialiser votre partie. <br />
+                    Êtes-vous sûr de vouloir continuer ?
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={apply}>
+                    Continue
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          ) : (
+            <Button
+              variant={unsaved ? "cta" : "default"}
+              disabled={!unsaved}
+              size="cta"
+              onClick={apply}
+            >
+              Appliquer
+            </Button>
+          )}
+
+          {needReload && (
+            <div className="flex-grow border rounded-xl flex items-center gap-3 pl-3">
+              <Warning className="w-5" /> Un rechargement peut être nécessaire.
+            </div>
+          )}
+        </div>
       </Card>
     </div>
   );

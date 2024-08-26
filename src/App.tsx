@@ -32,7 +32,7 @@ export default function App() {
   const toggleDarkMode = useDarkMode();
   const { godRays, animation } = useQualitySettings((state) => ({
     godRays: state.godRays,
-    animation: state.cardAnimation,
+    animation: state.animations,
   }));
   const isCardGameVisible = useGlobalState((state) => state.isCardGameVisible);
   // const isSplineLoaded = useGlobalState((state) => state.splineLoaded);

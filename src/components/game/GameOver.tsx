@@ -9,14 +9,19 @@ import { Button, buttonVariants } from "@/components/ui/button.tsx";
 import { Stats } from "@/components/game/Stat.tsx";
 import { Tilt } from "@/components/game/Tilt.tsx";
 import { cn } from "@/utils.ts";
+import { settings } from "@/game-settings.ts";
 
 export const GameOver = (props: { show: boolean }) => {
   const { shadows, transparency, animation } = useQualitySettings((state) => ({
     shadows: state.shadows,
-    animation: state.cardAnimation,
+    animation: state.animations,
     transparency: state.transparency,
   }));
-  const setVisible = useGlobalState((state) => state.setCardGameVisibility);
+
+  const [setVisible, toggleSettings] = useGlobalState((state) => [
+    state.setCardGameVisibility,
+    state.toggleSettings,
+  ]);
 
   const game = useCardGame((state) => ({
     isGameOver: state.isGameOver,
@@ -35,7 +40,7 @@ export const GameOver = (props: { show: boolean }) => {
       {game.isGameOver && (
         <div
           className={cn(
-            "absolute top-0 left-0 w-screen h-screen flex flex-col items-center justify-center z-40 pointer-events-auto",
+            "absolute top-0 left-0 w-screen h-screen flex flex-col items-center justify-center z-30 pointer-events-auto",
             {
               "bg-background/90": transparency,
               "bg-background": !transparency,
@@ -100,7 +105,7 @@ export const GameOver = (props: { show: boolean }) => {
                         <a
                           href="https://www.linkedin.com/in/camille-abella-a99950176/"
                           target="_blank"
-                          className="text-upgrade font-changa hover:underline"
+                          className="text-primary font-changa hover:underline"
                         >
                           Contactez-moi
                         </a>{" "}
@@ -110,7 +115,21 @@ export const GameOver = (props: { show: boolean }) => {
                   ) : (
                     <div className="text-lg">
                       Vous n'êtes pas classé, <br /> votre score est trop
-                      faible. <br /> essayez de nouveau !
+                      faible. <br /> Essayez{" "}
+                      {settings.difficulty === "noob" ||
+                      settings.difficulty === "easy" ? (
+                        <>
+                          une difficulté plus élevée ! <br />
+                          <span
+                            className="text-primary font-changa cursor-pointer hover:underline"
+                            onClick={toggleSettings}
+                          >
+                            Paramètres de difficulté
+                          </span>
+                        </>
+                      ) : (
+                        "de nouveau !"
+                      )}
                     </div>
                   )}
                 </div>

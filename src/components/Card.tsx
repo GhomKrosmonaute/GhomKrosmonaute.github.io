@@ -10,7 +10,7 @@ export const Card = (
 ) => {
   const quality = useQualitySettings((state) => ({
     transparency: state.transparency,
-    cardBlur: state.cardBlur,
+    cardBlur: state.blur,
   }));
 
   return (

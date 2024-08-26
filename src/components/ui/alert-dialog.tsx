@@ -17,7 +17,7 @@ const AlertDialogOverlay = React.forwardRef<
 >(({ className, ...props }, ref) => {
   const quality = useQualitySettings((state) => ({
     transparency: state.transparency,
-    animation: state.cardAnimation,
+    animation: state.animations,
   }));
 
   return (

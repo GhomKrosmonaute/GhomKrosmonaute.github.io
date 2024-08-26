@@ -6,11 +6,11 @@ export interface QualityOptions {
   transparency: boolean; // backgrounds transparents
   borderLights: boolean; // ajoute les lumières sur les bords
   godRays: boolean; // ajoute les god rays
-  cardBlur: boolean; // background blur sur toutes les cartes du site
-  cardTilt: boolean; // utilise Tilt ou non (agis sur cardFoil et cardPerspective)
-  cardFoil: boolean; // montre le reflet et la texture des cartes ou non
-  cardAnimation: boolean; // utilise les keyframes ou non
-  cardPerspective: boolean; // transformStyle: "preserve-3d" | "flat"
+  blur: boolean; // background blur sur toutes les cartes du site
+  tilt: boolean; // utilise Tilt ou non (agis sur cardFoil et cardPerspective)
+  foil: boolean; // montre le reflet et la texture des cartes ou non
+  animations: boolean; // utilise les keyframes ou non
+  perspective: boolean; // transformStyle: "preserve-3d" | "flat"
 }
 
 export const defaultSettings: Settings = {
@@ -20,19 +20,41 @@ export const defaultSettings: Settings = {
     transparency: true,
     borderLights: true,
     godRays: true,
-    cardBlur: true,
-    cardTilt: true,
-    cardFoil: true,
-    cardAnimation: true,
-    cardPerspective: true,
+    blur: true,
+    tilt: true,
+    foil: true,
+    animations: true,
+    perspective: true,
   },
 };
 
-interface Settings {
+export interface Settings {
   difficulty: Difficulty;
   quality: QualityOptions;
 }
 
+function getKeysRecursively(obj: object, keys: string[] = []): string[] {
+  for (const key in obj) {
+    if (typeof obj[key as keyof typeof obj] === "object") {
+      getKeysRecursively(obj[key as keyof typeof obj], keys);
+    } else {
+      keys.push(key);
+    }
+  }
+  return keys;
+}
+
+const saved = JSON.parse(localStorage.getItem("settings") ?? "{}");
+const savedKeys = getKeysRecursively(saved);
+const defaultKeys = getKeysRecursively(defaultSettings);
+
+// si une sauvegarde existe, si elle possède les mêmes clés que les settings par défaut, on la charge
+// sinon on charge les settings par défaut
 export const settings: Settings = JSON.parse(
-  localStorage.getItem("settings") ?? JSON.stringify(defaultSettings),
+  localStorage.getItem("settings")
+    ? savedKeys.every((key) => defaultKeys.includes(key)) &&
+      defaultKeys.every((key) => savedKeys.includes(key))
+      ? localStorage.getItem("settings")!
+      : JSON.stringify(defaultSettings)
+    : JSON.stringify(defaultSettings),
 );

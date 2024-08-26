@@ -17,9 +17,9 @@ export const CenterCard = (
 ) => {
   const matches = useMediaQuery("(width >= 768px) and (height >= 768px)");
   const quality = useQualitySettings((state) => ({
-    blur: state.cardBlur,
+    blur: state.blur,
     shadows: state.shadows,
-    animations: state.cardAnimation,
+    animations: state.animations,
   }));
 
   return (
