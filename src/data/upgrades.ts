@@ -22,7 +22,6 @@ type RawUpgrade = Pick<
   | "triggerEvent"
 > & {
   max?: number;
-  cumulable?: boolean;
 };
 
 const upgrades: RawUpgrade[] = [
@@ -35,7 +34,6 @@ const upgrades: RawUpgrade[] = [
     onTrigger: async (state, upgrade) => {
       await state.addEnergy(upgrade.cumul, { skipGameOverPause: true });
     },
-    cumulable: true,
     max: 3,
     cost: String(Math.max(0, 20 - advantage) * ENERGY_TO_MONEY), // 10 days * 2 cumul * 1 energy = 20
   },
@@ -48,7 +46,6 @@ const upgrades: RawUpgrade[] = [
     onTrigger: async (state, upgrade) => {
       await state.draw(upgrade.cumul, { skipGameOverPause: true });
     },
-    cumulable: true,
     max: 3,
     cost: String(Math.max(0, 20 - advantage) * ENERGY_TO_MONEY), // 10 days * 2 cumul * 1 energy (for draw) = 20
   },
@@ -63,7 +60,6 @@ const upgrades: RawUpgrade[] = [
         skipGameOverPause: true,
       });
     },
-    cumulable: true,
     cost: String(Math.max(0, 8 - advantage) * ENERGY_TO_MONEY), // 20 days (for infinite cumul) * 2 cumul * 1/5 energy = 20
   },
   {
@@ -75,7 +71,6 @@ const upgrades: RawUpgrade[] = [
     onTrigger: async (state, upgrade) => {
       await state.recycle(upgrade.cumul);
     },
-    cumulable: true,
     max: 3,
     cost: String(Math.max(0, 20 - advantage) * ENERGY_TO_MONEY), // 10 days * 2 cumul * 1 energy (for recycle) = 20
   },
@@ -90,7 +85,6 @@ const upgrades: RawUpgrade[] = [
         skipGameOverPause: true,
       });
     },
-    cumulable: true,
     cost: String(Math.max(0, 80 - advantage) * ENERGY_TO_MONEY), // 20 days (for infinite cumul) * 2 cumul * 1/5 energy * 10 (discard average) = 20
   },
   {
@@ -102,7 +96,6 @@ const upgrades: RawUpgrade[] = [
     onTrigger: async (state, upgrade) => {
       await state.addReputation(upgrade.cumul, { skipGameOverPause: true });
     },
-    cumulable: true,
     max: 2,
     cost: Math.max(0, 20 - advantage), // 10 days * 2 cumul * 1 (for reputation) = 20
   },
@@ -117,7 +110,6 @@ const upgrades: RawUpgrade[] = [
         skipGameOverPause: true,
       });
     },
-    cumulable: true,
     max: 2,
     cost: String(Math.max(0, 40 - advantage) * ENERGY_TO_MONEY), // 10 days * 2 cumul * 10 (for energy average) * 1/5 (money) = 40
   },
@@ -132,7 +124,6 @@ const upgrades: RawUpgrade[] = [
         skipGameOverPause: true,
       });
     },
-    cumulable: true,
     max: 5,
     cost: String(Math.max(0, 20 - advantage) * ENERGY_TO_MONEY), // 10 days * 2 cumul * 5 (for hand average) * 1/5 (money) = 20
   },

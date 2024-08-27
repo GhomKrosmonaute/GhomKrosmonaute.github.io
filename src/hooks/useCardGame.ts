@@ -75,6 +75,7 @@ export type GameCardState =
   | "dropped"
   | "drawn"
   | "unauthorized"
+  | "removed"
   | "idle"
   | null;
 
@@ -97,6 +98,7 @@ interface BaseGameMethodOptions {
 }
 
 interface CardGameState {
+  isOperationInProgress: boolean;
   operationInProgress: Record<string, boolean>;
   setOperationInProgress: (operation: string, value: boolean) => void;
   reason: GameOverReason;
@@ -146,7 +148,7 @@ interface CardGameState {
     random?: boolean;
     filter?: (card: GameCardInfo) => boolean;
   }) => Promise<void>;
-  removeCard: (name: string) => void;
+  removeCard: (name: string) => Promise<void>;
   recycle: (count?: number) => Promise<void>;
   play: (
     card: GameCardInfo,
@@ -246,6 +248,24 @@ export function parseCost(state: CardGameState, card: GameCardInfo) {
       : state[needs] + state.reputation >= cost;
 
   return { needs, cost, canBeBuy, appliedModifiers } as const;
+}
+
+export function willBeRemoved(state: CardGameState, card: GameCardInfo) {
+  if (card.effect.ephemeral) return true;
+
+  if (card.effect.upgrade) {
+    const rawUpgrade = upgrades.find((u) => u.name === card.name)!;
+
+    if (rawUpgrade.max) {
+      if (rawUpgrade.max === 1) return true;
+
+      const upgrade = state.upgrades.find((u) => u.name === card.name);
+
+      return upgrade && upgrade.cumul >= upgrade.max - 1;
+    }
+  }
+
+  return false;
 }
 
 export function formatText(text: string) {
@@ -396,6 +416,10 @@ function parseSave(save: string) {
       }
     }
 
+    if (key === "isOperationInProgress") {
+      return false;
+    }
+
     return value;
   });
 }
@@ -465,13 +489,14 @@ function generateInitialState(): Omit<
       effect: {
         index: -1,
         upgrade: true,
-        ephemeral: !upgrade.cumulable,
+        ephemeral: upgrade.max === 1,
         description: formatText(
           `@upgrade <br/> ${formatUpgradeText(upgrade.description, 1)}`,
         ),
         onPlayed: async (state) => await state.upgrade(upgrade.name),
         type: "action",
         cost: upgrade.cost,
+        waitBeforePlay: false,
       },
     } satisfies GameCardInfo;
   });
@@ -479,6 +504,7 @@ function generateInitialState(): Omit<
   const deck = shuffle([...supports, ...actions, ...upgradeActions], 3);
 
   return {
+    isOperationInProgress: false,
     operationInProgress: {},
     score: 0,
     reason: null,
@@ -672,7 +698,7 @@ function cardGameMethods(
       // on joue le son de la banque
       bank.upgrade.play();
 
-      let state = getState();
+      const state = getState();
 
       // si l'activité est déjà découverte, on augmente son cumul
       if (state.upgrades.find((a) => a.name === name)) {
@@ -695,33 +721,25 @@ function cardGameMethods(
                 ...rawUpgrades,
                 state: "appear",
                 cumul: 1,
-                max: rawUpgrades.cumulable ? (rawUpgrades.max ?? Infinity) : 1,
+                max: rawUpgrades.max ?? Infinity,
               },
             ],
           };
         });
       }
 
-      if (rawUpgrades.cumulable && rawUpgrades.max) {
-        // on vérifie si la carte qui sert à découvrir cette activité doit être supprimée ou non
-
-        state = getState();
-
-        const upgrade = state.upgrades.find((a) => a.name === name)!;
-
-        if (upgrade.cumul === upgrade.max) {
-          set({
-            hand: state.hand.map((c) => {
-              if (c.name === name) return { ...c, state: "played" };
-              return c;
-            }),
-          });
-
-          await wait(1000);
-
-          state.removeCard(name);
-        }
-      }
+      // todo: à supprimer si je vois qu'on n'en a plus besoin
+      // if (rawUpgrades.cumulable && rawUpgrades.max) {
+      //   // on vérifie si la carte qui sert à découvrir cette activité doit être supprimée ou non
+      //
+      //   state = getState();
+      //
+      //   const upgrade = state.upgrades.find((a) => a.name === name)!;
+      //
+      //   if (upgrade.cumul === upgrade.max) {
+      //     await state.removeCard(name);
+      //   }
+      // }
 
       await wait();
 
@@ -954,16 +972,45 @@ function cardGameMethods(
       }));
     },
 
-    removeCard: (name) => {
+    removeCard: async (name) => {
+      // on active l'animation de suppression de la carte
+      set((state) => ({
+        hand: state.hand.map((c) => {
+          if (c.name === name) {
+            return { ...c, state: "removed" };
+          }
+          return c;
+        }),
+        operationInProgress: {
+          ...state.operationInProgress,
+          remove: true,
+        },
+      }));
+
+      bank.remove.play();
+
+      // on attend la fin de l'animation
+      await wait(1000);
+
+      // on retire la carte de la main, du deck et de la défausse
+
       const from = ["discard", "deck", "hand"] as const;
 
       set((state) => ({
-        ...from.reduce((acc, key) => {
-          return {
-            ...acc,
-            [key]: state[key].filter((c) => c.name !== name),
-          };
-        }, {} as Partial<CardGameState>),
+        ...from.reduce(
+          (acc, key) => {
+            return {
+              ...acc,
+              [key]: state[key].filter((c) => c.name !== name),
+            };
+          },
+          {
+            operationInProgress: {
+              ...state.operationInProgress,
+              remove: false,
+            },
+          } as Partial<CardGameState>,
+        ),
       }));
     },
 
@@ -1079,23 +1126,32 @@ function cardGameMethods(
       // on joue le son de la banque
       bank.play.play();
 
+      const removing = willBeRemoved(state, card);
+
+      if (removing) {
+        wait(200).then(() => bank.remove.play());
+      }
+
       const cardManagement = async () => {
         // on active l'animation de retrait de la carte
         set((state) => ({
           hand: state.hand.map((c) => {
             if (c.name === card.name) {
-              return { ...c, state: "played" };
+              return {
+                ...c,
+                state: removing ? "removed" : "played",
+              };
             }
             return c;
           }),
         }));
 
         // on attend la fin de l'animation
-        await wait();
+        await wait(removing ? 1000 : undefined);
 
         // la carte va dans la défausse et on retire la carte de la main
         set((state) => ({
-          discard: card.effect.ephemeral
+          discard: removing
             ? state.discard
             : shuffle([{ ...card, state: null }, ...state.discard], 3),
           hand: state.hand.filter((c) => c.name !== card.name),
@@ -1123,9 +1179,6 @@ function cardGameMethods(
 
         // on applique l'effet de la carte (toujours via eval)
         await card.effect.onPlayed(state, card);
-
-        // on met à jour le score
-        state.updateScore();
       };
 
       await Promise.all([cardManagement(), effectManagement()]);
@@ -1197,6 +1250,26 @@ useCardGame.subscribe((state, prevState) => {
   )
     state.updateScore();
 
+  if (
+    prevState.hand.map((c) => c.state).join(",") !==
+      state.hand.map((c) => c.state).join(",") ||
+    Object.values(prevState.operationInProgress).join(",") !==
+      Object.values(state.operationInProgress).join(",") ||
+    prevState.upgrades.map((u) => u.state).join(",") !==
+      state.upgrades.map((u) => u.state).join(",")
+  ) {
+    console.log("state", state);
+    state.dangerouslyUpdate({
+      isOperationInProgress:
+        state.hand.some((card) => card.state !== "idle") ||
+        (state.upgrades.length > 0 &&
+          state.upgrades.some((upgrade) => upgrade.state !== "idle")) ||
+        (Object.keys(state.operationInProgress).length > 0 &&
+          Object.values(state.operationInProgress).some((o) => o)),
+      // isOperationInProgress: false,
+    });
+  }
+
   localStorage.setItem(
     "card-game",
     JSON.stringify(state, (key, value) => {
@@ -1206,15 +1279,14 @@ useCardGame.subscribe((state, prevState) => {
   );
 
   // si aucune opération n'est en cours
-  if (Object.values(state.operationInProgress).every((v) => !v)) {
+  if (!state.isOperationInProgress) {
     // on vérifie si le jeu est fini
-    if (!state.infinityMode) {
-      if (!state.isWon && state.money >= MONEY_TO_REACH) state.win();
-      else if (!state.isGameOver) {
-        const reason = isGameOver(state);
+    if (!state.infinityMode && !state.isWon && state.money >= MONEY_TO_REACH)
+      state.win();
+    else if (!state.isGameOver) {
+      const reason = isGameOver(state);
 
-        if (reason) state.gameOver(reason);
-      }
+      if (reason) state.gameOver(reason);
     }
 
     // const cardWithTemplate = state.hand.filter((card) => card.effect.template);

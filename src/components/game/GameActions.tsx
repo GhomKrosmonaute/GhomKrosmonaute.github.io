@@ -19,7 +19,8 @@ export const GameActions = (props: { show: boolean }) => {
   const disabled =
     game.energy + game.reputation < INFINITE_DRAW_COST ||
     game.hand.length >= MAX_HAND_SIZE ||
-    game.deck.length === 0;
+    game.deck.length === 0 ||
+    game.isOperationInProgress;
 
   return (
     <div
@@ -62,30 +63,41 @@ export const GameActions = (props: { show: boolean }) => {
         {process.env.NODE_ENV === "development" && (
           <>
             <Button
+              disabled={game.isOperationInProgress}
               className="text-upgrade"
               onClick={async () => {
                 game.upgrades = [];
 
                 for (const raw of upgrades) {
-                  if (raw.cumulable) {
-                    for (let i = 0; i < (raw.max ?? 10); i++) {
+                  await Promise.all(
+                    new Array(raw.max ?? 10).fill(0).map(async (_, i) => {
+                      await wait(100 * i);
                       await game.upgrade(raw.name);
-                    }
-                  } else {
-                    await game.upgrade(raw.name);
-                  }
+                    }),
+                  );
                 }
               }}
             >
               Toutes les améliorations
             </Button>
+            <Button
+              disabled={game.isOperationInProgress || game.hand.length === 0}
+              onClick={() => game.removeCard(game.hand[0]?.name)}
+            >
+              Supprime la première carte
+            </Button>
             <div className="flex">
-              <Button className="text-green-500" onClick={() => game.win()}>
+              <Button
+                className="text-green-500"
+                onClick={() => game.win()}
+                disabled={game.isOperationInProgress}
+              >
                 Win
               </Button>
               <Button
                 className="text-red-500"
                 onClick={() => game.gameOver("reputation")}
+                disabled={game.isOperationInProgress}
               >
                 Lose
               </Button>

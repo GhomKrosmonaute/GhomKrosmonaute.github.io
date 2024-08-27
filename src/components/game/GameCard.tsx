@@ -4,6 +4,7 @@ import "./GameCard.css";
 
 import QuoteLeft from "@/assets/icons/quote-left.svg";
 import QuoteRight from "@/assets/icons/quote-right.svg";
+import BrokenCard from "@/assets/icons/game/broken-card.svg";
 
 import {
   GameCardInfo,
@@ -36,7 +37,7 @@ export const GameCard = (
 
   const {
     handSize,
-    isAnyCardAnimated,
+    isOperationInProgress,
     isGameOver,
     play,
     canTriggerEffect,
@@ -46,11 +47,7 @@ export const GameCard = (
 
     return {
       handSize: state.hand.length,
-      isAnyCardAnimated:
-        state.hand.some((card) => card.state !== "idle") ||
-        (state.upgrades.length > 0 &&
-          state.upgrades.some((upgrade) => upgrade.state !== "idle")) ||
-        Object.values(state.operationInProgress).some((o) => o),
+      isOperationInProgress: state.isOperationInProgress,
       play: state.play,
       isGameOver: state.isGameOver,
       parsedCost,
@@ -66,18 +63,18 @@ export const GameCard = (
     <div
       className={cn(
         "game-card",
-        "relative w-[calc(630px/3)] h-[calc(880px/3)]",
-        "hover:-translate-y-14",
+        "relative w-[210px] h-[293px]",
         "-mx-3.5 z-10 hover:z-20 cursor-pointer select-none",
         {
+          "hover:-translate-y-14": props.card.state !== "removed",
           [cn("transition-transform", props.card.state)]: animation,
           grayscale: isGameOver || !parsedCost.canBeBuy || !canTriggerEffect,
-          "cursor-not-allowed": isAnyCardAnimated,
+          "cursor-not-allowed": isOperationInProgress,
           // "translate-y-8": !canTriggerEffect || !haveEnoughResources,
         },
       )}
       onClick={async () => {
-        if (!isAnyCardAnimated && !isGameOver) {
+        if (!isOperationInProgress && !isGameOver) {
           await play(props.card);
         }
       }}
@@ -96,177 +93,205 @@ export const GameCard = (
         transitionTimingFunction: animation ? "ease-in-out" : "linear",
       }}
     >
-      <Tilt
-        scale={1.1}
-        className={cn(
-          "group/game-card",
-          {
-            "transition-shadow duration-200 ease-in-out hover:shadow-glow-20 shadow-primary":
-              shadows,
-          },
-          "flex flex-col w-full h-full rounded-xl",
-          "*:shrink-0",
-          {
-            [cn({
-              "bg-card/60": transparency,
-              "bg-card": !transparency,
-            })]: props.card.effect.type === "support",
-            // "shadow-action": props.card.effect.type === "action",
-          },
-        )}
-      >
-        {isActionCardInfo(props.card) && props.card.detail && (
-          <div
-            className={cn(
-              "absolute pointer-events-none left-1/2 -top-[10px] -translate-x-1/2 -translate-y-full rounded-2xl bg-card",
-              "p-2 w-max max-w-full gap-1",
-              {
-                "shadow shadow-action": shadows,
-                "transition-opacity duration-200 ease-in-out delay-1000":
-                  animation,
-                "opacity-0 group-hover/game-card:opacity-100 flex":
-                  transparency,
-                "hidden group-hover/game-card:flex": !transparency,
-              },
-            )}
-          >
-            <QuoteLeft className="w-10" />
-            <div className="flex-grow text-sm text-left">
-              {props.card.detail}
-            </div>
-            <QuoteRight className="w-10 self-end" />
-          </div>
-        )}
-
-        {perspective && tilt && (
-          <div
-            className={cn("absolute w-full h-full rounded-xl", {
-              "bg-card/60": transparency,
-              "bg-card": !transparency,
-              // "backdrop-blur-sm": blur && transparency,
-            })}
-            style={{
-              transform: "translateZ(-20px)",
-            }}
-          />
-        )}
-
-        <div
-          className={cn(
-            "relative flex justify-start items-center h-10 rounded-t-xl",
-            {
-              "bg-action": props.card.effect.type === "action",
-              [cn({
-                "bg-support/50": transparency,
-                "bg-support": !transparency,
-              })]: props.card.effect.type === "support",
-            },
-          )}
-          style={{
-            transformStyle: perspective ? "preserve-3d" : "flat",
-          }}
-        >
-          <div
-            className="font-changa shrink-0 relative"
-            style={{
-              transform: `${perspective ? "translateZ(5px)" : ""} translateX(-15px)`,
-              transformStyle: perspective ? "preserve-3d" : "flat",
-            }}
-          >
-            {parsedCost.needs === "energy" ? (
-              <ValueIcon
-                isCost
-                type="energy"
-                value={parsedCost.cost}
-                iconScale="0.75"
-                style={{
-                  transform: perspective ? "translateZ(5px)" : "none",
-                  transformStyle: perspective ? "preserve-3d" : "flat",
-                }}
-              />
-            ) : (
-              <MoneyIcon
-                value={String(parsedCost.cost)}
-                style={{
-                  transform: `${perspective ? "translateZ(10px)" : ""} rotate(-10deg)`,
-                  transformStyle: perspective ? "preserve-3d" : "flat",
-                }}
-              />
-            )}
-          </div>
-          <h2
-            className={cn(
-              "absolute left-0 w-full text-center whitespace-nowrap overflow-hidden text-ellipsis shrink-0 flex-grow text-xl font-changa",
-              {
-                [cn({
-                  "left-3 text-lg":
-                    parsedCost.needs === "money" && props.card.name.length > 7,
-                  "left-7":
-                    parsedCost.needs === "money" && parsedCost.cost > 99,
-                  "text-md": props.card.name.length > 11,
-                })]: parsedCost.cost > 0,
-                "text-action-foreground": props.card.effect.type === "action",
-                "text-support-foreground": props.card.effect.type === "support",
-              },
-            )}
-            style={{
-              transform: perspective ? "translateZ(5px)" : "none",
-            }}
-          >
-            {props.card.name}
-          </h2>
-        </div>
-
-        {isActionCardInfo(props.card) ? (
-          <GameCardProject card={props.card} />
-        ) : (
-          <GameCardTechno card={props.card} />
-        )}
-
-        <div
-          className={cn(
-            "flex-grow rounded-b-xl",
-            props.card.effect.type === "action" && {
-              // "backdrop-blur-sm": blur && transparency,
-              "bg-card/60": transparency,
-              "bg-card": !transparency,
-            },
-          )}
-          style={{ transformStyle: perspective ? "preserve-3d" : "flat" }}
-        >
-          <p
-            className="py-[10px] px-[15px] text-center"
-            style={{
-              transform: perspective ? "translateZ(10px)" : "none",
-              transformStyle: perspective ? "preserve-3d" : "flat",
-            }}
-            dangerouslySetInnerHTML={{
-              __html: props.card.effect.description,
-            }}
-          />
-
-          {props.card.effect.ephemeral && (
-            <div
-              className={cn("text-center h-full text-2xl font-bold", {
-                "text-muted-foreground/30": transparency,
-                "text-muted-foreground": !transparency,
+      {props.card.state === "removed" && animation ? (
+        <div className="relative">
+          {Math.random() < 0.5 ? (
+            <BrokenCard
+              className={cn("absolute scale-x-[-1]", {
+                "text-card/60": transparency,
+                "text-card": !transparency,
               })}
-            >
-              Éphémère
-            </div>
+              style={{
+                maskClip: "fill-box",
+              }}
+            />
+          ) : (
+            <BrokenCard
+              className={cn("absolute", {
+                "text-card/60": transparency,
+                "text-card": !transparency,
+              })}
+              style={{
+                maskClip: "fill-box",
+              }}
+            />
           )}
         </div>
+      ) : (
+        <Tilt
+          scale={1.1}
+          className={cn(
+            "group/game-card",
+            {
+              "transition-shadow duration-200 ease-in-out hover:shadow-glow-20 shadow-primary":
+                shadows,
+            },
+            "flex flex-col w-full h-full rounded-xl",
+            "*:shrink-0",
+            {
+              [cn({
+                "bg-card/60": transparency,
+                "bg-card": !transparency,
+              })]: props.card.effect.type === "support",
+              // "shadow-action": props.card.effect.type === "action",
+            },
+          )}
+        >
+          {isActionCardInfo(props.card) && props.card.detail && (
+            <div
+              className={cn(
+                "absolute pointer-events-none left-1/2 -top-[10px] -translate-x-1/2 -translate-y-full rounded-2xl bg-card",
+                "p-2 w-max max-w-full gap-1",
+                {
+                  "shadow shadow-action": shadows,
+                  "transition-opacity duration-200 ease-in-out delay-1000":
+                    animation,
+                  "opacity-0 group-hover/game-card:opacity-100 flex":
+                    transparency,
+                  "hidden group-hover/game-card:flex": !transparency,
+                },
+              )}
+            >
+              <QuoteLeft className="w-10" />
+              <div className="flex-grow text-sm text-left">
+                {props.card.detail}
+              </div>
+              <QuoteRight className="w-10 self-end" />
+            </div>
+          )}
 
-        <BorderLight groupName="game-card" appearOnHover disappearOnCorners />
-        <BorderLight
-          groupName="game-card"
-          appearOnHover
-          disappearOnCorners
-          opposed
-        />
+          {perspective && tilt && (
+            <div
+              className={cn("absolute w-full h-full rounded-xl", {
+                "bg-card/60": transparency,
+                "bg-card": !transparency,
+                // "backdrop-blur-sm": blur && transparency,
+              })}
+              style={{
+                transform: "translateZ(-20px)",
+              }}
+            />
+          )}
 
-        <TiltFoil />
-      </Tilt>
+          <div
+            className={cn(
+              "relative flex justify-start items-center h-10 rounded-t-xl",
+              {
+                "bg-action": props.card.effect.type === "action",
+                [cn({
+                  "bg-support/50": transparency,
+                  "bg-support": !transparency,
+                })]: props.card.effect.type === "support",
+              },
+            )}
+            style={{
+              transformStyle: perspective ? "preserve-3d" : "flat",
+            }}
+          >
+            <div
+              className="font-changa shrink-0 relative"
+              style={{
+                transform: `${perspective ? "translateZ(5px)" : ""} translateX(-15px)`,
+                transformStyle: perspective ? "preserve-3d" : "flat",
+              }}
+            >
+              {parsedCost.needs === "energy" ? (
+                <ValueIcon
+                  isCost
+                  type="energy"
+                  value={parsedCost.cost}
+                  iconScale="0.75"
+                  style={{
+                    transform: perspective ? "translateZ(5px)" : "none",
+                    transformStyle: perspective ? "preserve-3d" : "flat",
+                  }}
+                />
+              ) : (
+                <MoneyIcon
+                  value={String(parsedCost.cost)}
+                  style={{
+                    transform: `${perspective ? "translateZ(10px)" : ""} rotate(-10deg)`,
+                    transformStyle: perspective ? "preserve-3d" : "flat",
+                  }}
+                />
+              )}
+            </div>
+            <h2
+              className={cn(
+                "absolute left-0 w-full text-center whitespace-nowrap overflow-hidden text-ellipsis shrink-0 flex-grow text-xl font-changa",
+                {
+                  [cn({
+                    "left-3 text-lg":
+                      parsedCost.needs === "money" &&
+                      props.card.name.length > 7,
+                    "left-7":
+                      parsedCost.needs === "money" && parsedCost.cost > 99,
+                    "text-md": props.card.name.length > 11,
+                  })]: parsedCost.cost > 0,
+                  "text-action-foreground": props.card.effect.type === "action",
+                  "text-support-foreground":
+                    props.card.effect.type === "support",
+                },
+              )}
+              style={{
+                transform: perspective ? "translateZ(5px)" : "none",
+              }}
+            >
+              {props.card.name}
+            </h2>
+          </div>
+
+          {isActionCardInfo(props.card) ? (
+            <GameCardProject card={props.card} />
+          ) : (
+            <GameCardTechno card={props.card} />
+          )}
+
+          <div
+            className={cn(
+              "flex-grow rounded-b-xl",
+              props.card.effect.type === "action" && {
+                // "backdrop-blur-sm": blur && transparency,
+                "bg-card/60": transparency,
+                "bg-card": !transparency,
+              },
+            )}
+            style={{ transformStyle: perspective ? "preserve-3d" : "flat" }}
+          >
+            <p
+              className="py-[10px] px-[15px] text-center"
+              style={{
+                transform: perspective ? "translateZ(10px)" : "none",
+                transformStyle: perspective ? "preserve-3d" : "flat",
+              }}
+              dangerouslySetInnerHTML={{
+                __html: props.card.effect.description,
+              }}
+            />
+
+            {props.card.effect.ephemeral && (
+              <div
+                className={cn("text-center h-full text-2xl font-bold", {
+                  "text-muted-foreground/30": transparency,
+                  "text-muted-foreground": !transparency,
+                })}
+              >
+                Éphémère
+              </div>
+            )}
+          </div>
+
+          <BorderLight groupName="game-card" appearOnHover disappearOnCorners />
+          <BorderLight
+            groupName="game-card"
+            appearOnHover
+            disappearOnCorners
+            opposed
+          />
+
+          <TiltFoil />
+        </Tilt>
+      )}
     </div>
   );
 };

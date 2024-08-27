@@ -1,0 +1,20 @@
+<svg id="ei4vTKagxuI1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 210 293" shape-rendering="geometricPrecision" text-rendering="geometricPrecision">
+    <g id="ei4vTKagxuI2_to" style={{
+        offsetPath: "path('M106.179942,145.357467C102.030894,151.968208,167.060366,313.511039,122.542594,404.77247')",
+        offsetRotate: "auto"
+    }} >
+        <path d="M12,0h92.99995c0,0-.000003,145.436127-.000003,145.436127L0.00005,162.293619q0,0-.00005-150.293619C0,5.372583,5.372583,0,12,0Z" transform="rotate(-122.761853) scale(1.000001,0.999999) translate(-104.999947,-146.50007)" fill="currentColor" stroke-width="0"/>
+    </g>
+    <g id="ei4vTKagxuI3_to" style={{
+        offsetPath: "path('M104.521676,145.491509C104.521676,248.170819,124.27232,357.117448,104.521676,414.901295')",
+        offsetRotate: "0deg"
+    }} >
+        <path d="M93,0c6.627417,0,12,5.372583,12,12v116.478378q0,0-105,16.95768q0,0,0-145.435985" transform="translate(0,-145.436058)" fill="currentColor" stroke-width="0"/>
+    </g>
+    <g id="ei4vTKagxuI4_to" style={{
+        offsetPath: "path('M105,146.499996C95.739555,247.624858,79.069108,394.470956,104.521676,440.192192')",
+        offsetRotate: "auto"
+    }} >
+        <path d="M210,-42.671564v192.548238c0,6.627417-5.372583,12-12,12h-186c-6.627417,0-12-5.372583-12-12L0,0" transform="rotate(-94.962899) scale(1,0.804317) translate(-105,20.265446)" fill="currentColor" stroke-width="0"/>
+    </g>
+</svg>

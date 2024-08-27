@@ -114,3 +114,54 @@
     top: 0;
   }
 }
+
+/* SVG broken card */
+
+#ei4vTKagxuI2_to {
+  animation: ei4vTKagxuI2_to__to 1000ms linear 1 normal forwards;
+}
+@keyframes ei4vTKagxuI2_to__to {
+  0% {
+    offset-distance: 0%;
+    animation-timing-function: cubic-bezier(1, -0.02, 1, 1);
+  }
+  40% {
+    offset-distance: 100%;
+  }
+  100% {
+    offset-distance: 100%;
+  }
+}
+#ei4vTKagxuI3_to {
+  animation: ei4vTKagxuI3_to__to 1000ms linear 1 normal forwards;
+}
+@keyframes ei4vTKagxuI3_to__to {
+  0% {
+    offset-distance: 0%;
+  }
+  20% {
+    offset-distance: 0%;
+    animation-timing-function: cubic-bezier(0.765, 0.005, 1, 1);
+  }
+  70% {
+    offset-distance: 100%;
+  }
+  100% {
+    offset-distance: 100%;
+  }
+}
+#ei4vTKagxuI4_to {
+  animation: ei4vTKagxuI4_to__to 1000ms linear 1 normal forwards;
+}
+@keyframes ei4vTKagxuI4_to__to {
+  0% {
+    offset-distance: 0%;
+  }
+  50% {
+    offset-distance: 0%;
+    animation-timing-function: cubic-bezier(0.635, 0.01, 1, 1);
+  }
+  100% {
+    offset-distance: 100%;
+  }
+}
