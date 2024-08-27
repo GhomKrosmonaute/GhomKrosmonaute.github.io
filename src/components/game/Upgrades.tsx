@@ -90,7 +90,9 @@ export const Upgrades = (props: { show: boolean }) => {
                   {upgrade.name}{" "}
                   <span className="text-upgrade font-bold">
                     {upgrade.cumul}
-                    {upgrade.max !== Infinity ? `/${upgrade.max}` : ""}
+                    {upgrade.max !== Infinity && upgrade.max !== null
+                      ? `/${upgrade.max}`
+                      : ""}
                   </span>
                 </h3>
                 <p

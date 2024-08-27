@@ -29,7 +29,11 @@ export interface Upgrade {
   image: string;
   triggerEvent: TriggerEvent;
   condition?: (state: CardGameState, upgrade: Upgrade) => boolean;
-  onTrigger: (state: CardGameState, upgrade: Upgrade) => Promise<unknown>;
+  onTrigger: (
+    state: CardGameState,
+    upgrade: Upgrade,
+    reason: GameLog["reason"],
+  ) => Promise<unknown>;
   cost: number | string;
   state: "appear" | "idle" | "triggered";
   cumul: number;
@@ -47,13 +51,18 @@ export interface Effect {
     condition: boolean,
   ) => string;
   condition?: (state: CardGameState, card: GameCardInfo) => boolean;
-  onPlayed: (state: CardGameState, card: GameCardInfo) => Promise<unknown>;
+  onPlayed: (
+    state: CardGameState,
+    card: GameCardInfo,
+    reason: GameLog["reason"],
+  ) => Promise<unknown>;
   waitBeforePlay?: boolean;
   ephemeral?: boolean;
   upgrade?: boolean;
 }
 
 export interface ActionCardInfo {
+  type: "action";
   name: string;
   image: string;
   effect: Effect;
@@ -64,8 +73,9 @@ export interface ActionCardInfo {
 }
 
 export interface SupportCardInfo {
+  type: "support";
   name: string;
-  logo: string;
+  image: string;
   effect: Effect;
   state: GameCardState;
 }
@@ -93,13 +103,25 @@ export type TriggerEvent = keyof typeof TRIGGER_EVENTS;
 
 export type GameOverReason = "mill" | "soft-lock" | "reputation" | null;
 
-interface BaseGameMethodOptions {
-  skipGameOverPause?: boolean;
-}
+export type GameLog = {
+  type: "money" | "reputation" | "energy";
+  value: number;
+  reason: GameCardInfo | Upgrade | string;
+};
 
-interface CardGameState {
-  isOperationInProgress: boolean;
-  operationInProgress: Record<string, boolean>;
+type MethodWhoCheckIfGameOver = {
+  skipGameOverPause?: boolean;
+};
+
+type MethodWhoLog = {
+  reason: GameLog["reason"];
+};
+
+type GameMethodOptions = MethodWhoCheckIfGameOver & MethodWhoLog;
+
+export interface CardGameState {
+  logs: GameLog[];
+  operationInProgress: string[];
   setOperationInProgress: (operation: string, value: boolean) => void;
   reason: GameOverReason;
   isWon: boolean;
@@ -115,20 +137,18 @@ interface CardGameState {
   energy: number;
   reputation: number;
   money: number;
+  addLog: (log: GameLog) => void;
   dangerouslyUpdate: (partial: Partial<CardGameState>) => void;
   updateScore: () => void;
-  addEnergy: (count: number, options?: BaseGameMethodOptions) => Promise<void>;
-  addReputation: (
-    count: number,
-    options?: BaseGameMethodOptions,
-  ) => Promise<void>;
-  addMoney: (count: number, options?: BaseGameMethodOptions) => Promise<void>;
-  addDay: (count?: number) => Promise<void>;
+  addEnergy: (count: number, options: GameMethodOptions) => Promise<void>;
+  addReputation: (count: number, options: GameMethodOptions) => Promise<void>;
+  addMoney: (count: number, options: GameMethodOptions) => Promise<void>;
+  addDay: (count: number, options: MethodWhoCheckIfGameOver) => Promise<void>;
   upgrade: (name: string) => Promise<void>;
-  triggerUpgrade: (name: string) => Promise<void>;
+  triggerUpgrade: (name: string, options: GameMethodOptions) => Promise<void>;
   triggerUpgradeEvent: (
     event: TriggerEvent,
-    options?: BaseGameMethodOptions,
+    options: MethodWhoCheckIfGameOver,
   ) => Promise<void>;
   addCardModifier: <CardModifierName extends keyof typeof cardModifiers>(
     name: CardModifierName,
@@ -136,23 +156,24 @@ interface CardGameState {
     options?: { before?: boolean },
   ) => unknown;
   draw: (
-    count?: number,
-    options?: BaseGameMethodOptions &
+    count: number,
+    options: GameMethodOptions &
       Partial<{
         fromDiscardPile: boolean;
         filter: (card: GameCardInfo) => boolean;
       }>,
   ) => Promise<void>;
-  discardCard: (options?: {
+  discardCard: (options: {
     toDeck?: boolean;
     random?: boolean;
+    reason: GameLog["reason"];
     filter?: (card: GameCardInfo) => boolean;
   }) => Promise<void>;
   removeCard: (name: string) => Promise<void>;
-  recycle: (count?: number) => Promise<void>;
+  recycle: (count: number, options: GameMethodOptions) => Promise<void>;
   play: (
     card: GameCardInfo,
-    options?: BaseGameMethodOptions & { free?: boolean },
+    options: GameMethodOptions & { free?: boolean },
   ) => Promise<void>;
   win: () => void;
   gameOver: (reason: GameOverReason) => void;
@@ -371,7 +392,7 @@ export function map(
 }
 
 export function isActionCardInfo(card: GameCardInfo): card is ActionCardInfo {
-  return (card as ActionCardInfo).image !== undefined;
+  return card.type === "action";
 }
 
 function reviveCardModifier(indice: CardModifierIndice): CardModifier {
@@ -412,7 +433,7 @@ function parseSave(save: string) {
             } as Upgrade;
           });
         case "operationInProgress":
-          return {};
+          return [];
       }
     }
 
@@ -457,7 +478,8 @@ function generateInitialState(): Omit<
 
     return {
       ...techno,
-      logo: `images/techno/${techno.logo}`,
+      type: "support" as const,
+      image: `images/techno/${techno.image}`,
       state: "idle" as const,
       effect: {
         ...effect,
@@ -472,6 +494,7 @@ function generateInitialState(): Omit<
 
     return {
       ...project,
+      type: "action" as const,
       image: `images/projects/${project.image}`,
       state: "idle" as const,
       effect: {
@@ -483,6 +506,7 @@ function generateInitialState(): Omit<
 
   const upgradeActions = upgrades.map((upgrade) => {
     return {
+      type: "action",
       name: upgrade.name,
       image: `images/upgrades/${upgrade.image}`,
       state: "idle",
@@ -504,8 +528,8 @@ function generateInitialState(): Omit<
   const deck = shuffle([...supports, ...actions, ...upgradeActions], 3);
 
   return {
-    isOperationInProgress: false,
-    operationInProgress: {},
+    logs: [],
+    operationInProgress: [],
     score: 0,
     reason: null,
     isWon: false,
@@ -534,14 +558,19 @@ function cardGameMethods(
   getState: () => CardGameState,
 ) {
   return {
+    addLog: (log) => {
+      set((state) => ({
+        logs: [...state.logs, log],
+      }));
+    },
+
     dangerouslyUpdate: (partial: Partial<CardGameState>) => set(partial),
 
     setOperationInProgress: (operation: string, value: boolean) => {
       set((state) => ({
-        operationInProgress: {
-          ...state.operationInProgress,
-          [operation]: value,
-        },
+        operationInProgress: value
+          ? [...state.operationInProgress, operation]
+          : state.operationInProgress.filter((op) => op !== operation),
       }));
     },
 
@@ -576,6 +605,14 @@ function cardGameMethods(
         // on joue le son de la banque
         bank.gain.play();
 
+        state.addLog({
+          value: count,
+          type: "energy",
+          reason: options.reason,
+        });
+
+        await wait();
+
         set((state) => {
           return {
             energy: Math.max(0, Math.min(MAX_ENERGY, state.energy + count)),
@@ -587,12 +624,18 @@ function cardGameMethods(
         // on retire toute l'énergie et on puise dans la réputation pour le reste
         const missingEnergy = Math.abs(count) - state.energy;
 
+        const consumedEnergy = Math.min(Math.abs(count), state.energy);
+
+        state.addLog({
+          value: -consumedEnergy,
+          type: "energy",
+          reason: options.reason,
+        });
+
         if (missingEnergy > 0) {
           set({ energy: 0 });
 
-          await state.addReputation(-missingEnergy, {
-            skipGameOverPause: options?.skipGameOverPause,
-          });
+          await state.addReputation(-missingEnergy, options);
         } else {
           set((state) => {
             return {
@@ -601,8 +644,6 @@ function cardGameMethods(
           });
         }
       }
-
-      await wait();
 
       state.setOperationInProgress("energy", false);
     },
@@ -616,6 +657,14 @@ function cardGameMethods(
       if (count === 10) bank.powerUp.play();
       else if (count > 0) bank.gain.play();
       else bank.loss.play();
+
+      if (count !== 0) {
+        state.addLog({
+          value: count,
+          type: "reputation",
+          reason: options.reason,
+        });
+      }
 
       set((state) => {
         return {
@@ -638,17 +687,25 @@ function cardGameMethods(
     addMoney: async (count, options) => {
       let state = getState();
 
+      state.addLog({
+        value: count,
+        type: "money",
+        reason: options?.reason,
+      });
+
       state.setOperationInProgress("money", true);
 
-      if (count > 0) bank.cashing.play();
+      if (count > 0) {
+        bank.cashing.play();
+
+        await wait();
+      }
 
       set((state) => {
         const money = state.money + count;
 
         return { money };
       });
-
-      await wait();
 
       state = getState();
 
@@ -659,46 +716,34 @@ function cardGameMethods(
       state.setOperationInProgress("money", false);
     },
 
-    addDay: async (count = 1) => {
-      set((state) => ({
-        day: state.day + count,
-        operationInProgress: {
-          ...state.operationInProgress,
-          day: true,
-        },
-      }));
+    addDay: async (count = 1, options) => {
+      const state = getState();
+
+      state.setOperationInProgress("addDay", true);
+
+      set({ day: state.day + count });
 
       if (count > 0) {
         // appliquer les effets de fin de journée
         const state = getState();
 
         for (let i = 0; i < count; i++) {
-          await state.triggerUpgradeEvent("eachDay");
+          await state.triggerUpgradeEvent("eachDay", options);
         }
       }
 
-      set((state) => ({
-        operationInProgress: {
-          ...state.operationInProgress,
-          day: false,
-        },
-      }));
+      state.setOperationInProgress("addDay", false);
     },
 
     upgrade: async (name) => {
-      set((state) => ({
-        operationInProgress: {
-          ...state.operationInProgress,
-          [`upgrade ${name}`]: true,
-        },
-      }));
+      const state = getState();
+
+      state.setOperationInProgress(`upgrade ${name}`, true);
 
       const rawUpgrades = upgrades.find((a) => a.name === name)!;
 
       // on joue le son de la banque
       bank.upgrade.play();
-
-      const state = getState();
 
       // si l'activité est déjà découverte, on augmente son cumul
       if (state.upgrades.find((a) => a.name === name)) {
@@ -728,19 +773,6 @@ function cardGameMethods(
         });
       }
 
-      // todo: à supprimer si je vois qu'on n'en a plus besoin
-      // if (rawUpgrades.cumulable && rawUpgrades.max) {
-      //   // on vérifie si la carte qui sert à découvrir cette activité doit être supprimée ou non
-      //
-      //   state = getState();
-      //
-      //   const upgrade = state.upgrades.find((a) => a.name === name)!;
-      //
-      //   if (upgrade.cumul === upgrade.max) {
-      //     await state.removeCard(name);
-      //   }
-      // }
-
       await wait();
 
       // remet l'activité en idle
@@ -752,35 +784,31 @@ function cardGameMethods(
             }
             return a;
           }),
-          operationInProgress: {
-            ...state.operationInProgress,
-            [`upgrade ${name}`]: false,
-          },
         };
       });
+
+      state.setOperationInProgress(`upgrade ${name}`, false);
     },
 
-    triggerUpgrade: async (name) => {
+    triggerUpgrade: async (name, options) => {
       const state = getState();
       const upgrade = state.upgrades.find((a) => a.name === name)!;
 
+      state.setOperationInProgress(`triggerUpgrade ${name}`, true);
+
       // mettre l'activité en triggered
-      set((state) => ({
+      set({
         upgrades: state.upgrades.map((a) => {
           if (a.name === upgrade.name) {
             return { ...a, state: "triggered" };
           }
           return a;
         }),
-        operationInProgress: {
-          ...state.operationInProgress,
-          [`trigger ${name}`]: true,
-        },
-      }));
+      });
 
       await wait();
 
-      await upgrade.onTrigger(getState(), upgrade);
+      await upgrade.onTrigger(getState(), upgrade, options?.reason ?? upgrade);
 
       await wait();
 
@@ -792,45 +820,41 @@ function cardGameMethods(
           }
           return a;
         }),
-        operationInProgress: {
-          ...state.operationInProgress,
-          [`trigger ${name}`]: false,
-        },
       }));
+
+      state.setOperationInProgress(`triggerUpgrade ${name}`, false);
     },
 
     triggerUpgradeEvent: async (event, options) => {
       let state = getState();
 
-      set((state) => ({
-        operationInProgress: {
-          ...state.operationInProgress,
-          [`trigger ${event}`]: true,
-        },
-      }));
+      state.setOperationInProgress(`triggerUpgradeEvent ${event}`, true);
 
       const upgrades = state.upgrades
         .slice()
-        .filter(
-          (upgrade) =>
-            upgrade.triggerEvent === event &&
-            (!upgrade.condition || upgrade.condition(state, upgrade)),
-        );
+        .filter((upgrade) => upgrade.triggerEvent === event);
+
+      let i = 0;
 
       await Promise.all(
-        upgrades.map(async (upgrade, i) => {
-          await wait(250 * i);
-          await state.triggerUpgrade(upgrade.name);
+        upgrades.map(async (upgrade) => {
+          if (!upgrade.condition || upgrade.condition(getState(), upgrade)) {
+            await wait(500 * i++);
+            await state.triggerUpgrade(upgrade.name, {
+              skipGameOverPause: options.skipGameOverPause,
+              reason: upgrade,
+            });
+          }
         }),
       );
 
       state = getState();
 
-      if (!options?.skipGameOverPause && isGameOver(state)) {
+      if (!options.skipGameOverPause && isGameOver(state)) {
         await wait(2000);
       }
 
-      state.setOperationInProgress(`trigger ${event}`, false);
+      state.setOperationInProgress(`triggerUpgradeEvent ${event}`, false);
     },
 
     addCardModifier: async (name, params, options) => {
@@ -848,57 +872,55 @@ function cardGameMethods(
     },
 
     draw: async (count = 1, options) => {
-      set((state) => {
-        const fromKey = options?.fromDiscardPile ? "discard" : "deck";
+      let state = getState();
 
-        const hand = state.hand.slice();
-        const discard = state.discard.slice();
+      state.setOperationInProgress("draw", true);
 
-        const from = state[fromKey].slice().filter((c) => {
-          if (options?.filter) return options.filter(c);
-          return true;
-        });
+      const fromKey = options?.fromDiscardPile ? "discard" : "deck";
 
-        const drawn: string[] = [];
+      const hand = state.hand.slice();
+      const discard = state.discard.slice();
 
-        let handAdded = false;
-        let discardAdded = false;
+      const from = state[fromKey].slice().filter((c) => {
+        if (options?.filter) return options.filter(c);
+        return true;
+      });
 
-        for (let i = 0; i < count; i++) {
-          if (from.length === 0) {
-            break;
-          }
+      const drawn: string[] = [];
 
-          const card = from.pop()!;
+      let handAdded = false;
+      let discardAdded = false;
 
-          card.state = "drawn";
-
-          drawn.push(card.name);
-
-          if (hand.length >= MAX_HAND_SIZE) {
-            discard.push(card);
-            discardAdded = true;
-          } else {
-            hand.push(card);
-            handAdded = true;
-          }
+      for (let i = 0; i < count; i++) {
+        if (from.length === 0) {
+          break;
         }
 
-        if (handAdded) bank.draw.play();
-        else if (discardAdded) bank.draw.play();
+        const card = from.pop()!;
 
-        return {
-          hand,
-          discard,
-          [fromKey]: shuffle(
-            state[fromKey].filter((c) => !drawn.includes(c.name)),
-            2,
-          ),
-          operationInProgress: {
-            ...state.operationInProgress,
-            draw: true,
-          },
-        };
+        card.state = "drawn";
+
+        drawn.push(card.name);
+
+        if (hand.length >= MAX_HAND_SIZE) {
+          discard.push(card);
+          discardAdded = true;
+        } else {
+          hand.push(card);
+          handAdded = true;
+        }
+      }
+
+      if (handAdded) bank.draw.play();
+      else if (discardAdded) bank.drop.play();
+
+      set({
+        hand,
+        discard,
+        [fromKey]: shuffle(
+          state[fromKey].filter((c) => !drawn.includes(c.name)),
+          2,
+        ),
       });
 
       await wait();
@@ -910,7 +932,7 @@ function cardGameMethods(
         }),
       }));
 
-      const state = getState();
+      state = getState();
 
       if (!options?.skipGameOverPause && isGameOver(state)) {
         await wait(2000);
@@ -965,53 +987,47 @@ function cardGameMethods(
           2,
         ),
         hand: state.hand.filter((c) => !dropped.some((d) => d.name === c.name)),
-        operationInProgress: {
-          ...state.operationInProgress,
-          discard: false,
-        },
       }));
+
+      state.setOperationInProgress("discard", false);
     },
 
     removeCard: async (name) => {
-      // on active l'animation de suppression de la carte
-      set((state) => ({
-        hand: state.hand.map((c) => {
-          if (c.name === name) {
-            return { ...c, state: "removed" };
-          }
-          return c;
-        }),
-        operationInProgress: {
-          ...state.operationInProgress,
-          remove: true,
-        },
-      }));
+      const state = getState();
 
-      bank.remove.play();
+      state.setOperationInProgress(`removeCard ${name}`, true);
 
-      // on attend la fin de l'animation
-      await wait(1000);
+      if (state.hand.some((c) => c.name === name)) {
+        // on active l'animation de suppression de la carte
+        set({
+          hand: state.hand.map((c) => {
+            if (c.name === name) {
+              return { ...c, state: "removed" };
+            }
+            return c;
+          }),
+        });
+
+        bank.remove.play();
+
+        // on attend la fin de l'animation
+        await wait(1000);
+      }
 
       // on retire la carte de la main, du deck et de la défausse
 
       const from = ["discard", "deck", "hand"] as const;
 
       set((state) => ({
-        ...from.reduce(
-          (acc, key) => {
-            return {
-              ...acc,
-              [key]: state[key].filter((c) => c.name !== name),
-            };
-          },
-          {
-            operationInProgress: {
-              ...state.operationInProgress,
-              remove: false,
-            },
-          } as Partial<CardGameState>,
-        ),
+        ...from.reduce((acc, key) => {
+          return {
+            ...acc,
+            [key]: state[key].filter((c) => c.name !== name),
+          };
+        }, {} as Partial<CardGameState>),
       }));
+
+      state.setOperationInProgress(`removeCard ${name}`, false);
     },
 
     /**
@@ -1044,10 +1060,9 @@ function cardGameMethods(
       set({
         deck: shuffle(to),
         discard: state.discard.filter((c) => !recycled.includes(c.name)),
-        operationInProgress: {
-          ...state.operationInProgress,
-          recycle: false,
-        },
+        operationInProgress: state.operationInProgress.filter(
+          (o) => o !== "recycle",
+        ),
       });
     },
 
@@ -1055,6 +1070,8 @@ function cardGameMethods(
       const free = !!options?.free;
 
       let state = getState();
+
+      const reason = options?.reason ?? card;
 
       const cantPlay = async () => {
         // jouer le son de la banque
@@ -1093,34 +1110,25 @@ function cardGameMethods(
 
       const { needs, cost, appliedModifiers } = parseCost(state, card);
 
-      if (!free) {
-        // on vérifie si on a assez de ressources
-        if (state[needs] < cost) {
-          if (needs === "energy") {
-            // on vérifie si on a assez de réputation et d'énergie
-            if (state.reputation + state.energy < cost) {
-              await cantPlay();
-              return;
-            }
-
-            state.setOperationInProgress("play", true);
-            await state.addEnergy(-cost, { skipGameOverPause: true });
-          } else {
-            await cantPlay();
-            return;
-          }
-        } else {
-          // on soustrait le coût de la carte à l'énergie
-          set({
-            [needs]: state[needs] - cost,
-            operationInProgress: {
-              ...state.operationInProgress,
-              play: true,
-            },
-          });
+      if (
+        free ||
+        Number(card.effect.cost) === 0 ||
+        (needs === "money"
+          ? state.money >= cost
+          : state.reputation + state.energy >= cost)
+      ) {
+        if (!free) {
+          if (needs === "money")
+            await state.addMoney(-cost, { skipGameOverPause: true, reason });
+          else
+            await state.addEnergy(-cost, { skipGameOverPause: true, reason });
         }
+
+        state.setOperationInProgress(`play ${card.name}`, true);
       } else {
-        state.setOperationInProgress("play", true);
+        await cantPlay();
+
+        return;
       }
 
       // on joue le son de la banque
@@ -1169,7 +1177,7 @@ function cardGameMethods(
 
         // on change de jour si besoin
         if (card.effect.type === "action") {
-          await state.addDay();
+          await state.addDay(1, options);
         }
       };
 
@@ -1178,7 +1186,7 @@ function cardGameMethods(
         if (card.effect.waitBeforePlay) await wait();
 
         // on applique l'effet de la carte (toujours via eval)
-        await card.effect.onPlayed(state, card);
+        await card.effect.onPlayed(state, card, reason);
       };
 
       await Promise.all([cardManagement(), effectManagement()]);
@@ -1189,14 +1197,14 @@ function cardGameMethods(
       state = getState();
 
       if (state.hand.length === 0) {
-        await state.draw();
+        await state.draw(1, { reason });
       }
 
       if (!options?.skipGameOverPause && isGameOver(getState())) {
         await wait(2000);
       }
 
-      state.setOperationInProgress("play", false);
+      state.setOperationInProgress(`play ${card.name}`, false);
     },
 
     win: () => {
@@ -1250,26 +1258,6 @@ useCardGame.subscribe((state, prevState) => {
   )
     state.updateScore();
 
-  if (
-    prevState.hand.map((c) => c.state).join(",") !==
-      state.hand.map((c) => c.state).join(",") ||
-    Object.values(prevState.operationInProgress).join(",") !==
-      Object.values(state.operationInProgress).join(",") ||
-    prevState.upgrades.map((u) => u.state).join(",") !==
-      state.upgrades.map((u) => u.state).join(",")
-  ) {
-    console.log("state", state);
-    state.dangerouslyUpdate({
-      isOperationInProgress:
-        state.hand.some((card) => card.state !== "idle") ||
-        (state.upgrades.length > 0 &&
-          state.upgrades.some((upgrade) => upgrade.state !== "idle")) ||
-        (Object.keys(state.operationInProgress).length > 0 &&
-          Object.values(state.operationInProgress).some((o) => o)),
-      // isOperationInProgress: false,
-    });
-  }
-
   localStorage.setItem(
     "card-game",
     JSON.stringify(state, (key, value) => {
@@ -1279,7 +1267,11 @@ useCardGame.subscribe((state, prevState) => {
   );
 
   // si aucune opération n'est en cours
-  if (!state.isOperationInProgress) {
+  if (
+    state.operationInProgress.join(",") !==
+      prevState.operationInProgress.join("") &&
+    state.operationInProgress.length === 0
+  ) {
     // on vérifie si le jeu est fini
     if (!state.infinityMode && !state.isWon && state.money >= MONEY_TO_REACH)
       state.win();

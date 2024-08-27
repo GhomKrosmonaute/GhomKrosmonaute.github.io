@@ -11,6 +11,7 @@ import { Stats } from "@/components/game/Stat.tsx";
 import { Card } from "@/components/Card.tsx";
 
 import { cn } from "@/utils.ts";
+import { GameLogs } from "@/components/game/GameLogs.tsx";
 
 export const GameValues = (props: { show: boolean }) => {
   const { shadows, animation } = useQualitySettings((state) => ({
@@ -62,8 +63,9 @@ export const GameValues = (props: { show: boolean }) => {
       />
 
       <GameControl show={props.show} delay={delayControl} />
+      <GameLogs show={props.show} />
 
-      <Card className="space-y-2">
+      <Card className="space-y-2 w-[400px]">
         <div className="text-3xl text-center">Game values</div>
         <Gauge type="energy" value={game.energy} max={MAX_ENERGY} />
         <Gauge
@@ -73,7 +75,7 @@ export const GameValues = (props: { show: boolean }) => {
           barColor="bg-pink-500"
         />
 
-        <Stats className="*:h-6 text-lg" verbose />
+        <Stats className="*:h-6 text-lg" forHUD />
       </Card>
     </div>
   );

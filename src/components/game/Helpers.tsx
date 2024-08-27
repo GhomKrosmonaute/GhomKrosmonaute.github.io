@@ -6,10 +6,15 @@ import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
 
 import Question from "@/assets/icons/question.svg";
 
+import { useHover } from "usehooks-ts";
 import { formatText } from "@/hooks/useCardGame.ts";
 import { cn } from "@/utils.ts";
 
 export const Helpers = (props: { show: boolean }) => {
+  const ref = React.useRef<HTMLDivElement>(null);
+
+  const isHovered = useHover(ref);
+
   const { animation, shadow, transparency } = useQualitySettings((state) => ({
     animation: state.animations,
     transparency: state.transparency,
@@ -18,10 +23,20 @@ export const Helpers = (props: { show: boolean }) => {
 
   const [helpIndex, setHelpIndex] = React.useState<number>(0);
 
+  // Change the helper index all 5 seconds, but only if the helper is not hovered
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      if (!isHovered) setHelpIndex((helpIndex + 1) % helpers.length);
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [helpIndex, isHovered]);
+
   return (
     <div
+      ref={ref}
       className={cn(
-        "absolute top-0 left-0 -translate-y-full -translate-x-full w-fit",
+        "absolute top-0 left-0 -translate-y-full -translate-x-full max-w-fit",
         "rounded-br-3xl border-8 border-upgrade border-t-0 border-l-0 p-4",
         {
           "bg-card/50": transparency,

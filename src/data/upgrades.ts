@@ -31,8 +31,8 @@ const upgrades: RawUpgrade[] = [
     description: "Rend @cumul @energy@s",
     image: "starbucks.png",
     condition: (state) => state.energy < MAX_ENERGY,
-    onTrigger: async (state, upgrade) => {
-      await state.addEnergy(upgrade.cumul, { skipGameOverPause: true });
+    onTrigger: async (state, upgrade, reason) => {
+      await state.addEnergy(upgrade.cumul, { skipGameOverPause: true, reason });
     },
     max: 3,
     cost: String(Math.max(0, 20 - advantage) * ENERGY_TO_MONEY), // 10 days * 2 cumul * 1 energy = 20
@@ -43,8 +43,8 @@ const upgrades: RawUpgrade[] = [
     description: "Pioche @cumul carte@s",
     image: "meditation.png",
     condition: (state) => state.deck.length > 0,
-    onTrigger: async (state, upgrade) => {
-      await state.draw(upgrade.cumul, { skipGameOverPause: true });
+    onTrigger: async (state, upgrade, reason) => {
+      await state.draw(upgrade.cumul, { skipGameOverPause: true, reason });
     },
     max: 3,
     cost: String(Math.max(0, 20 - advantage) * ENERGY_TO_MONEY), // 10 days * 2 cumul * 1 energy (for draw) = 20
@@ -55,9 +55,10 @@ const upgrades: RawUpgrade[] = [
     description: "Gagne @cumul fois 10% de votre capital",
     image: "bourse.png",
     condition: (state) => state.money > 0,
-    onTrigger: async (state, upgrade) => {
-      await state.addMoney(Math.ceil((upgrade.cumul / 100) * state.money), {
+    onTrigger: async (state, upgrade, reason) => {
+      await state.addMoney(Math.ceil(upgrade.cumul * (state.money / 10)), {
         skipGameOverPause: true,
+        reason,
       });
     },
     cost: String(Math.max(0, 8 - advantage) * ENERGY_TO_MONEY), // 20 days (for infinite cumul) * 2 cumul * 1/5 energy = 20
@@ -68,8 +69,8 @@ const upgrades: RawUpgrade[] = [
     description: "Place @cumul carte@s aléatoire@s de la défausse dans le deck",
     image: "recyclage.png",
     condition: (state) => state.discard.length > 0,
-    onTrigger: async (state, upgrade) => {
-      await state.recycle(upgrade.cumul);
+    onTrigger: async (state, upgrade, reason) => {
+      await state.recycle(upgrade.cumul, { reason });
     },
     max: 3,
     cost: String(Math.max(0, 20 - advantage) * ENERGY_TO_MONEY), // 10 days * 2 cumul * 1 energy (for recycle) = 20
@@ -80,9 +81,10 @@ const upgrades: RawUpgrade[] = [
     description: "Gagne @cumulM$ fois le nombre de carte en défausse",
     image: "ia.png",
     condition: (state) => state.discard.length > 0,
-    onTrigger: async (state, upgrade) => {
+    onTrigger: async (state, upgrade, reason) => {
       await state.addMoney(upgrade.cumul * state.discard.length, {
         skipGameOverPause: true,
+        reason,
       });
     },
     cost: String(Math.max(0, 80 - advantage) * ENERGY_TO_MONEY), // 20 days (for infinite cumul) * 2 cumul * 1/5 energy * 10 (discard average) = 20
@@ -93,8 +95,11 @@ const upgrades: RawUpgrade[] = [
     description: "Gagne @cumul @reputation@s",
     image: "sport.png",
     condition: (state) => state.reputation < MAX_REPUTATION,
-    onTrigger: async (state, upgrade) => {
-      await state.addReputation(upgrade.cumul, { skipGameOverPause: true });
+    onTrigger: async (state, upgrade, reason) => {
+      await state.addReputation(upgrade.cumul, {
+        skipGameOverPause: true,
+        reason,
+      });
     },
     max: 2,
     cost: Math.max(0, 20 - advantage), // 10 days * 2 cumul * 1 (for reputation) = 20
@@ -105,9 +110,10 @@ const upgrades: RawUpgrade[] = [
     description: "Gagne @cumulM$ fois le nombre d'@energy",
     image: "pc-puissant.png",
     condition: (state) => state.energy > 0,
-    onTrigger: async (state, upgrade) => {
+    onTrigger: async (state, upgrade, reason) => {
       await state.addMoney(upgrade.cumul * state.energy, {
         skipGameOverPause: true,
+        reason,
       });
     },
     max: 2,
@@ -119,9 +125,10 @@ const upgrades: RawUpgrade[] = [
     description: "Gagne @cumulM$ fois le nombre de cartes en main",
     image: "stagiaire.png",
     condition: (state) => state.hand.length > 0,
-    onTrigger: async (state, upgrade) => {
+    onTrigger: async (state, upgrade, reason) => {
       await state.addMoney(upgrade.cumul * state.hand.length, {
         skipGameOverPause: true,
+        reason,
       });
     },
     max: 5,

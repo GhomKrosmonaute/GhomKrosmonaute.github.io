@@ -29,12 +29,12 @@ export const Game = () => {
   return (
     <>
       <Helpers show={show} />
-      <Upgrades show={show} />
       <GameAlert show={show} />
       <Scoreboard show={show} />
       <GameValues show={show} />
       <GameOver show={show} />
       <GameActions show={show} />
+      <Upgrades show={show} />
       <CornerIcons show={show} />
       <Settings show={show && showSettings} />
 

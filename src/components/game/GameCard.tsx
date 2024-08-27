@@ -37,7 +37,7 @@ export const GameCard = (
 
   const {
     handSize,
-    isOperationInProgress,
+    operationInProgress,
     isGameOver,
     play,
     canTriggerEffect,
@@ -47,7 +47,7 @@ export const GameCard = (
 
     return {
       handSize: state.hand.length,
-      isOperationInProgress: state.isOperationInProgress,
+      operationInProgress: state.operationInProgress,
       play: state.play,
       isGameOver: state.isGameOver,
       parsedCost,
@@ -69,13 +69,13 @@ export const GameCard = (
           "hover:-translate-y-14": props.card.state !== "removed",
           [cn("transition-transform", props.card.state)]: animation,
           grayscale: isGameOver || !parsedCost.canBeBuy || !canTriggerEffect,
-          "cursor-not-allowed": isOperationInProgress,
+          "cursor-not-allowed": operationInProgress.length > 0,
           // "translate-y-8": !canTriggerEffect || !haveEnoughResources,
         },
       )}
       onClick={async () => {
-        if (!isOperationInProgress && !isGameOver) {
-          await play(props.card);
+        if (operationInProgress.length === 0 && !isGameOver) {
+          await play(props.card, { reason: props.card });
         }
       }}
       onContextMenu={(e) => {
@@ -373,7 +373,7 @@ const GameCardTechno = (
         }}
       >
         <img
-          src={props.card.logo}
+          src={props.card.image}
           alt={`Logo de la techno "${props.card.name}"`}
           className={cn("w-2/3 object-contain aspect-video", {
             "group-hover/game-card:animate-spin-forward":

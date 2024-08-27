@@ -29,7 +29,7 @@ export const Stat = (props: {
   );
 };
 
-export const Stats = (props: { className?: string; verbose?: boolean }) => {
+export const Stats = (props: { className?: string; forHUD?: boolean }) => {
   const game = useCardGame((state) => ({
     money: state.money,
     score: state.score,
@@ -53,7 +53,7 @@ export const Stats = (props: { className?: string; verbose?: boolean }) => {
           <span
             dangerouslySetInnerHTML={{
               __html: formatText(
-                `${game.money}M$ ${props.verbose ? `sur ${MONEY_TO_REACH}M$` : ""}`,
+                `${game.money}M$ ${props.forHUD ? `sur ${MONEY_TO_REACH}M$` : ""}`,
               ),
             }}
           />
@@ -69,7 +69,7 @@ export const Stats = (props: { className?: string; verbose?: boolean }) => {
         }
       />
       <Stat icon={Day} name="Jour" value={game.day} />
-      {props.verbose && (
+      {props.forHUD && (
         <>
           <Stat icon={Deck} name="Deck" value={game.deck.length} />
           <Stat icon={Discard} name="Défausse" value={game.discard.length} />

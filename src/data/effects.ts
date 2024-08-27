@@ -15,31 +15,37 @@ const effects: Effect[] = (
   [
     {
       description: `Gagne ${(2 + advantage) * ENERGY_TO_MONEY}M$`,
-      onPlayed: async (state) =>
+      onPlayed: async (state, _, reason) =>
         await state.addMoney((2 + advantage) * ENERGY_TO_MONEY, {
           skipGameOverPause: true,
+          reason,
         }),
       type: "action",
       cost: 2,
     },
     {
       description: `Gagne ${(4 + advantage) * ENERGY_TO_MONEY}M$`,
-      onPlayed: async (state) =>
+      onPlayed: async (state, _, reason) =>
         await state.addMoney((4 + advantage) * ENERGY_TO_MONEY, {
           skipGameOverPause: true,
+          reason,
         }),
       type: "action",
       cost: 4,
     },
     {
       description: `Le matin, gagne ${advantage * ENERGY_TO_MONEY}M$. L'après-midi, gagne ${advantage} @energy${advantage > 1 ? "s" : ""}`,
-      onPlayed: async (state) => {
+      onPlayed: async (state, _, reason) => {
         if (new Date().getHours() < 12) {
           await state.addMoney(advantage * ENERGY_TO_MONEY, {
             skipGameOverPause: true,
+            reason,
           });
         } else {
-          await state.addEnergy(advantage, { skipGameOverPause: true });
+          await state.addEnergy(advantage, {
+            skipGameOverPause: true,
+            reason,
+          });
         }
       },
       type: "action",
@@ -47,12 +53,12 @@ const effects: Effect[] = (
     },
     {
       description: `Gagne ${(2 + advantage) * ENERGY_TO_MONEY}M$ fois le nombre de cartes @action en main en comptant celle-ci`,
-      onPlayed: async (state) => {
+      onPlayed: async (state, _, reason) => {
         await state.addMoney(
           (2 + advantage) *
             ENERGY_TO_MONEY *
             state.hand.filter((card) => card.effect.type === "action").length,
-          { skipGameOverPause: true },
+          { skipGameOverPause: true, reason },
         );
       },
       type: "action",
@@ -60,9 +66,10 @@ const effects: Effect[] = (
     },
     {
       description: `Si le dark mode est activé, gagne ${(4 + advantage) * ENERGY_TO_MONEY}M$`,
-      onPlayed: async (state) =>
+      onPlayed: async (state, _, reason) =>
         await state.addMoney((4 + advantage) * ENERGY_TO_MONEY, {
           skipGameOverPause: true,
+          reason,
         }),
       condition: () => localStorage.getItem("theme") === "dark",
       type: "action",
@@ -70,9 +77,10 @@ const effects: Effect[] = (
     },
     {
       description: `Si la @reputation est inférieur à 5, gagne ${(4 + advantage) * ENERGY_TO_MONEY}M$`,
-      onPlayed: async (state) =>
+      onPlayed: async (state, _, reason) =>
         await state.addMoney((4 + advantage) * ENERGY_TO_MONEY, {
           skipGameOverPause: true,
+          reason,
         }),
       condition: (state) => state.reputation < 5,
       type: "action",
@@ -84,14 +92,18 @@ const effects: Effect[] = (
           ? ` et gagne ${advantage - 4} @energy${advantage - 4 > 1 ? "s" : ""}`
           : ""
       }`,
-      onPlayed: async (state) => {
+      onPlayed: async (state, _, reason) => {
         await state.play(state.hand[state.hand.length - 1], {
           free: true,
           skipGameOverPause: true,
+          reason,
         });
 
         if (advantage > 4) {
-          await state.addEnergy(advantage - 4, { skipGameOverPause: true });
+          await state.addEnergy(advantage - 4, {
+            skipGameOverPause: true,
+            reason,
+          });
         }
       },
       condition: (state, card) => {
@@ -122,16 +134,17 @@ const effects: Effect[] = (
       //
       //   return `(${cost} @energy${cost > 1 ? "s" : ""})`;
       // },
-      onPlayed: async (state) => {
+      onPlayed: async (state, _, reason) => {
         const target = state.hand[state.hand.length - 1];
         await state.discardCard({
           filter: (card) => card.name === target.name,
+          reason,
         });
         const cost =
           typeof target.effect.cost === "string"
             ? Math.ceil(Number(target.effect.cost) / ENERGY_TO_MONEY)
             : target.effect.cost;
-        await state.addEnergy(cost, { skipGameOverPause: true });
+        await state.addEnergy(cost, { skipGameOverPause: true, reason });
       },
       condition: (state, card) =>
         state.hand.length >= 1 &&
@@ -141,8 +154,8 @@ const effects: Effect[] = (
     },
     {
       description: `Pioche ${1 + advantage} carte${advantage > 0 ? "s" : ""}`,
-      onPlayed: async (state) =>
-        await state.draw(1 + advantage, { skipGameOverPause: true }),
+      onPlayed: async (state, _, reason) =>
+        await state.draw(1 + advantage, { skipGameOverPause: true, reason }),
       condition: (state) => state.deck.length >= 1,
       type: "support",
       cost: 1,
@@ -150,9 +163,10 @@ const effects: Effect[] = (
     },
     {
       description: `Pioche ${advantage > 2 ? 2 + (advantage - 2) : 2} cartes`,
-      onPlayed: async (state) =>
+      onPlayed: async (state, _, reason) =>
         await state.draw(advantage > 2 ? 2 + (advantage - 2) : 2, {
           skipGameOverPause: true,
+          reason,
         }),
       condition: (state) => state.deck.length >= 1,
       type: "support",
@@ -161,8 +175,8 @@ const effects: Effect[] = (
     },
     {
       description: `Si tu as moins de 5 cartes en main, pioche ${2 + advantage} cartes`,
-      onPlayed: async (state) =>
-        await state.draw(2 + advantage, { skipGameOverPause: true }),
+      onPlayed: async (state, _, reason) =>
+        await state.draw(2 + advantage, { skipGameOverPause: true, reason }),
       condition: (state) => state.hand.length < 5 && state.deck.length >= 1,
       type: "support",
       cost: 1,
@@ -174,17 +188,21 @@ const effects: Effect[] = (
           ? ` et gagne ${advantage % 2} @energy${advantage % 2 > 0 ? "s" : ""}`
           : ""
       }`,
-      onPlayed: async (state) => {
+      onPlayed: async (state, _, reason) => {
         await state.draw(
           advantage >= 2 ? 1 + Math.floor((advantage - 2) / 2) : 1,
           {
             filter: (card) => card.effect.type === "action",
             skipGameOverPause: true,
+            reason,
           },
         );
 
         if (advantage >= 2 && advantage % 2 !== 0) {
-          await state.addEnergy(advantage % 2, { skipGameOverPause: true });
+          await state.addEnergy(advantage % 2, {
+            skipGameOverPause: true,
+            reason,
+          });
         }
       },
       condition: (state) =>
@@ -199,15 +217,17 @@ const effects: Effect[] = (
           ? ` et gagne ${(advantage % 2) * ENERGY_TO_MONEY}M$`
           : ""
       }`,
-      onPlayed: async (state) => {
+      onPlayed: async (state, _, reason) => {
         await state.draw(1, {
           filter: (card) => card.effect.type === "action",
           skipGameOverPause: true,
+          reason,
         });
 
         if (advantage % 2 !== 0) {
           await state.addMoney((advantage % 2) * ENERGY_TO_MONEY, {
             skipGameOverPause: true,
+            reason,
           });
         }
       },
@@ -220,11 +240,15 @@ const effects: Effect[] = (
     },
     {
       description: `Défausse une carte aléatoire, pioche ${advantage >= 1 ? 2 : "une"} carte${advantage > 1 ? "s" : ""} et gagne ${(2 + advantage - 1) * ENERGY_TO_MONEY}M$`, // -2 +1 +2 = +1
-      onPlayed: async (state) => {
-        await state.discardCard({ random: true });
-        await state.draw(advantage >= 1 ? 2 : 1, { skipGameOverPause: true });
+      onPlayed: async (state, _, reason) => {
+        await state.discardCard({ random: true, reason });
+        await state.draw(advantage >= 1 ? 2 : 1, {
+          skipGameOverPause: true,
+          reason,
+        });
         await state.addMoney((2 + advantage - 1) * ENERGY_TO_MONEY, {
           skipGameOverPause: true,
+          reason,
         });
       },
       condition: (state) => state.hand.length >= 2 && state.deck.length >= 1,
@@ -234,10 +258,11 @@ const effects: Effect[] = (
     },
     {
       description: `Renvoie une carte aléatoire dans la pioche, pioche ${advantage >= 1 ? 1 + advantage : "une"} carte${advantage >= 1 ? "s" : ""}`,
-      onPlayed: async (state) => {
-        await state.discardCard({ toDeck: true, random: true });
+      onPlayed: async (state, _, reason) => {
+        await state.discardCard({ toDeck: true, random: true, reason });
         await state.draw(advantage >= 1 ? 1 + advantage : 1, {
           skipGameOverPause: true,
+          reason,
         });
       },
       condition: (state) => state.hand.length >= 2,
@@ -247,9 +272,9 @@ const effects: Effect[] = (
     },
     {
       description: `Défausse les cartes en main, pioche ${5 + advantage} cartes`,
-      onPlayed: async (state) => {
-        await state.discardCard();
-        await state.draw(5 + advantage, { skipGameOverPause: true });
+      onPlayed: async (state, _, reason) => {
+        await state.discardCard({ reason });
+        await state.draw(5 + advantage, { skipGameOverPause: true, reason });
       },
       condition: (state) => state.deck.length >= 1,
       type: "support",
@@ -260,10 +285,11 @@ const effects: Effect[] = (
       description: `Renvoie toutes les cartes en main dans la pioche, pioche ${
         advantage > 5 ? 5 + (advantage - 5) : 5
       } cartes`,
-      onPlayed: async (state) => {
-        await state.discardCard({ toDeck: true });
+      onPlayed: async (state, _, reason) => {
+        await state.discardCard({ toDeck: true, reason });
         await state.draw(advantage > 5 ? 5 + (advantage - 5) : 5, {
           skipGameOverPause: true,
+          reason,
         });
       },
       type: "support",
@@ -274,12 +300,16 @@ const effects: Effect[] = (
       description: `Pioche autant de carte que d'@upgrades découvertes${
         advantage > 3 ? ` et gagne ${(advantage - 3) * ENERGY_TO_MONEY}M$` : ""
       }`,
-      onPlayed: async (state) => {
-        await state.draw(state.upgrades.length, { skipGameOverPause: true });
+      onPlayed: async (state, _, reason) => {
+        await state.draw(state.upgrades.length, {
+          skipGameOverPause: true,
+          reason,
+        });
 
         if (advantage > 3) {
           await state.addMoney((advantage - 3) * ENERGY_TO_MONEY, {
             skipGameOverPause: true,
+            reason,
           });
         }
       },
@@ -292,18 +322,21 @@ const effects: Effect[] = (
       description: `Défausse les cartes @support en main(min 1), pioche 2 cartes @action${
         advantage > 0 ? ` et gagne ${advantage * ENERGY_TO_MONEY}M$` : ""
       }`, // -3 + 4 = +1
-      onPlayed: async (state) => {
+      onPlayed: async (state, _, reason) => {
         await state.discardCard({
           filter: (card) => card.effect.type === "support",
+          reason,
         });
         await state.draw(2, {
           filter: (card) => card.effect.type === "action",
           skipGameOverPause: true,
+          reason,
         });
 
         if (advantage > 0) {
           await state.addMoney(advantage * ENERGY_TO_MONEY, {
             skipGameOverPause: true,
+            reason,
           });
         }
       },
@@ -315,11 +348,12 @@ const effects: Effect[] = (
     },
     {
       description: `Défausse les cartes @action en main(min 1), pioche ${3 + advantage} cartes`,
-      onPlayed: async (state) => {
+      onPlayed: async (state, _, reason) => {
         await state.discardCard({
           filter: (card) => card.effect.type === "action",
+          reason,
         });
-        await state.draw(3 + advantage, { skipGameOverPause: true });
+        await state.draw(3 + advantage, { skipGameOverPause: true, reason });
       },
       condition: (state) =>
         state.hand.some((card) => card.effect.type === "action"),
@@ -333,14 +367,18 @@ const effects: Effect[] = (
           ? ` et gagne ${advantage - 4} @energy${advantage - 4 > 1 ? "s" : ""}`
           : ""
       }`,
-      onPlayed: async (state) => {
+      onPlayed: async (state, _, reason) => {
         await state.draw(2, {
           filter: (c) => typeof c.effect.cost === "number",
           skipGameOverPause: true,
+          reason,
         });
 
         if (advantage > 4) {
-          await state.addEnergy(advantage - 4, { skipGameOverPause: true });
+          await state.addEnergy(advantage - 4, {
+            skipGameOverPause: true,
+            reason,
+          });
         }
       },
       condition: (state) =>
@@ -355,11 +393,14 @@ const effects: Effect[] = (
           ? `, gagne ${advantage - 3} @energy${advantage - 3 > 1 ? "s" : ""}`
           : ""
       }`, // 4 (middle effect) - 1 (easy condition) = 3
-      onPlayed: async (state) => {
+      onPlayed: async (state, _, reason) => {
         state.addCardModifier("next card half cost", []);
 
         if (advantage > 3) {
-          await state.addEnergy(advantage - 3, { skipGameOverPause: true });
+          await state.addEnergy(advantage - 3, {
+            skipGameOverPause: true,
+            reason,
+          });
         }
       },
       type: "support",
@@ -396,20 +437,29 @@ const effects: Effect[] = (
     },
     {
       description: `${advantage > 4 ? `Ajoute ${advantage - 4} @energy${advantage > 5 ? "s" : ""}` : "D"}ouble l'@energy`, // as middle effect
-      onPlayed: async (state) => {
+      onPlayed: async (state, _, reason) => {
         if (advantage > 4) {
-          await state.addEnergy(advantage - 4, { skipGameOverPause: true });
+          await state.addEnergy(advantage - 4, {
+            skipGameOverPause: true,
+            reason,
+          });
         }
 
-        await state.addEnergy(state.energy, { skipGameOverPause: true });
+        await state.addEnergy(state.energy, {
+          skipGameOverPause: true,
+          reason,
+        });
       },
       type: "action",
       cost: String(Math.max(0, 4 - advantage) * ENERGY_TO_MONEY),
     },
     {
       description: `Ajoute ${4 + advantage} @energys`,
-      onPlayed: async (state) =>
-        await state.addEnergy(4 + advantage, { skipGameOverPause: true }),
+      onPlayed: async (state, _, reason) =>
+        await state.addEnergy(4 + advantage, {
+          skipGameOverPause: true,
+          reason,
+        }),
       type: "action",
       cost: String(4 * ENERGY_TO_MONEY),
     },
@@ -417,9 +467,10 @@ const effects: Effect[] = (
       description: `Si la @reputation est inférieur à 5, ajoute ${
         advantage > 3 ? 5 + advantage - 3 : 5
       } @energys`, // -2 + 5 = +3
-      onPlayed: async (state) =>
+      onPlayed: async (state, _, reason) =>
         await state.addEnergy(advantage > 3 ? 5 + advantage - 3 : 5, {
           skipGameOverPause: true,
+          reason,
         }),
       condition: (state) => state.reputation < 5,
       type: "action",
@@ -427,8 +478,8 @@ const effects: Effect[] = (
     },
     {
       description: "Remplis la jauge de @reputation", // middle score of reputation = 5 (parce qu'elle n'est jamais vide)
-      onPlayed: async (state) =>
-        await state.addReputation(10, { skipGameOverPause: true }),
+      onPlayed: async (state, _, reason) =>
+        await state.addReputation(10, { skipGameOverPause: true, reason }),
       type: "action",
       cost: String(
         Math.max(0, 5 * REPUTATION_TO_ENERGY - advantage) * ENERGY_TO_MONEY,

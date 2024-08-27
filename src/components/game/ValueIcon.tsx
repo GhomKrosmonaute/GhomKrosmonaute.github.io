@@ -10,13 +10,21 @@ export const ValueIcon = (props: {
   className?: string;
   style?: React.CSSProperties;
   isCost?: boolean;
+  miniature?: boolean;
 }) => {
   const energy = useCardGame((state) => state.energy);
 
   if (props.isCost && props.value === 0) return <></>;
 
   return (
-    <div className={cn("relative", props.className)} style={props.style}>
+    <div
+      className={cn(
+        "relative",
+        { "w-8 h-8": props.miniature },
+        props.className,
+      )}
+      style={props.style}
+    >
       {props.type === "energy" ? (
         !props.isCost || energy >= props.value ? (
           <img
@@ -56,12 +64,14 @@ export const ValueIcon = (props: {
       <div
         className={cn(
           "absolute top-1/2 left-1/2 font-bold text-[1.8em] text-white pointer-events-none box-content",
+          { "text-md": props.miniature },
           props.textColor,
         )}
         style={{
           transform: "translateX(-50%) translateY(-50%) translateZ(5px)",
         }}
       >
+        {props.miniature ? (props.value > 0 ? "+" : "") : ""}
         {props.value}
       </div>
     </div>

@@ -6,6 +6,7 @@ export const MoneyIcon = (
     value: string;
     className?: string;
     style?: React.CSSProperties;
+    miniature?: boolean;
   }>,
 ) => {
   if (props.value === "0") return <></>;
@@ -13,17 +14,21 @@ export const MoneyIcon = (
   return (
     <div
       className={cn(
-        "text-2xl font-bold border border-white px-1 bg-money text-money-foreground",
+        "text-2xl font-bold border border-white px-1 bg-money text-money-foreground w-fit",
+        { "text-md": props.miniature },
         props.className,
       )}
       style={props.style}
     >
       <div
         style={{
-          transform: "translateZ(5px)",
+          transform: !props.miniature ? "translateZ(5px)" : "none",
         }}
       >
-        {props.value}M$
+        {props.miniature
+          ? `${Number(props.value) > 0 ? "+" : ""}${props.value}`
+          : props.value}
+        M$
       </div>
     </div>
   );

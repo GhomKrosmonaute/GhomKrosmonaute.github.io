@@ -1,86 +1,86 @@
 [
   {
     "name": "TypeScript",
-    "logo": "ts.png"
+    "image": "ts.png"
   },
   {
     "name": "React",
-    "logo": "react.webp"
+    "image": "react.webp"
   },
   {
     "name": "Tailwind CSS",
-    "logo": "tailwind.png"
+    "image": "tailwind.png"
   },
   {
     "name": "NodeJS",
-    "logo": "node.png"
+    "image": "node.png"
   },
   {
     "name": "Vercel",
-    "logo": "vercel.png"
+    "image": "vercel.png"
   },
   {
     "name": "Next.js",
-    "logo": "nextjs.webp"
+    "image": "nextjs.webp"
   },
   {
     "name": "PostgreSQL",
-    "logo": "pgsql.png"
+    "image": "pgsql.png"
   },
   {
     "name": "Docker",
-    "logo": "docker.webp"
+    "image": "docker.webp"
   },
   {
     "name": "PixiJS",
-    "logo": "pixi.png"
+    "image": "pixi.png"
   },
   {
     "name": "Three.js",
-    "logo": "three.png"
+    "image": "three.png"
   },
   {
     "name": "Gulp",
-    "logo": "gulp.webp"
+    "image": "gulp.webp"
   },
   {
     "name": "Knex",
-    "logo": "knex.png"
+    "image": "knex.png"
   },
   {
     "name": "Git",
-    "logo": "git.png"
+    "image": "git.png"
   },
   {
     "name": "Processing",
-    "logo": "processing.webp"
+    "image": "processing.webp"
   },
   {
     "name": "p5.js",
-    "logo": "p5.png"
+    "image": "p5.png"
   },
   {
     "name": "Strapi",
-    "logo": "strapi.png"
+    "image": "strapi.png"
   },
   {
     "name": "Windows",
-    "logo": "windows.png"
+    "image": "windows.png"
   },
   {
     "name": "MacOS",
-    "logo": "macos.png"
+    "image": "macos.png"
   },
   {
     "name": "Linux",
-    "logo": "linux.png"
+    "image": "linux.png"
   },
   {
     "name": "Jetbrains",
-    "logo": "jetbrains.webp"
+    "image": "jetbrains.webp"
   },
   {
     "name": "Ruby",
-    "logo": "ruby.png"
+    "image": "ruby.png"
   }
 ]

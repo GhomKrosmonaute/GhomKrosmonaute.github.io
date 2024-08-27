@@ -1,1 +1,1 @@
-export const metadata = { version: "1.0.5" };
+export const metadata = { version: "1.0.6" };

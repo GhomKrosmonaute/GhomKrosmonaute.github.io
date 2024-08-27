@@ -16,11 +16,13 @@ export const GameActions = (props: { show: boolean }) => {
   const game = useCardGame();
   const animation = useQualitySettings((state) => state.animations);
 
+  const runningOps = game.operationInProgress.length > 0;
+
   const disabled =
     game.energy + game.reputation < INFINITE_DRAW_COST ||
     game.hand.length >= MAX_HAND_SIZE ||
     game.deck.length === 0 ||
-    game.isOperationInProgress;
+    runningOps;
 
   return (
     <div
@@ -29,6 +31,7 @@ export const GameActions = (props: { show: boolean }) => {
         {
           "transition-opacity duration-500 ease-in-out": animation,
           "opacity-100": props.show,
+          "pointer-events-none": !props.show,
         },
       )}
     >
@@ -41,8 +44,12 @@ export const GameActions = (props: { show: boolean }) => {
             bank.play.play();
             await game.addEnergy(-INFINITE_DRAW_COST, {
               skipGameOverPause: true,
+              reason: "Bouton pioche",
             });
-            await game.draw(1, { skipGameOverPause: true });
+            await game.draw(1, {
+              skipGameOverPause: true,
+              reason: "Bouton pioche",
+            });
             await game.triggerUpgradeEvent("eachDay", {
               skipGameOverPause: true,
             });
@@ -63,7 +70,7 @@ export const GameActions = (props: { show: boolean }) => {
         {process.env.NODE_ENV === "development" && (
           <>
             <Button
-              disabled={game.isOperationInProgress}
+              disabled={runningOps}
               className="text-upgrade"
               onClick={async () => {
                 game.upgrades = [];
@@ -75,13 +82,15 @@ export const GameActions = (props: { show: boolean }) => {
                       await game.upgrade(raw.name);
                     }),
                   );
+
+                  await game.removeCard(raw.name);
                 }
               }}
             >
               Toutes les améliorations
             </Button>
             <Button
-              disabled={game.isOperationInProgress || game.hand.length === 0}
+              disabled={runningOps || game.hand.length === 0}
               onClick={() => game.removeCard(game.hand[0]?.name)}
             >
               Supprime la première carte
@@ -90,14 +99,14 @@ export const GameActions = (props: { show: boolean }) => {
               <Button
                 className="text-green-500"
                 onClick={() => game.win()}
-                disabled={game.isOperationInProgress}
+                disabled={runningOps}
               >
                 Win
               </Button>
               <Button
                 className="text-red-500"
                 onClick={() => game.gameOver("reputation")}
-                disabled={game.isOperationInProgress}
+                disabled={runningOps}
               >
                 Lose
               </Button>
