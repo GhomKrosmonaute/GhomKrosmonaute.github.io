@@ -13,6 +13,11 @@ export interface QualityOptions {
   perspective: boolean; // transformStyle: "preserve-3d" | "flat"
 }
 
+export const difficultyIndex = Object.entries(GAME_ADVANTAGE).reduce(
+  (acc, entry, index) => ({ ...acc, [entry[0]]: index + 1 }),
+  {} as Record<Difficulty, number>,
+);
+
 export const defaultSettings: Settings = {
   difficulty: "normal",
   quality: {

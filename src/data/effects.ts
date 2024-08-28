@@ -36,7 +36,7 @@ const effects: Effect[] = (
     {
       description: `Le matin, gagne ${advantage * ENERGY_TO_MONEY}M$. L'après-midi, gagne ${advantage} @energy${advantage > 1 ? "s" : ""}`,
       onPlayed: async (state, _, reason) => {
-        if (new Date().getHours() < 12) {
+        if (state.day % 1 < 0.5) {
           await state.addMoney(advantage * ENERGY_TO_MONEY, {
             skipGameOverPause: true,
             reason,

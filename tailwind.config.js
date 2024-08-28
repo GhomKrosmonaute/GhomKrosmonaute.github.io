@@ -171,8 +171,9 @@ module.exports = {
         "border-light-opposed-fast-disappear":
           "border-light-opposed-disappear 1s infinite linear",
         "spin-forward": "spin 3s linear infinite",
-        appear: "appear 0.5s ease-in-out forwards 0.5s",
-        trigger: "trigger 0.5s ease-in-out forwards 0.5s",
+        appear: "appear 0.25s ease-in-out forwards 0.25s",
+        trigger: "trigger 0.25s ease-in-out forwards 0.25s",
+        "ping-forwards": "ping 2s cubic-bezier(0, 0, 0.2, 1) forwards",
       },
     },
   },

@@ -1,17 +1,13 @@
 import React from "react";
 
-import { useCardGame } from "@/hooks/useCardGame.ts";
 import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
 
-import { MAX_ENERGY, MAX_REPUTATION } from "@/game-constants.ts";
-
 import { GameControl } from "@/components/game/GameControl.tsx";
-import { Gauge } from "@/components/game/Gauge.tsx";
+import { GameLogs } from "@/components/game/GameLogs.tsx";
 import { Stats } from "@/components/game/Stat.tsx";
 import { Card } from "@/components/Card.tsx";
 
 import { cn } from "@/utils.ts";
-import { GameLogs } from "@/components/game/GameLogs.tsx";
 
 export const GameValues = (props: { show: boolean }) => {
   const { shadows, animation } = useQualitySettings((state) => ({
@@ -21,12 +17,6 @@ export const GameValues = (props: { show: boolean }) => {
 
   const [delayControl, setDelayControl] = React.useState(true);
   const [delayDiv, setDelayDiv] = React.useState(false);
-
-  const game = useCardGame((state) => ({
-    energy: state.energy,
-    reputation: state.reputation,
-    reset: state.reset,
-  }));
 
   // use an effect for delay the transmission of "props.show" to the "GameControl"
   // component but only if it's true, otherwise it's the parent div that will be delayed
@@ -66,15 +56,6 @@ export const GameValues = (props: { show: boolean }) => {
       <GameLogs show={props.show} />
 
       <Card className="space-y-2 w-[400px]">
-        <div className="text-3xl text-center">Game values</div>
-        <Gauge type="energy" value={game.energy} max={MAX_ENERGY} />
-        <Gauge
-          type="reputation"
-          value={game.reputation}
-          max={MAX_REPUTATION}
-          barColor="bg-pink-500"
-        />
-
         <Stats className="*:h-6 text-lg" forHUD />
       </Card>
     </div>

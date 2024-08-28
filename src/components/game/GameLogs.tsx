@@ -4,10 +4,10 @@ import { GameMiniature } from "@/components/game/GameMiniature.tsx";
 import { MoneyIcon } from "@/components/game/MoneyIcon.tsx";
 import { ValueIcon } from "@/components/game/ValueIcon.tsx";
 
-const SIZE = 12;
+const SIZE = 10;
 
 export const GameLogs = (props: { show: boolean }) => {
-  const logs = useCardGame((state) => state.logs);
+  const logs = useCardGame((state) => state.logs.toReversed());
 
   return (
     <div
@@ -21,13 +21,13 @@ export const GameLogs = (props: { show: boolean }) => {
       <table>
         <tbody>
           {new Array(SIZE).fill(0).map((_, index) => {
-            const log = logs.slice(-SIZE)[index];
+            const log = logs.slice()[SIZE - 1 - index];
 
             return log ? (
               <tr
                 key={index}
                 style={{
-                  opacity: index / SIZE + index / logs.length,
+                  opacity: index / SIZE,
                 }}
               >
                 <td>
@@ -44,14 +44,25 @@ export const GameLogs = (props: { show: boolean }) => {
                     {log.type === "money" ? (
                       <MoneyIcon miniature value={String(log.value)} />
                     ) : (
-                      <ValueIcon miniature value={log.value} type={log.type} />
+                      <ValueIcon
+                        miniature
+                        value={log.value}
+                        colors={
+                          cn({
+                            "bg-reputation": log.type === "reputation",
+                            "bg-energy": log.type === "energy",
+                          }) as `bg-${string}`
+                        }
+                      />
                     )}
                   </span>
                 </td>
               </tr>
             ) : (
               <tr key={index}>
-                <td></td>
+                <td className="pb-1.5">
+                  <span className="inline-block h-7"></span>
+                </td>
                 <td></td>
               </tr>
             );

@@ -31,6 +31,8 @@ export const ENERGY_TO_MONEY = 5;
  */
 export const REPUTATION_TO_ENERGY = 10;
 
+export const ENERGY_TO_DAYS = 0.1;
+
 export const TRIGGER_EVENTS = {
   eachDay: ["Chaque jour", "par jour"],
   eachTurn: ["A chaque carte jouée", "par carte"],

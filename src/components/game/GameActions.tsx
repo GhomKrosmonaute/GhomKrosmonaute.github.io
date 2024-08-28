@@ -1,4 +1,8 @@
-import { INFINITE_DRAW_COST, MAX_HAND_SIZE } from "@/game-constants.ts";
+import {
+  ENERGY_TO_DAYS,
+  INFINITE_DRAW_COST,
+  MAX_HAND_SIZE,
+} from "@/game-constants.ts";
 
 import { cn } from "@/utils.ts";
 import { Card } from "@/components/Card.tsx";
@@ -6,7 +10,12 @@ import { Button } from "@/components/ui/button.tsx";
 
 import { ValueIcon } from "@/components/game/ValueIcon.tsx";
 
-import { useCardGame, isGameOver, wait } from "@/hooks/useCardGame.ts";
+import {
+  useCardGame,
+  isGameOver,
+  wait,
+  energyCostColor,
+} from "@/hooks/useCardGame.ts";
 import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
 import { bank } from "@/sound.ts";
 
@@ -41,19 +50,23 @@ export const GameActions = (props: { show: boolean }) => {
           className={cn("flex justify-start gap-2", { grayscale: disabled })}
           onClick={async () => {
             game.setOperationInProgress("infinity-draw", true);
+
             bank.play.play();
+
             await game.addEnergy(-INFINITE_DRAW_COST, {
               skipGameOverPause: true,
               reason: "Bouton pioche",
             });
+
             await game.draw(1, {
               skipGameOverPause: true,
               reason: "Bouton pioche",
             });
-            await game.triggerUpgradeEvent("eachDay", {
-              skipGameOverPause: true,
-            });
+
+            await game.advanceTime(INFINITE_DRAW_COST);
+
             if (isGameOver(game)) await wait(2000);
+
             game.setOperationInProgress("infinity-draw", false);
           }}
           disabled={disabled}
@@ -61,14 +74,22 @@ export const GameActions = (props: { show: boolean }) => {
         >
           <ValueIcon
             value={INFINITE_DRAW_COST}
-            type="energy"
             isCost
             className="w-8"
+            colors={energyCostColor(game, INFINITE_DRAW_COST)}
           />{" "}
           Piocher une carte
         </Button>
         {process.env.NODE_ENV === "development" && (
           <>
+            <Button
+              disabled={runningOps}
+              onClick={() =>
+                game.advanceTime(Math.round((12 * 60) / ENERGY_TO_DAYS))
+              }
+            >
+              Ajouter 12h
+            </Button>
             <Button
               disabled={runningOps}
               className="text-upgrade"

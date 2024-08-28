@@ -13,6 +13,7 @@ import {
   useCardGame,
   isActionCardInfo,
   parseCost,
+  energyCostColor,
 } from "@/hooks/useCardGame.ts";
 
 import { cn } from "@/utils.ts";
@@ -42,8 +43,10 @@ export const GameCard = (
     play,
     canTriggerEffect,
     parsedCost,
+    energyColor,
   } = useCardGame((state) => {
     const parsedCost = parseCost(state, props.card);
+    const energyColor = energyCostColor(state, parsedCost.cost);
 
     return {
       handSize: state.hand.length,
@@ -51,6 +54,7 @@ export const GameCard = (
       play: state.play,
       isGameOver: state.isGameOver,
       parsedCost,
+      energyColor,
       canTriggerEffect:
         !props.card.effect.condition ||
         props.card.effect.condition(state, props.card),
@@ -198,9 +202,8 @@ export const GameCard = (
               {parsedCost.needs === "energy" ? (
                 <ValueIcon
                   isCost
-                  type="energy"
                   value={parsedCost.cost}
-                  iconScale="0.75"
+                  colors={energyColor}
                   style={{
                     transform: perspective ? "translateZ(5px)" : "none",
                     transformStyle: perspective ? "preserve-3d" : "flat",

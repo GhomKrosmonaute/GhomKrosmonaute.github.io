@@ -75,4 +75,9 @@ export const bank = {
     volume: 0.3,
     preload: true,
   }),
+  bell: new Howl({
+    src: ["sounds/bell.mp3"],
+    volume: 0.5,
+    preload: true,
+  }),
 };

@@ -1,28 +1,31 @@
+import React from "react";
 import { Progress } from "@/components/ui/progress.tsx";
 import { ValueIcon } from "@/components/game/ValueIcon.tsx";
 
 export const Gauge = (props: {
-  type: "energy" | "reputation";
   className?: string;
   value: number;
+  display?: (fraction: number) => React.ReactNode;
   max: number;
-  iconScale?: number | string;
-  textColor?: string;
-  barColor?: string;
+  color?: `bg-${string}` & string;
+  title: string;
+  increaseOnly?: boolean;
 }) => {
   return (
     <div className="flex items-center h-7 w-full">
       <ValueIcon
-        type={props.type}
-        value={props.value}
-        iconScale={props.iconScale}
-        textColor={props.textColor}
+        title={props.title}
+        value={
+          props.display ? props.display(props.value / props.max) : props.value
+        }
+        colors={props.color ?? "bg-primary"}
         className="absolute -translate-x-1/2 z-50 scale-50"
       />
       <Progress
-        barColor={props.barColor}
+        barColor={props.color}
         className={props.className}
         value={(props.value / props.max) * 100}
+        increaseOnly={props.increaseOnly}
       />
     </div>
   );

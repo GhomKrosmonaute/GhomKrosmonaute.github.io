@@ -61,7 +61,8 @@ const upgrades: RawUpgrade[] = [
         reason,
       });
     },
-    cost: String(Math.max(0, 8 - advantage) * ENERGY_TO_MONEY), // 20 days (for infinite cumul) * 2 cumul * 1/5 energy = 20
+    max: 5,
+    cost: String(Math.max(0, 10 - advantage) * ENERGY_TO_MONEY),
   },
   {
     name: "Recyclage",

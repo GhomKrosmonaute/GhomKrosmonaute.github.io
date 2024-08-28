@@ -2,8 +2,8 @@ import { bank, music, musicId } from "@/sound.ts";
 import { create } from "zustand";
 
 import {
+  ENERGY_TO_DAYS,
   ENERGY_TO_MONEY,
-  GAME_ADVANTAGE,
   INFINITE_DRAW_COST,
   MAX_ENERGY,
   MAX_HAND_SIZE,
@@ -15,7 +15,7 @@ import {
 } from "@/game-constants.ts";
 
 import { metadata } from "@/game-metadata.ts";
-import { settings } from "@/game-settings.ts";
+import { difficultyIndex, settings } from "@/game-settings.ts";
 
 import technos from "@/data/techno.json";
 import projects from "@/data/projects.json";
@@ -119,6 +119,8 @@ type MethodWhoLog = {
 
 type GameMethodOptions = MethodWhoCheckIfGameOver & MethodWhoLog;
 
+type ColorClass = `bg-${string}` & string;
+
 export interface CardGameState {
   logs: GameLog[];
   operationInProgress: string[];
@@ -134,22 +136,26 @@ export interface CardGameState {
   cardModifiers: CardModifierIndice[];
   score: number;
   day: number;
+  dayFull: boolean;
+  /**
+   * Entre 0 et 23
+   */
   energy: number;
   reputation: number;
   money: number;
+  advanceTime: (energy: number) => Promise<void>;
   addLog: (log: GameLog) => void;
   dangerouslyUpdate: (partial: Partial<CardGameState>) => void;
   updateScore: () => void;
   addEnergy: (count: number, options: GameMethodOptions) => Promise<void>;
   addReputation: (count: number, options: GameMethodOptions) => Promise<void>;
   addMoney: (count: number, options: GameMethodOptions) => Promise<void>;
-  addDay: (count: number, options: MethodWhoCheckIfGameOver) => Promise<void>;
   upgrade: (name: string) => Promise<void>;
-  triggerUpgrade: (name: string, options: GameMethodOptions) => Promise<void>;
-  triggerUpgradeEvent: (
-    event: TriggerEvent,
-    options: MethodWhoCheckIfGameOver,
+  triggerUpgrade: (
+    name: string,
+    options: MethodWhoCheckIfGameOver & Partial<MethodWhoLog>,
   ) => Promise<void>;
+  triggerEvent: (event: TriggerEvent) => Promise<void>;
   addCardModifier: <CardModifierName extends keyof typeof cardModifiers>(
     name: CardModifierName,
     params: Parameters<(typeof cardModifiers)[CardModifierName]>,
@@ -179,6 +185,17 @@ export interface CardGameState {
   gameOver: (reason: GameOverReason) => void;
   reset: () => void;
   continue: () => void;
+}
+
+export function energyCostColor(
+  state: CardGameState,
+  cost: number,
+): ColorClass | [ColorClass, ColorClass] {
+  return state.energy >= cost
+    ? "bg-energy"
+    : state.energy > 0
+      ? ["bg-energy", "bg-reputation"]
+      : "bg-reputation";
 }
 
 export function isGameOver(state: CardGameState): GameOverReason | false {
@@ -350,8 +367,12 @@ export function formatUpgradeText(text: string, cumul: number) {
     .replace(/@s/g, cumul > 1 ? "s" : "");
 }
 
-export async function wait(ms = 500) {
+export async function wait(ms = 250) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+export async function waitAnimationFrame() {
+  return new Promise((resolve) => requestAnimationFrame(resolve));
 }
 
 function shuffle(cards: GameCardInfo[], times = 1): GameCardInfo[] {
@@ -541,6 +562,7 @@ function generateInitialState(): Omit<
     upgrades: [],
     cardModifiers: [["upgrade cost threshold", []]],
     day: 1,
+    dayFull: false,
     energy: MAX_ENERGY,
     reputation: MAX_REPUTATION,
     money: 0,
@@ -558,6 +580,42 @@ function cardGameMethods(
   getState: () => CardGameState,
 ) {
   return {
+    advanceTime: async (energy: number) => {
+      if (energy <= 0) return;
+
+      const state = getState();
+
+      state.setOperationInProgress("advanceTime", true);
+
+      const addedDays = energy * ENERGY_TO_DAYS;
+
+      let previousFullDay = Math.floor(state.day);
+
+      const after = state.day + addedDays;
+
+      for (let day = state.day; day < after; day += ENERGY_TO_DAYS) {
+        if (previousFullDay !== Math.floor(day)) {
+          set({ dayFull: true });
+
+          previousFullDay = Math.floor(day);
+
+          // on joue le son de la banque
+          bank.bell.play();
+
+          await wait(1000);
+          await state.triggerEvent("eachDay");
+        } else {
+          await waitAnimationFrame();
+        }
+
+        set({ day, dayFull: false });
+      }
+
+      set({ day: after });
+
+      state.setOperationInProgress("advanceTime", false);
+    },
+
     addLog: (log) => {
       set((state) => ({
         logs: [...state.logs, log],
@@ -575,25 +633,47 @@ function cardGameMethods(
     },
 
     updateScore: () => {
-      // Plus la partie dure longtemps, plus le score diminue.
-      // Moins tu perds de réputation, plus le score est élevé.
-      // Plus tu as d'argent en fin de partie, plus le score est élevé.
-      // Chaque cumul d'activité augmente le score.
-      // L'énergie restante augmente légèrement le score.
-      // Calcul :
+      const state = getState();
 
-      set((state) => ({
-        score: Math.floor(
-          state.energy +
-            state.reputation * REPUTATION_TO_ENERGY +
-            state.money / ENERGY_TO_MONEY +
-            state.upgrades.reduce((acc, upgrade) => acc + upgrade.cumul, 0) *
-              10 *
-              (50 / state.day) *
-              100 *
-              (1 + Object.keys(GAME_ADVANTAGE).indexOf(settings.difficulty)),
-        ),
-      }));
+      // Coefficients de pondération pour chaque élément
+      const energyWeight = 1;
+      const reputationWeight = REPUTATION_TO_ENERGY;
+      const moneyWeight = 1 / ENERGY_TO_MONEY;
+
+      // Calcul des points pour chaque élément
+      const energyPoints = state.energy * energyWeight;
+      const reputationPoints = state.reputation * reputationWeight;
+      const moneyPoints = state.money * moneyWeight;
+
+      // Calcul des points pour les améliorations
+      let upgradesPoints = 0;
+      state.upgrades.forEach((upgrade) => {
+        upgradesPoints +=
+          (typeof upgrade.cost === "string"
+            ? Number(upgrade.cost) / ENERGY_TO_MONEY
+            : upgrade.cost) * upgrade.cumul;
+      });
+
+      // Calcul du multiplicateur en fonction des jours
+      let daysMultiplier = 1;
+      if (state.day <= 28) {
+        daysMultiplier = 2;
+      } else if (state.day <= 56) {
+        daysMultiplier = 1.5;
+      }
+
+      // Calcul du multiplicateur en fonction de la difficulté
+      const difficultyMultiplier =
+        1 + (difficultyIndex[settings.difficulty] - 3) * 0.2; // Diff. 3 = x1, diff. 4 = x1.2, diff. 2 = x0.8, etc.
+
+      // Calcul du score total
+      const baseScore =
+        energyPoints + reputationPoints + moneyPoints + upgradesPoints;
+      const finalScore = baseScore * daysMultiplier * difficultyMultiplier;
+
+      set({
+        score: Math.round(finalScore),
+      });
     },
 
     addEnergy: async (count, options) => {
@@ -602,16 +682,19 @@ function cardGameMethods(
       state.setOperationInProgress("energy", true);
 
       if (count > 0) {
-        // on joue le son de la banque
-        bank.gain.play();
+        const addedEnergy = Math.min(count, MAX_ENERGY - state.energy);
 
-        state.addLog({
-          value: count,
-          type: "energy",
-          reason: options.reason,
-        });
+        if (addedEnergy > 0) {
+          bank.gain.play();
 
-        await wait();
+          state.addLog({
+            value: addedEnergy,
+            type: "energy",
+            reason: options.reason,
+          });
+
+          await wait();
+        }
 
         set((state) => {
           return {
@@ -623,14 +706,15 @@ function cardGameMethods(
 
         // on retire toute l'énergie et on puise dans la réputation pour le reste
         const missingEnergy = Math.abs(count) - state.energy;
-
         const consumedEnergy = Math.min(Math.abs(count), state.energy);
 
-        state.addLog({
-          value: -consumedEnergy,
-          type: "energy",
-          reason: options.reason,
-        });
+        if (consumedEnergy > 0) {
+          state.addLog({
+            value: -consumedEnergy,
+            type: "energy",
+            reason: options.reason,
+          });
+        }
 
         if (missingEnergy > 0) {
           set({ energy: 0 });
@@ -687,13 +771,15 @@ function cardGameMethods(
     addMoney: async (count, options) => {
       let state = getState();
 
-      state.addLog({
-        value: count,
-        type: "money",
-        reason: options?.reason,
-      });
-
       state.setOperationInProgress("money", true);
+
+      if (count !== 0) {
+        state.addLog({
+          value: count,
+          type: "money",
+          reason: options?.reason,
+        });
+      }
 
       if (count > 0) {
         bank.cashing.play();
@@ -714,25 +800,6 @@ function cardGameMethods(
       }
 
       state.setOperationInProgress("money", false);
-    },
-
-    addDay: async (count = 1, options) => {
-      const state = getState();
-
-      state.setOperationInProgress("addDay", true);
-
-      set({ day: state.day + count });
-
-      if (count > 0) {
-        // appliquer les effets de fin de journée
-        const state = getState();
-
-        for (let i = 0; i < count; i++) {
-          await state.triggerUpgradeEvent("eachDay", options);
-        }
-      }
-
-      state.setOperationInProgress("addDay", false);
     },
 
     upgrade: async (name) => {
@@ -794,64 +861,54 @@ function cardGameMethods(
       const state = getState();
       const upgrade = state.upgrades.find((a) => a.name === name)!;
 
-      state.setOperationInProgress(`triggerUpgrade ${name}`, true);
+      if (!upgrade.condition || upgrade.condition(getState(), upgrade)) {
+        state.setOperationInProgress(`triggerUpgrade ${name}`, true);
 
-      // mettre l'activité en triggered
-      set({
-        upgrades: state.upgrades.map((a) => {
-          if (a.name === upgrade.name) {
-            return { ...a, state: "triggered" };
-          }
-          return a;
-        }),
-      });
+        // mettre l'activité en triggered
+        set({
+          upgrades: state.upgrades.map((a) => {
+            if (a.name === upgrade.name) {
+              return { ...a, state: "triggered" };
+            }
+            return a;
+          }),
+        });
 
-      await wait();
+        await wait();
 
-      await upgrade.onTrigger(getState(), upgrade, options?.reason ?? upgrade);
+        await upgrade.onTrigger(
+          getState(),
+          upgrade,
+          options?.reason ?? upgrade,
+        );
 
-      await wait();
+        // remettre l'activité en idle
+        set((state) => ({
+          upgrades: state.upgrades.map((a) => {
+            if (a.name === upgrade.name) {
+              return { ...a, state: "idle" };
+            }
+            return a;
+          }),
+        }));
 
-      // remettre l'activité en idle
-      set((state) => ({
-        upgrades: state.upgrades.map((a) => {
-          if (a.name === upgrade.name) {
-            return { ...a, state: "idle" };
-          }
-          return a;
-        }),
-      }));
-
-      state.setOperationInProgress(`triggerUpgrade ${name}`, false);
+        state.setOperationInProgress(`triggerUpgrade ${name}`, false);
+      }
     },
 
-    triggerUpgradeEvent: async (event, options) => {
-      let state = getState();
+    triggerEvent: async (event) => {
+      const state = getState();
 
       state.setOperationInProgress(`triggerUpgradeEvent ${event}`, true);
 
-      const upgrades = state.upgrades
-        .slice()
-        .filter((upgrade) => upgrade.triggerEvent === event);
-
-      let i = 0;
-
-      await Promise.all(
-        upgrades.map(async (upgrade) => {
-          if (!upgrade.condition || upgrade.condition(getState(), upgrade)) {
-            await wait(500 * i++);
-            await state.triggerUpgrade(upgrade.name, {
-              skipGameOverPause: options.skipGameOverPause,
-              reason: upgrade,
-            });
-          }
-        }),
+      const upgrades = state.upgrades.filter(
+        (upgrade) => upgrade.triggerEvent === event,
       );
 
-      state = getState();
-
-      if (!options.skipGameOverPause && isGameOver(state)) {
-        await wait(2000);
+      for (const upgrade of upgrades) {
+        await state.triggerUpgrade(upgrade.name, {
+          reason: upgrade,
+        });
       }
 
       state.setOperationInProgress(`triggerUpgradeEvent ${event}`, false);
@@ -1034,12 +1091,16 @@ function cardGameMethods(
      * Place des cartes de la défausse dans le deck
      */
     recycle: async (count = 1) => {
-      // on joue le son de la banque
-      bank.recycle.play();
+      if (count <= 0) return;
 
       const state = getState();
 
+      if (state.discard.length === 0) return;
+
       state.setOperationInProgress("recycle", true);
+
+      // on joue le son de la banque
+      bank.recycle.play();
 
       const from = state.discard.slice();
       const to = state.deck.slice();
@@ -1057,13 +1118,14 @@ function cardGameMethods(
         to.push(card);
       }
 
+      await wait();
+
       set({
         deck: shuffle(to),
         discard: state.discard.filter((c) => !recycled.includes(c.name)),
-        operationInProgress: state.operationInProgress.filter(
-          (o) => o !== "recycle",
-        ),
       });
+
+      state.setOperationInProgress("recycle", false);
     },
 
     play: async (card, options) => {
@@ -1118,6 +1180,10 @@ function cardGameMethods(
           : state.reputation + state.energy >= cost)
       ) {
         if (!free) {
+          state
+            .advanceTime(needs === "money" ? cost / ENERGY_TO_MONEY : cost)
+            .then();
+
           if (needs === "money")
             await state.addMoney(-cost, { skipGameOverPause: true, reason });
           else
@@ -1174,11 +1240,6 @@ function cardGameMethods(
             );
           }),
         }));
-
-        // on change de jour si besoin
-        if (card.effect.type === "action") {
-          await state.addDay(1, options);
-        }
       };
 
       const effectManagement = async () => {
