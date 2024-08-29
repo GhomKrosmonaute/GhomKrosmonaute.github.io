@@ -7,7 +7,7 @@ import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
 import Question from "@/assets/icons/question.svg";
 
 import { useHover } from "usehooks-ts";
-import { formatText } from "@/hooks/useCardGame.ts";
+import { formatText } from "@/game-utils";
 import { cn } from "@/utils.ts";
 
 export const Helpers = (props: { show: boolean }) => {

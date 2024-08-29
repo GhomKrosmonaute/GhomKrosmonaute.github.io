@@ -1,7 +1,7 @@
-import path from "path";
-import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import path from "path";
 import { visualizer } from "rollup-plugin-visualizer";
+import { defineConfig } from "vite";
 import svg from "./dev/vite/plugins/svg.ts";
 
 // https://vitejs.dev/config/

@@ -76,7 +76,7 @@ export default function App() {
   );
 
   return (
-    <>
+    <div className="font-zain text-xl leading-5">
       {largeWidth && (
         <>
           {godRays && (
@@ -128,11 +128,11 @@ export default function App() {
 
       <RouterProvider router={router} />
 
-      {largeScreen && (
+      {(process.env.NODE_ENV === "development" || largeScreen) && (
         <React.Suspense>
           <Game />
         </React.Suspense>
       )}
-    </>
+    </div>
   );
 }

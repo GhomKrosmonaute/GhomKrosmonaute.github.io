@@ -1,6 +1,6 @@
+import type { CardModifier } from "@/game-typings";
 import { ENERGY_TO_MONEY } from "@/game-constants.ts";
-
-import { CardModifier, getUpgradeCost } from "@/hooks/useCardGame.ts";
+import { getUpgradeCost } from "@/game-utils";
 
 const cardModifiers = {
   "upgrade cost threshold": () => ({

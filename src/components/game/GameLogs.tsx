@@ -46,6 +46,7 @@ export const GameLogs = (props: { show: boolean }) => {
                     ) : (
                       <ValueIcon
                         miniature
+                        symbol
                         value={log.value}
                         colors={
                           cn({

@@ -21,19 +21,19 @@ export const Contact = () => {
         <h1 className="text-3xl text-center md:text-left">Contact</h1>
         <div className="flex flex-col gap-2">
           <a href="mailto: camille.abella@proton.me" target="_blank">
-            <code className="flex items-center gap-4 h-min">
+            <span className="flex items-center gap-4 h-min font-sans">
               <Email className="w-5" />
               camille.abella@proton.me
-            </code>
+            </span>
           </a>
           <a
             href="https://www.linkedin.com/in/camille-abella-a99950176/"
             target="_blank"
           >
-            <code className="flex items-center gap-4">
+            <span className="flex items-center gap-4 font-sans">
               <LinkedIn className="w-5" />
               LinkedIn: Camille ABELLA
-            </code>
+            </span>
           </a>
         </div>
         <div className="flex gap-2">

@@ -11,11 +11,6 @@ module.exports = {
   ],
   prefix: "",
   theme: {
-    fontFamily: {
-      changa: ["Changa", "sans-serif"],
-      zain: ["Zain", "sans-serif"],
-      amsterdam: ['"New Amsterdam"', "sans-serif"],
-    },
     container: {
       center: true,
       padding: "2rem",
@@ -24,6 +19,11 @@ module.exports = {
       },
     },
     extend: {
+      fontFamily: {
+        changa: ["Changa", "sans-serif"],
+        zain: ["Zain", "sans-serif"],
+        amsterdam: ['"New Amsterdam"', "sans-serif"],
+      },
       grayscale: {
         50: "50%",
         75: "75%",
@@ -75,13 +75,26 @@ module.exports = {
           DEFAULT: "hsl(var(--support))",
           foreground: "hsl(var(--support-foreground))",
         },
-        energy: "hsl(var(--energy))",
-        reputation: "hsl(var(--reputation))",
-        upgrade: "hsl(var(--upgrade))",
+        energy: {
+          DEFAULT: "hsl(var(--energy))",
+          foreground: "hsl(var(--energy-foreground))",
+        },
+        reputation: {
+          DEFAULT: "hsl(var(--reputation))",
+          foreground: "hsl(var(--reputation-foreground))",
+        },
+        upgrade: {
+          DEFAULT: "hsl(var(--upgrade))",
+          foreground: "hsl(var(--upgrade-foreground))",
+        },
         "image-foil": "hsl(var(--foil))",
         money: {
           DEFAULT: "hsl(var(--money))",
           foreground: "hsl(var(--money-foreground))",
+        },
+        day: {
+          DEFAULT: "hsl(var(--day))",
+          foreground: "hsl(var(--day-foreground))",
         },
       },
       boxShadow: {

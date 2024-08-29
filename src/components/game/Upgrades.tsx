@@ -1,14 +1,12 @@
-import {
-  formatText,
-  formatUpgradeText,
-  useCardGame,
-} from "@/hooks/useCardGame.ts";
+import { useCardGame } from "@/hooks/useCardGame.ts";
 
+import { formatText, formatUpgradeText } from "@/game-utils.ts";
 import { cn } from "@/utils.ts";
 
-import { Progress } from "@/components/ui/progress.tsx";
 import { Card } from "@/components/Card.tsx";
+import { Progress } from "@/components/ui/progress.tsx";
 import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
+import { ValueIcon } from "@/components/game/ValueIcon.tsx";
 
 export const Upgrades = (props: { show: boolean }) => {
   const quality = useQualitySettings((state) => ({
@@ -74,14 +72,17 @@ export const Upgrades = (props: { show: boolean }) => {
                       value={(upgrade.cumul / upgrade.max) * 100}
                     />
                   )}
-                  <div
-                    className={cn(
-                      "absolute text-center font-changa left-0 -translate-y-3 aspect-square h-6 rounded-full bg-upgrade",
-                      { "shadow shadow-black": quality.shadows },
-                    )}
-                  >
-                    {upgrade.cumul}
-                  </div>
+                  <ValueIcon
+                    value={upgrade.cumul}
+                    colors="bg-upgrade"
+                    miniature
+                    className="absolute h-6 w-6"
+                    style={{
+                      top: "50%",
+                      left: "0",
+                      transform: "translate(0, -50%)",
+                    }}
+                  />
                 </div>
               </div>
 

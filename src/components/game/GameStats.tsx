@@ -1,23 +1,30 @@
 import React from "react";
 
+import { formatText } from "@/game-utils.ts";
+import { useCardGame } from "@/hooks/useCardGame.ts";
 import { cn } from "@/utils.ts";
-import { formatText, useCardGame } from "@/hooks/useCardGame.ts";
 
 import Day from "@/assets/icons/game/day.svg";
 import Deck from "@/assets/icons/game/deck.svg";
+import Discard from "@/assets/icons/game/discard.svg";
+import Infinity from "@/assets/icons/game/infinity.svg";
 import Money from "@/assets/icons/game/money.svg";
 import Score from "@/assets/icons/game/score.svg";
-import Discard from "@/assets/icons/game/discard.svg";
 import Settings from "@/assets/icons/settings.svg";
-import Infinity from "@/assets/icons/game/infinity.svg";
 
+import { Gauge } from "@/components/game/Gauge.tsx";
 import {
   MAX_ENERGY,
   MAX_REPUTATION,
   MONEY_TO_REACH,
 } from "@/game-constants.ts";
 import { settings, translations } from "@/game-settings.ts";
-import { Gauge } from "@/components/game/Gauge.tsx";
+import { MiniatureImage } from "@/components/game/GameMiniature.tsx";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card.tsx";
 
 export const Stat = (props: {
   name: string;
@@ -63,18 +70,21 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
               title="Réputation"
               value={game.reputation}
               max={MAX_REPUTATION}
-              color="bg-pink-500"
+              color="bg-reputation"
             />
             <Gauge
               title="Journée"
-              display={(fraction) => `${Math.floor(fraction * 100)}%`}
-              value={game.dayFull ? 10 : Math.floor((game.day % 1) * 10)}
-              max={10}
-              color="bg-green-500"
+              display={(f) => (Math.floor(f * 24) % 24) + "h"}
+              value={
+                game.dayFull === null ? game.day % 1 : game.dayFull ? 1 : 0
+              }
+              max={1}
+              color="bg-day"
               increaseOnly
             />
             <Gauge
               title="Sprint"
+              display={(f) => Math.floor(f * 7) + "j"}
               value={Math.floor(game.day % 7)}
               max={7}
               color="bg-upgrade"
@@ -82,10 +92,46 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
             />
           </div>
           <div className="flex flex-col items-start gap-y-1 *:gap-2 *:h-6 *:flex *:items-center">
-            <span>Energie</span>
+            <span className="capitalize">énergie</span>
             <span>Réputation</span>
             <Stat icon={Day} name="Jour" value={Math.floor(game.day)} />
             <Stat icon={Day} name="Sprint" value={Math.floor(game.day / 7)} />
+          </div>
+        </div>
+      )}
+      {props.forHUD && (
+        <div className="grid grid-cols-3 w-full gap-x-2">
+          <div className="col-span-2 space-y-1">
+            {(["deck", "discard"] as const).map((collection) => (
+              <div key={collection} className="flex justify-end">
+                {game[collection]
+                  .toSorted((a, b) => {
+                    return b.type > a.type ? 1 : -1;
+                  })
+                  .map((c, i) => (
+                    <HoverCard key={i} openDelay={0} closeDelay={0}>
+                      <HoverCardTrigger asChild>
+                        <div className="h-6 hover:shrink-0 pointer-events-auto">
+                          <MiniatureImage
+                            item={c}
+                            className="ring-0 rounded-none"
+                          />
+                        </div>
+                      </HoverCardTrigger>
+                      <HoverCardContent
+                        className="pointer-events-none"
+                        dangerouslySetInnerHTML={{
+                          __html: `<h2>${c.name}</h2><br />${c.effect.description}`,
+                        }}
+                      />
+                    </HoverCard>
+                  ))}
+              </div>
+            ))}
+          </div>
+          <div className="flex flex-col items-start gap-y-1 *:gap-2 *:h-6 *:flex *:items-center">
+            <Stat icon={Deck} name="Pioche" value={game.deck.length} />
+            <Stat icon={Discard} name="Défausse" value={game.discard.length} />
           </div>
         </div>
       )}
@@ -119,12 +165,6 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
         />
         {!props.forHUD && (
           <Stat icon={Day} name="Jour" value={Math.floor(game.day)} />
-        )}
-        {props.forHUD && (
-          <>
-            <Stat icon={Deck} name="Deck" value={game.deck.length} />
-            <Stat icon={Discard} name="Défausse" value={game.discard.length} />
-          </>
         )}
         <Stat
           icon={Settings}

@@ -1,118 +1,87 @@
-import React from "react";
+import { useQualitySettings } from "@/hooks/useQualitySettings";
 import { cn } from "@/utils.ts";
+import React from "react";
+import { ColorClass } from "@/game-typings.ts";
 
-type ValueColor = `bg-${string}` & string;
+const foregrounds = [
+  "text-energy-foreground",
+  "text-reputation-foreground",
+  "text-day-foreground",
+  "text-upgrade-foreground",
+];
 
-export const ValueIcon = (
-  props: React.ComponentProps<"div"> & {
-    value: number | React.ReactNode;
-    colors: ValueColor | [ValueColor, ValueColor];
-    isCost?: boolean;
-    miniature?: boolean;
-  },
-) => {
-  if (props.isCost && props.value === 0) return null;
+export const ValueIcon = ({
+  isCost,
+  miniature,
+  colors,
+  value,
+  symbol,
+  ...props
+}: React.ComponentProps<"div"> & {
+  value: number | React.ReactNode;
+  colors: ColorClass | [ColorClass, ColorClass];
+  isCost?: boolean;
+  symbol?: boolean;
+  miniature?: boolean;
+}) => {
+  const quality = useQualitySettings(({ perspective, shadows }) => ({
+    perspective,
+    shadows,
+  }));
+
+  if (isCost && value === 0) return null;
 
   return (
     <div
       {...props}
       className={cn(
-        "relative",
+        "relative aspect-square rounded-full text-changa",
+        typeof colors === "string" ? colors : colors[0],
         {
-          "w-8 h-8": props.miniature,
-          "w-10 h-10": !props.miniature,
+          "w-8 h-8 text-sm": miniature,
+          "w-10 h-10": !miniature,
+          "shadow shadow-black": quality.shadows,
         },
+        foregrounds.find((fg) =>
+          fg.includes(
+            (typeof colors === "string" ? colors : colors[0])!.replace(
+              "bg-",
+              "",
+            ),
+          ),
+        ),
         props.className,
       )}
+      style={{
+        transformStyle: quality.perspective ? "preserve-3d" : "flat",
+        transform: quality.perspective ? "translateZ(5px)" : "",
+        ...props.style,
+      }}
     >
-      <div
-        className={cn(
-          "absolute rounded-full aspect-square w-full h-full top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2",
-          typeof props.colors === "string"
-            ? props.colors
-            : cn(
-                "w-1/2 -translate-x-full rotate-[22.5deg] rounded-r-none rounded-l-full",
-                props.colors[0],
-              ),
-        )}
-      />
-      {Array.isArray(props.colors) && (
+      {/* Second color */}
+      {Array.isArray(colors) && (
         <div
           className={cn(
-            "absolute rounded-r-full aspect-square w-1/2 h-full top-1/2 left-1/2 translate-x-full -translate-y-1/2 rotate-[22.5deg]",
-            props.colors[1],
+            "absolute w-1/2 h-full origin-right rotate-[-22.5deg] rounded-l-full",
+            colors[1],
           )}
         />
       )}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-        {props.miniature && typeof props.value === "number"
-          ? props.value > 0
+
+      {/* Value */}
+      <div
+        className="absolute top-1/2 left-1/2 font-changa"
+        style={{
+          transform: `translate(-50%, -50%) ${quality.perspective ? "translateZ(5px)" : ""}`,
+        }}
+      >
+        {miniature && symbol && typeof value === "number"
+          ? value > 0
             ? "+"
             : ""
           : ""}
-        {props.value}
+        {value}
       </div>
     </div>
   );
-
-  // return (
-  //   <div
-  //     className={cn(
-  //       "relative",
-  //       { "w-8 h-8": props.miniature },
-  //       props.className,
-  //     )}
-  //     style={props.style}
-  //   >
-  //     {props.type === "energy" ? (
-  //       !props.isCost || energy >= props.value ? (
-  //         <img
-  //           src="images/energy-background.png"
-  //           alt={`Energie background image`}
-  //           title={props.isCost ? "Coût en énergie" : "Energie"}
-  //           className="pointer-events-auto"
-  //           style={{ scale: props.iconScale }}
-  //         />
-  //       ) : energy > 0 ? (
-  //         <img
-  //           src="images/enerputation-background.png"
-  //           alt={`Energie background image`}
-  //           title={props.isCost ? "Coût en énergie" : "Energie"}
-  //           className="pointer-events-auto"
-  //           style={{ scale: props.iconScale }}
-  //         />
-  //       ) : (
-  //         <img
-  //           src="images/reputation-background.png"
-  //           alt={`Reputation background image`}
-  //           title="Coût en réputation"
-  //           className="pointer-events-auto"
-  //           style={{ scale: props.iconScale }}
-  //         />
-  //       )
-  //     ) : (
-  //       <img
-  //         src="images/reputation-background.png"
-  //         alt={`Reputation background image`}
-  //         title="Réputation"
-  //         className="pointer-events-auto"
-  //         style={{ scale: props.iconScale }}
-  //       />
-  //     )}
-  //
-  //     <div
-  //       className={cn(
-  //         "absolute top-1/2 left-1/2 font-bold text-[1.8em] text-white pointer-events-none box-content",
-  //         { "text-md": props.miniature },
-  //         props.textColor,
-  //       )}
-  //       style={{
-  //         transform: "translateX(-50%) translateY(-50%) translateZ(5px)",
-  //       }}
-  //     >
-  //       {props.miniature ? (props.value > 0 ? "+" : "") : ""}
-  //       {props.value}
-  //     </div>
-  //   </div>
-  // );
 };

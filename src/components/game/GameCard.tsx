@@ -2,26 +2,26 @@ import React from "react";
 
 import "./GameCard.css";
 
+import BrokenCard from "@/assets/icons/game/broken-card.svg";
 import QuoteLeft from "@/assets/icons/quote-left.svg";
 import QuoteRight from "@/assets/icons/quote-right.svg";
-import BrokenCard from "@/assets/icons/game/broken-card.svg";
 
-import {
-  GameCardInfo,
+import type {
   ActionCardInfo,
+  GameCardInfo,
   SupportCardInfo,
-  useCardGame,
-  isActionCardInfo,
-  parseCost,
-  energyCostColor,
-} from "@/hooks/useCardGame.ts";
+} from "@/game-typings";
 
-import { cn } from "@/utils.ts";
-import { Tilt, TiltFoil } from "@/components/game/Tilt.tsx";
-import { BorderLight } from "@/components/ui/border-light.tsx";
-import { ValueIcon } from "@/components/game/ValueIcon.tsx";
+import { useCardGame } from "@/hooks/useCardGame.ts";
+
+import { energyCostColor, isActionCardInfo, parseCost } from "@/game-utils.ts";
+
 import { MoneyIcon } from "@/components/game/MoneyIcon.tsx";
+import { Tilt, TiltFoil } from "@/components/game/Tilt.tsx";
+import { ValueIcon } from "@/components/game/ValueIcon.tsx";
+import { BorderLight } from "@/components/ui/border-light.tsx";
 import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
+import { cn } from "@/utils.ts";
 
 export const GameCard = (
   props: React.PropsWithoutRef<{ card: GameCardInfo; position: number }>,
@@ -70,6 +70,7 @@ export const GameCard = (
         "relative w-[210px] h-[293px]",
         "-mx-3.5 z-10 hover:z-20 cursor-pointer select-none",
         {
+          "-translate-y-14": props.card.state === "selected",
           "hover:-translate-y-14": props.card.state !== "removed",
           [cn("transition-transform", props.card.state)]: animation,
           grayscale: isGameOver || !parsedCost.canBeBuy || !canTriggerEffect,
@@ -126,10 +127,6 @@ export const GameCard = (
           scale={1.1}
           className={cn(
             "group/game-card",
-            {
-              "transition-shadow duration-200 ease-in-out hover:shadow-glow-20 shadow-primary":
-                shadows,
-            },
             "flex flex-col w-full h-full rounded-xl",
             "*:shrink-0",
             {
@@ -138,6 +135,9 @@ export const GameCard = (
                 "bg-card": !transparency,
               })]: props.card.effect.type === "support",
               // "shadow-action": props.card.effect.type === "action",
+              "transition-shadow duration-200 ease-in-out hover:shadow-glow-20 shadow-primary":
+                shadows,
+              "shadow-glow-20 shadow-primary": props.card.state === "selected",
             },
           )}
         >
@@ -195,7 +195,7 @@ export const GameCard = (
             <div
               className="font-changa shrink-0 relative"
               style={{
-                transform: `${perspective ? "translateZ(5px)" : ""} translateX(-15px)`,
+                transform: `${perspective ? "translateZ(5px)" : ""} translateX(${parsedCost.needs === "money" ? "-15px" : "-8px"})`,
                 transformStyle: perspective ? "preserve-3d" : "flat",
               }}
             >

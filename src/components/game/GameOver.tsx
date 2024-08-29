@@ -1,16 +1,17 @@
 import React from "react";
 
-import { formatText, rankColor, useCardGame } from "@/hooks/useCardGame.ts";
+import { useCardGame } from "@/hooks/useCardGame.ts";
 import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
 import { useGlobalState } from "@/hooks/useGlobalState.ts";
 
 import { settings } from "@/game-settings.ts";
+import { formatText, rankColor } from "@/game-utils.ts";
 
 import scores from "@/data/scores.json";
 import helpers from "@/data/helpers.json";
 
 import { Button } from "@/components/ui/button.tsx";
-import { Stats } from "@/components/game/Stat.tsx";
+import { Stats } from "@/components/game/GameStats.tsx";
 import { Tilt } from "@/components/game/Tilt.tsx";
 import { cn } from "@/utils.ts";
 
@@ -116,7 +117,7 @@ export const GameOver = (props: { show: boolean }) => {
                           # {rank + 1}
                         </span>
                       </div>
-                      <p className="text-lg">
+                      <p className="text-2xl whitespace-nowrap">
                         <a
                           href="https://www.linkedin.com/in/camille-abella-a99950176/"
                           target="_blank"
@@ -128,7 +129,7 @@ export const GameOver = (props: { show: boolean }) => {
                       </p>
                     </>
                   ) : (
-                    <div className="text-lg">
+                    <div className="text-2xl whitespace-nowrap">
                       Vous n'êtes pas classé, <br /> votre score est trop
                       faible. <br /> Essayez{" "}
                       {settings.difficulty === "noob" ||
@@ -150,7 +151,7 @@ export const GameOver = (props: { show: boolean }) => {
                 </div>
               </div>
             ) : (
-              <div className="text-lg group/helpers">
+              <div className="text-2xl group/helpers">
                 {helpers
                   .filter((helper) => {
                     switch (game.reason) {
@@ -179,13 +180,13 @@ export const GameOver = (props: { show: boolean }) => {
                   })
                   .map((helper, i) => (
                     <div
+                      key={i}
                       className={cn("transform hover:scale-110", {
                         "transition-transform duration-500 ease-in-out":
                           quality.animation,
                       })}
                     >
                       <p
-                        key={i}
                         className={cn("hover:text-foreground", {
                           [cn("animate-trigger", {
                             "delay-0": i === 0,

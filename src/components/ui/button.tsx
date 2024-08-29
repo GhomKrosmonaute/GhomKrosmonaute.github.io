@@ -9,7 +9,7 @@ import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
 const buttonVariants = cva(
   cn(
     "button group/button",
-    "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50",
+    "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-sans font-medium transition-colors focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50",
     "ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
     "block relative overflow-hidden px-4 py-2 max-w-fit",
     "text-center leading-6 text-secondary-foreground whitespace-nowrap",

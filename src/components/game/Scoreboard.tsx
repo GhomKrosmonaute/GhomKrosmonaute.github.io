@@ -1,9 +1,9 @@
-import { cn } from "@/utils.ts";
-import scores from "@/data/scores.json";
 import Trophy from "@/assets/icons/game/trophy.svg";
-import { rankColor } from "@/hooks/useCardGame.ts";
 import { Card } from "@/components/Card.tsx";
+import scores from "@/data/scores.json";
+import { rankColor } from "@/game-utils.ts";
 import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
+import { cn } from "@/utils.ts";
 
 export const Scoreboard = (props: { show: boolean }) => {
   const { shadows, animation, transparency } = useQualitySettings((state) => ({
@@ -37,7 +37,7 @@ export const Scoreboard = (props: { show: boolean }) => {
       />
       <Card>
         <div className="space-y-3 pointer-events-auto flex flex-col items-center">
-          <div className="text-3xl">Scoreboard</div>
+          <h2 className="text-3xl">Scoreboard</h2>
           <div
             className={cn("rounded-xl p-5", {
               "bg-card/40": transparency,
@@ -81,7 +81,7 @@ export const Scoreboard = (props: { show: boolean }) => {
             </table>
           </div>
 
-          <p className="text-muted-foreground text-sm bg-muted py-1 px-2 rounded-md whitespace-nowrap">
+          <p className="text-muted-foreground text-lg leading-5 bg-muted py-1 px-2 rounded-md whitespace-nowrap">
             Si vous avez un meilleur score, vous pouvez me le <br />
             soumettre en me contactant sur Discord ou LinkedIn !
           </p>

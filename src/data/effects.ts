@@ -1,4 +1,4 @@
-import type { Effect } from "@/hooks/useCardGame.ts";
+import type { Effect } from "@/game-typings";
 
 import {
   ENERGY_TO_MONEY,

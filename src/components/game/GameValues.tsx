@@ -4,7 +4,7 @@ import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
 
 import { GameControl } from "@/components/game/GameControl.tsx";
 import { GameLogs } from "@/components/game/GameLogs.tsx";
-import { Stats } from "@/components/game/Stat.tsx";
+import { Stats } from "@/components/game/GameStats.tsx";
 import { Card } from "@/components/Card.tsx";
 
 import { cn } from "@/utils.ts";

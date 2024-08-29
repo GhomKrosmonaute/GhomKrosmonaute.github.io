@@ -37,17 +37,16 @@ a:active {
   text-decoration: none;
 }
 
-h1 {
+h1,
+h2 {
   margin-top: 0;
+  @apply font-changa;
 }
 
 code {
   display: inline-block;
   white-space: nowrap;
-  font-weight: bold;
-  font-size: 2em;
-  padding: 0 0.2em;
-  color: hsla(var(--secondary-foreground));
+  @apply font-mono;
 }
 
 @media (width <= 768px) {

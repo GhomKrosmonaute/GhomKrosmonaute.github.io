@@ -73,11 +73,16 @@
     --support: var(--foreground);
     --support-foreground: var(--background);
     --energy: 262.1 83.3% 57.8%;
+    --energy-foreground: 210 20% 98%;
     --reputation: 292 84% 61%;
+    --reputation-foreground: 210 20% 98%;
     --money: 155 100% 23%;
     --money-foreground: 0 0% 94%;
     --upgrade: 38 92% 50%;
+    --upgrade-foreground: 210 20% 98%;
     --image-foil: 293 100% 60%;
+    --day: 150 100% 54%;
+    --day-foreground: 0 0% 0%;
   }
 
   .dark {
@@ -86,11 +91,16 @@
     --support: var(--foreground);
     --support-foreground: var(--background);
     --energy: 262.1 83.3% 57.8%;
+    --energy-foreground: 210 20% 98%;
     --reputation: 292 84% 61%;
+    --reputation-foreground: 210 20% 98%;
     --money: 166 91% 9%;
     --money-foreground: 0 0% 94%;
     --upgrade: 38 92% 50%;
+    --upgrade-foreground: 210 20% 98%;
     --image-foil: 320 100% 88%;
+    --day: 150 100% 54%;
+    --day-foreground: 0 0% 0%;
   }
 
   @font-face {

@@ -1,4 +1,4 @@
-import type { Upgrade } from "@/hooks/useCardGame.ts";
+import type { Upgrade } from "@/game-typings";
 import {
   ENERGY_TO_MONEY,
   GAME_ADVANTAGE,

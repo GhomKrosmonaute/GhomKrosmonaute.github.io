@@ -31,6 +31,7 @@ import {
 import { GAME_ADVANTAGE } from "@/game-constants.ts";
 
 import Warning from "@/assets/icons/warning.svg";
+import { FPS } from "@/components/game/FPS.tsx";
 
 export const Settings = (props: { show: boolean }) => {
   const score = useCardGame((state) => state.score);
@@ -88,7 +89,10 @@ export const Settings = (props: { show: boolean }) => {
       />
 
       <Card className="space-y-4 z-40">
-        <div className="text-3xl">Settings</div>
+        <div className="flex justify-between items-baseline">
+          <h2 className="text-3xl">Settings</h2>
+          {props.show && <FPS className="text-2xl font-mono" />}
+        </div>
         <div
           className={cn(
             "flex gap-5 *:space-y-4 *:border *:rounded-xl *:py-4 *:px-6",
@@ -145,7 +149,6 @@ export const Settings = (props: { show: boolean }) => {
                 <Button
                   variant={unsaved ? "cta" : "default"}
                   disabled={!unsaved}
-                  size="cta"
                 >
                   Appliquer
                 </Button>
@@ -172,7 +175,6 @@ export const Settings = (props: { show: boolean }) => {
             <Button
               variant={unsaved ? "cta" : "default"}
               disabled={!unsaved}
-              size="cta"
               onClick={apply}
             >
               Appliquer
@@ -180,7 +182,7 @@ export const Settings = (props: { show: boolean }) => {
           )}
 
           {needReload && (
-            <div className="flex-grow border rounded-xl flex items-center gap-3 pl-3">
+            <div className="flex-grow border rounded-xl flex items-center gap-3 px-3">
               <Warning className="w-5" /> Un rechargement peut être nécessaire.
             </div>
           )}

@@ -4,18 +4,14 @@ import {
   MAX_HAND_SIZE,
 } from "@/game-constants.ts";
 
-import { cn } from "@/utils.ts";
 import { Card } from "@/components/Card.tsx";
 import { Button } from "@/components/ui/button.tsx";
+import { energyCostColor, isGameOver, wait } from "@/game-utils";
+import { cn } from "@/utils.ts";
 
 import { ValueIcon } from "@/components/game/ValueIcon.tsx";
 
-import {
-  useCardGame,
-  isGameOver,
-  wait,
-  energyCostColor,
-} from "@/hooks/useCardGame.ts";
+import { useCardGame } from "@/hooks/useCardGame.ts";
 import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
 import { bank } from "@/sound.ts";
 
@@ -45,7 +41,7 @@ export const GameActions = (props: { show: boolean }) => {
       )}
     >
       <Card className="space-y-4">
-        <div className="text-3xl">Game Actions</div>
+        <h2 className="text-3xl text-center">Actions</h2>
         <Button
           className={cn("flex justify-start gap-2", { grayscale: disabled })}
           onClick={async () => {
@@ -75,7 +71,7 @@ export const GameActions = (props: { show: boolean }) => {
           <ValueIcon
             value={INFINITE_DRAW_COST}
             isCost
-            className="w-8"
+            className="w-8 h-8"
             colors={energyCostColor(game, INFINITE_DRAW_COST)}
           />{" "}
           Piocher une carte
@@ -84,9 +80,11 @@ export const GameActions = (props: { show: boolean }) => {
           <>
             <Button
               disabled={runningOps}
-              onClick={() =>
-                game.advanceTime(Math.round((12 * 60) / ENERGY_TO_DAYS))
-              }
+              onClick={async () => {
+                const day = 0.5;
+                const energy = Math.round(day / ENERGY_TO_DAYS);
+                await game.advanceTime(energy);
+              }}
             >
               Ajouter 12h
             </Button>

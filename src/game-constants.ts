@@ -31,7 +31,11 @@ export const ENERGY_TO_MONEY = 5;
  */
 export const REPUTATION_TO_ENERGY = 10;
 
-export const ENERGY_TO_DAYS = 0.1;
+/**
+ * 1 = 1 day
+ * 1 energy = 0.05 day
+ */
+export const ENERGY_TO_DAYS = 0.05;
 
 export const TRIGGER_EVENTS = {
   eachDay: ["Chaque jour", "par jour"],
