@@ -1,9 +1,9 @@
-import { ValueIcon } from "@/components/game/ValueIcon.tsx";
+import { GameValueIcon } from "@/components/game/GameValueIcon.tsx";
 import { Progress } from "@/components/ui/progress.tsx";
 import { cn } from "@/utils";
 import React from "react";
 
-export const Gauge = ({
+export const GameGauge = ({
   iconClassName,
   barClassName,
   value,
@@ -28,7 +28,7 @@ export const Gauge = ({
       {...props}
       className={cn("flex items-center h-7 w-full", props.className)}
     >
-      <ValueIcon
+      <GameValueIcon
         title={title}
         value={display ? display(value / max) : value}
         miniature

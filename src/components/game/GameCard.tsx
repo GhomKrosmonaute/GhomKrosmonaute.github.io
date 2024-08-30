@@ -18,7 +18,7 @@ import { energyCostColor, isActionCardInfo, parseCost } from "@/game-utils.ts";
 
 import { MoneyIcon } from "@/components/game/MoneyIcon.tsx";
 import { Tilt, TiltFoil } from "@/components/game/Tilt.tsx";
-import { ValueIcon } from "@/components/game/ValueIcon.tsx";
+import { GameValueIcon } from "@/components/game/GameValueIcon.tsx";
 import { BorderLight } from "@/components/ui/border-light.tsx";
 import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
 import { cn } from "@/utils.ts";
@@ -200,7 +200,7 @@ export const GameCard = (
               }}
             >
               {parsedCost.needs === "energy" ? (
-                <ValueIcon
+                <GameValueIcon
                   isCost
                   value={parsedCost.cost}
                   colors={energyColor}

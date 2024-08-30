@@ -148,7 +148,6 @@ export function willBeRemoved(state: CardGameState, card: GameCardInfo) {
 
 export function formatText(text: string) {
   return text
-
     .replace(
       /(\(.+?\))/g,
       `<span style="position: relative; transform-style: preserve-3d">
@@ -175,12 +174,20 @@ export function formatText(text: string) {
       '<span style="color: hsl(var(--upgrade)); transform: translateZ(5px); font-weight: bold;">Amélioration$1</span>',
     )
     .replace(
+      /@sprint([^\s.:,]*)/g,
+      '<span style="color: hsl(var(--upgrade)); transform: translateZ(5px); font-weight: bold;">Sprint$1</span>',
+    )
+    .replace(
       /@support([^\s.:,]*)/g,
       '<span style="display: inline-block; background-color: hsla(var(--support) / 0.5); color: hsl(var(--support-foreground)); padding: 0 6px; border-radius: 4px; transform: translateZ(5px); font-weight: bold;">Support$1</span>',
     )
     .replace(
       /@energy([^\s.:,]*)/g,
       '<span style="color: hsl(var(--energy)); transform: translateZ(5px); font-weight: bold;">Énergie$1</span>',
+    )
+    .replace(
+      /@day([^\s.:,]*)/g,
+      '<span style="color: hsl(var(--day)); transform: translateZ(5px); font-weight: bold;">Jour$1</span>',
     )
     .replace(
       /((?:\d+|<span[^>]*>\d+<\/span>)M\$)/g,
@@ -266,7 +273,7 @@ export function parseSave(save: string) {
     if (typeof value === "object") {
       switch (key) {
         case "discard":
-        case "deck":
+        case "draw":
         case "hand":
           return value.map((card: GameCardInfo) => {
             return {

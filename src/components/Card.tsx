@@ -7,7 +7,9 @@ export const Card = ({
   borderLightAppearOnHover,
   ...props
 }: React.PropsWithChildren<
-  React.ComponentProps<"div"> & { borderLightAppearOnHover?: boolean }
+  React.ComponentProps<"div"> & {
+    borderLightAppearOnHover?: boolean;
+  }
 >) => {
   const quality = useQualitySettings((state) => ({
     transparency: state.transparency,
@@ -23,8 +25,7 @@ export const Card = ({
           "bg-background": !quality.transparency,
           "backdrop-blur-xl": quality.cardBlur && quality.transparency,
         },
-        "border-b-secondary-foreground border-r-primary p-10 rounded-md overflow-hidden",
-        "border-2",
+        "border-b-secondary-foreground border-r-primary p-10 rounded-md overflow-hidden border-2",
         props.className,
       )}
     >

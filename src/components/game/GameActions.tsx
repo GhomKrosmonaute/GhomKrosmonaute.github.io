@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button.tsx";
 import { energyCostColor, isGameOver, wait } from "@/game-utils";
 import { cn } from "@/utils.ts";
 
-import { ValueIcon } from "@/components/game/ValueIcon.tsx";
+import { GameValueIcon } from "@/components/game/GameValueIcon.tsx";
 
 import { useCardGame } from "@/hooks/useCardGame.ts";
 import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
@@ -68,7 +68,7 @@ export const GameActions = (props: { show: boolean }) => {
           disabled={disabled}
           size="cta"
         >
-          <ValueIcon
+          <GameValueIcon
             value={INFINITE_DRAW_COST}
             isCost
             className="w-8 h-8"

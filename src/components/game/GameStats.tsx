@@ -12,7 +12,7 @@ import Money from "@/assets/icons/game/money.svg";
 import Score from "@/assets/icons/game/score.svg";
 import Settings from "@/assets/icons/settings.svg";
 
-import { Gauge } from "@/components/game/Gauge.tsx";
+import { GameGauge } from "@/components/game/GameGauge.tsx";
 import {
   MAX_ENERGY,
   MAX_REPUTATION,
@@ -26,6 +26,7 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
+import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
 
 export const Stat = (props: {
   name: string;
@@ -56,13 +57,19 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
     dayFull: state.dayFull,
   }));
 
+  const quality = useQualitySettings((state) => ({
+    shadows: state.shadows,
+    animation: state.animations,
+    transparency: state.transparency,
+  }));
+
   return (
     <>
       {props.forHUD && (
         <>
           <div className="grid grid-cols-3 w-full gap-x-2 *:grid *:grid-cols-subgrid *:col-span-3 *:*:col-span-2">
             <div>
-              <Gauge
+              <GameGauge
                 title="Energie"
                 value={game.energy}
                 max={MAX_ENERGY}
@@ -71,7 +78,7 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
               <div className="capitalize last:col-span-1">énergie</div>
             </div>
             <div>
-              <Gauge
+              <GameGauge
                 title="Réputation"
                 value={game.reputation}
                 max={MAX_REPUTATION}
@@ -80,7 +87,7 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
               <div className="last:col-span-1">Réputation</div>
             </div>
             <div>
-              <Gauge
+              <GameGauge
                 title="Journée"
                 display={(f) => (Math.floor(f * 24) % 24) + "h"}
                 value={
@@ -98,7 +105,7 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
               />
             </div>
             <div>
-              <Gauge
+              <GameGauge
                 title="Sprint"
                 display={(f) => Math.floor(f * 7) + "j"}
                 value={Math.floor(game.day % 7)}
@@ -186,7 +193,8 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
       )}
       <div
         className={cn(
-          "flex flex-col gap-y-2 items-start *:flex *:items-center *:gap-2 *:h-20 text-6xl text-left",
+          "flex flex-col gap-y-2 items-start *:flex *:items-center *:gap-2 *:h-20 text-6xl text-left rounded-xl p-2",
+          quality.transparency ? "bg-card/60" : "bg-card",
           props.className,
         )}
       >

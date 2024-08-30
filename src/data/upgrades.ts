@@ -3,8 +3,8 @@ import {
   ENERGY_TO_MONEY,
   GAME_ADVANTAGE,
   MAX_ENERGY,
+  MAX_HAND_SIZE,
   MAX_REPUTATION,
-  TRIGGER_EVENTS,
 } from "@/game-constants.ts";
 
 import { settings } from "@/game-settings.ts";
@@ -27,7 +27,7 @@ type RawUpgrade = Pick<
 const upgrades: RawUpgrade[] = [
   {
     name: "Starbucks",
-    triggerEvent: "eachDay",
+    triggerEvent: "onPlay",
     description: "Rend @cumul @energy@s",
     image: "starbucks.png",
     condition: (state) => state.energy < MAX_ENERGY,
@@ -39,19 +39,23 @@ const upgrades: RawUpgrade[] = [
   },
   {
     name: "Méditation",
-    triggerEvent: "eachDay",
-    description: "Pioche @cumul carte@s",
+    triggerEvent: "onPlay",
+    description: "Pioche @cumul carte@s tant que votre main n'est pas pleine",
     image: "meditation.png",
-    condition: (state) => state.draw.length > 0,
+    condition: (state) =>
+      state.draw.length > 0 && state.hand.length < MAX_HAND_SIZE,
     onTrigger: async (state, upgrade, reason) => {
-      await state.drawCard(upgrade.cumul, { skipGameOverPause: true, reason });
+      await state.drawCard(
+        Math.min(upgrade.cumul, MAX_HAND_SIZE - state.hand.length),
+        { skipGameOverPause: true, reason },
+      );
     },
     max: 3,
     cost: String(Math.max(0, 20 - advantage) * ENERGY_TO_MONEY), // 10 days * 2 cumul * 1 energy (for draw) = 20
   },
   {
     name: "Bourse",
-    triggerEvent: "eachDay",
+    triggerEvent: "daily",
     description: "Gagne @cumul fois 10% de votre capital",
     image: "bourse.png",
     condition: (state) => state.money > 0,
@@ -66,7 +70,7 @@ const upgrades: RawUpgrade[] = [
   },
   {
     name: "Recyclage",
-    triggerEvent: "eachDay",
+    triggerEvent: "onDraw",
     description: "Place @cumul carte@s aléatoire@s de la défausse dans le deck",
     image: "recyclage.png",
     condition: (state) => state.discard.length > 0,
@@ -78,7 +82,7 @@ const upgrades: RawUpgrade[] = [
   },
   {
     name: "I.A",
-    triggerEvent: "eachDay",
+    triggerEvent: "onDraw",
     description: "Gagne @cumulM$ fois le nombre de carte en défausse",
     image: "ia.png",
     condition: (state) => state.discard.length > 0,
@@ -92,7 +96,7 @@ const upgrades: RawUpgrade[] = [
   },
   {
     name: "Sport",
-    triggerEvent: "eachDay",
+    triggerEvent: "daily",
     description: "Gagne @cumul @reputation@s",
     image: "sport.png",
     condition: (state) => state.reputation < MAX_REPUTATION,
@@ -102,12 +106,12 @@ const upgrades: RawUpgrade[] = [
         reason,
       });
     },
-    max: 2,
+    max: 5,
     cost: Math.max(0, 20 - advantage), // 10 days * 2 cumul * 1 (for reputation) = 20
   },
   {
     name: "PC Puissant",
-    triggerEvent: "eachDay",
+    triggerEvent: "onDraw",
     description: "Gagne @cumulM$ fois le nombre d'@energy",
     image: "pc-puissant.png",
     condition: (state) => state.energy > 0,
@@ -122,7 +126,7 @@ const upgrades: RawUpgrade[] = [
   },
   {
     name: "Stagiaire",
-    triggerEvent: "eachDay",
+    triggerEvent: "onDraw",
     description: "Gagne @cumulM$ fois le nombre de cartes en main",
     image: "stagiaire.png",
     condition: (state) => state.hand.length > 0,
@@ -137,7 +141,4 @@ const upgrades: RawUpgrade[] = [
   },
 ];
 
-export default upgrades.map((upgrade) => {
-  upgrade.description = `${upgrade.description} ${TRIGGER_EVENTS[upgrade.triggerEvent][1]}`;
-  return upgrade;
-});
+export default upgrades;

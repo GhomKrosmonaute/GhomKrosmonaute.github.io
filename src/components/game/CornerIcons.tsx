@@ -22,13 +22,13 @@ export const CornerIcons = (props: { show: boolean }) => {
   return (
     <div
       className={cn(
-        "absolute top-4 right-16 z-50 gap-2",
+        "absolute flex top-4 right-16 z-50 gap-2",
         "translate-x-full pointer-events-none",
         {
           hidden: !transparency,
           "opacity-0": transparency,
           "transition-all duration-500 ease-in-out": animation,
-          "translate-x-0 opacity-100 flex pointer-events-auto": props.show,
+          "translate-x-0 opacity-100 pointer-events-auto": props.show,
         },
       )}
     >

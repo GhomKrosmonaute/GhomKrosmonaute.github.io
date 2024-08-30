@@ -10,7 +10,7 @@ import { useHover } from "usehooks-ts";
 import { formatText } from "@/game-utils";
 import { cn } from "@/utils.ts";
 
-export const Helpers = (props: { show: boolean }) => {
+export const GameHelpers = (props: { show: boolean }) => {
   const ref = React.useRef<HTMLDivElement>(null);
 
   const isHovered = useHover(ref);

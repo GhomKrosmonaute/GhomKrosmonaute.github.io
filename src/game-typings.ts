@@ -1,12 +1,13 @@
 import type { CardGameState } from "@/hooks/useCardGame";
 import { TRIGGER_EVENTS } from "@/game-constants";
+import React from "react";
 
 export interface Upgrade {
   type: "upgrade";
   name: string;
   description: string;
   image: string;
-  triggerEvent: TriggerEvent;
+  triggerEvent: TriggerEventName;
   condition?: (state: CardGameState, upgrade: Upgrade) => boolean;
   onTrigger: (
     state: CardGameState,
@@ -79,7 +80,12 @@ export type CardModifier = {
 
 export type CardModifierIndice = [name: string, params: unknown[]];
 
-export type TriggerEvent = keyof typeof TRIGGER_EVENTS;
+export type TriggerEventName = keyof typeof TRIGGER_EVENTS;
+
+export type TriggerEvent = {
+  name: string;
+  icon: React.FunctionComponent<React.ComponentProps<"div">>;
+};
 
 export type GameOverReason = "mill" | "soft-lock" | "reputation" | null;
 

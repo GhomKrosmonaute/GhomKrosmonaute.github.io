@@ -7,11 +7,11 @@ import { GameDebug } from "@/components/game/GameDebug.tsx";
 import { GameHand } from "@/components/game/GameHand";
 import { GameOver } from "@/components/game/GameOver.tsx";
 import { GameValues } from "@/components/game/GameValues.tsx";
-import { Helpers } from "@/components/game/Helpers.tsx";
+import { GameHelpers } from "@/components/game/GameHelpers.tsx";
 import { HighLightMask } from "@/components/game/HighLightMask";
 import { Scoreboard } from "@/components/game/Scoreboard.tsx";
 import { Settings } from "@/components/game/Settings.tsx";
-import { Upgrades } from "@/components/game/Upgrades.tsx";
+import { GameUpgrades } from "@/components/game/GameUpgrades.tsx";
 import { GameMusic } from "@/components/game/GameMusic.tsx";
 
 export const Game = () => {
@@ -23,13 +23,13 @@ export const Game = () => {
   return (
     <>
       <GameMusic />
-      <Helpers show={show} />
+      <GameHelpers show={show} />
       <GameAlert show={show} />
       <Scoreboard show={show} />
       <GameValues show={show} />
       <GameOver show={show} />
       <GameActions show={show} />
-      <Upgrades show={show} />
+      <GameUpgrades show={show} />
       <CornerIcons show={show} />
       <Settings show={show && showSettings} />
       <GameHand show={show} />

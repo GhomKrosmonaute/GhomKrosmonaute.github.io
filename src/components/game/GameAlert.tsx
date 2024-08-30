@@ -36,7 +36,7 @@ export const GameAlert = (props: { show?: boolean }) => {
       >
         {game.handOverflow && (
           <>
-            <Warning className="w-10" /> La main est pleine !
+            <Warning className="w-10" /> Votre main est pleine !
           </>
         )}
       </div>

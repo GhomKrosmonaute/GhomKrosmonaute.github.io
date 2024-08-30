@@ -14,7 +14,7 @@ import type {
   GameOverReason,
   MethodWhoCheckIfGameOver,
   MethodWhoLog,
-  TriggerEvent,
+  TriggerEventName,
   Upgrade,
   Mask,
 } from "@/game-typings";
@@ -83,7 +83,7 @@ export interface CardGameState {
     name: string,
     options: MethodWhoCheckIfGameOver & Partial<MethodWhoLog>,
   ) => Promise<void>;
-  triggerEvent: (event: TriggerEvent) => Promise<void>;
+  triggerEvent: (event: TriggerEventName) => Promise<void>;
   addCardModifier: <CardModifierName extends keyof typeof cardModifiers>(
     name: CardModifierName,
     params: Parameters<(typeof cardModifiers)[CardModifierName]>,
@@ -262,7 +262,7 @@ function cardGameMethods(
 
           await wait(1000);
 
-          await state.triggerEvent("eachDay");
+          await state.triggerEvent("daily");
 
           set({ dayFull: false });
 
@@ -419,6 +419,8 @@ function cardGameMethods(
       });
 
       await wait();
+
+      if (count < 0) await state.triggerEvent("onReputationDeclines");
 
       if (!options?.skipGameOverPause && isGameOver(state)) {
         await wait(2000);
@@ -648,6 +650,8 @@ function cardGameMethods(
           return { ...c, state: "idle" };
         }),
       }));
+
+      await state.triggerEvent("onDraw");
 
       state = getState();
 
@@ -921,12 +925,15 @@ function cardGameMethods(
 
       await Promise.all([cardManagement(), effectManagement()]);
 
+      await state.triggerEvent("onPlay");
+
       // on vérifie si la main est vide
       // si la main est vide, on pioche
 
       state = getState();
 
       if (state.hand.length === 0) {
+        await state.triggerEvent("onEmptyHand");
         await state.drawCard(1, { reason });
       }
 

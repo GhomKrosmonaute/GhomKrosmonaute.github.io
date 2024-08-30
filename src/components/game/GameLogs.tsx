@@ -2,7 +2,7 @@ import { cn } from "@/utils.ts";
 import { useCardGame } from "@/hooks/useCardGame.ts";
 import { GameMiniature } from "@/components/game/GameMiniature.tsx";
 import { MoneyIcon } from "@/components/game/MoneyIcon.tsx";
-import { ValueIcon } from "@/components/game/ValueIcon.tsx";
+import { GameValueIcon } from "@/components/game/GameValueIcon.tsx";
 
 const SIZE = 10;
 
@@ -44,7 +44,7 @@ export const GameLogs = (props: { show: boolean }) => {
                     {log.type === "money" ? (
                       <MoneyIcon miniature value={String(log.value)} />
                     ) : (
-                      <ValueIcon
+                      <GameValueIcon
                         miniature
                         symbol
                         value={log.value}

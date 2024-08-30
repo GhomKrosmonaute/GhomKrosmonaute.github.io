@@ -10,7 +10,7 @@ const foregrounds = [
   "text-upgrade-foreground",
 ];
 
-export const ValueIcon = ({
+export const GameValueIcon = ({
   isCost,
   miniature,
   colors,
