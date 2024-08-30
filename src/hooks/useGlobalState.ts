@@ -1,15 +1,21 @@
 import { create } from "zustand";
 
 type State = {
+  musicMuted: boolean;
+  musicVolume: number;
   isCardGameVisible: boolean;
   splineLoaded: boolean;
   settingsVisible: boolean;
   setCardGameVisibility: (visible: boolean) => void;
   setSplineLoaded: (loaded: boolean) => void;
   toggleSettings: () => void;
+  toggleMusicMuted: () => void;
+  setMusicVolume: (cb: (currentVolume: number) => number) => void;
 };
 
 export const useGlobalState = create<State>((set) => ({
+  musicMuted: localStorage.getItem("muted") === "true",
+  musicVolume: 0,
   isCardGameVisible: false,
   splineLoaded: false,
   settingsVisible: false,
@@ -17,4 +23,11 @@ export const useGlobalState = create<State>((set) => ({
   setSplineLoaded: (loaded) => set({ splineLoaded: loaded }),
   toggleSettings: () =>
     set((state) => ({ settingsVisible: !state.settingsVisible })),
+  toggleMusicMuted: () =>
+    set((state) => {
+      localStorage.setItem("muted", JSON.stringify(!state.musicMuted));
+      return { musicMuted: !state.musicMuted };
+    }),
+  setMusicVolume: (volume) =>
+    set((state) => ({ musicVolume: volume(state.musicVolume) })),
 }));

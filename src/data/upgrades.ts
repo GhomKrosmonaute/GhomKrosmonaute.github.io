@@ -42,9 +42,9 @@ const upgrades: RawUpgrade[] = [
     triggerEvent: "eachDay",
     description: "Pioche @cumul carte@s",
     image: "meditation.png",
-    condition: (state) => state.deck.length > 0,
+    condition: (state) => state.draw.length > 0,
     onTrigger: async (state, upgrade, reason) => {
-      await state.draw(upgrade.cumul, { skipGameOverPause: true, reason });
+      await state.drawCard(upgrade.cumul, { skipGameOverPause: true, reason });
     },
     max: 3,
     cost: String(Math.max(0, 20 - advantage) * ENERGY_TO_MONEY), // 10 days * 2 cumul * 1 energy (for draw) = 20
@@ -71,7 +71,7 @@ const upgrades: RawUpgrade[] = [
     image: "recyclage.png",
     condition: (state) => state.discard.length > 0,
     onTrigger: async (state, upgrade, reason) => {
-      await state.recycle(upgrade.cumul, { reason });
+      await state.recycleCard(upgrade.cumul, { reason });
     },
     max: 3,
     cost: String(Math.max(0, 20 - advantage) * ENERGY_TO_MONEY), // 10 days * 2 cumul * 1 energy (for recycle) = 20

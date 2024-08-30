@@ -3,34 +3,43 @@ import { Progress } from "@/components/ui/progress.tsx";
 import { cn } from "@/utils";
 import React from "react";
 
-export const Gauge = (
-  props: React.ComponentProps<"div"> & {
-    iconClassName?: string;
-    barClassName?: string;
-    value: number;
-    display?: (fraction: number) => React.ReactNode;
-    max: number;
-    color?: `bg-${string}` & string;
-    title: string;
-    increaseOnly?: boolean;
-  },
-) => {
+export const Gauge = ({
+  iconClassName,
+  barClassName,
+  value,
+  display,
+  max,
+  color,
+  title,
+  increaseOnly,
+  ...props
+}: React.ComponentProps<"div"> & {
+  iconClassName?: string;
+  barClassName?: string;
+  value: number;
+  display?: (fraction: number) => React.ReactNode;
+  max: number;
+  color?: `bg-${string}` & string;
+  title: string;
+  increaseOnly?: boolean;
+}) => {
   return (
-    <div className={cn("flex items-center h-7 w-full", props.className)}>
+    <div
+      {...props}
+      className={cn("flex items-center h-7 w-full", props.className)}
+    >
       <ValueIcon
-        title={props.title}
-        value={
-          props.display ? props.display(props.value / props.max) : props.value
-        }
+        title={title}
+        value={display ? display(value / max) : value}
         miniature
-        colors={props.color ?? "bg-primary"}
-        className={cn("absolute z-50", props.iconClassName)}
+        colors={color ?? "bg-primary"}
+        className={cn("absolute z-50", iconClassName)}
       />
       <Progress
-        barColor={props.color}
-        className={props.barClassName}
-        value={(props.value / props.max) * 100}
-        increaseOnly={props.increaseOnly}
+        barColor={color}
+        className={barClassName}
+        value={(value / max) * 100}
+        increaseOnly={increaseOnly}
       />
     </div>
   );

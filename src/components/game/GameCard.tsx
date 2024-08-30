@@ -51,7 +51,7 @@ export const GameCard = (
     return {
       handSize: state.hand.length,
       operationInProgress: state.operationInProgress,
-      play: state.play,
+      play: state.playCard,
       isGameOver: state.isGameOver,
       parsedCost,
       energyColor,

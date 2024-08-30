@@ -12,6 +12,7 @@ import { HighLightMask } from "@/components/game/HighLightMask";
 import { Scoreboard } from "@/components/game/Scoreboard.tsx";
 import { Settings } from "@/components/game/Settings.tsx";
 import { Upgrades } from "@/components/game/Upgrades.tsx";
+import { GameMusic } from "@/components/game/GameMusic.tsx";
 
 export const Game = () => {
   const [show, showSettings] = useGlobalState((state) => [
@@ -21,6 +22,7 @@ export const Game = () => {
 
   return (
     <>
+      <GameMusic />
       <Helpers show={show} />
       <GameAlert show={show} />
       <Scoreboard show={show} />

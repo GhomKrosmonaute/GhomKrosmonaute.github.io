@@ -19,6 +19,9 @@ module.exports = {
       },
     },
     extend: {
+      flexGrow: {
+        2: "2",
+      },
       fontFamily: {
         changa: ["Changa", "sans-serif"],
         zain: ["Zain", "sans-serif"],
@@ -30,6 +33,7 @@ module.exports = {
       },
       screens: {
         mdh: { raw: "(height >= 768px)" },
+        xs: "460px",
       },
       colors: {
         border: "hsl(var(--border))",

@@ -25,6 +25,7 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card.tsx";
+import { Separator } from "@/components/ui/separator.tsx";
 
 export const Stat = (props: {
   name: string;
@@ -33,9 +34,9 @@ export const Stat = (props: {
   className?: string;
 }) => {
   return (
-    <div className={props.className}>
-      <props.icon className="h-full self-center" />
-      <span className="inline-flex items-baseline whitespace-nowrap gap-2">
+    <div className={cn("flex items-center gap-1", props.className)}>
+      <props.icon className="h-full aspect-square w-fit self-center justify-self-start" />
+      <span className="inline-flex items-baseline whitespace-nowrap gap-1">
         <span>{props.name} :</span> {props.value}
       </span>
     </div>
@@ -48,7 +49,7 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
     score: state.score,
     energy: state.energy,
     reputation: state.reputation,
-    deck: state.deck,
+    draw: state.draw,
     discard: state.discard,
     infinity: state.infinityMode,
     day: state.day,
@@ -58,82 +59,130 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
   return (
     <>
       {props.forHUD && (
-        <div className="grid grid-cols-3 w-full gap-x-2">
-          <div className="col-span-2">
-            <Gauge
-              title="Energie"
-              value={game.energy}
-              max={MAX_ENERGY}
-              color="bg-energy"
-            />
-            <Gauge
-              title="Réputation"
-              value={game.reputation}
-              max={MAX_REPUTATION}
-              color="bg-reputation"
-            />
-            <Gauge
-              title="Journée"
-              display={(f) => (Math.floor(f * 24) % 24) + "h"}
-              value={
-                game.dayFull === null ? game.day % 1 : game.dayFull ? 1 : 0
-              }
-              max={1}
-              color="bg-day"
-              increaseOnly
-            />
-            <Gauge
-              title="Sprint"
-              display={(f) => Math.floor(f * 7) + "j"}
-              value={Math.floor(game.day % 7)}
-              max={7}
-              color="bg-upgrade"
-              increaseOnly
-            />
+        <>
+          <div className="grid grid-cols-3 w-full gap-x-2 *:grid *:grid-cols-subgrid *:col-span-3 *:*:col-span-2">
+            <div>
+              <Gauge
+                title="Energie"
+                value={game.energy}
+                max={MAX_ENERGY}
+                color="bg-energy"
+              />
+              <div className="capitalize last:col-span-1">énergie</div>
+            </div>
+            <div>
+              <Gauge
+                title="Réputation"
+                value={game.reputation}
+                max={MAX_REPUTATION}
+                color="bg-reputation"
+              />
+              <div className="last:col-span-1">Réputation</div>
+            </div>
+            <div>
+              <Gauge
+                title="Journée"
+                display={(f) => (Math.floor(f * 24) % 24) + "h"}
+                value={
+                  game.dayFull === null ? game.day % 1 : game.dayFull ? 1 : 0
+                }
+                max={1}
+                color="bg-day"
+                increaseOnly
+              />
+              <Stat
+                icon={Day}
+                name="Jour"
+                value={Math.floor(game.day)}
+                className="last:col-span-1 h-5"
+              />
+            </div>
+            <div>
+              <Gauge
+                title="Sprint"
+                display={(f) => Math.floor(f * 7) + "j"}
+                value={Math.floor(game.day % 7)}
+                max={7}
+                color="bg-upgrade"
+                increaseOnly
+              />
+              <Stat
+                icon={Day}
+                name="Sprint"
+                value={Math.floor(game.day / 7)}
+                className="last:col-span-1 h-5"
+              />
+            </div>
           </div>
-          <div className="flex flex-col items-start gap-y-1 *:gap-2 *:h-6 *:flex *:items-center">
-            <span className="capitalize">énergie</span>
-            <span>Réputation</span>
-            <Stat icon={Day} name="Jour" value={Math.floor(game.day)} />
-            <Stat icon={Day} name="Sprint" value={Math.floor(game.day / 7)} />
-          </div>
-        </div>
-      )}
-      {props.forHUD && (
-        <div className="grid grid-cols-3 w-full gap-x-2">
-          <div className="col-span-2 space-y-1">
-            {(["deck", "discard"] as const).map((collection) => (
-              <div key={collection} className="flex justify-end">
-                {game[collection]
-                  .toSorted((a, b) => {
-                    return b.type > a.type ? 1 : -1;
-                  })
-                  .map((c, i) => (
-                    <HoverCard key={i} openDelay={0} closeDelay={0}>
-                      <HoverCardTrigger asChild>
-                        <div className="h-6 hover:shrink-0 pointer-events-auto">
-                          <MiniatureImage
-                            item={c}
-                            className="ring-0 rounded-none"
-                          />
-                        </div>
-                      </HoverCardTrigger>
-                      <HoverCardContent
-                        className="pointer-events-none"
-                        dangerouslySetInnerHTML={{
-                          __html: `<h2>${c.name}</h2><br />${c.effect.description}`,
-                        }}
-                      />
-                    </HoverCard>
-                  ))}
+          <Separator />
+          <div className="grid grid-cols-3 w-full gap-x-2">
+            {(["deck", "draw", "discard"] as const).map((collection) => (
+              <div
+                className="grid grid-cols-subgrid col-span-3 space-y-1"
+                key={collection}
+              >
+                <div className="flex justify-end col-span-2">
+                  {(collection === "deck"
+                    ? [...game.draw, ...game.discard]
+                    : game[collection]
+                  )
+                    .toSorted((a, b) => {
+                      if (a.type === b.type) return a.effect.upgrade ? 1 : -1;
+                      return b.type > a.type ? 1 : -1;
+                    })
+                    .map((c, i) => (
+                      <HoverCard key={i} openDelay={0} closeDelay={0}>
+                        <HoverCardTrigger asChild>
+                          <div className="h-6 hover:shrink-0 pointer-events-auto">
+                            <MiniatureImage
+                              item={c}
+                              className={cn(
+                                "ring-0 rounded-none object-contain border-b-2",
+                                {
+                                  "border-action": c.type === "action",
+                                  "border-support": c.type === "support",
+                                  "border-upgrade": c.effect.upgrade,
+                                },
+                              )}
+                            />
+                          </div>
+                        </HoverCardTrigger>
+                        <HoverCardContent
+                          className="pointer-events-none"
+                          dangerouslySetInnerHTML={{
+                            __html: `<h2>${c.name}</h2><br />${c.effect.description}`,
+                          }}
+                        />
+                      </HoverCard>
+                    ))}
+                </div>
+                <Stat
+                  icon={
+                    collection === "deck"
+                      ? Deck
+                      : collection === "draw"
+                        ? Deck
+                        : Discard
+                  }
+                  name={
+                    collection === "deck"
+                      ? "Deck"
+                      : collection === "draw"
+                        ? "Pioche"
+                        : "Défausse"
+                  }
+                  value={
+                    collection === "deck"
+                      ? game.draw.length + game.discard.length
+                      : game[collection].length
+                  }
+                  className="h-5"
+                />
               </div>
             ))}
           </div>
-          <div className="flex flex-col items-start gap-y-1 *:gap-2 *:h-6 *:flex *:items-center">
-            <Stat icon={Deck} name="Pioche" value={game.deck.length} />
-            <Stat icon={Discard} name="Défausse" value={game.discard.length} />
-          </div>
-        </div>
+          <Separator />
+        </>
       )}
       <div
         className={cn(

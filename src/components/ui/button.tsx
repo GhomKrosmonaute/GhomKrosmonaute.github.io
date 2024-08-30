@@ -9,12 +9,12 @@ import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
 const buttonVariants = cva(
   cn(
     "button group/button",
-    "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-sans font-medium transition-colors focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50",
+    "flex items-center justify-center whitespace-nowrap rounded-md text-sm font-sans font-medium transition-colors focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50",
     "ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-    "block relative overflow-hidden px-4 py-2 max-w-fit",
+    "relative overflow-hidden xs:px-4 xs:py-2 xs:max-w-fit",
     "text-center leading-6 text-secondary-foreground whitespace-nowrap",
     "transition-all duration-200",
-    "hover:shadow-glow-20 shadow-secondary",
+    "hover:shadow-glow-20 shadow-secondary/50",
     "cursor-pointer hover:cursor-pointer",
   ),
   {
@@ -28,11 +28,11 @@ const buttonVariants = cva(
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
-        default: "h-10 px-4 py-2 min-w-24",
-        cta: "h-10 px-4 py-2 min-w-48",
-        sm: "h-6 w-6 rounded-md p-2",
+        default: "h-10 px-4 py-2 xs:min-w-24",
+        cta: "h-10 px-4 py-2 xs:min-w-48",
+        sm: "h-6 w-6 rounded-md p-2 *:w-5",
         lg: "h-11 rounded-md px-8",
-        icon: "h-10 w-10 p-2",
+        icon: "h-10 w-10 p-0 *:w-8",
       },
     },
     defaultVariants: {
@@ -54,19 +54,24 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const Comp = asChild ? Slot : "button";
     return (
       <Comp
-        className={cn(buttonVariants({ variant, size, className }), {
-          "shadow-none hover:shadow-none": !shadows,
-        })}
-        ref={ref}
         {...props}
+        type={props.type || "button"}
+        className={cn(
+          buttonVariants({ variant, size }),
+          {
+            "shadow-none hover:shadow-none": !shadows,
+          },
+          className,
+        )}
+        ref={ref}
       >
         {props.children}
 
         <BorderLight
           opposed={variant === "cta"}
           groupName="button"
-          fast
           appearOnHover
+          fast
         />
       </Comp>
     );

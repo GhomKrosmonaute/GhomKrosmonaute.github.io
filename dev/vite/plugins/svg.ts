@@ -21,7 +21,13 @@ export default function svgPlugin(): Plugin {
                 .replace(/<\?.+?>/g, "")
                 .replace(/<!.+?>/g, "")
                 .replace(/(\s)(width|height)=".+?px"/g, '$1$2="100%"')
-                .replace(/fill="#.+?"/g, 'fill="currentColor"')}
+                .replace(/fill="#.+?"/g, 'fill="currentColor"')
+
+                // make camelCase attributes
+                .replace(
+                  /(\w+)-(\w+)=/g,
+                  (_, p1, p2) => p1 + p2[0].toUpperCase() + p2.slice(1) + "=",
+                )}
             </div>; 
           }
         `;

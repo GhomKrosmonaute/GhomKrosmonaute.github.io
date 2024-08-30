@@ -40,7 +40,7 @@ export function energyCostColor(
 
 export function isGameOver(state: CardGameState): GameOverReason | false {
   if (state.reputation === 0) return "reputation";
-  if (state.deck.length === 0 && state.hand.length === 0) return "mill";
+  if (state.draw.length === 0 && state.hand.length === 0) return "mill";
   if (
     state.hand.every((c) => {
       // on vérifie si la condition s'il y en
@@ -51,7 +51,7 @@ export function isGameOver(state: CardGameState): GameOverReason | false {
     }) &&
     (state.reputation + state.energy < INFINITE_DRAW_COST ||
       state.hand.length >= MAX_HAND_SIZE ||
-      state.deck.length === 0)
+      state.draw.length === 0)
   )
     return "soft-lock";
 

@@ -21,6 +21,7 @@ export const Home = () => {
   return (
     <CenterCard
       style={{
+        pointerEvents: isCardGameVisible ? "none" : undefined,
         opacity: isCardGameVisible ? 0 : 1,
         transition: animation
           ? "opacity 0.5s ease-in-out, transform 0.5s ease-in-out"
@@ -34,7 +35,7 @@ export const Home = () => {
       <Socials />
       <Slogan />
 
-      <div className="flex justify-center mt-6 w-full gap-8 md:gap-5 flex-wrap">
+      <div className="grid grid-cols-3 xs:flex xs:justify-center mt-6 w-full gap-4 xs:gap-8 md:gap-5">
         {largeScreen && (
           <Button
             onClick={() => setCardGameVisibility(!isCardGameVisible)}
@@ -46,7 +47,12 @@ export const Home = () => {
           </Button>
         )}
         <Button onClick={() => navigate("/pricing")}>Tarifs</Button>
-        <Button onClick={() => navigate("/contact")} variant="cta" size="cta">
+        <Button
+          className="col-span-2"
+          onClick={() => navigate("/contact")}
+          variant="cta"
+          size="cta"
+        >
           Contact
         </Button>
       </div>

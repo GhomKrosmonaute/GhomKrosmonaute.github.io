@@ -36,7 +36,7 @@ export const GameOver = (props: { show: boolean }) => {
     reason: state.reason,
     score: state.score,
     reset: state.reset,
-    continue: state.continue,
+    continue: state.enableInfinityMode,
   }));
 
   const rank = scores

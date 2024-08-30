@@ -3,11 +3,12 @@ import { cn } from "@/utils.ts";
 import { BorderLight } from "@/components/ui/border-light.tsx";
 import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
 
-export const Card = (
-  props: React.PropsWithChildren<
-    React.ComponentProps<"div"> & { borderLightAppearOnHover?: boolean }
-  >,
-) => {
+export const Card = ({
+  borderLightAppearOnHover,
+  ...props
+}: React.PropsWithChildren<
+  React.ComponentProps<"div"> & { borderLightAppearOnHover?: boolean }
+>) => {
   const quality = useQualitySettings((state) => ({
     transparency: state.transparency,
     cardBlur: state.blur,
@@ -32,12 +33,12 @@ export const Card = (
       <BorderLight
         className="hidden md:mdh:block"
         groupName="card"
-        appearOnHover={props.borderLightAppearOnHover}
+        appearOnHover={borderLightAppearOnHover}
       />
       <BorderLight
         className="hidden md:mdh:block"
         groupName="card"
-        appearOnHover={props.borderLightAppearOnHover}
+        appearOnHover={borderLightAppearOnHover}
         opposed
       />
     </div>

@@ -10,7 +10,7 @@ const Progress = React.forwardRef<
     barColor?: `bg-${string}`;
     increaseOnly?: boolean;
   }
->(({ barColor, className, value, ...props }, ref) => {
+>(({ barColor, className, value, increaseOnly, ...props }, ref) => {
   const previous = usePrevious(value);
 
   if (barColor === "bg-green-500") console.log(value);
@@ -30,7 +30,7 @@ const Progress = React.forwardRef<
           [cn("transition-transform duration-200 ease-out", {
             "duration-500":
               typeof value === "number" && previous === 0 && value > 90,
-          })]: props.increaseOnly
+          })]: increaseOnly
             ? typeof value !== "number" ||
               typeof previous !== "number" ||
               value > previous

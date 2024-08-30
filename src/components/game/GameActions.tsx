@@ -26,7 +26,7 @@ export const GameActions = (props: { show: boolean }) => {
   const disabled =
     game.energy + game.reputation < INFINITE_DRAW_COST ||
     game.hand.length >= MAX_HAND_SIZE ||
-    game.deck.length === 0 ||
+    game.draw.length === 0 ||
     runningOps;
 
   return (
@@ -54,7 +54,7 @@ export const GameActions = (props: { show: boolean }) => {
               reason: "Bouton pioche",
             });
 
-            await game.draw(1, {
+            await game.drawCard(1, {
               skipGameOverPause: true,
               reason: "Bouton pioche",
             });
@@ -124,7 +124,7 @@ export const GameActions = (props: { show: boolean }) => {
               </Button>
               <Button
                 className="text-red-500"
-                onClick={() => game.gameOver("reputation")}
+                onClick={() => game.defeat("reputation")}
                 disabled={runningOps}
               >
                 Lose

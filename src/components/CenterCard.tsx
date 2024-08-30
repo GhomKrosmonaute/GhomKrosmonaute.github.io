@@ -26,7 +26,7 @@ export const CenterCard = (
     <>
       <div
         className={cn(
-          "group/card absolute pointer-events-none md:pointer-events-auto",
+          "group/card absolute",
           "left-0 top-0 w-full h-full md:w-auto md:h-auto",
           "md:left-1/2 mdh:md:top-1/2 md:-translate-x-1/2 mdh:md:-translate-y-1/2",
           "md:w-max md:min-w-min md:max-w-[100vw] md:max-h-[100svh]",
