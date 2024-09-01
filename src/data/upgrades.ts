@@ -19,7 +19,7 @@ type RawUpgrade = Pick<
   | "onTrigger"
   | "cost"
   | "condition"
-  | "triggerEvent"
+  | "eventName"
 > & {
   max?: number;
 };
@@ -27,7 +27,7 @@ type RawUpgrade = Pick<
 const upgrades: RawUpgrade[] = [
   {
     name: "Starbucks",
-    triggerEvent: "onPlay",
+    eventName: "onPlay",
     description: "Rend @cumul @energy@s",
     image: "starbucks.png",
     condition: (state) => state.energy < MAX_ENERGY,
@@ -39,7 +39,7 @@ const upgrades: RawUpgrade[] = [
   },
   {
     name: "Méditation",
-    triggerEvent: "onPlay",
+    eventName: "onPlay",
     description: "Pioche @cumul carte@s tant que votre main n'est pas pleine",
     image: "meditation.png",
     condition: (state) =>
@@ -55,7 +55,7 @@ const upgrades: RawUpgrade[] = [
   },
   {
     name: "Bourse",
-    triggerEvent: "daily",
+    eventName: "daily",
     description: "Gagne @cumul fois 10% de votre capital",
     image: "bourse.png",
     condition: (state) => state.money > 0,
@@ -70,7 +70,7 @@ const upgrades: RawUpgrade[] = [
   },
   {
     name: "Recyclage",
-    triggerEvent: "onDraw",
+    eventName: "onDraw",
     description: "Place @cumul carte@s aléatoire@s de la défausse dans le deck",
     image: "recyclage.png",
     condition: (state) => state.discard.length > 0,
@@ -82,7 +82,7 @@ const upgrades: RawUpgrade[] = [
   },
   {
     name: "I.A",
-    triggerEvent: "onDraw",
+    eventName: "onDraw",
     description: "Gagne @cumulM$ fois le nombre de carte en défausse",
     image: "ia.png",
     condition: (state) => state.discard.length > 0,
@@ -96,7 +96,7 @@ const upgrades: RawUpgrade[] = [
   },
   {
     name: "Sport",
-    triggerEvent: "daily",
+    eventName: "daily",
     description: "Gagne @cumul @reputation@s",
     image: "sport.png",
     condition: (state) => state.reputation < MAX_REPUTATION,
@@ -111,7 +111,7 @@ const upgrades: RawUpgrade[] = [
   },
   {
     name: "PC Puissant",
-    triggerEvent: "onDraw",
+    eventName: "onDraw",
     description: "Gagne @cumulM$ fois le nombre d'@energy",
     image: "pc-puissant.png",
     condition: (state) => state.energy > 0,
@@ -126,7 +126,7 @@ const upgrades: RawUpgrade[] = [
   },
   {
     name: "Stagiaire",
-    triggerEvent: "onDraw",
+    eventName: "onDraw",
     description: "Gagne @cumulM$ fois le nombre de cartes en main",
     image: "stagiaire.png",
     condition: (state) => state.hand.length > 0,

@@ -1,13 +1,15 @@
 import { useCardGame } from "@/hooks/useCardGame.ts";
 import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
 
-import { TRIGGER_EVENTS } from "@/game-constants.ts";
+import events from "@/data/events.ts";
+
 import { formatText, formatUpgradeText } from "@/game-utils.ts";
 import { cn } from "@/utils.ts";
 
 import { Card } from "@/components/Card.tsx";
 import { Progress } from "@/components/ui/progress.tsx";
 import { GameValueIcon } from "@/components/game/GameValueIcon.tsx";
+import { EventText } from "@/components/game/EventText.tsx";
 
 export const GameUpgrades = (props: { show: boolean }) => {
   const quality = useQualitySettings((state) => ({
@@ -47,8 +49,7 @@ export const GameUpgrades = (props: { show: boolean }) => {
           )}
         >
           {upgrades.map((upgrade, index) => {
-            const { icon: EventIcon, name: eventName } =
-              TRIGGER_EVENTS[upgrade.triggerEvent];
+            const event = events[upgrade.eventName];
 
             return (
               <div key={index} className="group/upgrade shrink-0 relative">
@@ -77,6 +78,19 @@ export const GameUpgrades = (props: { show: boolean }) => {
                         value={(upgrade.cumul / upgrade.max) * 100}
                       />
                     )}
+                    <GameValueIcon
+                      value={<event.icon />}
+                      colors={
+                        "colors" in event ? event.colors : "bg-background"
+                      }
+                      miniature
+                      className="absolute h-6 w-6"
+                      style={{
+                        top: "-15px",
+                        left: "-15px",
+                        transform: "translate(0, -50%)",
+                      }}
+                    />
                     <GameValueIcon
                       value={upgrade.cumul}
                       colors="bg-upgrade"
@@ -108,15 +122,7 @@ export const GameUpgrades = (props: { show: boolean }) => {
                       ),
                     }}
                   />
-                  <div className="flex items-center gap-1">
-                    <EventIcon className="w-6 h-6" />
-                    <span
-                      className="font-zain"
-                      dangerouslySetInnerHTML={{
-                        __html: formatText(eventName),
-                      }}
-                    />
-                  </div>
+                  <EventText eventName={upgrade.eventName} />
                 </Card>
               </div>
             );

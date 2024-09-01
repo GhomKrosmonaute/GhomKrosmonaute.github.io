@@ -45,7 +45,7 @@ export const GameCard = (
     parsedCost,
     energyColor,
   } = useCardGame((state) => {
-    const parsedCost = parseCost(state, props.card);
+    const parsedCost = parseCost(state, props.card, []);
     const energyColor = energyCostColor(state, parsedCost.cost);
 
     return {
@@ -261,7 +261,7 @@ export const GameCard = (
             )}
             style={{ transformStyle: perspective ? "preserve-3d" : "flat" }}
           >
-            <p
+            <div
               className="py-[10px] px-[15px] text-center"
               style={{
                 transform: perspective ? "translateZ(10px)" : "none",

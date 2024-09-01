@@ -28,17 +28,21 @@ import {
 import { Separator } from "@/components/ui/separator.tsx";
 import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
 
-export const Stat = (props: {
+export const Stat = ({
+  name,
+  Icon,
+  value,
+  ...props
+}: {
   name: string;
-  icon: React.FunctionComponent<React.ComponentProps<"div">>;
+  Icon: React.FunctionComponent<React.ComponentProps<"div">>;
   value: React.ReactNode;
-  className?: string;
-}) => {
+} & React.ComponentProps<"div">) => {
   return (
-    <div className={cn("flex items-center gap-1", props.className)}>
-      <props.icon className="h-full aspect-square w-fit self-center justify-self-start" />
+    <div {...props} className={cn("flex items-center gap-1", props.className)}>
+      <Icon className="h-full aspect-square w-fit self-center justify-self-start" />
       <span className="inline-flex items-baseline whitespace-nowrap gap-1">
-        <span>{props.name} :</span> {props.value}
+        <span>{name} :</span> {value}
       </span>
     </div>
   );
@@ -68,7 +72,7 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
       {props.forHUD && (
         <>
           <div className="grid grid-cols-3 w-full gap-x-2 *:grid *:grid-cols-subgrid *:col-span-3 *:*:col-span-2">
-            <div>
+            <div id="energy">
               <GameGauge
                 title="Energie"
                 value={game.energy}
@@ -77,7 +81,7 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
               />
               <div className="capitalize last:col-span-1">énergie</div>
             </div>
-            <div>
+            <div id="reputation">
               <GameGauge
                 title="Réputation"
                 value={game.reputation}
@@ -86,7 +90,7 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
               />
               <div className="last:col-span-1">Réputation</div>
             </div>
-            <div>
+            <div id="day">
               <GameGauge
                 title="Journée"
                 display={(f) => (Math.floor(f * 24) % 24) + "h"}
@@ -98,13 +102,13 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
                 increaseOnly
               />
               <Stat
-                icon={Day}
+                Icon={Day}
                 name="Jour"
                 value={Math.floor(game.day)}
                 className="last:col-span-1 h-5"
               />
             </div>
-            <div>
+            <div id="sprint">
               <GameGauge
                 title="Sprint"
                 display={(f) => Math.floor(f * 7) + "j"}
@@ -114,7 +118,7 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
                 increaseOnly
               />
               <Stat
-                icon={Day}
+                Icon={Day}
                 name="Sprint"
                 value={Math.floor(game.day / 7)}
                 className="last:col-span-1 h-5"
@@ -122,7 +126,7 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
             </div>
           </div>
           <Separator />
-          <div className="grid grid-cols-3 w-full gap-x-2">
+          <div className="grid grid-cols-3 w-full gap-x-2" id="deck">
             {(["deck", "draw", "discard"] as const).map((collection) => (
               <div
                 className="grid grid-cols-subgrid col-span-3 space-y-1"
@@ -164,7 +168,7 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
                     ))}
                 </div>
                 <Stat
-                  icon={
+                  Icon={
                     collection === "deck"
                       ? Deck
                       : collection === "draw"
@@ -199,7 +203,8 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
         )}
       >
         <Stat
-          icon={Money}
+          id="money"
+          Icon={Money}
           name="Dollars"
           value={
             <span
@@ -212,7 +217,7 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
           }
         />
         <Stat
-          icon={Score}
+          Icon={Score}
           name="Score"
           value={
             <span className="text-upgrade font-changa">
@@ -221,10 +226,10 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
           }
         />
         {!props.forHUD && (
-          <Stat icon={Day} name="Jour" value={Math.floor(game.day)} />
+          <Stat Icon={Day} name="Jour" value={Math.floor(game.day)} />
         )}
         <Stat
-          icon={Settings}
+          Icon={Settings}
           name="Mode"
           value={
             <span className="capitalize">
@@ -233,7 +238,7 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
           }
         />
         {game.infinity && (
-          <Stat icon={Infinity} name="Mode infini" value="Activé" />
+          <Stat Icon={Infinity} name="Mode infini" value="Activé" />
         )}
       </div>
     </>

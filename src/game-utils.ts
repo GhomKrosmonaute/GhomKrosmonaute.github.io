@@ -7,6 +7,7 @@ import type {
   GameOverReason,
   Upgrade,
 } from "@/game-typings";
+
 import type { CardGameState } from "@/hooks/useCardGame";
 
 import {
@@ -47,7 +48,7 @@ export function isGameOver(state: CardGameState): GameOverReason | false {
       if (c.effect.condition && !c.effect.condition(state, c)) return true;
 
       // on vérifie si on a assez de resources
-      return !parseCost(state, c).canBeBuy;
+      return !parseCost(state, c, []).canBeBuy;
     }) &&
     (state.reputation + state.energy < INFINITE_DRAW_COST ||
       state.hand.length >= MAX_HAND_SIZE ||
@@ -93,6 +94,7 @@ export function cloneSomething<T>(something: T): T {
 export function applyCardModifiers(
   state: CardGameState,
   card: GameCardInfo,
+  used: string[],
 ): { card: GameCardInfo; appliedModifiers: CardModifierIndice[] } {
   const clone = cloneSomething(card);
   const modifiers = state.cardModifiers.slice();
@@ -102,6 +104,11 @@ export function applyCardModifiers(
     appliedModifiers: CardModifierIndice[];
   }>(
     (previousValue, indice) => {
+      const stringIndice = JSON.stringify(indice);
+
+      if (used.includes(stringIndice)) return previousValue;
+      else used.push(stringIndice);
+
       const modifier = reviveCardModifier(indice);
 
       return !modifier.condition ||
@@ -116,8 +123,16 @@ export function applyCardModifiers(
   );
 }
 
-export function parseCost(state: CardGameState, card: GameCardInfo) {
-  const { card: tempCard, appliedModifiers } = applyCardModifiers(state, card);
+export function parseCost(
+  state: CardGameState,
+  card: GameCardInfo,
+  used: string[],
+) {
+  const { card: tempCard, appliedModifiers } = applyCardModifiers(
+    state,
+    card,
+    used,
+  );
   const needs = typeof tempCard.effect.cost === "number" ? "energy" : "money";
   const cost = Number(tempCard.effect.cost);
   const canBeBuy =

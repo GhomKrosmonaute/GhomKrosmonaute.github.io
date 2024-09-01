@@ -40,7 +40,7 @@ export const GameActions = (props: { show: boolean }) => {
         },
       )}
     >
-      <Card className="space-y-4">
+      <Card className="space-y-4 group/actions">
         <h2 className="text-3xl text-center">Actions</h2>
         <Button
           className={cn("flex justify-start gap-2", { grayscale: disabled })}
@@ -77,7 +77,10 @@ export const GameActions = (props: { show: boolean }) => {
           Piocher une carte
         </Button>
         {process.env.NODE_ENV === "development" && (
-          <>
+          <div className="hidden group-hover/actions:block space-y-4">
+            <Button onClick={() => game.addNotification("Une notification")}>
+              Déclencher une notification
+            </Button>
             <Button
               disabled={runningOps}
               onClick={async () => {
@@ -130,7 +133,7 @@ export const GameActions = (props: { show: boolean }) => {
                 Lose
               </Button>
             </div>
-          </>
+          </div>
         )}
       </Card>
     </div>

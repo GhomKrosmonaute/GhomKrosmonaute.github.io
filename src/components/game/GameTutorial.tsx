@@ -1,10 +1,13 @@
 import React from "react";
+import { useTutorial } from "@/hooks/useTutorial";
 import { useCardGame } from "@/hooks/useCardGame";
 import { useQualitySettings } from "@/hooks/useQualitySettings";
 import { cn } from "@/utils";
 
-export const HighLightMask = (props: { show: boolean }) => {
+export const GameTutorial = (props: { show: boolean }) => {
+  const { start } = useTutorial();
   const masks = useCardGame(({ masks }) => masks);
+  const tutorial = useCardGame(({ tutorial }) => tutorial);
   const enabled = useQualitySettings(
     ({ transparency, animations }) => transparency && animations,
   );
@@ -21,6 +24,12 @@ export const HighLightMask = (props: { show: boolean }) => {
 
     return `data:image/svg+xml;base64,${btoa(svgData)}`;
   }, [masks]);
+
+  React.useEffect(() => {
+    if (enabled && props.show && tutorial) {
+      start();
+    }
+  }, [enabled, props.show, tutorial]);
 
   if (!enabled && props.show) return null;
 

@@ -3,12 +3,15 @@ import { cn } from "@/utils.ts";
 import React from "react";
 import { ColorClass } from "@/game-typings.ts";
 
-const foregrounds = [
-  "text-energy-foreground",
-  "text-reputation-foreground",
-  "text-day-foreground",
-  "text-upgrade-foreground",
-];
+const foregrounds: Record<ColorClass, string> = {
+  "bg-energy": "text-energy-foreground",
+  "bg-reputation": "text-reputation-foreground",
+  "bg-day": "text-day-foreground",
+  "bg-upgrade": "text-upgrade-foreground",
+  "bg-action": "text-action-foreground",
+  "bg-support": "text-support-foreground",
+  "bg-background": "text-foreground",
+};
 
 export const GameValueIcon = ({
   isCost,
@@ -42,14 +45,6 @@ export const GameValueIcon = ({
           "w-10 h-10": !miniature,
           "shadow shadow-black": quality.shadows,
         },
-        foregrounds.find((fg) =>
-          fg.includes(
-            (typeof colors === "string" ? colors : colors[0])!.replace(
-              "bg-",
-              "",
-            ),
-          ),
-        ),
         props.className,
       )}
       style={{
@@ -70,7 +65,10 @@ export const GameValueIcon = ({
 
       {/* Value */}
       <div
-        className="absolute top-1/2 left-1/2 font-changa"
+        className={cn(
+          "absolute top-1/2 left-1/2 font-changa",
+          foregrounds[typeof colors === "string" ? colors : colors[0]],
+        )}
         style={{
           transform: `translate(-50%, -50%) ${quality.perspective ? "translateZ(5px)" : ""}`,
         }}

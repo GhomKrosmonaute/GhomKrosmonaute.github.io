@@ -1,3 +1,6 @@
+import React from "react";
+import ReactDOMServer from "react-dom/server";
+
 import { bank } from "@/sound.ts";
 import { create } from "zustand";
 
@@ -46,10 +49,13 @@ import {
 
 import { metadata } from "@/game-metadata.ts";
 import { difficultyIndex, settings } from "@/game-settings.ts";
+import { EventText } from "@/components/game/EventText.tsx";
 
 export interface CardGameState {
   logs: GameLog[];
   masks: Mask[];
+  tutorial: boolean;
+  notification: string | null;
   operationInProgress: string[];
   setOperationInProgress: (operation: string, value: boolean) => void;
   reason: GameOverReason;
@@ -73,6 +79,7 @@ export interface CardGameState {
   money: number;
   advanceTime: (energy: number) => Promise<void>;
   addLog: (log: GameLog) => void;
+  addNotification: (notification: string) => void;
   dangerouslyUpdate: (partial: Partial<CardGameState>) => void;
   updateScore: () => void;
   addEnergy: (count: number, options: GameMethodOptions) => Promise<void>;
@@ -177,9 +184,12 @@ function generateInitialState(): Omit<
         index: -1,
         upgrade: true,
         ephemeral: upgrade.max === 1,
-        description: formatText(
-          `@upgrade <br/> ${formatUpgradeText(upgrade.description, 1)}`,
-        ),
+        description: `${formatText(`@upgrade <br/> ${formatUpgradeText(upgrade.description, 1)}`)} <br/> ${ReactDOMServer.renderToString(
+          React.createElement(EventText, {
+            eventName: upgrade.eventName,
+            className: "mx-auto w-fit mt-2",
+          }),
+        ).replace(/"/g, "'")}`,
         onPlayed: async (state) => await state.upgrade(upgrade.name),
         type: "action",
         cost: upgrade.cost,
@@ -193,6 +203,8 @@ function generateInitialState(): Omit<
   return {
     masks: [],
     logs: [],
+    tutorial: true,
+    notification: null,
     operationInProgress: [],
     score: 0,
     reason: null,
@@ -260,6 +272,8 @@ function cardGameMethods(
           // on joue le son de la banque
           bank.bell.play();
 
+          state.addNotification(`Jour ${Math.floor(day)}`);
+
           await wait(1000);
 
           await state.triggerEvent("daily");
@@ -279,6 +293,21 @@ function cardGameMethods(
       set((state) => ({
         logs: [...state.logs, log],
       }));
+    },
+
+    addNotification: async (notification) => {
+      const state = getState();
+
+      if (state.notification) {
+        set({ notification: null });
+        await wait(500);
+      }
+
+      set({ notification });
+
+      await wait(2000);
+
+      set({ notification: null });
     },
 
     dangerouslyUpdate: (partial: Partial<CardGameState>) => set(partial),
@@ -564,7 +593,7 @@ function cardGameMethods(
       state.setOperationInProgress(`triggerUpgradeEvent ${event}`, true);
 
       const upgrades = state.upgrades.filter(
-        (upgrade) => upgrade.triggerEvent === event,
+        (upgrade) => upgrade.eventName === event,
       );
 
       for (const upgrade of upgrades) {
@@ -834,7 +863,7 @@ function cardGameMethods(
         return;
       }
 
-      const { needs, cost, appliedModifiers } = parseCost(state, card);
+      const { needs, cost, appliedModifiers } = parseCost(state, card, []);
 
       if (
         free ||

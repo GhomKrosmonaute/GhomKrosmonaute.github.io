@@ -172,6 +172,31 @@ module.exports = {
           "30%": { transform: "scale(1.2)" },
           "100%": { transform: "scale(1)" },
         },
+        notification: {
+          "0%": {
+            transform: "translateY(0)",
+            opacity: 0,
+          },
+          "50%": {
+            transform: "translateY(0)",
+            opacity: 1,
+          },
+          "100%": {
+            transform: "translateY(-200px)",
+            opacity: 0,
+          },
+        },
+        "notification-bg": {
+          "0%": {
+            opacity: 0,
+          },
+          "50%": {
+            opacity: 1,
+          },
+          "100%": {
+            opacity: 0,
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -191,6 +216,8 @@ module.exports = {
         appear: "appear 0.25s ease-in-out forwards 0.25s",
         trigger: "trigger 0.25s ease-in-out forwards 0.25s",
         "ping-forwards": "ping 2s cubic-bezier(0, 0, 0.2, 1) forwards",
+        notification: "notification 2s forwards",
+        "notification-bg": "notification-bg 2s forwards",
       },
     },
   },

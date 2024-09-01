@@ -16,7 +16,7 @@ export default function svgPlugin(): Plugin {
           import { cn } from "@/utils.ts";
     
           export default function Svg(props: React.ComponentProps<"div">) { 
-            return <div {...props} className={cn("w-full h-full aspect-square text-foreground", props.className)} style={props.style}>
+            return <div {...props} className={cn("w-full h-full aspect-square", props.className)} style={props.style}>
               ${file
                 .replace(/<\?.+?>/g, "")
                 .replace(/<!.+?>/g, "")

@@ -1,6 +1,6 @@
 import type { CardModifier } from "@/game-typings";
 import { ENERGY_TO_MONEY } from "@/game-constants.ts";
-import { getUpgradeCost } from "@/game-utils";
+import { getUpgradeCost, parseCost } from "@/game-utils";
 
 const cardModifiers = {
   "upgrade cost threshold": () => ({
@@ -41,8 +41,12 @@ const cardModifiers = {
   }),
   "next money card cost energy": () => ({
     once: true,
-    condition: (card) =>
-      typeof card.effect.cost === "string" && Number(card.effect.cost) > 0,
+    condition: (card, state) => {
+      const parsed = parseCost(state, card, [
+        '["next money card cost energy",[]]',
+      ]);
+      return parsed.needs === "money" && parsed.cost > 0;
+    },
     use: (card) => ({
       ...card,
       effect: {
@@ -56,7 +60,8 @@ const cardModifiers = {
   }),
   "next card half cost": () => ({
     once: true,
-    condition: (card) => Number(card.effect.cost) > 1,
+    condition: (card, state) =>
+      parseCost(state, card, ['["next card half cost",[]]']).cost > 1,
     use: (card) => ({
       ...card,
       effect: {
