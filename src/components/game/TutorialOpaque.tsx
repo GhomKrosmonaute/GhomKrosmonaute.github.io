@@ -2,7 +2,7 @@ import React from "react";
 import { createPortal } from "react-dom";
 import { useTutorialPrivate } from "@/hooks/useTutorial.ts";
 
-const PADDING = 5;
+export const PADDING = 5;
 
 const sharedStyle: React.CSSProperties = {
   position: "fixed",

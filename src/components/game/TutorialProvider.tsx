@@ -1,6 +1,9 @@
 import React from "react";
 import { useCardGame } from "@/hooks/useCardGame.ts";
 import { TutorialOpaque } from "./TutorialOpaque";
+import { Progress } from "@/components/ui/progress.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import Forward from "@/assets/icons/forward.svg";
 
 export interface TutorialStep {
   id: string;
@@ -209,6 +212,18 @@ export const TutorialProvider = ({ steps, children, opaqueStyle }: Props) => {
       >
         {children}
         {stepRendered}
+        {/* monitor */}
+        {currentStep && (
+          <div
+            className="fixed w-fit right-2 bottom-2"
+            style={{ zIndex: 999999 }}
+          >
+            <Button variant="cta" size="cta" className="mb-2" onClick={finish}>
+              Passer le didacticiel <Forward className="ml-2" />
+            </Button>
+            <Progress value={(((index ?? 0) + 1) / steps.length) * 100} />
+          </div>
+        )}
       </TutorialPrivateContext.Provider>
     </TutorialContext.Provider>
   );

@@ -174,11 +174,11 @@ module.exports = {
         },
         notification: {
           "0%": {
-            transform: "translateY(0)",
+            transform: "translateY(0) scale(0.5)",
             opacity: 0,
           },
           "50%": {
-            transform: "translateY(0)",
+            transform: "translateY(0) scale(1)",
             opacity: 1,
           },
           "100%": {

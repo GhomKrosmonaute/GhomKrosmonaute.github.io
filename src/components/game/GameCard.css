@@ -4,16 +4,16 @@
   top: 0;
 }
 .game-card.played {
-  animation: play 0.25s ease-in-out forwards;
+  animation: play 0.5s ease-in-out forwards;
 }
 .game-card.dropped {
-  animation: drop 0.25s ease-in-out forwards;
+  animation: drop 0.5s ease-in-out forwards;
 }
 .game-card.drawn {
-  animation: draw 0.25s ease-in-out forwards;
+  animation: draw 0.5s ease-in-out forwards;
 }
 .game-card.unauthorized {
-  animation: unauthorized 0.25s ease-in-out forwards;
+  animation: unauthorized 0.5s ease-in-out forwards;
 }
 
 .inset-shadow:after {

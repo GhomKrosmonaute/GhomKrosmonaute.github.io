@@ -17,15 +17,16 @@ export const EventNotifier = (props: { show: boolean }) => {
       className={cn(
         "absolute w-full h-full z-50 flex justify-center items-center pointer-events-none",
         {
-          "bg-gradient-to-b from-transparent via-background/80 to-transparent animate-notification-bg":
+          "bg-gradient-to-b from-transparent to-transparent animate-notification-bg":
             !!game.notification,
           hidden: !props.show || !quality.transparency || !quality.animations,
         },
+        game.notification?.[1],
       )}
     >
       {game.notification && (
-        <div className="animate-notification font-changa text-7xl">
-          {game.notification}
+        <div className="animate-notification font-changa text-8xl">
+          {game.notification[0]}
         </div>
       )}
     </div>

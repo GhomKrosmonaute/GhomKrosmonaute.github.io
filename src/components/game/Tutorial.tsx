@@ -1,12 +1,20 @@
 import React from "react";
 import { useTutorialPrivate } from "@/hooks/useTutorial.ts";
+import { PADDING } from "@/components/game/TutorialOpaque.tsx";
+import { Position } from "@/components/game/TutorialProvider.tsx";
 
 interface TutorialProps extends React.HTMLAttributes<HTMLDivElement> {
-  location?: "left" | "right";
+  location?: "left" | "right" | "center" | "top" | "bottom";
   highlight?: boolean;
 }
 
-export const Tutorial = ({ location, highlight, ...rest }: TutorialProps) => {
+export const Tutorial = ({
+  location,
+  highlight,
+  children,
+  style,
+  ...rest
+}: TutorialProps) => {
   const {
     position: positionContext,
     isLoading,
@@ -23,48 +31,48 @@ export const Tutorial = ({ location, highlight, ...rest }: TutorialProps) => {
   }, [highlight]);
 
   React.useEffect(() => {
-    const position: React.CSSProperties | null = positionContext;
+    const position: Position | null = positionContext;
 
-    // if (!position) throw Error("Not position exists");
+    const temp: React.CSSProperties = {};
 
-    let tempPosition: React.CSSProperties = { ...position };
-
-    if (location === "right") {
-      let leftPosition = position?.left || "0px";
-      let width = position?.width || "0px";
-
-      if (typeof leftPosition === "number") {
-        leftPosition = leftPosition + "px";
-      }
-      if (typeof width === "number") {
-        width = width + "px";
-      }
-
-      tempPosition = {
-        ...position,
-        left: `calc(${leftPosition} + ${width})`,
-      };
+    switch (location) {
+      case "right":
+      case "left":
+      case "top":
+      case "bottom":
+        if (!position) throw Error("Not position exists");
     }
 
-    if (location === "left") {
-      const refPosition = ref.current?.getBoundingClientRect();
-      let leftPosition = position?.left || "0px";
-      let width = refPosition?.width || "0px";
-
-      if (typeof leftPosition === "number") {
-        leftPosition = leftPosition + "px";
-      }
-      if (typeof width === "number") {
-        width = width + "px";
-      }
-
-      tempPosition = {
-        ...position,
-        left: `calc(${leftPosition} - ${width})`,
-      };
+    switch (location) {
+      case "right":
+      case "left":
+        temp.top = position!.top - PADDING + "px";
+        if (location === "left") {
+          temp.left = position!.left - PADDING + "px";
+          temp.transform = "translate(-100%, 0)";
+        } else temp.left = position!.right + PADDING + "px";
+        break;
+      case "top":
+      case "bottom":
+        temp.left = position!.left + position!.width / 2 + "px";
+        if (location === "top") {
+          temp.top = position!.top - PADDING + "px";
+          temp.transform = "translate(-50%, -100%)";
+        } else {
+          temp.top = position!.bottom + PADDING + "px";
+          temp.transform = "translate(-50%, 0)";
+        }
+        break;
+      case "center":
+        temp.left = "50%";
+        temp.top = "50%";
+        temp.transform = "translate(-50%, -50%)";
+        break;
     }
 
-    setRenderPosition(tempPosition);
+    console.log(temp, position);
+
+    setRenderPosition(temp);
     setLoading(false);
   }, [positionContext, isLoading]);
 
@@ -80,12 +88,12 @@ export const Tutorial = ({ location, highlight, ...rest }: TutorialProps) => {
         visibility: "visible",
         zIndex: "10010",
         borderRadius: "3px",
-        overflow: "hidden",
-        top: renderPosition?.top,
-        left: renderPosition?.left,
         fontSize: "1.5rem",
-        ...rest.style,
+        ...renderPosition,
+        ...style,
       }}
-    />
+    >
+      {children}
+    </div>
   );
 };

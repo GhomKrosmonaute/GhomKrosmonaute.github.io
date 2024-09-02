@@ -9,6 +9,7 @@ export const GameHand = (props: { show: boolean }) => {
 
   return (
     <div
+      id="hand"
       className={cn(
         "absolute flex items-center -translate-x-1/2 max-w-[100vw] left-[50vw]",
         {

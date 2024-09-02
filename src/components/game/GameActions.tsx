@@ -78,7 +78,14 @@ export const GameActions = (props: { show: boolean }) => {
         </Button>
         {process.env.NODE_ENV === "development" && (
           <div className="hidden group-hover/actions:block space-y-4">
-            <Button onClick={() => game.addNotification("Une notification")}>
+            <Button
+              onClick={() =>
+                game.addNotification(
+                  "Une notification",
+                  "via-background/50 text-foreground",
+                )
+              }
+            >
               Déclencher une notification
             </Button>
             <Button

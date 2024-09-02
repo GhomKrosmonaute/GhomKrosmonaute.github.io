@@ -55,7 +55,7 @@ export interface CardGameState {
   logs: GameLog[];
   masks: Mask[];
   tutorial: boolean;
-  notification: string | null;
+  notification: [text: string, className: string] | null;
   operationInProgress: string[];
   setOperationInProgress: (operation: string, value: boolean) => void;
   reason: GameOverReason;
@@ -79,7 +79,7 @@ export interface CardGameState {
   money: number;
   advanceTime: (energy: number) => Promise<void>;
   addLog: (log: GameLog) => void;
-  addNotification: (notification: string) => void;
+  addNotification: (notification: string, className: string) => void;
   dangerouslyUpdate: (partial: Partial<CardGameState>) => void;
   updateScore: () => void;
   addEnergy: (count: number, options: GameMethodOptions) => Promise<void>;
@@ -272,7 +272,10 @@ function cardGameMethods(
           // on joue le son de la banque
           bank.bell.play();
 
-          state.addNotification(`Jour ${Math.floor(day)}`);
+          state.addNotification(
+            `Jour ${Math.floor(day)}`,
+            "via-day text-day-foreground",
+          );
 
           await wait(1000);
 
@@ -295,15 +298,8 @@ function cardGameMethods(
       }));
     },
 
-    addNotification: async (notification) => {
-      const state = getState();
-
-      if (state.notification) {
-        set({ notification: null });
-        await wait(500);
-      }
-
-      set({ notification });
+    addNotification: async (text, className) => {
+      set({ notification: [text, className] });
 
       await wait(2000);
 

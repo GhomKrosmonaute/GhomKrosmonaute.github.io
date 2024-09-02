@@ -229,7 +229,7 @@ export function formatUpgradeText(text: string, cumul: number) {
     .replace(/@s/g, cumul > 1 ? "s" : "");
 }
 
-export async function wait(ms = 250) {
+export async function wait(ms = 500) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 

@@ -11,8 +11,9 @@ export const GameLogs = (props: { show: boolean }) => {
 
   return (
     <div
+      id="logs"
       className={cn(
-        "absolute right-0 bottom-0 translate-x-full pointer-events-none",
+        "absolute right-0 bottom-0 translate-x-full pointer-events-none min-w-52",
         {
           hidden: !props.show,
         },
