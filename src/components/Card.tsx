@@ -3,14 +3,13 @@ import { cn } from "@/utils.ts";
 import { BorderLight } from "@/components/ui/border-light.tsx";
 import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
 
-export const Card = ({
-  borderLightAppearOnHover,
-  ...props
-}: React.PropsWithChildren<
-  React.ComponentProps<"div"> & {
-    borderLightAppearOnHover?: boolean;
-  }
->) => {
+export const Card = React.forwardRef<
+  HTMLDivElement,
+  React.ComponentProps<"div"> &
+    React.PropsWithChildren<{
+      borderLightAppearOnHover?: boolean;
+    }>
+>(({ borderLightAppearOnHover, ...props }, ref) => {
   const quality = useQualitySettings((state) => ({
     transparency: state.transparency,
     cardBlur: state.blur,
@@ -19,6 +18,7 @@ export const Card = ({
   return (
     <div
       {...props}
+      ref={ref}
       className={cn(
         {
           "bg-background/70": quality.transparency,
@@ -44,4 +44,4 @@ export const Card = ({
       />
     </div>
   );
-};
+});

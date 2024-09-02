@@ -35,7 +35,7 @@ export const Home = () => {
       <Socials />
       <Slogan />
 
-      <div className="grid grid-cols-3 xs:flex xs:justify-center mt-6 w-full gap-4 xs:gap-8 md:gap-5">
+      <div className="grid grid-cols-3 xs:flex xs:justify-center mt-6 w-full gap-4">
         {largeScreen && (
           <Button
             onClick={() => setCardGameVisibility(!isCardGameVisible)}

@@ -30,11 +30,17 @@ const Game = React.lazy(() =>
 
 export default function App() {
   const toggleDarkMode = useDarkMode();
+
   const { godRays, animation } = useQualitySettings((state) => ({
     godRays: state.godRays,
     animation: state.animations,
   }));
-  const isCardGameVisible = useGlobalState((state) => state.isCardGameVisible);
+
+  const [isCardGameVisible, setCardGameVisibility] = useGlobalState((state) => [
+    state.isCardGameVisible,
+    state.setCardGameVisibility,
+  ]);
+
   // const isSplineLoaded = useGlobalState((state) => state.splineLoaded);
   const largeScreen = useMediaQuery("(width >= 768px) and (height >= 768px)");
   const largeWidth = useMediaQuery("(width >= 768px)");
@@ -55,6 +61,12 @@ export default function App() {
       }
     }
   }, []);
+
+  React.useEffect(() => {
+    if (!largeScreen && process.env.NODE_ENV !== "development") {
+      setCardGameVisibility(false);
+    }
+  }, [largeScreen]);
 
   const router = useMemo(
     () =>

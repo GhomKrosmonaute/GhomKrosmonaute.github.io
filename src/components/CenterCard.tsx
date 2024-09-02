@@ -15,12 +15,51 @@ export const CenterCard = (
     big?: boolean;
   }>,
 ) => {
+  const modalRef = React.useRef<HTMLDivElement>(null);
   const matches = useMediaQuery("(width >= 768px) and (height >= 768px)");
   const quality = useQualitySettings((state) => ({
     blur: state.blur,
     shadows: state.shadows,
     animations: state.animations,
   }));
+
+  React.useEffect(() => {
+    if (modalRef.current) {
+      const focusableElements = modalRef.current.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      );
+
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
+
+      const trapFocus = (event: KeyboardEvent) => {
+        if (event.key === "Tab") {
+          if (event.shiftKey) {
+            // Si Shift + Tab
+            if (document.activeElement === firstElement) {
+              event.preventDefault();
+              lastElement.focus(); // Boucle vers le dernier élément
+            }
+          } else {
+            // Si juste Tab
+            if (document.activeElement === lastElement) {
+              event.preventDefault();
+              firstElement.focus(); // Boucle vers le premier élément
+            }
+          }
+        }
+      };
+
+      modalRef.current.addEventListener("keydown", trapFocus);
+
+      // Focus sur le premier élément focusable à l'ouverture de la modal
+      //firstElement?.focus();
+
+      return () => {
+        modalRef.current?.removeEventListener("keydown", trapFocus);
+      };
+    }
+  }, [modalRef]);
 
   return (
     <>
@@ -37,20 +76,21 @@ export const CenterCard = (
         style={props.style}
       >
         <Card
+          ref={modalRef}
           className={cn(
             "rounded-none overflow-scroll border-none",
             "md:h-auto md:rounded-md md:border-2 md:overflow-hidden",
             {
               "md:transition md:ease-in-out md:duration-500":
                 quality.animations,
-              "md:shadow-spotlight md:hover:shadow-glow-150 md:hover:shadow-primary":
+              "md:shadow-spotlight md:hover:shadow-glow-150 md:hover:shadow-primary md:focus-within:shadow-primary md:active:shadow-primary":
                 quality.shadows,
             },
             "md:hover:border-b-primary",
             // set inclination
             {
               "md:hover:backdrop-blur-md": quality.blur,
-              "rotate-2 scale-95 hover:rotate-0 hover:scale-100":
+              "rotate-2 scale-95 hover:rotate-0 hover:scale-100 focus-within:rotate-0 focus-within:scale-100 active:rotate-0 active:scale-100":
                 matches && quality.animations,
             },
           )}

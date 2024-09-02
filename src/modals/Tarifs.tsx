@@ -7,14 +7,18 @@ import { Button } from "@/components/ui/button.tsx";
 
 import tarifs from "../data/tarifs.json";
 import { useGlobalState } from "@/hooks/useGlobalState.ts";
+import React from "react";
 
 export const Tarifs = () => {
   const navigate = useNavigate();
-  const setCardGameVisibility = useGlobalState(
-    (state) => state.setCardGameVisibility,
-  );
+  const [isCardGameVisible, setCardGameVisibility] = useGlobalState((state) => [
+    state.isCardGameVisible,
+    state.setCardGameVisibility,
+  ]);
 
-  setCardGameVisibility(false);
+  React.useEffect(() => {
+    if (isCardGameVisible) setCardGameVisibility(false);
+  }, [isCardGameVisible]);
 
   return (
     <Modal modalName="/pricing" big>
