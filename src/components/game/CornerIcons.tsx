@@ -1,5 +1,5 @@
 import { useGlobalState } from "@/hooks/useGlobalState.ts";
-import { Button } from "@/components/ui/button.tsx";
+import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
 
 import Sound from "@/assets/icons/sound.svg";
 import Muted from "@/assets/icons/muted.svg";
@@ -8,12 +8,12 @@ import Settings from "@/assets/icons/settings.svg";
 import Question from "@/assets/icons/question.svg";
 
 import { cn } from "@/utils.ts";
-import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
-import { useCardGame } from "@/hooks/useCardGame.ts";
+
+import { Button } from "@/components/ui/button.tsx";
 
 export const CornerIcons = (props: { show: boolean }) => {
-  const enableTutorial = useCardGame(
-    (state) => () => state.dangerouslyUpdate({ tutorial: true }),
+  const enableTutorial = useGlobalState(
+    (state) => () => state.setTutorial(true),
   );
 
   const [animation, transparency] = useQualitySettings((state) => [

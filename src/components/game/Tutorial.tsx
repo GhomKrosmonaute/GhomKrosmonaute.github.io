@@ -70,8 +70,6 @@ export const Tutorial = ({
         break;
     }
 
-    console.log(temp, position);
-
     setRenderPosition(temp);
     setLoading(false);
   }, [positionContext, isLoading]);

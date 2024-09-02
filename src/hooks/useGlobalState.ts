@@ -1,6 +1,8 @@
 import { create } from "zustand";
+import { defaultSettings, settings } from "@/game-settings.ts";
 
 type State = {
+  tutorial: boolean;
   musicMuted: boolean;
   musicVolume: number;
   isCardGameVisible: boolean;
@@ -13,9 +15,11 @@ type State = {
   toggleSettings: () => void;
   toggleMusicMuted: () => void;
   setMusicVolume: (cb: (currentVolume: number) => number) => void;
+  setTutorial: (enable: boolean) => void;
 };
 
 export const useGlobalState = create<State>((set) => ({
+  tutorial: settings.tutorial,
   musicMuted: localStorage.getItem("muted") === "true",
   musicVolume: 0,
   isCardGameVisible: false,
@@ -34,4 +38,16 @@ export const useGlobalState = create<State>((set) => ({
   setMusicVolume: (volume) =>
     set((state) => ({ musicVolume: volume(state.musicVolume) })),
   toggleRules: () => set((state) => ({ rulesVisible: !state.rulesVisible })),
+  setTutorial: (enable) => {
+    localStorage.setItem(
+      "settings",
+      JSON.stringify({
+        ...(localStorage.getItem("settings")
+          ? JSON.parse(localStorage.getItem("settings")!)
+          : defaultSettings),
+        tutorial: enable,
+      }),
+    );
+    set({ tutorial: enable });
+  },
 }));

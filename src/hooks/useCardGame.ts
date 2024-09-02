@@ -19,7 +19,6 @@ import type {
   MethodWhoLog,
   TriggerEventName,
   Upgrade,
-  Mask,
 } from "@/game-typings";
 
 import {
@@ -53,8 +52,6 @@ import { EventText } from "@/components/game/EventText.tsx";
 
 export interface CardGameState {
   logs: GameLog[];
-  masks: Mask[];
-  tutorial: boolean;
   notification: [text: string, className: string] | null;
   operationInProgress: string[];
   setOperationInProgress: (operation: string, value: boolean) => void;
@@ -201,9 +198,7 @@ function generateInitialState(): Omit<
   const deck = shuffle([...supports, ...actions, ...upgradeActions], 3);
 
   return {
-    masks: [],
     logs: [],
-    tutorial: true,
     notification: null,
     operationInProgress: [],
     score: 0,

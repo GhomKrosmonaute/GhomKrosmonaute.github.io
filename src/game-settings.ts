@@ -20,6 +20,7 @@ export const difficultyIndex = Object.entries(GAME_ADVANTAGE).reduce(
 
 export const defaultSettings: Settings = {
   difficulty: "normal",
+  tutorial: true,
   quality: {
     shadows: true,
     transparency: true,
@@ -35,6 +36,7 @@ export const defaultSettings: Settings = {
 
 export interface Settings {
   difficulty: Difficulty;
+  tutorial: boolean;
   quality: QualityOptions;
 }
 

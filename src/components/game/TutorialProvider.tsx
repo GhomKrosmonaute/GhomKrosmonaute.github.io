@@ -1,5 +1,5 @@
 import React from "react";
-import { useCardGame } from "@/hooks/useCardGame.ts";
+import { useGlobalState } from "@/hooks/useGlobalState.ts";
 import { TutorialOpaque } from "./TutorialOpaque";
 import { Progress } from "@/components/ui/progress.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -54,8 +54,8 @@ export const TutorialPrivateContext =
   React.createContext<TutorialPrivateContextType | null>(null);
 
 export const TutorialProvider = ({ steps, children, opaqueStyle }: Props) => {
-  const finishTutorial = useCardGame(
-    (state) => () => state.dangerouslyUpdate({ tutorial: false }),
+  const finishTutorial = useGlobalState(
+    (state) => () => state.setTutorial(false),
   );
 
   const [index, setIndex] = React.useState<number | null>(null);

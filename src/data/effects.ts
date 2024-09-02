@@ -430,7 +430,7 @@ const effects: Effect[] = (
     {
       description: `Baisse le prix de toutes les cartes en main de ${
         1 + advantage
-      } @energys ou de ${1 + advantage * ENERGY_TO_MONEY}M$`,
+      } @energys ou de ${(1 + advantage) * ENERGY_TO_MONEY}M$`,
       onPlayed: async (state, card) => {
         const handCardNames = state.hand
           .filter((c) => c.name !== card.name && Number(card.effect.cost) > 0)
