@@ -83,7 +83,7 @@ const upgrades: RawUpgrade[] = [
   {
     name: "I.A",
     eventName: "onDraw",
-    description: "Gagne @cumulM$ fois le nombre de carte en défausse",
+    description: "Gagne @cumulM$ par carte en défausse",
     image: "ia.png",
     condition: (state) => state.discard.length > 0,
     onTrigger: async (state, upgrade, reason) => {
@@ -112,7 +112,7 @@ const upgrades: RawUpgrade[] = [
   {
     name: "PC Puissant",
     eventName: "onDraw",
-    description: "Gagne @cumulM$ fois le nombre d'@energy",
+    description: "Gagne @cumulM$ par @energy",
     image: "pc-puissant.png",
     condition: (state) => state.energy > 0,
     onTrigger: async (state, upgrade, reason) => {
@@ -127,7 +127,7 @@ const upgrades: RawUpgrade[] = [
   {
     name: "Stagiaire",
     eventName: "onDraw",
-    description: "Gagne @cumulM$ fois le nombre de cartes en main",
+    description: "Gagne @cumulM$ par cartes en main",
     image: "stagiaire.png",
     condition: (state) => state.hand.length > 0,
     onTrigger: async (state, upgrade, reason) => {

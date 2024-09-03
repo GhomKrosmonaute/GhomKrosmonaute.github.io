@@ -2,6 +2,10 @@ import type { TriggerEvent } from "@/game-typings.ts";
 
 import Day from "@/assets/icons/game/day.svg";
 import Play from "@/assets/icons/game/play.svg";
+import Sprint from "@/assets/icons/game/sprint.svg";
+import Draw from "@/assets/icons/game/draw.svg";
+import Down from "@/assets/icons/game/down.svg";
+import Cross from "@/assets/icons/cross.svg";
 
 const events = {
   daily: {
@@ -11,7 +15,7 @@ const events = {
   },
   weekly: {
     name: "Toutes les fins de @sprint",
-    icon: Day,
+    icon: Sprint,
     colors: "bg-upgrade",
   },
   onPlay: {
@@ -20,15 +24,15 @@ const events = {
   },
   onDraw: {
     name: "À chaque pioche",
-    icon: Play,
+    icon: Draw,
   },
   onEmptyHand: {
     name: "Quand ta main est vide",
-    icon: Play,
+    icon: Cross,
   },
   onReputationDeclines: {
     name: "Quand la @reputation diminue",
-    icon: Play,
+    icon: Down,
     colors: "bg-reputation",
   },
 } satisfies Record<string, TriggerEvent>;

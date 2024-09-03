@@ -84,7 +84,7 @@ export const GameUpgrades = (props: { show: boolean }) => {
                         />
                       )}
                       <GameValueIcon
-                        value={<event.icon />}
+                        value={<event.icon className="h-5" />}
                         colors={
                           "colors" in event ? event.colors : "bg-background"
                         }

@@ -11,6 +11,8 @@ import Infinity from "@/assets/icons/game/infinity.svg";
 import Money from "@/assets/icons/game/money.svg";
 import Score from "@/assets/icons/game/score.svg";
 import Settings from "@/assets/icons/settings.svg";
+import Sprint from "@/assets/icons/game/sprint.svg";
+import Draw from "@/assets/icons/game/draw.svg";
 
 import { GameGauge } from "@/components/game/GameGauge.tsx";
 import {
@@ -126,7 +128,7 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
               />
               <div className="last:col-span-1 flex items-center">
                 <Stat
-                  Icon={Day}
+                  Icon={Sprint}
                   name="Sprint"
                   value={Math.floor(game.day / 7)}
                   className="h-5"
@@ -181,7 +183,7 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
                     collection === "deck"
                       ? Deck
                       : collection === "draw"
-                        ? Deck
+                        ? Draw
                         : Discard
                   }
                   name={

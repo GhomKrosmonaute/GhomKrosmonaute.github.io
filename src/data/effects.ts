@@ -71,7 +71,7 @@ const effects: Effect[] = (
       cost: 3,
     },
     {
-      description: `Gagne ${(2 + advantage) * ENERGY_TO_MONEY}M$ fois le nombre de cartes @action en main en comptant celle-ci`,
+      description: `Gagne ${(2 + advantage) * ENERGY_TO_MONEY}M$ par carte @action en main en comptant celle-ci`,
       onPlayed: async (state, _, reason) => {
         await state.addMoney(
           (2 + advantage) *

@@ -13,8 +13,6 @@ const Progress = React.forwardRef<
 >(({ barColor, className, value, increaseOnly, ...props }, ref) => {
   const previous = usePrevious(value);
 
-  if (barColor === "bg-green-500") console.log(value);
-
   return (
     <ProgressPrimitive.Root
       ref={ref}
@@ -23,7 +21,6 @@ const Progress = React.forwardRef<
         className,
       )}
       {...props}
-      value={value}
     >
       <ProgressPrimitive.Indicator
         className={cn("h-full w-full flex-1", barColor ?? "bg-primary", {
