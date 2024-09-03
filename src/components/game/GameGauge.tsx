@@ -37,7 +37,7 @@ export const GameGauge = ({
       />
       <Progress
         barColor={color}
-        className={barClassName}
+        className={cn(barClassName, "ml-[30px] rounded-l-none")}
         value={(value / max) * 100}
         increaseOnly={increaseOnly}
       />

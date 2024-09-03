@@ -66,7 +66,7 @@ const steps: TutorialStep[] = [
           <p>
             Elle te permet d'utiliser des cartes lorsque tu n'as plus assez
             d'énergie. <br />
-            Cependant, si cette gauge est vide, tu perds la partie.
+            Cependant, si cette jauge est vide, tu perds la partie.
           </p>
           <div className="flex gap-2">
             <Button onClick={back}>Retour</Button>
@@ -86,7 +86,7 @@ const steps: TutorialStep[] = [
           <h2>La journée</h2>
           <p>
             La journée avance à chaque carte jouée. <br />
-            Certains évènement se déclencheront à la fin de la journée.
+            Certains évènements se déclencheront à la fin de la journée.
           </p>
           <div className="flex gap-2">
             <Button onClick={back}>Retour</Button>
@@ -123,7 +123,7 @@ const steps: TutorialStep[] = [
       <Tutorial location="right" style={cardStyle} highlight>
         <h2>Le deck, la pioche et la défausse</h2>
         <p>
-          Comme dans la plupart des jeux de carte, ton deck représente <br />
+          Comme dans la plupart des jeux de cartes, ton deck représente <br />
           toutes les cartes que tu possèdes.
         </p>
         <p>

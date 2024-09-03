@@ -41,7 +41,7 @@ export const GameActions = (props: { show: boolean }) => {
         <h2 className="text-3xl text-center">
           {game.choiceOptions.length > 0 ? (
             <>
-              Choisi une carte{" "}
+              Choisis une carte{" "}
               {newSprint && game.choiceOptions.length <= 2 && (
                 <span
                   dangerouslySetInnerHTML={{
