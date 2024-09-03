@@ -18,7 +18,7 @@ const events = {
     icon: Play,
   },
   onEmptyHand: {
-    name: "Quand votre main est vide",
+    name: "Quand ta main est vide",
     icon: Play,
   },
   onReputationDeclines: {

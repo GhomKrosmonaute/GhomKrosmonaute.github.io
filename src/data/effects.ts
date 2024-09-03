@@ -374,6 +374,26 @@ const effects: Effect[] = (
       waitBeforePlay: true,
     },
     {
+      description: "Recycle toutes les cartes de la défausse",
+      onPlayed: async (state, _, reason) => {
+        await state.recycleCard(state.discard.length, { reason });
+      },
+      condition: (state) => state.discard.length > 0,
+      type: "support",
+      cost: Math.max(0, 10 - advantage),
+      waitBeforePlay: true,
+    },
+    {
+      description: `Recycle ${1 + advantage} carte${advantage > 0 ? "s" : ""} aléatoire${advantage > 0 ? "s" : ""} de la défausse`,
+      onPlayed: async (state, _, reason) => {
+        await state.recycleCard(1 + advantage, { reason });
+      },
+      condition: (state) => state.discard.length > 0,
+      type: "support",
+      cost: 1,
+      waitBeforePlay: true,
+    },
+    {
       description: `Pioche 2 cartes qui coûtent de l'@energy${
         advantage > 4
           ? ` et gagne ${advantage - 4} @energy${advantage - 4 > 1 ? "s" : ""}`

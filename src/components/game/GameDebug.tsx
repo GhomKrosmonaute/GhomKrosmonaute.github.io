@@ -2,6 +2,7 @@ import React from "react";
 import { useCardGame } from "@/hooks/useCardGame.ts";
 import { Card } from "@/components/Card.tsx";
 import { cn } from "@/utils.ts";
+import { GameDebugActions } from "@/components/game/GameDebugActions.tsx";
 
 export const GameDebug = () => {
   const ops = useCardGame((state) => state.operationInProgress);
@@ -34,6 +35,8 @@ export const GameDebug = () => {
           </div>
         ))}
       </div>
+
+      <GameDebugActions />
     </Card>
   );
 };

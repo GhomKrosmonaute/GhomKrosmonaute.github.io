@@ -51,7 +51,7 @@ export const Contact = () => {
           >
             <div className="grid grid-cols-2 gap-4 mb-2">
               <Label>
-                Votre nom
+                Nom / Entreprise
                 <Input
                   value={name}
                   onChange={(e) => setName(e.target.value)}

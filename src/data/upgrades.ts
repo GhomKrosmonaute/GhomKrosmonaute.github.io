@@ -40,7 +40,7 @@ const upgrades: RawUpgrade[] = [
   {
     name: "Méditation",
     eventName: "onPlay",
-    description: "Pioche @cumul carte@s tant que votre main n'est pas pleine",
+    description: "Pioche @cumul carte@s tant que ta main n'est pas pleine",
     image: "meditation.png",
     condition: (state) =>
       state.draw.length > 0 && state.hand.length < MAX_HAND_SIZE,
@@ -56,7 +56,7 @@ const upgrades: RawUpgrade[] = [
   {
     name: "Bourse",
     eventName: "daily",
-    description: "Gagne @cumul fois 10% de votre capital",
+    description: "Gagne @cumul fois 10% de ton capital",
     image: "bourse.png",
     condition: (state) => state.money > 0,
     onTrigger: async (state, upgrade, reason) => {
@@ -71,7 +71,7 @@ const upgrades: RawUpgrade[] = [
   {
     name: "Recyclage",
     eventName: "onDraw",
-    description: "Place @cumul carte@s aléatoire@s de la défausse dans le deck",
+    description: "Recycle @cumul carte@s aléatoire@s",
     image: "recyclage.png",
     condition: (state) => state.discard.length > 0,
     onTrigger: async (state, upgrade, reason) => {

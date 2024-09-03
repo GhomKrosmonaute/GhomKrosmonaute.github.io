@@ -159,8 +159,8 @@ export const Settings = (props: { show: boolean }) => {
                     Une partie est en cours !
                   </AlertDialogTitle>
                   <AlertDialogDescription>
-                    Cette action va réinitialiser votre partie. <br />
-                    Êtes-vous sûr de vouloir continuer ?
+                    Cette action va réinitialiser ta partie. <br />
+                    Es-tu sûr de vouloir continuer ?
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>

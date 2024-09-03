@@ -3,17 +3,20 @@
   scale: 1;
   top: 0;
 }
-.game-card.played {
+.game-card.playing {
   animation: play 0.5s ease-in-out forwards;
 }
-.game-card.dropped {
+.game-card.discarding {
   animation: drop 0.5s ease-in-out forwards;
 }
-.game-card.drawn {
+.game-card.drawing {
   animation: draw 0.5s ease-in-out forwards;
 }
 .game-card.unauthorized {
   animation: unauthorized 0.5s ease-in-out forwards;
+}
+.game-card.removing {
+  animation: disappear 1s ease-out forwards;
 }
 
 .inset-shadow:after {
@@ -24,6 +27,15 @@
   position: absolute;
   top: 0;
   width: 100%;
+}
+
+@keyframes disappear {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
 }
 
 @keyframes draw {

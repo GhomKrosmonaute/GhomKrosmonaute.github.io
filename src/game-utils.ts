@@ -20,13 +20,35 @@ import {
 import cardModifiers from "@/data/cardModifiers.ts";
 import effects from "@/data/effects.ts";
 import upgrades from "@/data/upgrades.ts";
+import cards from "@/data/cards.ts";
 
-export const supportEffects = effects.filter(
-  (effect) => effect.type === "support",
-);
-export const actionEffects = effects.filter(
-  (effect) => effect.type === "action",
-);
+interface ChoiceOptionsGeneratorOptions {
+  exclude?: GameCardInfo[];
+  filter?: (card: GameCardInfo) => boolean;
+}
+
+export function generateChoiceOptions(
+  state: CardGameState,
+  options?: ChoiceOptionsGeneratorOptions,
+) {
+  const _cards = cards.filter(
+    (card) =>
+      state.draw.every((c) => c.name !== card.name) &&
+      state.discard.every((c) => c.name !== card.name) &&
+      state.hand.every((c) => c.name !== card.name) &&
+      options?.exclude?.every((c) => c.name !== card.name) &&
+      options?.filter?.(card),
+  );
+
+  if (_cards.length === 0) {
+    state.dangerouslyUpdate({ choiceRemaining: 0 });
+    return [];
+  }
+
+  // todo: add random rarity to selected cards
+
+  return shuffle(_cards, 3).slice(0, state.choiceOptionCount);
+}
 
 export function energyCostColor(
   state: CardGameState,

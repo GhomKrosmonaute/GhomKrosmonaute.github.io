@@ -82,7 +82,7 @@ export const Scoreboard = (props: { show: boolean }) => {
           </div>
 
           <p className="text-muted-foreground text-lg leading-5 bg-muted py-1 px-2 rounded-md whitespace-nowrap">
-            Si vous avez un meilleur score, vous pouvez me le <br />
+            Si tu as un meilleur score, tu peux me le <br />
             soumettre en me contactant sur Discord ou LinkedIn !
           </p>
         </div>

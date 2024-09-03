@@ -62,10 +62,11 @@ export interface SupportCardInfo {
 
 export type GameCardState =
   | "selected"
-  | "played"
-  | "dropped"
-  | "drawn"
+  | "playing"
+  | "discarding"
+  | "drawing"
   | "unauthorized"
+  | "removing"
   | "removed"
   | "idle"
   | null;

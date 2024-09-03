@@ -70,10 +70,10 @@ export const GameOver = (props: { show: boolean }) => {
 
               <div className="*:text-7xl *:whitespace-nowrap *:font-amsterdam text-center">
                 {game.isWon && (
-                  <div className="text-green-500">Vous avez gagné !</div>
+                  <div className="text-green-500">Tu as gagné !</div>
                 )}
                 {!game.isWon && (
-                  <div className="text-red-500">Vous avez perdu !</div>
+                  <div className="text-red-500">Tu as perdu !</div>
                 )}
               </div>
             </Tilt>
@@ -82,10 +82,9 @@ export const GameOver = (props: { show: boolean }) => {
               <p className="text-4xl">
                 {
                   {
-                    reputation:
-                      "Vous avez utilisé toute votre jauge de réputation...",
-                    mill: "Vous n'avez plus de carte...",
-                    "soft-lock": "Votre main est injouable...",
+                    reputation: "Tu as utilisé toute ta jauge de réputation...",
+                    mill: "Tu n'as plus de carte...",
+                    "soft-lock": "Ta main est injouable...",
                   }[game.reason]
                 }
               </p>
@@ -123,15 +122,15 @@ export const GameOver = (props: { show: boolean }) => {
                           target="_blank"
                           className="text-primary font-changa hover:underline"
                         >
-                          Contactez-moi
+                          Contacte-moi
                         </a>{" "}
-                        pour <br /> soumettre votre score !
+                        pour <br /> soumettre ton score !
                       </p>
                     </>
                   ) : (
                     <div className="text-2xl whitespace-nowrap">
-                      Vous n'êtes pas classé, <br /> votre score est trop
-                      faible. <br /> Essayez{" "}
+                      Tu n'es pas classé, <br /> ton score est trop faible.{" "}
+                      <br /> Essaye{" "}
                       {settings.difficulty === "noob" ||
                       settings.difficulty === "easy" ? (
                         <>

@@ -24,27 +24,22 @@ import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
 import { cn } from "@/utils.ts";
 
 export const GameCard = (
-  props: React.PropsWithoutRef<{ card: GameCardInfo; position: number }>,
+  props: React.PropsWithoutRef<{
+    card: GameCardInfo;
+    position?: number;
+    isChoice?: boolean;
+  }>,
 ) => {
-  const { shadows, perspective, animation, transparency, tilt } =
-    useQualitySettings((state) => ({
-      blur: state.blur,
-      shadows: state.shadows,
-      perspective: state.perspective,
-      animation: state.animations,
-      transparency: state.transparency,
-      tilt: state.tilt,
-    }));
+  const quality = useQualitySettings((state) => ({
+    blur: state.blur,
+    shadows: state.shadows,
+    perspective: state.perspective,
+    animation: state.animations,
+    transparency: state.transparency,
+    tilt: state.tilt,
+  }));
 
-  const {
-    handSize,
-    operationInProgress,
-    isGameOver,
-    play,
-    canTriggerEffect,
-    parsedCost,
-    energyColor,
-  } = useCardGame((state) => {
+  const game = useCardGame((state) => {
     const parsedCost = parseCost(state, props.card, []);
     const energyColor = energyCostColor(state, parsedCost.cost);
 
@@ -52,16 +47,21 @@ export const GameCard = (
       handSize: state.hand.length,
       operationInProgress: state.operationInProgress,
       play: state.playCard,
+      pick: state.pickCard,
       isGameOver: state.isGameOver,
       parsedCost,
       energyColor,
+      choiceRemaining: state.choiceRemaining,
       canTriggerEffect:
         !props.card.effect.condition ||
         props.card.effect.condition(state, props.card),
     };
   });
 
-  const positionFromCenter = props.position - (handSize - 1) / 2;
+  const positionFromCenter =
+    typeof props.position === "number"
+      ? props.position - (game.handSize - 1) / 2
+      : 0;
 
   return (
     <div
@@ -70,17 +70,33 @@ export const GameCard = (
         "relative w-[210px] h-[293px]",
         "-mx-3.5 z-10 hover:z-20 cursor-pointer select-none",
         {
-          "-translate-y-14": props.card.state === "selected",
-          "hover:-translate-y-14": props.card.state !== "removed",
-          [cn("transition-transform", props.card.state)]: animation,
-          grayscale: isGameOver || !parsedCost.canBeBuy || !canTriggerEffect,
-          "cursor-not-allowed": operationInProgress.length > 0,
-          // "translate-y-8": !canTriggerEffect || !haveEnoughResources,
+          [cn("transition-transform", props.card.state)]: quality.animation,
+          [cn({
+            "-translate-y-14": props.card.state === "selected",
+            "hover:-translate-y-14": props.card.state !== "removing",
+            grayscale:
+              game.isGameOver ||
+              !game.parsedCost.canBeBuy ||
+              !game.canTriggerEffect,
+            "cursor-not-allowed":
+              game.operationInProgress.length > 0 || game.choiceRemaining > 0,
+            // "translate-y-8": !canTriggerEffect || !haveEnoughResources,
+          })]: !props.isChoice,
         },
       )}
       onClick={async () => {
-        if (operationInProgress.length === 0 && !isGameOver) {
-          await play(props.card, { reason: props.card });
+        if (!props.isChoice) {
+          if (
+            game.choiceRemaining === 0 &&
+            game.operationInProgress.length === 0 &&
+            !game.isGameOver
+          ) {
+            await game.play(props.card, { reason: props.card });
+          }
+        } else {
+          if (game.choiceRemaining > 0) {
+            await game.pick(props.card);
+          }
         }
       }}
       onContextMenu={(e) => {
@@ -94,17 +110,17 @@ export const GameCard = (
       style={{
         marginBottom: `${20 - Math.abs(positionFromCenter) * 5}px`, // temporaire, peut causer des problèmes
         rotate: `${positionFromCenter * 2}deg`,
-        transitionDuration: animation ? "0.3s" : "0",
-        transitionTimingFunction: animation ? "ease-in-out" : "linear",
+        transitionDuration: quality.animation ? "0.3s" : "0",
+        transitionTimingFunction: quality.animation ? "ease-in-out" : "linear",
       }}
     >
-      {props.card.state === "removed" && animation ? (
+      {props.card.state === "removing" && quality.animation ? (
         <div className="relative">
           {Math.random() < 0.5 ? (
             <BrokenCard
               className={cn("absolute scale-x-[-1]", {
-                "text-card/60": transparency,
-                "text-card": !transparency,
+                "text-card/60": quality.transparency,
+                "text-card": !quality.transparency,
               })}
               style={{
                 maskClip: "fill-box",
@@ -113,8 +129,8 @@ export const GameCard = (
           ) : (
             <BrokenCard
               className={cn("absolute", {
-                "text-card/60": transparency,
-                "text-card": !transparency,
+                "text-card/60": quality.transparency,
+                "text-card": !quality.transparency,
               })}
               style={{
                 maskClip: "fill-box",
@@ -122,6 +138,8 @@ export const GameCard = (
             />
           )}
         </div>
+      ) : props.card.state === "removed" ? (
+        <></>
       ) : (
         <Tilt
           scale={1.1}
@@ -131,12 +149,12 @@ export const GameCard = (
             "*:shrink-0",
             {
               [cn({
-                "bg-card/60": transparency,
-                "bg-card": !transparency,
+                "bg-card/60": quality.transparency,
+                "bg-card": !quality.transparency,
               })]: props.card.effect.type === "support",
               // "shadow-action": props.card.effect.type === "action",
               "transition-shadow duration-200 ease-in-out hover:shadow-glow-20 shadow-primary":
-                shadows,
+                quality.shadows,
               "shadow-glow-20 shadow-primary": props.card.state === "selected",
             },
           )}
@@ -147,12 +165,12 @@ export const GameCard = (
                 "absolute pointer-events-none left-1/2 -top-[10px] -translate-x-1/2 -translate-y-full rounded-2xl bg-card",
                 "p-2 w-max max-w-full gap-1",
                 {
-                  "shadow shadow-action": shadows,
+                  "shadow shadow-action": quality.shadows,
                   "transition-opacity duration-200 ease-in-out delay-1000":
-                    animation,
+                    quality.animation,
                   "opacity-0 group-hover/game-card:opacity-100 flex":
-                    transparency,
-                  "hidden group-hover/game-card:flex": !transparency,
+                    quality.transparency,
+                  "hidden group-hover/game-card:flex": !quality.transparency,
                 },
               )}
             >
@@ -164,11 +182,11 @@ export const GameCard = (
             </div>
           )}
 
-          {perspective && tilt && (
+          {quality.perspective && quality.tilt && (
             <div
               className={cn("absolute w-full h-full rounded-xl", {
-                "bg-card/60": transparency,
-                "bg-card": !transparency,
+                "bg-card/60": quality.transparency,
+                "bg-card": !quality.transparency,
                 // "backdrop-blur-sm": blur && transparency,
               })}
               style={{
@@ -183,38 +201,42 @@ export const GameCard = (
               {
                 "bg-action": props.card.effect.type === "action",
                 [cn({
-                  "bg-support/50": transparency,
-                  "bg-support": !transparency,
+                  "bg-support/50": quality.transparency,
+                  "bg-support": !quality.transparency,
                 })]: props.card.effect.type === "support",
               },
             )}
             style={{
-              transformStyle: perspective ? "preserve-3d" : "flat",
+              transformStyle: quality.perspective ? "preserve-3d" : "flat",
             }}
           >
             <div
               className="font-changa shrink-0 relative"
               style={{
-                transform: `${perspective ? "translateZ(5px)" : ""} translateX(${parsedCost.needs === "money" ? "-15px" : "-8px"})`,
-                transformStyle: perspective ? "preserve-3d" : "flat",
+                transform: `${quality.perspective ? "translateZ(5px)" : ""} translateX(${game.parsedCost.needs === "money" ? "-15px" : "-8px"})`,
+                transformStyle: quality.perspective ? "preserve-3d" : "flat",
               }}
             >
-              {parsedCost.needs === "energy" ? (
+              {game.parsedCost.needs === "energy" ? (
                 <GameValueIcon
                   isCost
-                  value={parsedCost.cost}
-                  colors={energyColor}
+                  value={game.parsedCost.cost}
+                  colors={game.energyColor}
                   style={{
-                    transform: perspective ? "translateZ(5px)" : "none",
-                    transformStyle: perspective ? "preserve-3d" : "flat",
+                    transform: quality.perspective ? "translateZ(5px)" : "none",
+                    transformStyle: quality.perspective
+                      ? "preserve-3d"
+                      : "flat",
                   }}
                 />
               ) : (
                 <MoneyIcon
-                  value={String(parsedCost.cost)}
+                  value={String(game.parsedCost.cost)}
                   style={{
-                    transform: `${perspective ? "translateZ(10px)" : ""} rotate(-10deg)`,
-                    transformStyle: perspective ? "preserve-3d" : "flat",
+                    transform: `${quality.perspective ? "translateZ(10px)" : ""} rotate(-10deg)`,
+                    transformStyle: quality.perspective
+                      ? "preserve-3d"
+                      : "flat",
                   }}
                 />
               )}
@@ -225,19 +247,20 @@ export const GameCard = (
                 {
                   [cn({
                     "left-3 text-lg":
-                      parsedCost.needs === "money" &&
+                      game.parsedCost.needs === "money" &&
                       props.card.name.length > 7,
                     "left-7":
-                      parsedCost.needs === "money" && parsedCost.cost > 99,
+                      game.parsedCost.needs === "money" &&
+                      game.parsedCost.cost > 99,
                     "text-md": props.card.name.length > 11,
-                  })]: parsedCost.cost > 0,
+                  })]: game.parsedCost.cost > 0,
                   "text-action-foreground": props.card.effect.type === "action",
                   "text-support-foreground":
                     props.card.effect.type === "support",
                 },
               )}
               style={{
-                transform: perspective ? "translateZ(5px)" : "none",
+                transform: quality.perspective ? "translateZ(5px)" : "none",
               }}
             >
               {props.card.name}
@@ -255,17 +278,19 @@ export const GameCard = (
               "flex-grow rounded-b-xl",
               props.card.effect.type === "action" && {
                 // "backdrop-blur-sm": blur && transparency,
-                "bg-card/60": transparency,
-                "bg-card": !transparency,
+                "bg-card/60": quality.transparency,
+                "bg-card": !quality.transparency,
               },
             )}
-            style={{ transformStyle: perspective ? "preserve-3d" : "flat" }}
+            style={{
+              transformStyle: quality.perspective ? "preserve-3d" : "flat",
+            }}
           >
             <div
               className="py-[10px] px-[15px] text-center"
               style={{
-                transform: perspective ? "translateZ(10px)" : "none",
-                transformStyle: perspective ? "preserve-3d" : "flat",
+                transform: quality.perspective ? "translateZ(10px)" : "none",
+                transformStyle: quality.perspective ? "preserve-3d" : "flat",
               }}
               dangerouslySetInnerHTML={{
                 __html: props.card.effect.description,
@@ -275,8 +300,8 @@ export const GameCard = (
             {props.card.effect.ephemeral && (
               <div
                 className={cn("text-center h-full text-2xl font-bold", {
-                  "text-muted-foreground/30": transparency,
-                  "text-muted-foreground": !transparency,
+                  "text-muted-foreground/30": quality.transparency,
+                  "text-muted-foreground": !quality.transparency,
                 })}
               >
                 Éphémère

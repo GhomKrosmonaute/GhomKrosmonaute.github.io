@@ -55,6 +55,7 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
     energy: state.energy,
     reputation: state.reputation,
     draw: state.draw,
+    hand: state.hand,
     discard: state.discard,
     infinity: state.infinityMode,
     day: state.day,
@@ -79,7 +80,9 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
                 max={MAX_ENERGY}
                 color="bg-energy"
               />
-              <div className="capitalize last:col-span-1">énergie</div>
+              <div className="capitalize last:col-span-1 flex items-center">
+                énergie
+              </div>
             </div>
             <div id="reputation">
               <GameGauge
@@ -88,7 +91,9 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
                 max={MAX_REPUTATION}
                 color="bg-reputation"
               />
-              <div className="last:col-span-1">Réputation</div>
+              <div className="last:col-span-1 flex items-center">
+                Réputation
+              </div>
             </div>
             <div id="day">
               <GameGauge
@@ -101,12 +106,14 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
                 color="bg-day"
                 increaseOnly
               />
-              <Stat
-                Icon={Day}
-                name="Jour"
-                value={Math.floor(game.day)}
-                className="last:col-span-1 h-5"
-              />
+              <div className="last:col-span-1 flex items-center">
+                <Stat
+                  Icon={Day}
+                  name="Jour"
+                  value={Math.floor(game.day)}
+                  className="h-5"
+                />
+              </div>
             </div>
             <div id="sprint">
               <GameGauge
@@ -117,12 +124,14 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
                 color="bg-upgrade"
                 increaseOnly
               />
-              <Stat
-                Icon={Day}
-                name="Sprint"
-                value={Math.floor(game.day / 7)}
-                className="last:col-span-1 h-5"
-              />
+              <div className="last:col-span-1 flex items-center">
+                <Stat
+                  Icon={Day}
+                  name="Sprint"
+                  value={Math.floor(game.day / 7)}
+                  className="h-5"
+                />
+              </div>
             </div>
           </div>
           <Separator />
@@ -134,7 +143,7 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
               >
                 <div className="flex justify-end col-span-2">
                   {(collection === "deck"
-                    ? [...game.draw, ...game.discard]
+                    ? [...game.draw, ...game.discard, ...game.hand]
                     : game[collection]
                   )
                     .toSorted((a, b) => {
@@ -184,7 +193,9 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
                   }
                   value={
                     collection === "deck"
-                      ? game.draw.length + game.discard.length
+                      ? game.draw.length +
+                        game.discard.length +
+                        game.hand.length
                       : game[collection].length
                   }
                   className="h-5"

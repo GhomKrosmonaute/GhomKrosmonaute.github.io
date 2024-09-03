@@ -22,7 +22,6 @@ const cardModifiers = {
     handCardNames: string[],
     discount: number,
   ) => ({
-    once: true,
     condition: (card) => handCardNames.includes(card.name),
     use: (card) => ({
       ...card,

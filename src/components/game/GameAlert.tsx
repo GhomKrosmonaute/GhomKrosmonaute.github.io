@@ -3,6 +3,7 @@ import { useCardGame } from "@/hooks/useCardGame.ts";
 import { MAX_HAND_SIZE } from "@/game-constants.ts";
 import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
 import Warning from "@/assets/icons/Warning.svg";
+import { formatText } from "@/game-utils.ts";
 
 export const GameAlert = (props: { show?: boolean }) => {
   const quality = useQualitySettings((state) => ({
@@ -43,22 +44,27 @@ export const GameAlert = (props: { show?: boolean }) => {
       >
         {game.handOverflow && (
           <div>
-            <Warning className="w-10" /> Votre main est pleine !
+            <Warning className="w-10" /> Ta main est pleine !
           </div>
         )}
         {game.almostEmptyDraw && (
           <div>
-            <Warning className="w-10" /> Votre pioche est presque vide !
+            <Warning className="w-10" /> Ta pioche est presque vide !
           </div>
         )}
         {game.emptyDraw && (
           <div>
-            <Warning className="w-10" /> Votre pioche est vide !
+            <Warning className="w-10" /> Ta pioche est vide !
           </div>
         )}
         {game.almostEmptyReputation && (
           <div>
-            <Warning className="w-10" /> Votre réputation est basse !
+            <Warning className="w-10" />{" "}
+            <span
+              dangerouslySetInnerHTML={{
+                __html: formatText("Ta @reputation est basse !"),
+              }}
+            />
           </div>
         )}
       </div>
