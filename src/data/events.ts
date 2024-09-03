@@ -9,6 +9,11 @@ const events = {
     icon: Day,
     colors: "bg-day",
   },
+  weekly: {
+    name: "Toutes les fins de @sprint",
+    icon: Day,
+    colors: "bg-upgrade",
+  },
   onPlay: {
     name: "À chaque carte jouée",
     icon: Play,

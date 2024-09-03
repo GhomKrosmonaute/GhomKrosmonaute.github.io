@@ -51,7 +51,7 @@ export const GameCard = (
       isGameOver: state.isGameOver,
       parsedCost,
       energyColor,
-      choiceRemaining: state.choiceRemaining,
+      choiceOptions: state.choiceOptions,
       canTriggerEffect:
         !props.card.effect.condition ||
         props.card.effect.condition(state, props.card),
@@ -73,7 +73,7 @@ export const GameCard = (
         {
           "cursor-not-allowed":
             game.operationInProgress.length > 0 ||
-            (!props.isChoice && game.choiceRemaining > 0),
+            (!props.isChoice && game.choiceOptions.length > 0),
           [cn("transition-transform", props.card.state)]: quality.animation,
           [cn({
             "-translate-y-14": props.card.state === "selected",
@@ -89,7 +89,7 @@ export const GameCard = (
       onClick={async () => {
         if (!props.isChoice) {
           if (
-            game.choiceRemaining === 0 &&
+            game.choiceOptions.length === 0 &&
             game.operationInProgress.length === 0 &&
             !game.isGameOver
           ) {
@@ -97,7 +97,7 @@ export const GameCard = (
           }
         } else {
           if (
-            game.choiceRemaining > 0 &&
+            game.choiceOptions.length > 0 &&
             game.operationInProgress.length === 0
           ) {
             await game.pick(props.card);

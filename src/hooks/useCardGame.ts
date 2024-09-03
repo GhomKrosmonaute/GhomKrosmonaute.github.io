@@ -18,13 +18,15 @@ import type {
 } from "@/game-typings";
 
 import {
-  ENERGY_TO_DAYS,
-  ENERGY_TO_MONEY,
   MAX_ENERGY,
   MAX_HAND_SIZE,
   MAX_REPUTATION,
   MONEY_TO_REACH,
+  ENERGY_TO_DAYS,
+  ENERGY_TO_MONEY,
   REPUTATION_TO_ENERGY,
+  INITIAL_CHOICE_COUNT,
+  INITIAL_CHOICE_OPTION_COUNT,
 } from "@/game-constants.ts";
 
 import {
@@ -56,8 +58,7 @@ export interface CardGame {
 
 export interface CardGameState {
   choiceOptionCount: number;
-  choiceRemaining: number;
-  choiceOptions: GameCardInfo[];
+  choiceOptions: GameCardInfo[][];
   logs: GameLog[];
   notification: [text: string, className: string] | null;
   operationInProgress: string[];
@@ -262,15 +263,27 @@ function generateInitialState(): Omit<
     3,
   ).map((c) => ({ ...c, state: "drawing" }) as GameCardInfo);
 
+  const firstChoices: GameCardInfo[][] = [];
+
+  for (let i = 0; i < INITIAL_CHOICE_COUNT; i++) {
+    firstChoices.push(
+      shuffle(
+        cards.filter(
+          (c) =>
+            firstChoices.every((o) => o.every((_c) => _c.name !== c.name)) &&
+            deck.every((_c) => _c.name !== c.name) &&
+            !c.effect.upgrade,
+        ),
+        5,
+      )
+        .slice(0, INITIAL_CHOICE_OPTION_COUNT)
+        .map((c) => ({ ...c, state: "drawing" })),
+    );
+  }
+
   return {
-    choiceOptions: shuffle(
-      cards.filter((c) => !deck.includes(c) && !c.effect.upgrade),
-      5,
-    )
-      .slice(0, 3)
-      .map((c) => ({ ...c, state: "drawing" })),
-    choiceOptionCount: 3,
-    choiceRemaining: 5,
+    choiceOptions: firstChoices,
+    choiceOptionCount: INITIAL_CHOICE_OPTION_COUNT,
     logs: [],
     notification: null,
     operationInProgress: [],
@@ -324,8 +337,8 @@ function cardGameMethods(
 
     advanceTime: async (energy: number) => {
       const debugFloat = (float: number) => {
-        return float;
-        // return parseFloat(float.toFixed(2));
+        // return float;
+        return parseFloat(float.toFixed(1));
       };
 
       if (energy < 0) return;
@@ -346,36 +359,73 @@ function cardGameMethods(
 
       const after = debugFloat(state.day + addedDays);
 
+      // debugger;
+
       for (
         let day = state.day;
-        day < after;
-        day = debugFloat(day + ENERGY_TO_DAYS)
+        debugFloat(day) <= debugFloat(after);
+        day += ENERGY_TO_DAYS
       ) {
-        if (previousFullDay !== Math.floor(day + ENERGY_TO_DAYS)) {
+        if (previousFullDay !== Math.floor(day)) {
           previousFullDay = Math.floor(day);
 
-          set({ day: debugFloat(day), dayFull: true });
+          const newSprint = Math.floor(day) % 7 === 0;
+
+          set({
+            day: debugFloat(day),
+            dayFull: true,
+            sprintFull: newSprint,
+          });
 
           // on joue le son de la banque
-          bank.bell.play();
+          if (newSprint) bank.upgrade.play();
+          else bank.bell.play();
 
           await state.addNotification(
-            `Jour ${Math.floor(day)}`,
-            "via-day text-day-foreground",
+            newSprint
+              ? `Sprint ${Math.floor(day / 7)}`
+              : `Jour ${Math.floor(day)}`,
+            newSprint
+              ? "via-upgrade text-upgrade-foreground"
+              : "via-day text-day-foreground",
           );
 
           await state.triggerEvent("daily");
 
           set((state) => ({
             dayFull: false,
-            choiceRemaining: state.choiceRemaining + 1,
+            choiceOptions: newSprint
+              ? state.choiceOptions
+              : [
+                  ...state.choiceOptions,
+                  generateChoiceOptions(state, {
+                    filter: (c) => !c.effect.upgrade,
+                  }),
+                ],
           }));
+
+          if (newSprint) {
+            await state.triggerEvent("weekly");
+
+            set((state) => ({
+              sprintFull: false,
+              choiceOptions: [
+                ...state.choiceOptions,
+                generateChoiceOptions(state, {
+                  filter: (c) => !c.effect.upgrade && c.type === "action",
+                }),
+                generateChoiceOptions(state, {
+                  filter: (c) => !!c.effect.upgrade,
+                }),
+              ],
+            }));
+          }
 
           await wait(1000);
         }
       }
 
-      set({ day: after, dayFull: null });
+      set({ day: after, dayFull: null, sprintFull: null });
 
       state.setOperationInProgress("advanceTime", false);
     },
@@ -1070,11 +1120,13 @@ function cardGameMethods(
 
       // on active les animations
       set({
-        choiceOptions: state.choiceOptions.map((c) => {
-          if (c.name === card.name) {
-            return { ...c, state: "playing" };
-          }
-          return { ...c, state: "removing" };
+        choiceOptions: state.choiceOptions.map((options) => {
+          return options.map((c) => {
+            if (c.name === card.name) {
+              return { ...c, state: "playing" };
+            }
+            return { ...c, state: "removing" };
+          });
         }),
       });
 
@@ -1087,9 +1139,11 @@ function cardGameMethods(
           // on retire l'animation de "played" et on ajoute la carte à la pioche
 
           set((state) => ({
-            choiceOptions: state.choiceOptions.map((c) => {
-              if (c.name === card.name) return { ...c, state: "removed" };
-              else return c;
+            choiceOptions: state.choiceOptions.map((options) => {
+              return options.map((c) => {
+                if (c.name === card.name) return { ...c, state: "removed" };
+                else return c;
+              });
             }),
           }));
         })(),
@@ -1101,22 +1155,20 @@ function cardGameMethods(
           // on retire l'animation de "removed"
 
           set((state) => ({
-            choiceOptions: state.choiceOptions.map((c) => {
-              return { ...c, state: null };
+            choiceOptions: state.choiceOptions.map((options) => {
+              return options.map((c) => {
+                return { ...c, state: null };
+              });
             }),
           }));
         })(),
       ]);
 
-      // on retire 1 à choiceRemaining et s'il reste des choiceRemaining, on réinitialise les choiceOptions
+      // on retire un groupe de choix
 
       set((state) => {
         return {
-          choiceRemaining: state.choiceRemaining - 1,
-          choiceOptions: generateChoiceOptions(state, {
-            exclude: [card],
-            filter: (c) => !c.effect.upgrade,
-          }),
+          choiceOptions: state.choiceOptions.slice(1),
           draw: shuffle([...state.draw, { ...card, state: null }], 3),
         };
       });
@@ -1182,7 +1234,6 @@ useCardGame.subscribe((state, prevState) => {
       {
         choiceOptions: state.choiceOptions,
         choiceOptionCount: state.choiceOptionCount,
-        choiceRemaining: state.choiceRemaining,
         draw: state.draw,
         hand: state.hand,
         discard: state.discard,

@@ -2,7 +2,7 @@ import { INFINITE_DRAW_COST, MAX_HAND_SIZE } from "@/game-constants.ts";
 
 import { Card } from "@/components/Card.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { energyCostColor, isGameOver, wait } from "@/game-utils";
+import { energyCostColor, formatText, isGameOver, wait } from "@/game-utils";
 import { cn } from "@/utils.ts";
 
 import { GameValueIcon } from "@/components/game/GameValueIcon.tsx";
@@ -18,6 +18,7 @@ export const GameActions = (props: { show: boolean }) => {
   const animation = useQualitySettings((state) => state.animations);
 
   const runningOps = game.operationInProgress.length > 0;
+  const newSprint = Math.floor(game.day) % 7 === 0;
 
   const disabled =
     game.energy + game.reputation < INFINITE_DRAW_COST ||
@@ -38,11 +39,27 @@ export const GameActions = (props: { show: boolean }) => {
     >
       <Card className="space-y-4 group/actions">
         <h2 className="text-3xl text-center">
-          {game.choiceRemaining
-            ? `Choisi une carte ${game.choiceRemaining > 1 ? `(${game.choiceRemaining} restantes)` : ""}`
-            : "Actions"}
+          {game.choiceOptions.length > 0 ? (
+            <>
+              Choisi une carte{" "}
+              {newSprint && game.choiceOptions.length <= 2 && (
+                <span
+                  dangerouslySetInnerHTML={{
+                    __html: formatText(
+                      game.choiceOptions.length === 1 ? "@upgrade" : "@action",
+                    ),
+                  }}
+                />
+              )}{" "}
+              {game.choiceOptions.length > 1 &&
+                !newSprint &&
+                `(${game.choiceOptions.length} restantes)`}
+            </>
+          ) : (
+            "Actions"
+          )}
         </h2>
-        {game.choiceRemaining === 0 ? (
+        {game.choiceOptions.length === 0 ? (
           <Button
             className={cn("flex justify-start gap-2", { grayscale: disabled })}
             onClick={async () => {
@@ -79,7 +96,8 @@ export const GameActions = (props: { show: boolean }) => {
           </Button>
         ) : (
           <div className="flex">
-            {game.choiceOptions.map((option, i) => (
+            {/*{JSON.stringify(game.choiceOptions[0])}*/}
+            {game.choiceOptions[0].map((option, i) => (
               <GameCard key={i} card={option} isChoice />
             ))}
           </div>

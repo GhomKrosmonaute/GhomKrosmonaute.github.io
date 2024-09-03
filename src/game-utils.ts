@@ -24,7 +24,7 @@ import cards from "@/data/cards.ts";
 
 interface ChoiceOptionsGeneratorOptions {
   exclude?: GameCardInfo[];
-  filter?: (card: GameCardInfo) => boolean;
+  filter?: (card: GameCardInfo, state: CardGameState) => boolean;
 }
 
 export function generateChoiceOptions(
@@ -33,15 +33,18 @@ export function generateChoiceOptions(
 ): GameCardInfo[] {
   const _cards = cards.filter(
     (card) =>
-      state.draw.every((c) => c.name !== card.name) &&
-      state.discard.every((c) => c.name !== card.name) &&
-      state.hand.every((c) => c.name !== card.name) &&
-      options?.exclude?.every((c) => c.name !== card.name) &&
-      options?.filter?.(card),
+      (state.draw.length === 0 ||
+        state.draw.every((c) => c.name !== card.name)) &&
+      (state.discard.length === 0 ||
+        state.discard.every((c) => c.name !== card.name)) &&
+      (state.hand.length === 0 ||
+        state.hand.every((c) => c.name !== card.name)) &&
+      (!options?.exclude ||
+        options?.exclude?.every((c) => c.name !== card.name)) &&
+      (!options?.filter || options?.filter?.(card, state)),
   );
 
   if (_cards.length === 0) {
-    state.dangerouslyUpdate({ choiceRemaining: 0 });
     return [];
   }
 

@@ -1,3 +1,6 @@
+export const INITIAL_CHOICE_OPTION_COUNT = 3;
+export const INITIAL_CHOICE_COUNT = 5;
+
 export const GAME_ADVANTAGE = {
   noob: 4,
   easy: 3,
