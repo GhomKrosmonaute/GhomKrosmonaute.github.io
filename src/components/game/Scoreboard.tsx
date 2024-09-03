@@ -4,6 +4,7 @@ import scores from "@/data/scores.json";
 import { rankColor } from "@/game-utils.ts";
 import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
 import { cn } from "@/utils.ts";
+import { translations } from "@/game-settings.ts";
 
 export const Scoreboard = (props: { show: boolean }) => {
   const { shadows, animation, transparency } = useQualitySettings((state) => ({
@@ -74,7 +75,9 @@ export const Scoreboard = (props: { show: boolean }) => {
                         {score.name}
                       </th>
                       <td>{score.score.toLocaleString()} pts</td>
-                      <td>{score.mode}</td>
+                      <td>
+                        {translations[score.mode as keyof typeof translations]}
+                      </td>
                     </tr>
                   ))}
               </tbody>

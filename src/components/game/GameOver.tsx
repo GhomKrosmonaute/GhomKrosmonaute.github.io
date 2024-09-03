@@ -123,8 +123,9 @@ export const GameOver = (props: { show: boolean }) => {
                           className="text-primary font-changa hover:underline"
                         >
                           Contacte-moi
-                        </a>{" "}
-                        pour <br /> soumettre ton score !
+                        </a>
+                        <br />
+                        pour soumettre ton score !
                       </p>
                     </>
                   ) : (

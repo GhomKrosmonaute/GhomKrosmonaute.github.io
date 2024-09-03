@@ -70,8 +70,8 @@
   :root {
     --action: 221 83% 53%;
     --action-foreground: 0 0% 94%;
-    --support: var(--foreground);
-    --support-foreground: var(--background);
+    --support: 213 100% 70%;
+    --support-foreground: 213 100% 10%;
     --energy: 262.1 83.3% 57.8%;
     --energy-foreground: 210 20% 98%;
     --reputation: 292 84% 61%;
@@ -88,8 +88,8 @@
   .dark {
     --action: 221 83% 53%;
     --action-foreground: 0 0% 94%;
-    --support: var(--foreground);
-    --support-foreground: var(--background);
+    --support: 213 100% 85%;
+    --support-foreground: 213 100% 2%;
     --energy: 262.1 83.3% 57.8%;
     --energy-foreground: 210 20% 98%;
     --reputation: 292 84% 61%;

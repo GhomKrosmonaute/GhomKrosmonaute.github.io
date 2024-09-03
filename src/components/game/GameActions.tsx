@@ -1,17 +1,15 @@
 import { INFINITE_DRAW_COST, MAX_HAND_SIZE } from "@/game-constants.ts";
 
-import { Card } from "@/components/Card.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { energyCostColor, formatText, isGameOver, wait } from "@/game-utils";
 import { cn } from "@/utils.ts";
+import { bank } from "@/sound.ts";
+import { energyCostColor, formatText, isGameOver, wait } from "@/game-utils";
 
+import { Button } from "@/components/ui/button.tsx";
 import { GameValueIcon } from "@/components/game/GameValueIcon.tsx";
+import { GameCard } from "@/components/game/GameCard.tsx";
 
 import { useCardGame } from "@/hooks/useCardGame.ts";
 import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
-import { bank } from "@/sound.ts";
-
-import { GameCard } from "@/components/game/GameCard.tsx";
 
 export const GameActions = (props: { show: boolean }) => {
   const game = useCardGame();
@@ -37,7 +35,7 @@ export const GameActions = (props: { show: boolean }) => {
         },
       )}
     >
-      <Card className="space-y-4 group/actions">
+      <div className="space-y-4 group/actions bg-background/80 p-2 rounded-xl">
         <h2 className="text-3xl text-center">
           {game.choiceOptions.length > 0 ? (
             <>
@@ -102,7 +100,7 @@ export const GameActions = (props: { show: boolean }) => {
             ))}
           </div>
         )}
-      </Card>
+      </div>
     </div>
   );
 };
