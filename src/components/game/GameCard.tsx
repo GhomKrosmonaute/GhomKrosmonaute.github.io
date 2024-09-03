@@ -65,11 +65,15 @@ export const GameCard = (
 
   return (
     <div
+      key={props.card.name}
       className={cn(
         "game-card",
         "relative w-[210px] h-[293px]",
         "-mx-3.5 z-10 hover:z-20 cursor-pointer select-none",
         {
+          "cursor-not-allowed":
+            game.operationInProgress.length > 0 ||
+            (!props.isChoice && game.choiceRemaining > 0),
           [cn("transition-transform", props.card.state)]: quality.animation,
           [cn({
             "-translate-y-14": props.card.state === "selected",
@@ -78,8 +82,6 @@ export const GameCard = (
               game.isGameOver ||
               !game.parsedCost.canBeBuy ||
               !game.canTriggerEffect,
-            "cursor-not-allowed":
-              game.operationInProgress.length > 0 || game.choiceRemaining > 0,
             // "translate-y-8": !canTriggerEffect || !haveEnoughResources,
           })]: !props.isChoice,
         },
@@ -94,7 +96,10 @@ export const GameCard = (
             await game.play(props.card, { reason: props.card });
           }
         } else {
-          if (game.choiceRemaining > 0) {
+          if (
+            game.choiceRemaining > 0 &&
+            game.operationInProgress.length === 0
+          ) {
             await game.pick(props.card);
           }
         }

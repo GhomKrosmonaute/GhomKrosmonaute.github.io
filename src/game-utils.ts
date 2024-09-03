@@ -30,7 +30,7 @@ interface ChoiceOptionsGeneratorOptions {
 export function generateChoiceOptions(
   state: CardGameState,
   options?: ChoiceOptionsGeneratorOptions,
-) {
+): GameCardInfo[] {
   const _cards = cards.filter(
     (card) =>
       state.draw.every((c) => c.name !== card.name) &&
@@ -47,7 +47,9 @@ export function generateChoiceOptions(
 
   // todo: add random rarity to selected cards
 
-  return shuffle(_cards, 3).slice(0, state.choiceOptionCount);
+  return shuffle(_cards, 3)
+    .slice(0, state.choiceOptionCount)
+    .map((c) => ({ ...c, state: "drawing" }));
 }
 
 export function energyCostColor(
@@ -227,7 +229,7 @@ export function formatText(text: string) {
       '<span style="color: hsl(var(--day)); transform: translateZ(5px); font-weight: bold;">Jour$1</span>',
     )
     .replace(
-      /((?:\d+|<span[^>]*>\d+<\/span>)M\$)/g,
+      /((?:[\de+.]+|<span[^>]*>[\de+.]+<\/span>)M\$)/g,
       `<span 
         style="display: inline-block; 
         background-color: hsl(var(--money)); 

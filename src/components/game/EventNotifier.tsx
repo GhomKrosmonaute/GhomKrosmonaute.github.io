@@ -14,6 +14,7 @@ export const EventNotifier = (props: { show: boolean }) => {
 
   return (
     <div
+      // key={key}
       className={cn(
         "absolute w-full h-full z-50 flex justify-center items-center pointer-events-none",
         {

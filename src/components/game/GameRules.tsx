@@ -73,17 +73,30 @@ export const GameRules = (props: { show: boolean }) => {
           <div className="grid grid-rows-3 gap-4 *:bg-card *:p-5 *:rounded-xl *:space-y-2">
             <div>
               <h2 className="text-3xl">Taux de conversion</h2>
-              <Label>
-                Énergie
-                <Input
-                  min={0}
-                  type="number"
-                  value={value}
-                  onChange={(e) => setValue(+e.target.value)}
-                  placeholder="Entre une valeur en énergie"
-                />
-              </Label>
               <table className="w-full">
+                <thead>
+                  <tr>
+                    <th className="text-right">
+                      <Label
+                        htmlFor="energy-input"
+                        dangerouslySetInnerHTML={{
+                          __html: formatText("En @energy :"),
+                        }}
+                      />
+                    </th>
+                    <th>
+                      <Input
+                        id="energy-input"
+                        min={0}
+                        type="number"
+                        value={value}
+                        onChange={(e) => setValue(+e.target.value)}
+                        placeholder="Entre une valeur en énergie"
+                        className="w-fit h-6 pb-0 pt-1 px-1"
+                      />
+                    </th>
+                  </tr>
+                </thead>
                 <tbody>
                   <tr>
                     <td className="text-right">En Dollars :</td>
@@ -112,11 +125,11 @@ export const GameRules = (props: { show: boolean }) => {
                     <td>
                       {value * ENERGY_TO_DAYS > 1
                         ? `${Math.floor(value * ENERGY_TO_DAYS)} jours`
-                        : ""}
+                        : " "}
                       {(value * ENERGY_TO_DAYS) % 1 > 0 &&
                       value * ENERGY_TO_DAYS > 1
                         ? " et "
-                        : ""}
+                        : " "}
                       {Math.floor(((value * ENERGY_TO_DAYS) % 1) * 24)} heures
                       et{" "}
                       {Math.floor(

@@ -81,9 +81,13 @@ export interface CardGameState {
   energy: number;
   reputation: number;
   money: number;
+  coinFlip: (options: {
+    onHead: (state: CardGameState) => Promise<void>;
+    onTail: (state: CardGameState) => Promise<void>;
+  }) => Promise<void>;
   advanceTime: (energy: number) => Promise<void>;
   addLog: (log: GameLog) => void;
-  addNotification: (notification: string, className: string) => void;
+  addNotification: (notification: string, className: string) => Promise<void>;
   dangerouslyUpdate: (partial: Partial<CardGameState>) => void;
   updateScore: () => void;
   addEnergy: (count: number, options: GameMethodOptions) => Promise<void>;
@@ -256,13 +260,15 @@ function generateInitialState(): Omit<
       ),
     ],
     3,
-  );
+  ).map((c) => ({ ...c, state: "drawing" }) as GameCardInfo);
 
   return {
     choiceOptions: shuffle(
       cards.filter((c) => !deck.includes(c) && !c.effect.upgrade),
       5,
-    ).slice(0, 3),
+    )
+      .slice(0, 3)
+      .map((c) => ({ ...c, state: "drawing" })),
     choiceOptionCount: 3,
     choiceRemaining: 5,
     logs: [],
@@ -298,9 +304,28 @@ function cardGameMethods(
   getState: () => CardGameState,
 ) {
   return {
+    coinFlip: async (options) => {
+      const state = getState();
+
+      state.setOperationInProgress("coinFlip", true);
+
+      const result = Math.random() > 0.5;
+
+      await Promise.all([
+        await state.addNotification(
+          result ? "Face" : "Pile",
+          "via-background text-foreground",
+        ),
+        await options[result ? "onHead" : "onTail"](state),
+      ]);
+
+      state.setOperationInProgress("coinFlip", false);
+    },
+
     advanceTime: async (energy: number) => {
       const debugFloat = (float: number) => {
-        return parseFloat(float.toFixed(2));
+        return float;
+        // return parseFloat(float.toFixed(2));
       };
 
       if (energy < 0) return;
@@ -326,7 +351,7 @@ function cardGameMethods(
         day < after;
         day = debugFloat(day + ENERGY_TO_DAYS)
       ) {
-        if (previousFullDay !== Math.floor(day)) {
+        if (previousFullDay !== Math.floor(day + ENERGY_TO_DAYS)) {
           previousFullDay = Math.floor(day);
 
           set({ day: debugFloat(day), dayFull: true });
@@ -334,16 +359,17 @@ function cardGameMethods(
           // on joue le son de la banque
           bank.bell.play();
 
-          state.addNotification(
+          await state.addNotification(
             `Jour ${Math.floor(day)}`,
             "via-day text-day-foreground",
           );
 
-          await wait(1000);
-
           await state.triggerEvent("daily");
 
-          set({ dayFull: false });
+          set((state) => ({
+            dayFull: false,
+            choiceRemaining: state.choiceRemaining + 1,
+          }));
 
           await wait(1000);
         }
@@ -1039,7 +1065,7 @@ function cardGameMethods(
       state.setOperationInProgress(`pick ${card.name}`, true);
 
       // on joue le son de la banque
-      bank.play.play();
+      bank.gain.play();
       bank.remove.play();
 
       // on active les animations
@@ -1082,7 +1108,7 @@ function cardGameMethods(
         })(),
       ]);
 
-      // on retire 1 à choiceRemaining et s'il reste des choiceRemaining, on reset les choiceOptions
+      // on retire 1 à choiceRemaining et s'il reste des choiceRemaining, on réinitialise les choiceOptions
 
       set((state) => {
         return {

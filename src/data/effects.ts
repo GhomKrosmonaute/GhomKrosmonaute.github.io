@@ -34,22 +34,41 @@ const effects: Effect[] = (
       cost: 4,
     },
     {
-      description: `Le matin, gagne ${advantage * ENERGY_TO_MONEY}M$. L'après-midi, gagne ${advantage} @energy${advantage > 1 ? "s" : ""}`,
-      onPlayed: async (state, _, reason) => {
-        if (state.day % 1 < 0.5) {
-          await state.addMoney(advantage * ENERGY_TO_MONEY, {
-            skipGameOverPause: true,
-            reason,
-          });
-        } else {
-          await state.addEnergy(advantage, {
-            skipGameOverPause: true,
-            reason,
-          });
-        }
-      },
+      description: `Lance une pièce. <br/> Face: gagne ${(1 + advantage) * ENERGY_TO_MONEY}M$. <br/> Pile: gagne ${1 + advantage} @energy${1 + advantage > 1 ? "s" : ""}`,
+      onPlayed: async (state, _, reason) =>
+        await state.coinFlip({
+          onHead: async () =>
+            await state.addMoney((1 + advantage) * ENERGY_TO_MONEY, {
+              skipGameOverPause: true,
+              reason,
+            }),
+          onTail: async () =>
+            await state.addEnergy(1 + advantage, {
+              skipGameOverPause: true,
+              reason,
+            }),
+        }),
       type: "action",
-      cost: 0,
+      cost: 1,
+    },
+    {
+      description: `Lance une pièce. <br/> Face: gagne ${(4 + advantage) * ENERGY_TO_MONEY}M$. <br/> Pile: gagne ${4 + advantage} @energy${4 + advantage > 1 ? "s" : ""}`,
+      onPlayed: async (state, _, reason) =>
+        await state.coinFlip({
+          onHead: async () =>
+            await state.addMoney((4 + advantage) * ENERGY_TO_MONEY, {
+              skipGameOverPause: true,
+              reason,
+            }),
+          onTail: async () =>
+            await state.addEnergy(4 + advantage, {
+              skipGameOverPause: true,
+              reason,
+            }),
+        }),
+      condition: () => localStorage.getItem("theme") === "dark",
+      type: "action",
+      cost: 3,
     },
     {
       description: `Gagne ${(2 + advantage) * ENERGY_TO_MONEY}M$ fois le nombre de cartes @action en main en comptant celle-ci`,
@@ -63,17 +82,6 @@ const effects: Effect[] = (
       },
       type: "action",
       cost: 4,
-    },
-    {
-      description: `Si le dark mode est activé, gagne ${(4 + advantage) * ENERGY_TO_MONEY}M$`,
-      onPlayed: async (state, _, reason) =>
-        await state.addMoney((4 + advantage) * ENERGY_TO_MONEY, {
-          skipGameOverPause: true,
-          reason,
-        }),
-      condition: () => localStorage.getItem("theme") === "dark",
-      type: "action",
-      cost: 3,
     },
     {
       description: `Si la @reputation est inférieur à 5, gagne ${(4 + advantage) * ENERGY_TO_MONEY}M$`,

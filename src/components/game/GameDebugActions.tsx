@@ -10,7 +10,7 @@ export const GameDebugActions = () => {
   const runningOps = game.operationInProgress.length > 0;
 
   return (
-    <div className="hidden group-hover/actions:block space-y-4">
+    <div className="group-hover/debug:block hidden space-y-4">
       <Button
         onClick={() =>
           game.addNotification(
