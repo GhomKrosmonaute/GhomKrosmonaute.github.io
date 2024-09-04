@@ -295,6 +295,7 @@ const effects: Effect[] = (
       condition: (state) => state.discard.length >= 1,
       type: "support",
       cost: 2,
+      waitBeforePlay: true,
     },
     {
       description: `Défausse les cartes en main, pioche ${5 + advantage} cartes`,
