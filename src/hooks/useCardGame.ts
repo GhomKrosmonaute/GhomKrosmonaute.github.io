@@ -219,9 +219,12 @@ function cardGameStatsMethods(
     },
 
     addPlayedGame: () => {
-      set((state) => ({
+      const state = getState();
+
+      set({
         playedGames: state.playedGames + 1,
-      }));
+        totalMoney: state.totalMoney + state.money,
+      });
 
       updateLocalStorage();
     },
