@@ -29,13 +29,13 @@ export const Contact = () => {
   return (
     <Modal modalName="/contact">
       <h1 className="text-3xl text-center md:text-left">Contact</h1>
-      <div className="space-y-4 min-w-[400px] *:space-y-2 *:rounded-xl *:p-3 *:bg-card/20 *:my-2">
+      <div className="space-y-4 md:min-w-[400px] *:space-y-2 *:rounded-xl *:p-3 *:bg-card/20 *:my-2">
         <div>
-          <h2>Envoyez moi un email</h2>
+          <h2 className="text-2xl">Envoyez moi un email</h2>
           <a
             href="mailto: camille.abella@proton.me"
             target="_blank"
-            className="text-lg"
+            className="text-lg hidden md:block"
           >
             <span className="font-zain">camille.abella@proton.me</span>
           </a>
@@ -63,7 +63,7 @@ export const Contact = () => {
                 <Input
                   value={object}
                   onChange={(e) => setObject(e.target.value)}
-                  placeholder="Collab, question, etc."
+                  placeholder="Collab, question..."
                 />
               </Label>
             </div>
@@ -83,8 +83,8 @@ export const Contact = () => {
             </div>
           </form>
         </div>
-        <div>
-          <h2>Ou contactez-moi sur les réseaux</h2>
+        <div className="hidden md:block">
+          <h2 className="text-2xl">Ou contactez-moi sur les réseaux</h2>
           <div className="flex flex-col gap-2">
             <a
               href="https://www.linkedin.com/in/camille-abella-a99950176/"
@@ -111,7 +111,7 @@ export const Contact = () => {
           onClick={() => navigate("/pricing")}
           variant="cta"
           size="cta"
-          className="mx-auto md:mx-0"
+          className="hidden md:block mx-0"
         >
           Mes tarifs
         </Button>

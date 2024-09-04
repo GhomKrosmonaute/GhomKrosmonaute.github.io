@@ -51,7 +51,7 @@
     "name": "Nano",
     "image": "nano.png",
     "description": "TypeScript library for building modular Discord bots",
-    "detail": "Vous pouvez utiliser cette lib pour construire des bots Discord avec une architecture modulaire et flexible",
+    "detail": "Cette lib sert à construire des bots Discord avec une architecture modulaire et flexible",
     "url": "https://github.com/NanoWorkspace"
   },
   {
@@ -93,5 +93,12 @@
     "description": "Hardcore RPG Discord bot",
     "detail": "Un bot Discord RPG hardcore en rogue-like.",
     "url": "https://discord.gg/7N5pJEY"
+  },
+  {
+    "name": "Windows.js",
+    "image": "windows.png",
+    "description": "JavaScript fun UI library",
+    "detail": "Librairie JavaScript pour créer des fenêtres d'OS dans le navigateur.",
+    "url": "https://ghomkrosmonaute.github.io/Windows.js/"
   }
 ]

@@ -15,11 +15,7 @@ import Sprint from "@/assets/icons/game/sprint.svg";
 import Draw from "@/assets/icons/game/draw.svg";
 
 import { GameGauge } from "@/components/game/GameGauge.tsx";
-import {
-  MAX_ENERGY,
-  MAX_REPUTATION,
-  MONEY_TO_REACH,
-} from "@/game-constants.ts";
+import { MAX_REPUTATION, MONEY_TO_REACH } from "@/game-constants.ts";
 import { settings, translations } from "@/game-settings.ts";
 import { MiniatureImage } from "@/components/game/GameMiniature.tsx";
 import {
@@ -55,6 +51,7 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
     money: state.money,
     score: state.score,
     energy: state.energy,
+    energyMax: state.energyMax,
     reputation: state.reputation,
     draw: state.draw,
     hand: state.hand,
@@ -79,7 +76,7 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
               <GameGauge
                 title="Energie"
                 value={game.energy}
-                max={MAX_ENERGY}
+                max={game.energyMax}
                 color="bg-energy"
               />
               <div className="capitalize last:col-span-1 flex items-center">

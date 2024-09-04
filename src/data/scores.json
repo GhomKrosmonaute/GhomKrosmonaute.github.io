@@ -1,22 +1,27 @@
 [
   {
-    "name": "Placeholder 1",
-    "score": 3000,
-    "mode": "hard"
-  },
-  {
-    "name": "Placeholder 2",
-    "score": 2500,
-    "mode": "hard"
-  },
-  {
-    "name": "Placeholder 3",
-    "score": 2000,
-    "mode": "hard"
+    "name": "Ghom",
+    "score": 3444,
+    "mode": "easy"
   },
   {
     "name": "\uD835\uDD7A\uD835\uDD93\uD835\uDD9E\uD835\uDD9D",
     "score": 1596,
     "mode": "noob"
+  },
+  {
+    "name": "Placeholder",
+    "score": 1500,
+    "mode": "normal"
+  },
+  {
+    "name": "Placeholder",
+    "score": 1000,
+    "mode": "normal"
+  },
+  {
+    "name": "Placeholder",
+    "score": 500,
+    "mode": "normal"
   }
 ]

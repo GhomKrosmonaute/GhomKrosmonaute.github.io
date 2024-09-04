@@ -26,6 +26,7 @@ export const GameActions = (props: { show: boolean }) => {
 
   return (
     <div
+      id="actions"
       className={cn(
         "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0",
         {
@@ -93,7 +94,7 @@ export const GameActions = (props: { show: boolean }) => {
             Piocher une carte
           </Button>
         ) : (
-          <div className="flex">
+          <div className="flex justify-center">
             {/*{JSON.stringify(game.choiceOptions[0])}*/}
             {game.choiceOptions[0].map((option, i) => (
               <GameCard key={i} card={option} isChoice />

@@ -4,6 +4,7 @@ import { TutorialOpaque } from "./TutorialOpaque";
 import { Progress } from "@/components/ui/progress.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import Forward from "@/assets/icons/forward.svg";
+import { bank } from "@/sound.ts";
 
 export interface TutorialStep {
   id: string;
@@ -79,6 +80,7 @@ export const TutorialProvider = ({ steps, children, opaqueStyle }: Props) => {
   };
 
   const finish = () => {
+    bank.bell.play();
     setIndex(null);
     setCurrentStep(null);
     setPosition(null);
@@ -88,12 +90,14 @@ export const TutorialProvider = ({ steps, children, opaqueStyle }: Props) => {
   const next = () => {
     if (index === null) return;
     if (index >= steps.length - 1) return finish();
+    bank.gain.play();
     _getData(index + 1);
   };
 
   const back = () => {
     if (index === null) return;
     if (index - 1 < 0) return finish();
+    bank.play.play();
     _getData(index - 1);
   };
 

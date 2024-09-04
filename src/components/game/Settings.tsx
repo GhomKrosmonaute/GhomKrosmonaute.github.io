@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 
 import { cn } from "@/utils.ts";
 import { Card } from "@/components/Card.tsx";
@@ -40,26 +40,22 @@ export const Settings = (props: { show: boolean }) => {
 
   const [difficulty, setDifficulty] = React.useState(settings.difficulty);
 
-  const unsaved = useMemo(
-    () => difficulty !== settings.difficulty,
-    [difficulty],
-  );
-
-  const needReload = useMemo(
-    () =>
-      quality.animations !== settings.quality.animations ||
+  const [newDifficulty, needReload] = React.useMemo(() => {
+    return [
       difficulty !== settings.difficulty,
-    [quality, difficulty],
-  );
+      quality.animations !== settings.quality.animations,
+    ];
+  }, [difficulty, quality.animations]);
+
   const apply = React.useCallback(() => {
     // Apply settings
     localStorage.setItem(
       "settings",
       JSON.stringify({
-        difficulty,
-        quality: JSON.parse(
+        ...JSON.parse(
           localStorage.getItem("settings") ?? JSON.stringify(settings),
-        ).quality,
+        ),
+        difficulty,
       }),
     );
 
@@ -106,7 +102,7 @@ export const Settings = (props: { show: boolean }) => {
             <div className="text-2xl">Difficulté</div>
             <RadioGroup
               className="space-y-0 gap-0"
-              defaultValue={difficulty}
+              value={difficulty}
               onValueChange={(d) => {
                 setDifficulty(d as keyof typeof GAME_ADVANTAGE);
               }}
@@ -143,12 +139,23 @@ export const Settings = (props: { show: boolean }) => {
         </div>
 
         <div className="flex gap-5">
-          {score > 0 && needReload ? (
+          {newDifficulty && (
+            <Button
+              variant="default"
+              onClick={() => {
+                setDifficulty(settings.difficulty);
+                toggleSettings();
+              }}
+            >
+              Annuler
+            </Button>
+          )}
+          {score > 0 && newDifficulty ? (
             <AlertDialog>
               <AlertDialogTrigger>
                 <Button
-                  variant={unsaved ? "cta" : "default"}
-                  disabled={!unsaved}
+                  variant={newDifficulty ? "cta" : "default"}
+                  disabled={!newDifficulty}
                 >
                   Appliquer
                 </Button>
@@ -159,31 +166,30 @@ export const Settings = (props: { show: boolean }) => {
                     Une partie est en cours !
                   </AlertDialogTitle>
                   <AlertDialogDescription>
-                    Cette action va réinitialiser ta partie. <br />
-                    Es-tu sûr de vouloir continuer ?
+                    Le nouveau mode de difficulté sera <br />
+                    appliqué lors d'une prochaine partie.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogCancel>Annuler</AlertDialogCancel>
                   <AlertDialogAction onClick={apply}>
-                    Continue
+                    Continuer
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
           ) : (
-            <Button
-              variant={unsaved ? "cta" : "default"}
-              disabled={!unsaved}
-              onClick={apply}
-            >
+            <Button variant={needReload ? "cta" : "default"} onClick={apply}>
               Appliquer
             </Button>
           )}
 
-          {needReload && (
-            <div className="flex-grow border rounded-xl flex items-center gap-3 px-3">
-              <Warning className="w-5" /> Un rechargement peut être nécessaire.
+          {(needReload || newDifficulty) && (
+            <div className="flex-grow border rounded-lg flex items-center gap-3 px-3">
+              <Warning className="w-5" />{" "}
+              {needReload
+                ? "Un rechargement peut être nécessaire."
+                : "Le mode de difficulté sera appliqué à la prochaine partie."}
             </div>
           )}
         </div>

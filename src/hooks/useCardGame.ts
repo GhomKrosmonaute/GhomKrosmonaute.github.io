@@ -80,6 +80,7 @@ export interface CardGameState {
    * Entre 0 et 23
    */
   energy: number;
+  energyMax: number;
   reputation: number;
   money: number;
   coinFlip: (options: {
@@ -92,6 +93,7 @@ export interface CardGameState {
   dangerouslyUpdate: (partial: Partial<CardGameState>) => void;
   updateScore: () => void;
   addEnergy: (count: number, options: GameMethodOptions) => Promise<void>;
+  addMaxEnergy: (count: number, options: GameMethodOptions) => Promise<void>;
   addReputation: (count: number, options: GameMethodOptions) => Promise<void>;
   addMoney: (count: number, options: GameMethodOptions) => Promise<void>;
   upgrade: (name: string) => Promise<void>;
@@ -230,21 +232,14 @@ function generateInitialState(): Omit<
   CardGameState,
   keyof ReturnType<typeof cardGameMethods>
 > {
-  const saveMetadata = localStorage.getItem("card-game-metadata");
-  const saveDifficulty =
-    localStorage.getItem("card-game-difficulty") ?? "normal";
-  const save = localStorage.getItem("card-game");
+  const saveMetadata = localStorage.getItem("metadata");
+  const save = localStorage.getItem("save");
 
-  if (
-    save &&
-    JSON.stringify(metadata) === saveMetadata &&
-    settings.difficulty === saveDifficulty
-  ) {
+  if (save && JSON.stringify(metadata) === saveMetadata) {
     return parseSave(save);
   }
 
-  localStorage.setItem("card-game-metadata", JSON.stringify(metadata));
-  localStorage.setItem("card-game-difficulty", settings.difficulty);
+  localStorage.setItem("metadata", JSON.stringify(metadata));
 
   const deck = shuffle(
     [
@@ -301,6 +296,7 @@ function generateInitialState(): Omit<
     dayFull: false,
     sprintFull: false,
     energy: MAX_ENERGY,
+    energyMax: MAX_ENERGY,
     reputation: MAX_REPUTATION,
     money: 0,
   };
@@ -378,8 +374,8 @@ function cardGameMethods(
           });
 
           // on joue le son de la banque
+          bank.bell.play();
           if (newSprint) bank.upgrade.play();
-          else bank.bell.play();
 
           await state.addNotification(
             newSprint
@@ -506,7 +502,7 @@ function cardGameMethods(
       state.setOperationInProgress("energy", true);
 
       if (count > 0) {
-        const addedEnergy = Math.min(count, MAX_ENERGY - state.energy);
+        const addedEnergy = Math.min(count, state.energyMax - state.energy);
 
         if (addedEnergy > 0) {
           bank.gain.play();
@@ -522,7 +518,10 @@ function cardGameMethods(
 
         set((state) => {
           return {
-            energy: Math.max(0, Math.min(MAX_ENERGY, state.energy + count)),
+            energy: Math.max(
+              0,
+              Math.min(state.energyMax, state.energy + count),
+            ),
           };
         });
       } else if (count < 0) {
@@ -554,6 +553,38 @@ function cardGameMethods(
       }
 
       state.setOperationInProgress("energy", false);
+    },
+
+    addMaxEnergy: async (count, options) => {
+      if (count === 0) return;
+
+      const state = getState();
+
+      state.setOperationInProgress("maxEnergy", true);
+
+      set((state) => {
+        return {
+          energyMax: Math.max(0, state.energyMax + count),
+        };
+      });
+
+      if (count > 0) {
+        bank.powerUp.play();
+
+        await wait();
+
+        await state.addEnergy(count, options);
+      } else {
+        bank.loss.play();
+
+        await wait();
+
+        if (state.energy > state.energyMax) {
+          await state.addEnergy(state.energyMax - state.energy, options);
+        }
+      }
+
+      state.setOperationInProgress("maxEnergy", false);
     },
 
     addReputation: async (count, options) => {
@@ -633,7 +664,7 @@ function cardGameMethods(
 
       state.setOperationInProgress(`upgrade ${name}`, true);
 
-      const rawUpgrades = upgrades.find((a) => a.name === name)!;
+      const rawUpgrade = upgrades.find((a) => a.name === name)!;
 
       // on joue le son de la banque
       bank.upgrade.play();
@@ -656,11 +687,11 @@ function cardGameMethods(
             upgrades: [
               ...state.upgrades,
               {
-                ...rawUpgrades,
+                ...rawUpgrade,
                 type: "upgrade",
                 state: "appear",
                 cumul: 1,
-                max: rawUpgrades.max ?? Infinity,
+                max: rawUpgrade.max ?? Infinity,
               },
             ],
           };
@@ -680,6 +711,11 @@ function cardGameMethods(
           }),
         };
       });
+
+      if (rawUpgrade.eventName === "onUpgradeThis") {
+        const upgrade = state.upgrades.find((a) => a.name === name)!;
+        await state.triggerUpgrade(name, { reason: upgrade });
+      }
 
       state.setOperationInProgress(`upgrade ${name}`, false);
     },
@@ -795,8 +831,10 @@ function cardGameMethods(
         }
       }
 
-      if (handAdded) bank.draw.play();
-      else if (discardAdded) bank.drop.play();
+      if (handAdded) {
+        if (fromKey === "draw") bank.draw.play();
+        else bank.recycle.play();
+      } else if (discardAdded) bank.drop.play();
 
       set({
         hand,
@@ -1116,7 +1154,7 @@ function cardGameMethods(
 
       // on joue le son de la banque
       bank.gain.play();
-      bank.remove.play();
+      if (state.choiceOptions[0].length > 1) bank.remove.play();
 
       // on active les animations
       set({
@@ -1191,9 +1229,8 @@ function cardGameMethods(
     },
 
     reset: () => {
-      localStorage.removeItem("card-game-metadata");
-      localStorage.removeItem("card-game-difficulty");
-      localStorage.removeItem("card-game");
+      localStorage.removeItem("metadata");
+      localStorage.removeItem("save");
 
       set(generateInitialState());
     },
@@ -1229,7 +1266,7 @@ useCardGame.subscribe((state, prevState) => {
     state.updateScore();
 
   localStorage.setItem(
-    "card-game",
+    "save",
     JSON.stringify(
       {
         choiceOptions: state.choiceOptions,
@@ -1241,6 +1278,7 @@ useCardGame.subscribe((state, prevState) => {
         cardModifiers: state.cardModifiers,
         day: state.day,
         energy: state.energy,
+        energyMax: state.energyMax,
         reputation: state.reputation,
         notification: state.notification,
         dayFull: state.dayFull,

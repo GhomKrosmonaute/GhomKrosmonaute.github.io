@@ -285,6 +285,18 @@ const effects: Effect[] = (
       waitBeforePlay: true,
     },
     {
+      description: `Pioche ${advantage >= 3 ? 1 + Math.floor(advantage / 2) : "une"} carte${advantage >= 3 ? "s" : ""} dans la défausse`,
+      onPlayed: async (state, _, reason) =>
+        await state.drawCard(advantage >= 1 ? 1 + advantage : 1, {
+          fromDiscardPile: true,
+          skipGameOverPause: true,
+          reason,
+        }),
+      condition: (state) => state.discard.length >= 1,
+      type: "support",
+      cost: 2,
+    },
+    {
       description: `Défausse les cartes en main, pioche ${5 + advantage} cartes`,
       onPlayed: async (state, _, reason) => {
         await state.discardCard({ reason });

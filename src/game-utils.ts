@@ -41,7 +41,10 @@ export function generateChoiceOptions(
         state.hand.every((c) => c.name !== card.name)) &&
       (!options?.exclude ||
         options?.exclude?.every((c) => c.name !== card.name)) &&
-      (!options?.filter || options?.filter?.(card, state)),
+      (!options?.filter || options?.filter?.(card, state)) &&
+      (!card.effect.upgrade ||
+        state.upgrades.length === 0 ||
+        state.upgrades.every((u) => u.name !== card.name || u.cumul < u.max)),
   );
 
   if (_cards.length === 0) {
@@ -203,6 +206,13 @@ export function formatText(text: string) {
     )
     .replace(/MONEY_TO_REACH/g, String(MONEY_TO_REACH))
     .replace(/MAX_HAND_SIZE/g, String(MAX_HAND_SIZE))
+    .replace(/\b([\de+.]+)M\$/g, (_, n) => {
+      const amount = Number(n);
+      console.trace(_, amount);
+      return amount >= 1000
+        ? `${(amount / 1000).toFixed(2).replace(".00", "").replace(/\.0\b/, "")}B$`
+        : `${amount}M$`;
+    })
     .replace(
       /@action([^\s.:,)]*)/g,
       '<span style="color: hsl(var(--action)); transform: translateZ(5px); font-weight: bold;">Action$1</span>',
@@ -232,7 +242,7 @@ export function formatText(text: string) {
       '<span style="color: hsl(var(--day)); transform: translateZ(5px); font-weight: bold;">Jour$1</span>',
     )
     .replace(
-      /((?:[\de+.]+|<span[^>]*>[\de+.]+<\/span>)M\$)/g,
+      /((?:[\de+.]+|<span[^>]*>[\de+.]+<\/span>)[MB]\$)/g,
       `<span 
         style="display: inline-block; 
         background-color: hsl(var(--money)); 

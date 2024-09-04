@@ -1,9 +1,11 @@
 import React from "react";
+import { confettiFireworks } from "@/components/ui/confetti";
 import { Tutorial } from "@/components/game/Tutorial.tsx";
 import { TutorialStep } from "@/components/game/TutorialProvider.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { MONEY_TO_REACH } from "@/game-constants.ts";
 import { formatText } from "@/game-utils.ts";
+import { bank } from "@/sound.ts";
 
 const cardStyle: React.CSSProperties = {
   backgroundColor: "hsl(var(--card))",
@@ -196,7 +198,8 @@ const steps: TutorialStep[] = [
         <h2>La main</h2>
         <p>
           Ta main est l'ensemble des cartes que tu peux jouer. <br />
-          Tu peux en jouer tant que tu as les ressources nécessaires.
+          Tu peux en jouer tant que tu as les ressources nécessaires <br />
+          et que leurs effets sont activables.
         </p>
         <div className="flex gap-2">
           <Button onClick={back}>Retour</Button>
@@ -213,9 +216,9 @@ const steps: TutorialStep[] = [
       <Tutorial location="bottom" style={cardStyle} highlight>
         <h2>Les améliorations</h2>
         <p>
-          Sur le haut de l'écran, tu verras apparaitre des améliorations <br />
-          lorsque tu les débloqueras. Elles s'activeront automatiquement <br />
-          en fonction de certaines conditions.
+          Sur le haut de l'écran, tu verras apparaitre des améliorations. <br />
+          Elles s'activeront automatiquement en fonction de certaines
+          conditions.
         </p>
         <img src="images/upgrades.png" alt="upgrades" />
         <div className="flex gap-2">
@@ -243,6 +246,58 @@ const steps: TutorialStep[] = [
             Suivant
           </Button>
         </div>
+      </Tutorial>
+    ),
+  },
+  {
+    id: "#actions",
+    render: ({ next, back }) => (
+      <Tutorial location="top" style={cardStyle} highlight>
+        <h2>Les actions</h2>
+        <p>
+          Au milieu de l'écran, tu trouveras des actions <br />a effectuer au
+          cours de la partie.
+        </p>
+        <p>
+          Par exemple, choisir une carte à ajouter à ton deck <br />
+          ou même piocher une carte si tu ne peux pas jouer
+        </p>
+        <div className="flex gap-2">
+          <Button onClick={back}>Retour</Button>
+          <Button
+            variant="cta"
+            size="cta"
+            onClick={() => {
+              bank.victory.play();
+              confettiFireworks();
+              next();
+            }}
+          >
+            Suivant
+          </Button>
+        </div>
+      </Tutorial>
+    ),
+  },
+  {
+    id: "_end",
+    render: ({ finish }) => (
+      <Tutorial style={cardStyle} location="center">
+        <h2>Fin du tutoriel</h2>
+        <p>
+          Tu as maintenant toutes les clés en main. <br />
+          N'hésite pas à consulter les règles du jeu si tu as besoin d'aide.
+        </p>
+        <div className="flex gap-2">
+          <Button variant="cta" size="cta" onClick={finish}>
+            Lancer une partie
+          </Button>
+        </div>
+        <img
+          src="images/ghom.png"
+          alt="ghom face"
+          className="absolute right-0 bottom-0 w-32 translate-x-1/3 translate-y-1/3"
+        />
       </Tutorial>
     ),
   },
