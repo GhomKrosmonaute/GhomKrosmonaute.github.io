@@ -397,7 +397,7 @@ const effects: Effect[] = (
     {
       description: "Recycle toutes les cartes de la défausse",
       onPlayed: async (state, _, reason) => {
-        await state.recycleCard(state.discard.length, { reason });
+        await state.recycleCard(state.discard.length + 1, { reason });
       },
       condition: (state) => state.discard.length > 0,
       type: "support",
@@ -407,7 +407,9 @@ const effects: Effect[] = (
     {
       description: `Recycle ${1 + advantage} carte${advantage > 0 ? "s" : ""} aléatoire${advantage > 0 ? "s" : ""} de la défausse`,
       onPlayed: async (state, _, reason) => {
-        await state.recycleCard(1 + advantage, { reason });
+        // on ajoute 1 pour que ça compte la carte qui est jouée, car elle
+        // est déjà dans la défausse malgrès qu'on lui ai dit d'attendre avant d'être jouée
+        await state.recycleCard(2 + advantage, { reason });
       },
       condition: (state) => state.discard.length > 0,
       type: "support",
