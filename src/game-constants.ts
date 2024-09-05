@@ -35,7 +35,6 @@ export const ENERGY_TO_MONEY = 5;
 export const REPUTATION_TO_ENERGY = 10;
 
 /**
- * 1 = 1 day
- * 1 energy = 0.05 day
+ * 1 energy = 0.08 day
  */
-export const ENERGY_TO_DAYS = 0.05;
+export const ENERGY_TO_DAYS = 0.08;
