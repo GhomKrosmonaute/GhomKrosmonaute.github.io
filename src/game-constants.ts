@@ -11,7 +11,7 @@ export const GAME_ADVANTAGE = {
 export const MAX_ENERGY = 20;
 export const MAX_HAND_SIZE = 8;
 export const MAX_REPUTATION = 10;
-export const MONEY_TO_REACH = 100_000; // en M$
+export const MONEY_TO_REACH = 10_000; // en M$
 export const INFINITE_DRAW_COST = 5;
 export const UPGRADE_COST_THRESHOLDS = {
   string: ["20", "50", "75", "100", "150"],
