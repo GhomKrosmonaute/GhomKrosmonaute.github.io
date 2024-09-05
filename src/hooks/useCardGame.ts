@@ -265,22 +265,43 @@ function generateInitialState(): Omit<
 
   localStorage.setItem("metadata", JSON.stringify(metadata));
 
-  const deck = shuffle(
-    [
-      cards.find((c) => c.effect.description.startsWith("Renvoie tout"))!,
-      ...cards
-        .filter((c) => c.effect.description.startsWith("Pioche"))
-        .slice(0, 4),
-      ...cards.filter((c) => c.effect.description.startsWith("Recycle")),
-      ...cards.filter(
+  let deck: GameCardInfo[] = [];
+
+  deck.push(
+    cards.find((c) => c.effect.description.startsWith("Renvoie tout"))!,
+  );
+
+  deck.push(
+    ...cards
+      .filter(
         (c) =>
-          !c.effect.upgrade &&
-          c.effect.description.toLowerCase().includes("gagne") &&
-          c.effect.description.toLowerCase().includes("énergie"),
-      ),
-    ],
-    3,
-  ).map((c) => ({ ...c, state: "drawing" }) as GameCardInfo);
+          deck.every((_c) => _c.name !== c.name) &&
+          c.effect.description.startsWith("Pioche"),
+      )
+      .slice(0, 4),
+  );
+
+  deck.push(
+    ...cards.filter(
+      (c) =>
+        deck.every((_c) => _c.name !== c.name) &&
+        c.effect.description.startsWith("Recycle"),
+    ),
+  );
+
+  deck.push(
+    ...cards.filter(
+      (c) =>
+        deck.every((_c) => _c.name !== c.name) &&
+        !c.effect.upgrade &&
+        c.effect.description.toLowerCase().includes("gagne") &&
+        c.effect.description.toLowerCase().includes("énergie"),
+    ),
+  );
+
+  deck = shuffle(deck, 3).map(
+    (c) => ({ ...c, state: "drawing" }) as GameCardInfo,
+  );
 
   const firstChoices: GameCardInfo[][] = [];
 
