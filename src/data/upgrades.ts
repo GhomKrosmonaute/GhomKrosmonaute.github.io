@@ -55,11 +55,11 @@ const upgrades: RawUpgrade[] = [
   {
     name: "Bourse",
     eventName: "daily",
-    description: "Gagne @cumul fois 10% de ton capital",
+    description: "Gagne @cumul fois 5% de ton capital",
     image: "bourse.png",
     condition: (state) => state.money > 0,
     onTrigger: async (state, upgrade, reason) => {
-      await state.addMoney(Math.ceil(upgrade.cumul * (state.money / 10)), {
+      await state.addMoney(Math.ceil(upgrade.cumul * (state.money / 5)), {
         skipGameOverPause: true,
         reason,
       });

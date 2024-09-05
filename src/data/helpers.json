@@ -10,7 +10,7 @@
   "Les cartes éphémères sont détruites après utilisation.",
   "Les effets des @upgrades sont cumulables !",
   "Tu ne peux pas avoir plus de MAX_HAND_SIZE cartes en main.",
-  "Les cartes piochées en trop sont défaussées à la place.",
+  "Les cartes piochées en trop restent dans la pioche.",
   "Le prix des cartes d'@upgrade augmente progressivement.",
   "Si tu obtiens MONEY_TO_REACHM$, tu gagnes la partie.",
   "Chaque @sprint contient une semaine (7 @days).",

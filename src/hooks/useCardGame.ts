@@ -840,7 +840,6 @@ function cardGameMethods(
       const drawn: string[] = [];
 
       let handAdded = false;
-      let discardAdded = false;
 
       for (let i = 0; i < count; i++) {
         if (from.length === 0) {
@@ -853,10 +852,7 @@ function cardGameMethods(
 
         drawn.push(card.name);
 
-        if (hand.length >= MAX_HAND_SIZE) {
-          discard.push(card);
-          discardAdded = true;
-        } else {
+        if (hand.length < MAX_HAND_SIZE) {
           hand.push(card);
           handAdded = true;
         }
@@ -865,7 +861,7 @@ function cardGameMethods(
       if (handAdded) {
         if (fromKey === "draw") bank.draw.play();
         else bank.recycle.play();
-      } else if (discardAdded) bank.drop.play();
+      }
 
       set({
         hand,
