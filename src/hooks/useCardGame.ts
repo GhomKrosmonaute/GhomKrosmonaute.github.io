@@ -3,6 +3,7 @@ import { create } from "zustand";
 
 import cards from "@/data/cards.ts";
 import upgrades from "@/data/upgrades";
+import achievements from "@/data/achievements.ts";
 import cardModifiers from "@/data/cardModifiers";
 
 import type {
@@ -50,10 +51,11 @@ export interface CardGame {
   playedGames: number;
   discoveries: string[];
   achievements: string[];
-  addDiscovery: (name: string) => void;
-  addAchievement: (name: string) => void;
+  addDiscovery: (...names: string[]) => void;
+  addAchievement: (name: string) => Promise<void>;
   addWonGame: () => void;
   addPlayedGame: () => void;
+  checkAchievements: () => Promise<void>;
 }
 
 export interface CardGameState {
@@ -183,22 +185,41 @@ function cardGameStatsMethods(
   };
 
   return {
-    addDiscovery: (name) => {
+    checkAchievements: async () => {
+      const state = getState();
+
+      for (const achievement of achievements) {
+        if (state.achievements.includes(achievement.name)) continue;
+
+        if (achievement.unlockCondition(getState())) {
+          await state.addAchievement(achievement.name);
+        }
+      }
+    },
+
+    addDiscovery: (...names) => {
       set((state) => {
         return {
-          discoveries: [...state.discoveries, name],
+          discoveries: Array.from(new Set([...state.discoveries, ...names])),
         };
       });
 
       updateLocalStorage();
     },
 
-    addAchievement: (name) => {
+    addAchievement: async (name) => {
       set((state) => {
         return {
           achievements: [...state.achievements, name],
         };
       });
+
+      bank.achievement.play();
+
+      await getState().addNotification(
+        `<span style="font-size: 32px">Succès dévérouillé</span><br/>${name}`,
+        "bg-primary text-primary-foreground text-center",
+      );
 
       updateLocalStorage();
     },
@@ -313,7 +334,7 @@ function cardGameMethods(
       | ((state: CardGameState) => CardGameState | Partial<CardGameState>),
     replace?: boolean | undefined,
   ) => void,
-  getState: () => CardGameState,
+  getState: () => CardGameState & CardGame,
 ) {
   return {
     coinFlip: async (options) => {
@@ -326,7 +347,7 @@ function cardGameMethods(
       await Promise.all([
         await state.addNotification(
           result ? "Face" : "Pile",
-          "via-background text-foreground",
+          "bg-background text-foreground",
         ),
         await options[result ? "onHead" : "onTail"](state),
       ]);
@@ -385,8 +406,8 @@ function cardGameMethods(
               ? `Sprint ${Math.floor(day / 7)}`
               : `Jour ${Math.floor(day)}`,
             newSprint
-              ? "via-upgrade text-upgrade-foreground"
-              : "via-day text-day-foreground",
+              ? "bg-upgrade text-upgrade-foreground"
+              : "bg-day text-day-foreground",
           );
 
           await state.triggerEvent("daily");
@@ -397,7 +418,7 @@ function cardGameMethods(
               ? state.choiceOptions
               : [
                   ...state.choiceOptions,
-                  generateChoiceOptions(state, {
+                  generateChoiceOptions(getState(), {
                     filter: (c) => !c.effect.upgrade,
                   }),
                 ],
@@ -406,14 +427,16 @@ function cardGameMethods(
           if (newSprint) {
             await state.triggerEvent("weekly");
 
+            const fullState = getState();
+
             set((state) => ({
               sprintFull: false,
               choiceOptions: [
                 ...state.choiceOptions,
-                generateChoiceOptions(state, {
+                generateChoiceOptions(fullState, {
                   filter: (c) => !c.effect.upgrade && c.type === "action",
                 }),
-                generateChoiceOptions(state, {
+                generateChoiceOptions(fullState, {
                   filter: (c) => !!c.effect.upgrade,
                 }),
               ],
@@ -440,7 +463,12 @@ function cardGameMethods(
 
       await wait(2000);
 
-      set({ notification: null });
+      set((state) => ({
+        notification:
+          state.notification?.toString() === [text, className].toString()
+            ? null
+            : state.notification,
+      }));
     },
 
     dangerouslyUpdate: (partial: Partial<CardGameState>) => set(partial),
@@ -1257,7 +1285,7 @@ export const useCardGame = create<CardGameState & CardGame>(
   }),
 );
 
-useCardGame.subscribe((state, prevState) => {
+useCardGame.subscribe(async (state, prevState) => {
   // on met à jour le score
   if (
     state.reputation !== prevState.reputation ||
@@ -1308,6 +1336,9 @@ useCardGame.subscribe((state, prevState) => {
       prevState.operationInProgress.join("") &&
     state.operationInProgress.length === 0
   ) {
+    // on vérifie les achievements
+    await state.checkAchievements();
+
     // on vérifie si le jeu est fini
     if (!state.infinityMode && !state.isWon && state.money >= MONEY_TO_REACH) {
       state.win();

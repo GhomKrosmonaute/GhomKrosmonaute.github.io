@@ -2,7 +2,7 @@ import React from "react";
 
 import helpers from "@/data/helpers.json";
 
-import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
+import { useSettings } from "@/hooks/useSettings.ts";
 
 import Question from "@/assets/icons/question.svg";
 
@@ -15,7 +15,7 @@ export const GameHelpers = (props: { show: boolean }) => {
 
   const isHovered = useHover(ref);
 
-  const { animation, shadow, transparency } = useQualitySettings((state) => ({
+  const { animation, shadow, transparency } = useSettings((state) => ({
     animation: state.animations,
     transparency: state.transparency,
     shadow: state.shadows,

@@ -1,10 +1,10 @@
 import { cn } from "@/utils";
 import { useCardGame } from "@/hooks/useCardGame";
-import { useQualitySettings } from "@/hooks/useQualitySettings";
+import { useSettings } from "@/hooks/useSettings.ts";
 import { GameCard } from "@/components/game/GameCard";
 
 export const GameHand = (props: { show: boolean }) => {
-  const quality = useQualitySettings(({ animations }) => ({ animations }));
+  const quality = useSettings(({ animations }) => ({ animations }));
   const game = useCardGame(({ hand }) => ({ hand }));
 
   return (

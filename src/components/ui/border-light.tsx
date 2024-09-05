@@ -1,6 +1,6 @@
 import React from "react";
 import { cn } from "@/utils";
-import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
+import { useSettings } from "@/hooks/useSettings.ts";
 
 const groupHover = [
   "group-hover/card:opacity-100",
@@ -22,8 +22,8 @@ export interface BorderLightProps {
 export const BorderLight = (
   props: React.ComponentProps<"div"> & BorderLightProps,
 ) => {
-  const shadows = useQualitySettings((state) => state.shadows);
-  const activated = useQualitySettings(
+  const shadows = useSettings((state) => state.shadows);
+  const activated = useSettings(
     (state) => state.borderLights && state.transparency && state.animations,
   );
 

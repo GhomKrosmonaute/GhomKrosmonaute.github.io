@@ -4,7 +4,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/utils";
 import { BorderLight } from "@/components/ui/border-light.tsx";
-import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
+import { useSettings } from "@/hooks/useSettings.ts";
 
 const buttonVariants = cva(
   cn(
@@ -50,7 +50,7 @@ export interface ButtonProps
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, ...props }, ref) => {
-    const shadows = useQualitySettings((state) => state.shadows);
+    const shadows = useSettings((state) => state.shadows);
     const Comp = asChild ? Slot : "button";
     return (
       <Comp

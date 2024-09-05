@@ -6,6 +6,8 @@ export const useDarkMode = () => {
     if (html) {
       const theme = html.classList.toggle("dark") ? "dark" : "light";
 
+      html.classList.toggle("light");
+
       localStorage.setItem("theme", theme);
     }
   }, []);

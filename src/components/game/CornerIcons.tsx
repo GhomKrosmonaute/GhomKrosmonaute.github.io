@@ -1,5 +1,5 @@
 import { useGlobalState } from "@/hooks/useGlobalState.ts";
-import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
+import { useSettings } from "@/hooks/useSettings.ts";
 
 import Sound from "@/assets/icons/sound.svg";
 import Muted from "@/assets/icons/muted.svg";
@@ -16,7 +16,7 @@ export const CornerIcons = (props: { show: boolean }) => {
     (state) => () => state.setTutorial(true),
   );
 
-  const [animation, transparency] = useQualitySettings((state) => [
+  const [animation, transparency] = useSettings((state) => [
     state.animations,
     state.transparency,
   ]);

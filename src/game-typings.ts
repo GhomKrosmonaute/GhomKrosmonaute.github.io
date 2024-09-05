@@ -108,13 +108,3 @@ export type MethodWhoLog = {
 export type GameMethodOptions = MethodWhoCheckIfGameOver & MethodWhoLog;
 
 export type ColorClass = `bg-${string}` & string;
-
-export type MaskState = "appear" | "idle" | "disappear";
-
-export type Mask = {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  state: MaskState;
-};

@@ -13,6 +13,14 @@ import { Button } from "@/components/ui/button.tsx";
 import { useGlobalState } from "@/hooks/useGlobalState.ts";
 import Cross from "@/assets/icons/cross.svg";
 import { useCardGame } from "@/hooks/useCardGame.ts";
+import cards from "@/data/cards.ts";
+import achievements from "@/data/achievements.ts";
+import { GameCardPopover } from "@/components/game/GameCardPopover.tsx";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card.tsx";
 
 export const GameRules = (props: { show: boolean }) => {
   const close = useGlobalState((state) => state.toggleRules);
@@ -40,11 +48,8 @@ export const GameRules = (props: { show: boolean }) => {
         close();
       }}
       className={cn(
-        "absolute z-50 w-screen h-svh flex justify-center items-center",
-        {
-          "bg-background/80": true,
-          hidden: !props.show,
-        },
+        "absolute z-50 w-screen h-svh flex justify-center items-center bg-background/80",
+        { hidden: !props.show },
       )}
     >
       <div className="relative bg-background/80 space-y-4 p-10 rounded-xl pointer-events-auto">
@@ -170,16 +175,33 @@ export const GameRules = (props: { show: boolean }) => {
                       <td>Parties jouées</td>
                       <td>{stats.playedGames}</td>
                     </tr>
+                    <tr>
+                      <td>Cartes découvertes</td>
+                      <td>
+                        {stats.discoveries.length} / {cards.length}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Succès obtenus</td>
+                      <td>
+                        {stats.achievements.length} / {achievements.length}
+                      </td>
+                    </tr>
                   </tbody>
                 </table>
               </div>
 
               <div>
                 <h3 className="font-changa">Cartes découvertes</h3>
-                <ul>
+                <ul className="flex flex-wrap gap-x-2">
                   {stats.discoveries.length > 0
                     ? stats.discoveries.map((discovery, i) => (
-                        <li key={i}>{discovery}</li>
+                        <GameCardPopover
+                          card={cards.find((c) => c.name === discovery)!}
+                          key={i}
+                        >
+                          <li>{discovery}</li>
+                        </GameCardPopover>
                       ))
                     : "Aucune découverte"}
                 </ul>
@@ -187,10 +209,26 @@ export const GameRules = (props: { show: boolean }) => {
 
               <div>
                 <h3 className="font-changa">Succès</h3>
-                <ul>
+                <ul className="flex flex-wrap gap-x-2">
                   {stats.achievements.length > 0
                     ? stats.achievements.map((achievement, i) => (
-                        <li key={i}>{achievement}</li>
+                        <HoverCard openDelay={0} closeDelay={0}>
+                          <HoverCardTrigger asChild>
+                            <li key={i}>{achievement}</li>
+                          </HoverCardTrigger>
+                          <HoverCardContent className="pointer-events-none">
+                            <h2 className="mb-2">{achievement}</h2>
+                            <p
+                              dangerouslySetInnerHTML={{
+                                __html: formatText(
+                                  achievements.find(
+                                    (a) => a.name === achievement,
+                                  )!.description,
+                                ),
+                              }}
+                            />
+                          </HoverCardContent>
+                        </HoverCard>
                       ))
                     : "Aucun succès"}
                 </ul>

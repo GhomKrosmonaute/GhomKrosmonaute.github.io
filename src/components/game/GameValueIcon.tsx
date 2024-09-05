@@ -1,4 +1,4 @@
-import { useQualitySettings } from "@/hooks/useQualitySettings";
+import { useSettings } from "@/hooks/useSettings.ts";
 import { cn } from "@/utils.ts";
 import React from "react";
 import { ColorClass } from "@/game-typings.ts";
@@ -27,7 +27,7 @@ export const GameValueIcon = ({
   symbol?: boolean;
   miniature?: boolean;
 }) => {
-  const quality = useQualitySettings(({ perspective, shadows }) => ({
+  const quality = useSettings(({ perspective, shadows }) => ({
     perspective,
     shadows,
   }));

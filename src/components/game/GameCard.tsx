@@ -16,11 +16,11 @@ import { useCardGame } from "@/hooks/useCardGame.ts";
 
 import { energyCostColor, isActionCardInfo, parseCost } from "@/game-utils.ts";
 
-import { MoneyIcon } from "@/components/game/MoneyIcon.tsx";
+import { GameMoneyIcon } from "@/components/game/GameMoneyIcon.tsx";
 import { Tilt, TiltFoil } from "@/components/game/Tilt.tsx";
 import { GameValueIcon } from "@/components/game/GameValueIcon.tsx";
 import { BorderLight } from "@/components/ui/border-light.tsx";
-import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
+import { useSettings } from "@/hooks/useSettings.ts";
 import { cn } from "@/utils.ts";
 
 export const GameCard = (
@@ -30,7 +30,7 @@ export const GameCard = (
     isChoice?: boolean;
   }>,
 ) => {
-  const quality = useQualitySettings((state) => ({
+  const quality = useSettings((state) => ({
     blur: state.blur,
     shadows: state.shadows,
     perspective: state.perspective,
@@ -235,7 +235,7 @@ export const GameCard = (
                   }}
                 />
               ) : (
-                <MoneyIcon
+                <GameMoneyIcon
                   value={String(game.parsedCost.cost)}
                   style={{
                     transform: `${quality.perspective ? "translateZ(10px)" : ""} rotate(-10deg)`,
@@ -332,7 +332,7 @@ export const GameCard = (
 const GameCardProject = (
   props: React.PropsWithoutRef<{ card: ActionCardInfo }>,
 ) => {
-  const { shadows, perspective, transparency, animation } = useQualitySettings(
+  const { shadows, perspective, transparency, animation } = useSettings(
     (state) => ({
       shadows: state.shadows,
       perspective: state.perspective,
@@ -392,7 +392,7 @@ const spinners = ["React", "Knex"];
 const GameCardTechno = (
   props: React.PropsWithoutRef<{ card: SupportCardInfo }>,
 ) => {
-  const { perspective, animation } = useQualitySettings((state) => ({
+  const { perspective, animation } = useSettings((state) => ({
     perspective: state.perspective,
     animation: state.animations,
   }));

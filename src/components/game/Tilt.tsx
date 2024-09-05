@@ -1,7 +1,7 @@
 import React from "react";
 import { useHover } from "usehooks-ts";
 import { cn } from "@/utils.ts";
-import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
+import { useSettings } from "@/hooks/useSettings.ts";
 
 const TiltContext = React.createContext<{
   degX: number;
@@ -32,7 +32,7 @@ export const Tilt: React.FC<TiltProps> = ({
   children,
   style,
 }) => {
-  const enabled = useQualitySettings((state) => state.tilt && state.animations);
+  const enabled = useSettings((state) => state.tilt && state.animations);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const isHovered = useHover(containerRef);
   const [styleState, setStyle] = React.useState<React.CSSProperties>({});
@@ -127,7 +127,7 @@ export const Tilt: React.FC<TiltProps> = ({
 
 export const TiltFoil: React.FC = () => {
   const tiltContext = React.useContext(TiltContext);
-  const enabled = useQualitySettings((state) => state.foil);
+  const enabled = useSettings((state) => state.foil);
 
   if (!enabled) {
     return <></>;

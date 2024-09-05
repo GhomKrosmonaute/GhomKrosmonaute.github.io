@@ -9,11 +9,11 @@ import { GameValueIcon } from "@/components/game/GameValueIcon.tsx";
 import { GameCard } from "@/components/game/GameCard.tsx";
 
 import { useCardGame } from "@/hooks/useCardGame.ts";
-import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
+import { useSettings } from "@/hooks/useSettings.ts";
 
 export const GameActions = (props: { show: boolean }) => {
   const game = useCardGame();
-  const animation = useQualitySettings((state) => state.animations);
+  const animation = useSettings((state) => state.animations);
 
   const runningOps = game.operationInProgress.length > 0;
   const newSprint = Math.floor(game.day) % 7 === 0;
@@ -94,12 +94,22 @@ export const GameActions = (props: { show: boolean }) => {
             Piocher une carte
           </Button>
         ) : (
-          <div className="flex justify-center">
-            {/*{JSON.stringify(game.choiceOptions[0])}*/}
-            {game.choiceOptions[0].map((option, i) => (
-              <GameCard key={i} card={option} isChoice />
-            ))}
-          </div>
+          (() => {
+            if (game.choiceOptions[0].length === 0) {
+              game.dangerouslyUpdate({
+                choiceOptions: game.choiceOptions.slice(1),
+              });
+            }
+
+            return (
+              <div className="flex justify-center">
+                {/*{JSON.stringify(game.choiceOptions[0])}*/}
+                {game.choiceOptions[0].map((option, i) => (
+                  <GameCard key={i} card={option} isChoice />
+                ))}
+              </div>
+            );
+          })()
         )}
       </div>
     </div>

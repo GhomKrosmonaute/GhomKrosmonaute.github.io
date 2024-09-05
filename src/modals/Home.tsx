@@ -7,11 +7,11 @@ import { CenterCard } from "@/components/CenterCard.tsx";
 import { useMediaQuery } from "usehooks-ts";
 import { useNavigate } from "react-router-dom";
 import { useGlobalState } from "@/hooks/useGlobalState.ts";
-import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
+import { useSettings } from "@/hooks/useSettings.ts";
 
 export const Home = () => {
   const navigate = useNavigate();
-  const animation = useQualitySettings((state) => state.animations);
+  const animation = useSettings((state) => state.animations);
   const largeScreen = useMediaQuery("(width >= 768px) and (height >= 768px)");
   const [isCardGameVisible, setCardGameVisibility] = useGlobalState((state) => [
     state.isCardGameVisible,

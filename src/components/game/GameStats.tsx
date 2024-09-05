@@ -18,13 +18,9 @@ import { GameGauge } from "@/components/game/GameGauge.tsx";
 import { MAX_REPUTATION, MONEY_TO_REACH } from "@/game-constants.ts";
 import { settings, translations } from "@/game-settings.ts";
 import { MiniatureImage } from "@/components/game/GameMiniature.tsx";
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover-card.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
-import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
+import { useSettings } from "@/hooks/useSettings.ts";
+import { GameCardPopover } from "@/components/game/GameCardPopover.tsx";
 
 export const Stat = ({
   name,
@@ -61,7 +57,7 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
     dayFull: state.dayFull,
   }));
 
-  const quality = useQualitySettings((state) => ({
+  const quality = useSettings((state) => ({
     shadows: state.shadows,
     animation: state.animations,
     transparency: state.transparency,
@@ -150,29 +146,21 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
                       return b.type > a.type ? 1 : -1;
                     })
                     .map((c, i) => (
-                      <HoverCard key={i} openDelay={0} closeDelay={0}>
-                        <HoverCardTrigger asChild>
-                          <div className="h-6 hover:shrink-0 pointer-events-auto">
-                            <MiniatureImage
-                              item={c}
-                              className={cn(
-                                "ring-0 rounded-none object-contain border-b-2",
-                                {
-                                  "border-action": c.type === "action",
-                                  "border-support": c.type === "support",
-                                  "border-upgrade": c.effect.upgrade,
-                                },
-                              )}
-                            />
-                          </div>
-                        </HoverCardTrigger>
-                        <HoverCardContent
-                          className="pointer-events-none"
-                          dangerouslySetInnerHTML={{
-                            __html: `<h2>${c.name}</h2><br />${c.effect.description}`,
-                          }}
-                        />
-                      </HoverCard>
+                      <GameCardPopover key={i} card={c}>
+                        <div className="h-6 hover:shrink-0 pointer-events-auto">
+                          <MiniatureImage
+                            item={c}
+                            className={cn(
+                              "ring-0 rounded-none object-contain border-b-2",
+                              {
+                                "border-action": c.type === "action",
+                                "border-support": c.type === "support",
+                                "border-upgrade": c.effect.upgrade,
+                              },
+                            )}
+                          />
+                        </div>
+                      </GameCardPopover>
                     ))}
                 </div>
                 <Stat

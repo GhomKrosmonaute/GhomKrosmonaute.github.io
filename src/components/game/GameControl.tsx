@@ -4,10 +4,10 @@ import { cn } from "@/utils.ts";
 
 import { useCardGame } from "@/hooks/useCardGame.ts";
 import { useGlobalState } from "@/hooks/useGlobalState.ts";
-import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
+import { useSettings } from "@/hooks/useSettings.ts";
 
 export const GameControl = (props: { show: boolean; delay: boolean }) => {
-  const animation = useQualitySettings((state) => state.animations);
+  const animation = useSettings((state) => state.animations);
   const reset = useCardGame((state) => state.reset);
   const exit = useGlobalState(
     (state) => () => state.setCardGameVisibility(false),

@@ -1,6 +1,6 @@
 import React from "react";
 
-import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
+import { useSettings } from "@/hooks/useSettings.ts";
 
 import { GameControl } from "@/components/game/GameControl.tsx";
 import { GameLogs } from "@/components/game/GameLogs.tsx";
@@ -10,7 +10,7 @@ import { Card } from "@/components/Card.tsx";
 import { cn } from "@/utils.ts";
 
 export const GameValues = (props: { show: boolean }) => {
-  const { shadows, animation } = useQualitySettings((state) => ({
+  const { shadows, animation } = useSettings((state) => ({
     shadows: state.shadows,
     animation: state.animations,
   }));

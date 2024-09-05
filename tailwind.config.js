@@ -177,25 +177,30 @@ module.exports = {
             transform: "translateY(0) scale(0.5)",
             opacity: 0,
           },
-          "50%": {
+          "30%": {
+            transform: "translateY(0) scale(1)",
+            opacity: 1,
+          },
+          "70%": {
             transform: "translateY(0) scale(1)",
             opacity: 1,
           },
           "100%": {
-            transform: "translateY(-200px)",
+            transform: "translateY(-50px)",
             opacity: 0,
           },
         },
-        "notification-bg": {
-          "0%": {
-            opacity: 0,
-          },
-          "50%": {
-            opacity: 1,
-          },
-          "100%": {
-            opacity: 0,
-          },
+        "to-right": {
+          "0%": { transform: "translateX(-100%)", left: 0 },
+          "30%": { transform: "translateX(-50)", left: "50%" },
+          "70%": { transform: "translateX(-50)", left: "50%" },
+          "100%": { transform: "translateX(0)", left: "100%" },
+        },
+        "to-left": {
+          "0%": { transform: "translateX(0)", left: "100%" },
+          "30%": { transform: "translateX(-50)", left: "50%" },
+          "70%": { transform: "translateX(-50)", left: "50%" },
+          "100%": { transform: "translateX(-100%)", left: 0 },
         },
       },
       animation: {
@@ -217,7 +222,8 @@ module.exports = {
         trigger: "trigger 0.25s ease-in-out forwards 0.25s",
         "ping-forwards": "ping 2s cubic-bezier(0, 0, 0.2, 1) forwards",
         notification: "notification 2s forwards",
-        "notification-bg": "notification-bg 2s forwards",
+        "to-right": "to-right 2s ease-in-out forwards",
+        "to-left": "to-left 2s ease-in-out forwards",
       },
     },
   },

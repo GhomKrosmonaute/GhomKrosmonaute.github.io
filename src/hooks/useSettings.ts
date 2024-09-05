@@ -2,22 +2,25 @@ import { create } from "zustand";
 
 import { settings, QualityOptions } from "@/game-settings.ts";
 
-export const useQualitySettings = create<
+export const useSettings = create<
   QualityOptions & {
-    update: (quality: Partial<QualityOptions>) => void;
+    theme: string;
+    update: (quality: Partial<QualityOptions & { theme: string }>) => void;
   }
 >((set) => ({
   ...settings.quality,
+  theme: settings.theme,
   update: (quality) => set((state) => ({ ...state, ...quality })),
 }));
 
-useQualitySettings.subscribe((state) => {
+useSettings.subscribe((state) => {
   localStorage.setItem(
     "settings",
     JSON.stringify({
       ...JSON.parse(
         localStorage.getItem("settings") ?? JSON.stringify(settings),
       ),
+      theme: state.theme,
       quality: state,
     }),
   );

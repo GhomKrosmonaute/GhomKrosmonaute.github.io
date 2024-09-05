@@ -1,12 +1,12 @@
 import { cn } from "@/utils.ts";
 import { useCardGame } from "@/hooks/useCardGame.ts";
 import { MAX_HAND_SIZE } from "@/game-constants.ts";
-import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
+import { useSettings } from "@/hooks/useSettings.ts";
 import Warning from "@/assets/icons/Warning.svg";
 import { formatText } from "@/game-utils.ts";
 
 export const GameAlert = (props: { show?: boolean }) => {
-  const quality = useQualitySettings((state) => ({
+  const quality = useSettings((state) => ({
     animations: state.animations,
     transparency: state.transparency,
   }));

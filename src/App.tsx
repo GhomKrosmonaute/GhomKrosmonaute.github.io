@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import DeviceDetector from "device-detector-js";
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
 
@@ -13,10 +13,14 @@ import { Home } from "./modals/Home.tsx";
 import { Tarifs } from "./modals/Tarifs.tsx";
 import { Contact } from "./modals/Contact.tsx";
 
-import Theme from "@/assets/icons/theme.svg";
 import { cn } from "@/utils.ts";
+
 import { useGlobalState } from "@/hooks/useGlobalState.ts";
-import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
+import { useSettings } from "@/hooks/useSettings.ts";
+
+import Theme from "@/assets/icons/theme.svg";
+
+import themes from "@/data/themes.json";
 
 const SplineMacbook = React.lazy(() =>
   import("@/components/ui/spline-macbook.tsx").then((mod) => ({
@@ -31,7 +35,8 @@ const Game = React.lazy(() =>
 export default function App() {
   const toggleDarkMode = useDarkMode();
 
-  const { godRays, animation } = useQualitySettings((state) => ({
+  const { godRays, animation, theme } = useSettings((state) => ({
+    theme: state.theme,
     godRays: state.godRays,
     animation: state.animations,
   }));
@@ -68,7 +73,7 @@ export default function App() {
     }
   }, [largeScreen]);
 
-  const router = useMemo(
+  const router = React.useMemo(
     () =>
       createBrowserRouter([
         {
@@ -100,6 +105,9 @@ export default function App() {
           <img
             src="images/background.svg"
             className="fixed top-0 left-0 w-screen h-screen object-cover pointer-events-none bg-primary opacity-70"
+            style={{
+              filter: `hue-rotate(${themes.find((t) => t[0] === theme)?.[1] ?? 0}deg)`,
+            }}
           />
         </>
       )}

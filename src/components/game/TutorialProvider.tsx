@@ -222,8 +222,13 @@ export const TutorialProvider = ({ steps, children, opaqueStyle }: Props) => {
             className="fixed w-fit right-2 bottom-2"
             style={{ zIndex: 999999 }}
           >
-            <Button variant="cta" size="cta" className="mb-2" onClick={finish}>
-              Passer le didacticiel <Forward className="ml-2" />
+            {index !== null && (
+              <div className="text-xl font-mono text-center text-white bg-black bg-opacity-50 p-1 rounded-md">
+                {index + 1} / {steps.length}
+              </div>
+            )}
+            <Button variant="cta" size="cta" className="my-2" onClick={finish}>
+              Passer le didacticiel <Forward className="ml-2 h-5" />
             </Button>
             <Progress value={(((index ?? 0) + 1) / steps.length) * 100} />
           </div>

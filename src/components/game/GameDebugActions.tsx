@@ -14,8 +14,8 @@ export const GameDebugActions = () => {
       <Button
         onClick={() =>
           game.addNotification(
-            "Une notification",
-            "via-background/50 text-foreground",
+            "<span style='font-size: 32px'>Test d'une notif</span><br/>Une notification",
+            "bg-background text-foreground",
           )
         }
       >

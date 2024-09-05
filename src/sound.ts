@@ -6,6 +6,11 @@ export const bank = {
     volume: 0.4,
     preload: true,
   }),
+  achievement: new Howl({
+    src: ["sounds/achievement.mp3"],
+    volume: 0.7,
+    preload: true,
+  }),
   play: new Howl({
     src: ["sounds/play.mp3"],
     volume: 1,

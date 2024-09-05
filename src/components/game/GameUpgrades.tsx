@@ -1,5 +1,5 @@
 import { useCardGame } from "@/hooks/useCardGame.ts";
-import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
+import { useSettings } from "@/hooks/useSettings.ts";
 
 import events from "@/data/events.ts";
 
@@ -12,7 +12,7 @@ import { GameValueIcon } from "@/components/game/GameValueIcon.tsx";
 import { EventText } from "@/components/game/EventText.tsx";
 
 export const GameUpgrades = (props: { show: boolean }) => {
-  const quality = useQualitySettings((state) => ({
+  const quality = useSettings((state) => ({
     shadows: state.shadows,
     animation: state.animations,
     transparency: state,

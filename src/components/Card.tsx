@@ -1,7 +1,7 @@
 import React from "react";
 import { cn } from "@/utils.ts";
 import { BorderLight } from "@/components/ui/border-light.tsx";
-import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
+import { useSettings } from "@/hooks/useSettings.ts";
 
 export const Card = React.forwardRef<
   HTMLDivElement,
@@ -10,7 +10,7 @@ export const Card = React.forwardRef<
       borderLightAppearOnHover?: boolean;
     }>
 >(({ borderLightAppearOnHover, ...props }, ref) => {
-  const quality = useQualitySettings((state) => ({
+  const quality = useSettings((state) => ({
     transparency: state.transparency,
     cardBlur: state.blur,
   }));

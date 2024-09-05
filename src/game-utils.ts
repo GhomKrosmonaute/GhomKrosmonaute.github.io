@@ -8,7 +8,7 @@ import type {
   Upgrade,
 } from "@/game-typings";
 
-import type { CardGameState } from "@/hooks/useCardGame";
+import type { CardGame, CardGameState } from "@/hooks/useCardGame";
 
 import {
   INFINITE_DRAW_COST,
@@ -28,7 +28,7 @@ interface ChoiceOptionsGeneratorOptions {
 }
 
 export function generateChoiceOptions(
-  state: CardGameState,
+  state: CardGameState & CardGame,
   options?: ChoiceOptionsGeneratorOptions,
 ): GameCardInfo[] {
   const _cards = cards.filter(
@@ -53,9 +53,13 @@ export function generateChoiceOptions(
 
   // todo: add random rarity to selected cards
 
-  return shuffle(_cards, 3)
+  const outputOptions: GameCardInfo[] = shuffle(_cards, 3)
     .slice(0, state.choiceOptionCount)
     .map((c) => ({ ...c, state: "drawing" }));
+
+  state.addDiscovery(...outputOptions.map((c) => c.name));
+
+  return outputOptions;
 }
 
 export function energyCostColor(
@@ -208,7 +212,7 @@ export function formatText(text: string) {
     .replace(/MAX_HAND_SIZE/g, String(MAX_HAND_SIZE))
     .replace(/\b([\de+.]+)M\$/g, (_, n) => {
       const amount = Number(n);
-      console.trace(_, amount);
+
       return amount >= 1000
         ? `${(amount / 1000).toFixed(2).replace(".00", "").replace(/\.0\b/, "")}B$`
         : `${amount}M$`;

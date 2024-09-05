@@ -20,7 +20,7 @@ import {
 
 import { useCardGame } from "@/hooks/useCardGame.ts";
 import { useGlobalState } from "@/hooks/useGlobalState.ts";
-import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
+import { useSettings } from "@/hooks/useSettings.ts";
 
 import {
   Difficulty,
@@ -31,21 +31,24 @@ import {
 import { GAME_ADVANTAGE } from "@/game-constants.ts";
 
 import Warning from "@/assets/icons/warning.svg";
+
+import themes from "@/data/themes.json";
+
 import { FPS } from "@/components/game/FPS.tsx";
 
 export const Settings = (props: { show: boolean }) => {
   const score = useCardGame((state) => state.score);
   const toggleSettings = useGlobalState((state) => state.toggleSettings);
-  const quality = useQualitySettings();
+  const settingsCache = useSettings();
 
   const [difficulty, setDifficulty] = React.useState(settings.difficulty);
 
   const [newDifficulty, needReload] = React.useMemo(() => {
     return [
       difficulty !== settings.difficulty,
-      quality.animations !== settings.quality.animations,
+      settingsCache.animations !== settings.quality.animations,
     ];
-  }, [difficulty, quality.animations]);
+  }, [difficulty, settingsCache.animations]);
 
   const apply = React.useCallback(() => {
     // Apply settings
@@ -59,8 +62,9 @@ export const Settings = (props: { show: boolean }) => {
       }),
     );
 
-    if (needReload) window.location.reload();
-    else toggleSettings();
+    if (needReload) {
+      window.location.search = "?game";
+    } else toggleSettings();
   }, [difficulty, needReload, toggleSettings]);
 
   return (
@@ -69,9 +73,10 @@ export const Settings = (props: { show: boolean }) => {
         "absolute top-0 left-0 w-full h-full z-30",
         "flex items-center justify-center pointer-events-none",
         {
-          "transition-opacity duration-500 ease-in-out": quality.animations,
-          "opacity-0 bg-background/80": quality.transparency,
-          hidden: !quality.transparency,
+          "transition-opacity duration-500 ease-in-out":
+            settingsCache.animations,
+          "opacity-0 bg-background/80": settingsCache.transparency,
+          hidden: !settingsCache.transparency,
           "opacity-100 flex pointer-events-auto": props.show,
         },
       )}
@@ -93,8 +98,8 @@ export const Settings = (props: { show: boolean }) => {
           className={cn(
             "flex gap-5 *:space-y-4 *:border *:rounded-xl *:py-4 *:px-6",
             {
-              "*:bg-card/30": quality.transparency,
-              "*:bg-card": !quality.transparency,
+              "*:bg-card/30": settingsCache.transparency,
+              "*:bg-card": !settingsCache.transparency,
             },
           )}
         >
@@ -115,6 +120,7 @@ export const Settings = (props: { show: boolean }) => {
               ))}
             </RadioGroup>
           </div>
+
           <div>
             <div className="text-2xl">Qualité</div>
             <div className="grid grid-cols-2 grid-rows-5">
@@ -125,16 +131,44 @@ export const Settings = (props: { show: boolean }) => {
                 >
                   <Checkbox
                     defaultChecked={
-                      quality[key as keyof QualityOptions] as boolean
+                      settingsCache[key as keyof QualityOptions] as boolean
                     }
                     onCheckedChange={(value) =>
-                      quality.update({ [key]: value })
+                      settingsCache.update({ [key]: value })
                     }
                   />
                   {translations[key as keyof QualityOptions]}
                 </Label>
               ))}
             </div>
+          </div>
+
+          <div>
+            <div className="text-2xl">Thême (WIP)</div>
+            <RadioGroup
+              className="space-y-0 gap-0"
+              defaultValue={settings.theme}
+              onValueChange={(theme) => {
+                const root = document.body; //document.getElementsByTagName("html")[0];
+
+                const oldTheme = Array.from(root.classList.values()).find((c) =>
+                  c.startsWith("theme-"),
+                );
+
+                if (oldTheme) root.classList.remove(oldTheme);
+
+                root.classList.add(`theme-${theme}`);
+
+                settingsCache.update({ theme });
+              }}
+            >
+              {themes.map((theme) => (
+                <Label className="flex items-center gap-2 py-2" key={theme[0]}>
+                  <RadioGroupItem value={theme[0] as string} />
+                  {theme[0]}
+                </Label>
+              ))}
+            </RadioGroup>
           </div>
         </div>
 

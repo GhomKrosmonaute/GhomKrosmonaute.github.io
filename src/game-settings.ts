@@ -21,6 +21,7 @@ export const difficultyIndex = Object.entries(GAME_ADVANTAGE).reduce(
 export const defaultSettings: Settings = {
   difficulty: "normal",
   tutorial: true,
+  theme: "default",
   quality: {
     shadows: true,
     transparency: true,
@@ -35,8 +36,9 @@ export const defaultSettings: Settings = {
 };
 
 export interface Settings {
-  difficulty: Difficulty;
+  theme: string;
   tutorial: boolean;
+  difficulty: Difficulty;
   quality: QualityOptions;
 }
 
@@ -65,6 +67,11 @@ export const settings: Settings = JSON.parse(
       : JSON.stringify(defaultSettings)
     : JSON.stringify(defaultSettings),
 );
+
+if (settings.theme !== "default") {
+  const root = document.body; //document.getElementsByTagName("html")[0];
+  root.classList.add(`theme-${settings.theme}`);
+}
 
 export const translations: Record<keyof QualityOptions | Difficulty, string> = {
   noob: "Débutant",

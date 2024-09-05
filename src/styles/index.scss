@@ -62,10 +62,8 @@
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
   }
-}
 
-@layer base {
-  /* Game colors */
+  /* Game */
 
   :root {
     --action: 221 83% 53%;
@@ -101,6 +99,48 @@
     --image-foil: 320 100% 88%;
     --day: 150 100% 54%;
     --day-foreground: 0 0% 0%;
+  }
+
+  .light .theme-fire {
+    --primary: 31 100% 53%;
+    --energy: 31 100% 53%;
+    --reputation: 3 100% 53%;
+    --day: 62 100% 53%;
+    --upgrade: 334 100% 53%;
+  }
+
+  .light .theme-dirt {
+    --primary: 24 60% 40%;
+    --energy: 61 48% 35%;
+    --energy-foreground: 0 0% 100%;
+    --reputation: 139 48% 35%;
+    --reputation-foreground: 0 0% 100%;
+    --day: 30 40% 53%;
+    --day-foreground: 0 0% 100%;
+    --upgrade: 30 100% 53%;
+    --action: 24 57% 55%;
+    --support: 24 35% 67%;
+  }
+
+  .dark .theme-fire {
+    --primary: 31 100% 53%;
+    --energy: 31 100% 53%;
+    --reputation: 3 100% 53%;
+    --day: 62 100% 53%;
+    --upgrade: 334 100% 53%;
+  }
+
+  .dark .theme-dirt {
+    --primary: 24 60% 40%;
+    --energy: 61 48% 67%;
+    --energy-foreground: 224 71.4% 4.1%;
+    --reputation: 139 48% 67%;
+    --reputation-foreground: 224 71.4% 4.1%;
+    --day: 35 80% 45%;
+    --day-foreground: 224 71.4% 100%;
+    --upgrade: 30 100% 53%;
+    --action: 24 57% 35%;
+    --support: 24 35% 67%;
   }
 
   @font-face {

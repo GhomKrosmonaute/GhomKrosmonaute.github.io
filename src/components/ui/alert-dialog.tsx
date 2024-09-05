@@ -3,7 +3,7 @@ import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog";
 
 import { cn } from "@/utils";
 import { buttonVariants } from "@/components/ui/button";
-import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
+import { useSettings } from "@/hooks/useSettings.ts";
 
 const AlertDialog = AlertDialogPrimitive.Root;
 
@@ -15,7 +15,7 @@ const AlertDialogOverlay = React.forwardRef<
   React.ElementRef<typeof AlertDialogPrimitive.Overlay>,
   React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Overlay>
 >(({ className, ...props }, ref) => {
-  const quality = useQualitySettings((state) => ({
+  const quality = useSettings((state) => ({
     transparency: state.transparency,
     animation: state.animations,
   }));

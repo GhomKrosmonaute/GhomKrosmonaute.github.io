@@ -22,7 +22,7 @@ export const useGlobalState = create<State>((set) => ({
   tutorial: settings.tutorial,
   musicMuted: localStorage.getItem("muted") === "true",
   musicVolume: 0,
-  isCardGameVisible: false,
+  isCardGameVisible: new URLSearchParams(location.search).has("game"),
   rulesVisible: false,
   splineLoaded: false,
   settingsVisible: false,

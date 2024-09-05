@@ -5,7 +5,7 @@ import { cn } from "@/utils.ts";
 import { useMediaQuery } from "usehooks-ts";
 import { Card } from "@/components/Card.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
+import { useSettings } from "@/hooks/useSettings.ts";
 
 export const CenterCard = (
   props: React.PropsWithChildren<{
@@ -17,7 +17,7 @@ export const CenterCard = (
 ) => {
   const modalRef = React.useRef<HTMLDivElement>(null);
   const matches = useMediaQuery("(width >= 768px) and (height >= 768px)");
-  const quality = useQualitySettings((state) => ({
+  const quality = useSettings((state) => ({
     blur: state.blur,
     shadows: state.shadows,
     animations: state.animations,

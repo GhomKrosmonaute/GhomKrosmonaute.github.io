@@ -2,12 +2,12 @@ import Trophy from "@/assets/icons/game/trophy.svg";
 import { Card } from "@/components/Card.tsx";
 import scores from "@/data/scores.json";
 import { rankColor } from "@/game-utils.ts";
-import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
+import { useSettings } from "@/hooks/useSettings.ts";
 import { cn } from "@/utils.ts";
 import { translations } from "@/game-settings.ts";
 
 export const Scoreboard = (props: { show: boolean }) => {
-  const { shadows, animation, transparency } = useQualitySettings((state) => ({
+  const { shadows, animation, transparency } = useSettings((state) => ({
     shadows: state.shadows,
     animation: state.animations,
     transparency: state.transparency,
@@ -85,8 +85,19 @@ export const Scoreboard = (props: { show: boolean }) => {
           </div>
 
           <p className="text-muted-foreground text-lg leading-5 bg-muted py-1 px-2 rounded-md whitespace-nowrap">
-            Si tu as un meilleur score, tu peux me le <br />
-            soumettre en me contactant sur Discord ou LinkedIn !
+            Si tu as un meilleur score, tu peux me le soumettre <br />
+            en me contactant sur{" "}
+            <a href="https://discord.gg/3vC2XWK" target="_blank">
+              Discord
+            </a>{" "}
+            ou{" "}
+            <a
+              href="https://www.linkedin.com/in/camille-abella-a99950176/"
+              target="_blank"
+            >
+              LinkedIn
+            </a>{" "}
+            !
           </p>
         </div>
       </Card>

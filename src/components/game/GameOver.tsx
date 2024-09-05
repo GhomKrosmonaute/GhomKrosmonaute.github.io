@@ -1,7 +1,7 @@
 import React from "react";
 
 import { useCardGame } from "@/hooks/useCardGame.ts";
-import { useQualitySettings } from "@/hooks/useQualitySettings.ts";
+import { useSettings } from "@/hooks/useSettings.ts";
 import { useGlobalState } from "@/hooks/useGlobalState.ts";
 
 import { settings } from "@/game-settings.ts";
@@ -19,7 +19,7 @@ import { confettiFireworks } from "@/components/ui/confetti";
 import { bank } from "@/sound.ts";
 
 export const GameOver = (props: { show: boolean }) => {
-  const quality = useQualitySettings((state) => ({
+  const quality = useSettings((state) => ({
     shadows: state.shadows,
     animation: state.animations,
     transparency: state.transparency,

@@ -41,10 +41,10 @@ export const MiniatureImage = ({
       }
       alt={`miniature of ${item.name} ${item.type}`}
       className={cn(
-        "aspect-square rounded-full h-full",
+        "aspect-square rounded-full h-full bg-background",
         {
           "object-cover": item.type === "upgrade" || item.type === "action",
-          "object-contain bg-support-foreground": item.type === "support",
+          "object-contain": item.type === "support",
           "ring-upgrade shadow ring-4": item.type === "upgrade",
           "ring-action ring-4": item.type === "action",
           "ring-support ring-4": item.type === "support",

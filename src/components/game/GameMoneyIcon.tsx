@@ -1,12 +1,13 @@
 import React from "react";
 import { cn } from "@/utils.ts";
 
-export const MoneyIcon = (
+export const GameMoneyIcon = (
   props: React.PropsWithChildren<{
     value: string;
     className?: string;
     style?: React.CSSProperties;
     miniature?: boolean;
+    symbol?: boolean;
   }>,
 ) => {
   if (props.value === "0") return <></>;
@@ -14,7 +15,7 @@ export const MoneyIcon = (
   return (
     <div
       className={cn(
-        "text-2xl font-bold border border-white px-1 bg-money text-money-foreground w-fit",
+        "text-2xl font-changa border border-white px-1 bg-money text-money-foreground w-fit",
         { "text-md": props.miniature },
         props.className,
       )}
@@ -25,7 +26,7 @@ export const MoneyIcon = (
           transform: !props.miniature ? "translateZ(5px)" : "none",
         }}
       >
-        {props.miniature
+        {props.symbol
           ? `${Number(props.value) > 0 ? "+" : ""}${props.value}`
           : props.value}
         M$
