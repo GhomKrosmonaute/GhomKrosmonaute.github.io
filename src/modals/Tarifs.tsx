@@ -41,7 +41,7 @@ export const Tarifs = () => {
           <Button onClick={() => navigate("/contact")} variant="cta" size="cta">
             Contactez-moi !
           </Button>
-          <p className="italic text-muted-foreground">
+          <p className="italic text-muted-foreground max-w-xl">
             Les tarifs exposés sont approximatifs et peuvent être redéfinis en
             fonction de la complexité du projet lors du chiffrage du cahier des
             charges.
