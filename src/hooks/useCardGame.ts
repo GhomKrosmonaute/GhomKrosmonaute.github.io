@@ -390,9 +390,7 @@ function cardGameMethods(
       }
 
       let currentDay = Math.floor(state.day);
-
       const afterTime = state.day + addedTime;
-
       const afterDay = Math.floor(afterTime);
 
       for (currentDay; currentDay < afterDay; currentDay++) {
