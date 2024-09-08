@@ -56,13 +56,14 @@ export interface CardGame {
   addWonGame: () => void;
   addPlayedGame: () => void;
   checkAchievements: () => Promise<void>;
+  checkDiscoveries: () => void;
 }
 
 export interface CardGameState {
   choiceOptionCount: number;
   choiceOptions: GameCardInfo[][];
   logs: GameLog[];
-  notification: [text: string, className: string] | null;
+  notification: [text: string, className: string][];
   operationInProgress: string[];
   setOperationInProgress: (operation: string, value: boolean) => void;
   reason: GameOverReason;
@@ -197,6 +198,16 @@ function cardGameStatsMethods(
       }
     },
 
+    checkDiscoveries: () => {
+      const state = getState();
+
+      state.addDiscovery(
+        ...state.hand.map((c) => c.name),
+        ...state.draw.map((c) => c.name),
+        ...state.discard.map((c) => c.name),
+      );
+    },
+
     addDiscovery: (...names) => {
       set((state) => {
         return {
@@ -265,53 +276,53 @@ function generateInitialState(): Omit<
 
   localStorage.setItem("metadata", JSON.stringify(metadata));
 
-  let deck: GameCardInfo[] = [];
+  let startingDeck: GameCardInfo[] = [];
 
-  deck.push(
+  startingDeck.push(
     cards.find((c) => c.effect.description.startsWith("Renvoie tout"))!,
   );
 
-  deck.push(
+  startingDeck.push(
     ...cards
       .filter(
         (c) =>
-          deck.every((_c) => _c.name !== c.name) &&
+          startingDeck.every((_c) => _c.name !== c.name) &&
           c.effect.description.startsWith("Pioche"),
       )
       .slice(0, 4),
   );
 
-  deck.push(
+  startingDeck.push(
     ...cards.filter(
       (c) =>
-        deck.every((_c) => _c.name !== c.name) &&
+        startingDeck.every((_c) => _c.name !== c.name) &&
         c.effect.description.startsWith("Recycle"),
     ),
   );
 
-  deck.push(
+  startingDeck.push(
     ...cards.filter(
       (c) =>
-        deck.every((_c) => _c.name !== c.name) &&
+        startingDeck.every((_c) => _c.name !== c.name) &&
         !c.effect.upgrade &&
         c.effect.description.toLowerCase().includes("gagne") &&
         c.effect.description.toLowerCase().includes("énergie"),
     ),
   );
 
-  deck = shuffle(deck, 3).map(
+  startingDeck = shuffle(startingDeck, 3).map(
     (c) => ({ ...c, state: "drawing" }) as GameCardInfo,
   );
 
-  const firstChoices: GameCardInfo[][] = [];
+  const startingChoices: GameCardInfo[][] = [];
 
   for (let i = 0; i < INITIAL_CHOICE_COUNT; i++) {
-    firstChoices.push(
+    startingChoices.push(
       shuffle(
         cards.filter(
           (c) =>
-            firstChoices.every((o) => o.every((_c) => _c.name !== c.name)) &&
-            deck.every((_c) => _c.name !== c.name) &&
+            startingChoices.every((o) => o.every((_c) => _c.name !== c.name)) &&
+            startingDeck.every((_c) => _c.name !== c.name) &&
             !c.effect.upgrade,
         ),
         5,
@@ -322,18 +333,18 @@ function generateInitialState(): Omit<
   }
 
   return {
-    choiceOptions: firstChoices,
+    choiceOptions: startingChoices,
     choiceOptionCount: INITIAL_CHOICE_OPTION_COUNT,
     logs: [],
-    notification: null,
+    notification: [],
     operationInProgress: [],
     score: 0,
     reason: null,
     isWon: false,
     isGameOver: false,
     infinityMode: false,
-    draw: deck.slice(MAX_HAND_SIZE - 2),
-    hand: deck.slice(0, MAX_HAND_SIZE - 2),
+    draw: startingDeck.slice(MAX_HAND_SIZE - 2),
+    hand: startingDeck.slice(0, MAX_HAND_SIZE - 2),
     discard: [],
     upgrades: [],
     cardModifiers: [["upgrade cost threshold", []]],
@@ -359,6 +370,8 @@ function cardGameMethods(
 ) {
   return {
     coinFlip: async (options) => {
+      bank.coinFlip.play();
+
       const state = getState();
 
       state.setOperationInProgress("coinFlip", true);
@@ -463,15 +476,29 @@ function cardGameMethods(
     },
 
     addNotification: async (text, className) => {
-      set({ notification: [text, className] });
+      const state = getState();
+
+      if (state.notification.length > 0) {
+        // todo: create useGameError et <GameError /> pour afficher les erreurs et m'envoyer un crash report par email
+        //  (tout en laissant la possibilité a l'utilisateur soit de continuer sa partie, soit de recommencer)
+        //  trigger l'erreur ici
+        console.error(
+          "Trying to add a notification while one is already displayed",
+          "Displayed notification:",
+          state.notification[0],
+          "New notification:",
+          [text, className],
+        );
+      }
+
+      set((state) => ({
+        notification: [[text, className] as const, ...state.notification],
+      }));
 
       await wait(2000);
 
       set((state) => ({
-        notification:
-          state.notification?.toString() === [text, className].toString()
-            ? null
-            : state.notification,
+        notification: state.notification.slice(1),
       }));
     },
 
@@ -1334,10 +1361,12 @@ useCardGame.subscribe(async (state, prevState) => {
   if (
     state.operationInProgress.join(",") !==
       prevState.operationInProgress.join("") &&
-    state.operationInProgress.length === 0
+    state.operationInProgress.length === 0 &&
+    state.choiceOptions.length === 0
   ) {
     // on vérifie les achievements
     await state.checkAchievements();
+    state.checkDiscoveries();
 
     // on vérifie si le jeu est fini
     if (!state.infinityMode && !state.isWon && state.money >= MONEY_TO_REACH) {

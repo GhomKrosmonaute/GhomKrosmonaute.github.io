@@ -16,7 +16,7 @@ export const EventNotifier = (props: { show: boolean }) => {
     !props.show ||
     !quality.transparency ||
     !quality.animations ||
-    !game.notification
+    game.notification.length === 0
   )
     return null;
 
@@ -26,7 +26,7 @@ export const EventNotifier = (props: { show: boolean }) => {
       {/* bande de gauche */}
       <div
         className={cn(
-          game.notification[1],
+          game.notification[0][1],
           "absolute animate-to-right rounded-r-full rounded-bl-full w-full h-[120px] opacity-50",
         )}
       />
@@ -34,7 +34,7 @@ export const EventNotifier = (props: { show: boolean }) => {
       {/* bande de droite */}
       <div
         className={cn(
-          game.notification[1],
+          game.notification[0][1],
           "absolute animate-to-left rounded-l-full rounded-tr-full w-full h-[120px] opacity-50",
         )}
       />
@@ -42,10 +42,10 @@ export const EventNotifier = (props: { show: boolean }) => {
       {/* texte de la notification */}
       <div
         className={cn(
-          game.notification[1],
+          game.notification[0][1],
           "bg-transparent font-changa italic animate-notification text-6xl w-fit h-fit text-center",
         )}
-        dangerouslySetInnerHTML={{ __html: game.notification[0] }}
+        dangerouslySetInnerHTML={{ __html: game.notification[0][0] }}
       />
     </div>
   );

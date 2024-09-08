@@ -28,15 +28,14 @@ export const GameActions = (props: { show: boolean }) => {
     <div
       id="actions"
       className={cn(
-        "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0",
+        "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 pointer-events-none",
         {
           "transition-opacity duration-500 ease-in-out": animation,
-          "opacity-100": props.show,
-          "pointer-events-none": !props.show,
+          "opacity-100 pointer-events-auto": props.show,
         },
       )}
     >
-      <div className="space-y-4 group/actions bg-background/80 p-2 rounded-xl">
+      <div className="space-y-4 group/actions bg-background/80 p-2 rounded-xl relative">
         <h2 className="text-3xl text-center">
           {game.choiceOptions.length > 0 ? (
             <>
@@ -52,7 +51,7 @@ export const GameActions = (props: { show: boolean }) => {
               )}{" "}
               {game.choiceOptions.length > 1 &&
                 !newSprint &&
-                `(${game.choiceOptions.length} restantes)`}
+                `(x${game.choiceOptions.length})`}
             </>
           ) : (
             "Actions"
@@ -94,22 +93,42 @@ export const GameActions = (props: { show: boolean }) => {
             Piocher une carte
           </Button>
         ) : (
-          (() => {
-            if (game.choiceOptions[0].length === 0) {
-              game.dangerouslyUpdate({
-                choiceOptions: game.choiceOptions.slice(1),
-              });
-            }
+          <>
+            <Button
+              className="flex gap-3 absolute right-2 -top-2"
+              onClick={async () => {
+                bank.play.play();
 
-            return (
-              <div className="flex justify-center">
-                {/*{JSON.stringify(game.choiceOptions[0])}*/}
-                {game.choiceOptions[0].map((option, i) => (
-                  <GameCard key={i} card={option} isChoice />
-                ))}
-              </div>
-            );
-          })()
+                await game.addEnergy(5, {
+                  reason: "Bouton passer",
+                  skipGameOverPause: true,
+                });
+
+                game.dangerouslyUpdate({
+                  choiceOptions: game.choiceOptions.slice(1),
+                });
+              }}
+            >
+              <GameValueIcon value={5} symbol miniature colors="bg-energy" />
+              Passer
+            </Button>
+            {(() => {
+              if (game.choiceOptions[0].length === 0) {
+                game.dangerouslyUpdate({
+                  choiceOptions: game.choiceOptions.slice(1),
+                });
+              }
+
+              return (
+                <div className="flex justify-center">
+                  {/*{JSON.stringify(game.choiceOptions[0])}*/}
+                  {game.choiceOptions[0].map((option, i) => (
+                    <GameCard key={i} card={option} isChoice />
+                  ))}
+                </div>
+              );
+            })()}
+          </>
         )}
       </div>
     </div>

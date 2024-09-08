@@ -343,7 +343,7 @@ const GameCardProject = (
 
   return (
     <div
-      className="group/image relative pointer-events-auto"
+      className="group/image relative"
       style={{
         transformStyle: perspective ? "preserve-3d" : "flat",
       }}

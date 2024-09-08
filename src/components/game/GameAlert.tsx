@@ -23,7 +23,7 @@ export const GameAlert = (props: { show?: boolean }) => {
   return (
     <div
       className={cn(
-        "absolute right-0 -translate-x-8 top-[60%] rotate-3 pointer-events-none",
+        "absolute right-0 -translate-x-8 top-[60%] rotate-3 pointer-events-none -translate-y-1/2",
         {
           "animate-pulse duration-700":
             quality.animations && quality.transparency,

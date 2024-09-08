@@ -120,8 +120,9 @@ const effects: Effect[] = (
         return (
           target &&
           target.name !== card.name &&
-          (!target.effect.condition ||
-            target.effect.condition(state, state.hand[state.hand.length - 1]))
+          target.state === "idle" &&
+          card.state === "idle" &&
+          (!target.effect.condition || target.effect.condition(state, target))
         );
       },
       type: "action",
