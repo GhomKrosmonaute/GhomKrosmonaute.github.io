@@ -1,25 +1,25 @@
 {
-  "tjm": 300,
+  "tjm": 500,
   "products": [
     {
       "name": "Portfolio",
       "description": "Site web simple, sans base de données",
-      "price": 200
+      "price": 500
     },
     {
       "name": "Site vitrine / Blog",
       "description": "Site web simple avec CMS",
-      "price": 500
+      "price": 800
     },
     {
       "name": "Bot Discord (Bot.ts)",
       "description": "Bot Discord simple avec mon framework",
-      "price": 50
+      "price": 100
     },
     {
       "name": "Bot Discord avancé",
       "description": "Bot Discord entièrement personnalisé",
-      "price": 200
+      "price": 300
     },
     {
       "name": "Jeu vidéo 2D",
@@ -30,11 +30,11 @@
   "hosting": [
     {
       "description": "Application web sans base de données",
-      "price": 3
+      "price": 4
     },
     {
       "description": "Application web avec base de données",
-      "price": 6
+      "price": 5
     }
   ]
 }

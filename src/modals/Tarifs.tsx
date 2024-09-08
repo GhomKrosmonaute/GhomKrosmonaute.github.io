@@ -42,8 +42,9 @@ export const Tarifs = () => {
             Contactez-moi !
           </Button>
           <p className="italic text-muted-foreground">
-            Les tarifs peuvent être redéfinis en fonction de la complexité du
-            projet.
+            Les tarifs exposés sont approximatifs et peuvent être redéfinis en
+            fonction de la complexité du projet lors du chiffrage du cahier des
+            charges.
           </p>
         </div>
       </div>

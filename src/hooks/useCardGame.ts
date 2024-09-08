@@ -377,98 +377,83 @@ function cardGameMethods(
     },
 
     advanceTime: async (energy: number) => {
-      const debugFloat = (float: number) => {
-        // return float;
-        return parseFloat(float.toFixed(1));
-      };
-
       if (energy < 0) return;
 
       const state = getState();
 
       state.setOperationInProgress("advanceTime", true);
 
-      const addedDays = debugFloat(
-        Math.max(ENERGY_TO_DAYS, energy * ENERGY_TO_DAYS),
-      );
+      const addedTime = Math.max(ENERGY_TO_DAYS, energy * ENERGY_TO_DAYS);
 
-      if (addedDays < ENERGY_TO_DAYS) {
+      if (addedTime < ENERGY_TO_DAYS) {
         throw new Error("Not enough energy to advance time");
       }
 
-      let previousFullDay = Math.floor(state.day);
+      let currentDay = Math.floor(state.day);
 
-      const after = debugFloat(state.day + addedDays);
+      const afterTime = state.day + addedTime;
 
-      // debugger;
+      const afterDay = Math.floor(afterTime);
 
-      for (
-        let day = state.day;
-        debugFloat(day) <= debugFloat(after);
-        day += ENERGY_TO_DAYS
-      ) {
-        if (previousFullDay !== Math.floor(day)) {
-          previousFullDay = Math.floor(day);
+      for (currentDay; currentDay < afterDay; currentDay++) {
+        const newSprint = currentDay % 7 === 0;
 
-          const newSprint = Math.floor(day) % 7 === 0;
+        set({
+          day: currentDay,
+          dayFull: true,
+          sprintFull: newSprint,
+        });
 
-          set({
-            day: debugFloat(day),
-            dayFull: true,
-            sprintFull: newSprint,
-          });
+        // on joue le son de la banque
+        bank.bell.play();
+        if (newSprint) bank.upgrade.play();
 
-          // on joue le son de la banque
-          bank.bell.play();
-          if (newSprint) bank.upgrade.play();
+        await state.addNotification(
+          newSprint
+            ? `Sprint ${Math.floor(currentDay / 7)}`
+            : `Jour ${currentDay}`,
+          newSprint
+            ? "bg-upgrade text-upgrade-foreground"
+            : "bg-day text-day-foreground",
+        );
 
-          await state.addNotification(
-            newSprint
-              ? `Sprint ${Math.floor(day / 7)}`
-              : `Jour ${Math.floor(day)}`,
-            newSprint
-              ? "bg-upgrade text-upgrade-foreground"
-              : "bg-day text-day-foreground",
-          );
+        await state.triggerEvent("daily");
 
-          await state.triggerEvent("daily");
-
-          set((state) => ({
-            dayFull: false,
-            choiceOptions: newSprint
-              ? state.choiceOptions
-              : [
-                  ...state.choiceOptions,
-                  generateChoiceOptions(getState(), {
-                    filter: (c) => !c.effect.upgrade,
-                  }),
-                ],
-          }));
-
-          if (newSprint) {
-            await state.triggerEvent("weekly");
-
-            const fullState = getState();
-
-            set((state) => ({
-              sprintFull: false,
-              choiceOptions: [
+        set((state) => ({
+          dayFull: false,
+          choiceOptions: newSprint
+            ? state.choiceOptions
+            : [
                 ...state.choiceOptions,
-                generateChoiceOptions(fullState, {
-                  filter: (c) => !c.effect.upgrade && c.type === "action",
-                }),
-                generateChoiceOptions(fullState, {
-                  filter: (c) => !!c.effect.upgrade,
+                generateChoiceOptions(getState(), {
+                  filter: (c) => !c.effect.upgrade,
                 }),
               ],
-            }));
-          }
+        }));
 
-          await wait(1000);
+        if (newSprint) {
+          await state.triggerEvent("weekly");
+
+          const fullState = getState();
+
+          set((state) => ({
+            sprintFull: false,
+            choiceOptions: [
+              ...state.choiceOptions,
+              generateChoiceOptions(fullState, {
+                filter: (c) => !c.effect.upgrade && c.type === "action",
+              }),
+              generateChoiceOptions(fullState, {
+                filter: (c) => !!c.effect.upgrade,
+              }),
+            ],
+          }));
         }
+
+        await wait(1000);
       }
 
-      set({ day: after, dayFull: null, sprintFull: null });
+      set({ day: afterTime, dayFull: null, sprintFull: null });
 
       state.setOperationInProgress("advanceTime", false);
     },
