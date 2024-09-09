@@ -1,3 +1,5 @@
+import React from "react";
+
 import { INFINITE_DRAW_COST, MAX_HAND_SIZE } from "@/game-constants.ts";
 
 import { cn } from "@/utils.ts";
@@ -16,7 +18,10 @@ export const GameActions = (props: { show: boolean }) => {
   const animation = useSettings((state) => state.animations);
 
   const runningOps = game.operationInProgress.length > 0;
-  const newSprint = Math.floor(game.day) % 7 === 0;
+  const newSprint = React.useMemo(
+    () => Math.floor(game.day) !== 0 && Math.floor(game.day) % 7 === 0,
+    [game.day],
+  );
 
   const disabled =
     game.energy + game.reputation < INFINITE_DRAW_COST ||
@@ -96,6 +101,7 @@ export const GameActions = (props: { show: boolean }) => {
           <>
             <Button
               className="flex gap-3 absolute right-2 -top-2"
+              disabled={runningOps}
               onClick={async () => {
                 bank.play.play();
 

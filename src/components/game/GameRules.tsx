@@ -212,9 +212,9 @@ export const GameRules = (props: { show: boolean }) => {
                 <ul className="flex flex-wrap gap-x-2">
                   {stats.achievements.length > 0
                     ? stats.achievements.map((achievement, i) => (
-                        <HoverCard openDelay={0} closeDelay={0}>
+                        <HoverCard openDelay={0} closeDelay={0} key={i}>
                           <HoverCardTrigger asChild>
-                            <li key={i}>{achievement}</li>
+                            <li>{achievement}</li>
                           </HoverCardTrigger>
                           <HoverCardContent className="pointer-events-none">
                             <h2 className="mb-2">{achievement}</h2>

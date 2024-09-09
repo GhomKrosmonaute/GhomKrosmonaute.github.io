@@ -348,7 +348,7 @@ function generateInitialState(): Omit<
     discard: [],
     upgrades: [],
     cardModifiers: [["upgrade cost threshold", []]],
-    day: 1,
+    day: 0,
     dayFull: false,
     sprintFull: false,
     energy: MAX_ENERGY,
@@ -407,10 +407,12 @@ function cardGameMethods(
       const afterDay = Math.floor(afterTime);
 
       for (currentDay; currentDay < afterDay; currentDay++) {
-        const newSprint = currentDay % 7 === 0;
+        const newSprint = currentDay !== 0 && (currentDay + 1) % 7 === 0;
+
+        // debugger;
 
         set({
-          day: currentDay,
+          day: currentDay + 1,
           dayFull: true,
           sprintFull: newSprint,
         });
@@ -421,8 +423,8 @@ function cardGameMethods(
 
         await state.addNotification(
           newSprint
-            ? `Sprint ${Math.floor(currentDay / 7)}`
-            : `Jour ${currentDay}`,
+            ? `Sprint ${Math.floor((currentDay + 1) / 7)}`
+            : `Jour ${currentDay + 1}`,
           newSprint
             ? "bg-upgrade text-upgrade-foreground"
             : "bg-day text-day-foreground",
@@ -567,15 +569,11 @@ function cardGameMethods(
         const addedEnergy = Math.min(count, state.energyMax - state.energy);
 
         if (addedEnergy > 0) {
-          bank.gain.play();
-
           state.addLog({
             value: addedEnergy,
             type: "energy",
             reason: options.reason,
           });
-
-          await wait();
         }
 
         set((state) => {
@@ -586,6 +584,10 @@ function cardGameMethods(
             ),
           };
         });
+
+        bank.gain.play();
+
+        await wait();
       } else if (count < 0) {
         const state = getState();
 
@@ -1116,14 +1118,9 @@ function cardGameMethods(
         }));
 
         if (!free) {
-          await Promise.all([
-            state.advanceTime(
-              needs === "money" ? cost / ENERGY_TO_MONEY : cost,
-            ),
-            needs === "money"
-              ? state.addMoney(-cost, { skipGameOverPause: true, reason })
-              : state.addEnergy(-cost, { skipGameOverPause: true, reason }),
-          ]);
+          await (needs === "money"
+            ? state.addMoney(-cost, { skipGameOverPause: true, reason })
+            : state.addEnergy(-cost, { skipGameOverPause: true, reason }));
         }
       } else {
         await cantPlay();
@@ -1134,7 +1131,7 @@ function cardGameMethods(
       // on joue le son de la banque
       bank.play.play();
 
-      const removing = willBeRemoved(state, card);
+      const removing = willBeRemoved(getState(), card);
 
       if (removing) {
         wait(200).then(() => bank.remove.play());
@@ -1177,14 +1174,16 @@ function cardGameMethods(
       };
 
       const effectManagement = async () => {
-        // si il ne s'agit que de pioche une carte, on attend avant de piocher
-        if (card.effect.waitBeforePlay) await wait();
-
         // on applique l'effet de la carte (toujours via eval)
-        await card.effect.onPlayed(state, card, reason);
+        await card.effect.onPlayed(getState(), card, reason);
       };
 
-      await Promise.all([cardManagement(), effectManagement()]);
+      if (card.effect.waitBeforePlay) {
+        await cardManagement();
+        await effectManagement();
+      } else {
+        await Promise.all([cardManagement(), effectManagement()]);
+      }
 
       await state.triggerEvent("onPlay");
 
@@ -1197,6 +1196,10 @@ function cardGameMethods(
         await state.triggerEvent("onEmptyHand");
         await state.drawCard(1, { reason });
       }
+
+      await state.advanceTime(
+        needs === "money" ? cost / ENERGY_TO_MONEY : cost,
+      );
 
       if (!options?.skipGameOverPause && isGameOver(getState())) {
         await wait(2000);
@@ -1381,6 +1384,7 @@ useCardGame.subscribe(async (state, prevState) => {
       }
     }
 
+    // todo: trouver un moyen de faire fonctionner les templates
     // const cardWithTemplate = state.hand.filter((card) => card.effect.template);
     // const changed: [string, string][] = [];
     //
