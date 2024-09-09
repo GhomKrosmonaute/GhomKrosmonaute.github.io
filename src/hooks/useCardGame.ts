@@ -39,6 +39,8 @@ import {
   shuffle,
   wait,
   willBeRemoved,
+  handleErrors,
+  handleErrorsAsync,
 } from "@/game-utils.ts";
 
 import { metadata } from "@/game-metadata.ts";
@@ -60,6 +62,8 @@ export interface CardGame {
 }
 
 export interface CardGameState {
+  error: Error | null;
+  throwError: (error: Error) => never;
   choiceOptionCount: number;
   choiceOptions: GameCardInfo[][];
   logs: GameLog[];
@@ -187,78 +191,90 @@ function cardGameStatsMethods(
 
   return {
     checkAchievements: async () => {
-      const state = getState();
+      await handleErrorsAsync(getState, async () => {
+        const state = getState();
 
-      for (const achievement of achievements) {
-        if (state.achievements.includes(achievement.name)) continue;
+        for (const achievement of achievements) {
+          if (state.achievements.includes(achievement.name)) continue;
 
-        if (achievement.unlockCondition(getState())) {
-          await state.addAchievement(achievement.name);
+          if (achievement.unlockCondition(getState())) {
+            await state.addAchievement(achievement.name);
+          }
         }
-      }
+      });
     },
 
     checkDiscoveries: () => {
-      const state = getState();
+      handleErrors(getState, () => {
+        const state = getState();
 
-      state.addDiscovery(
-        ...state.hand.map((c) => c.name),
-        ...state.draw.map((c) => c.name),
-        ...state.discard.map((c) => c.name),
-      );
+        state.addDiscovery(
+          ...state.hand.map((c) => c.name),
+          ...state.draw.map((c) => c.name),
+          ...state.discard.map((c) => c.name),
+        );
+      });
     },
 
     addDiscovery: (...names) => {
-      set((state) => {
-        return {
-          discoveries: Array.from(new Set([...state.discoveries, ...names])),
-        };
-      });
+      handleErrors(getState, () => {
+        set((state) => {
+          return {
+            discoveries: Array.from(new Set([...state.discoveries, ...names])),
+          };
+        });
 
-      updateLocalStorage();
+        updateLocalStorage();
+      });
     },
 
     addAchievement: async (name) => {
-      set((state) => {
-        return {
-          achievements: [...state.achievements, name],
-        };
+      await handleErrorsAsync(getState, async () => {
+        set((state) => {
+          return {
+            achievements: [...state.achievements, name],
+          };
+        });
+
+        bank.achievement.play();
+
+        await getState().addNotification(
+          `<span style="font-size: 32px">Succès dévérouillé</span><br/>${name}`,
+          "bg-primary text-primary-foreground text-center",
+        );
+
+        updateLocalStorage();
       });
-
-      bank.achievement.play();
-
-      await getState().addNotification(
-        `<span style="font-size: 32px">Succès dévérouillé</span><br/>${name}`,
-        "bg-primary text-primary-foreground text-center",
-      );
-
-      updateLocalStorage();
     },
 
     addWonGame: () => {
-      const state = getState();
+      handleErrors(getState, () => {
+        const state = getState();
 
-      set({
-        wonGames: state.wonGames + 1,
-        scoreAverage:
-          state.scoreAverage +
-          (state.score - state.scoreAverage) / (state.wonGames + 1),
-        totalMoney: state.totalMoney + state.money,
-        playedGames: state.playedGames + 1,
+        set({
+          wonGames: state.wonGames + 1,
+          scoreAverage:
+            state.scoreAverage +
+            (state.score - state.scoreAverage) / (state.wonGames + 1),
+          totalMoney: state.totalMoney + state.money,
+          playedGames: state.playedGames + 1,
+        });
+
+        updateLocalStorage();
       });
-
-      updateLocalStorage();
     },
 
     addPlayedGame: () => {
-      const state = getState();
+      handleErrors(getState, () => {
+        const state = getState();
 
-      set({
-        playedGames: state.playedGames + 1,
-        totalMoney: state.totalMoney + state.money,
+        set({
+          playedGames: state.playedGames + 1,
+          totalMoney: state.totalMoney + state.money,
+        });
+
+        updateLocalStorage();
       });
-
-      updateLocalStorage();
     },
   } satisfies Partial<CardGame>;
 }
@@ -333,6 +349,7 @@ function generateInitialState(): Omit<
   }
 
   return {
+    error: null,
     choiceOptions: startingChoices,
     choiceOptionCount: INITIAL_CHOICE_OPTION_COUNT,
     logs: [],
@@ -369,106 +386,117 @@ function cardGameMethods(
   getState: () => CardGameState & CardGame,
 ) {
   return {
+    throwError: (error: Error) => {
+      set({ error });
+      throw error;
+    },
+
     coinFlip: async (options) => {
-      bank.coinFlip.play();
+      await handleErrorsAsync(getState, async () => {
+        bank.coinFlip.play();
 
-      const state = getState();
+        const state = getState();
 
-      state.setOperationInProgress("coinFlip", true);
+        state.setOperationInProgress("coinFlip", true);
 
-      const result = Math.random() > 0.5;
+        const result = Math.random() > 0.5;
 
-      await Promise.all([
-        await state.addNotification(
-          result ? "Face" : "Pile",
-          "bg-background text-foreground",
-        ),
-        await options[result ? "onHead" : "onTail"](state),
-      ]);
+        await Promise.all([
+          await state.addNotification(
+            result ? "Face" : "Pile",
+            "bg-background text-foreground",
+          ),
+          await options[result ? "onHead" : "onTail"](state),
+        ]);
 
-      state.setOperationInProgress("coinFlip", false);
+        state.setOperationInProgress("coinFlip", false);
+      });
     },
 
     advanceTime: async (energy: number) => {
-      if (energy < 0) return;
+      await handleErrorsAsync(getState, async () => {
+        if (energy < 0) return;
 
-      const state = getState();
+        const state = getState();
 
-      state.setOperationInProgress("advanceTime", true);
+        state.setOperationInProgress("advanceTime", true);
 
-      const addedTime = Math.max(ENERGY_TO_DAYS, energy * ENERGY_TO_DAYS);
+        const addedTime = Math.max(ENERGY_TO_DAYS, energy * ENERGY_TO_DAYS);
 
-      if (addedTime < ENERGY_TO_DAYS) {
-        throw new Error("Not enough energy to advance time");
-      }
-
-      let currentDay = Math.floor(state.day);
-      const afterTime = state.day + addedTime;
-      const afterDay = Math.floor(afterTime);
-
-      for (currentDay; currentDay < afterDay; currentDay++) {
-        const newSprint = currentDay !== 0 && (currentDay + 1) % 7 === 0;
-
-        // debugger;
-
-        set({
-          day: currentDay + 1,
-          dayFull: true,
-          sprintFull: newSprint,
-        });
-
-        // on joue le son de la banque
-        bank.bell.play();
-        if (newSprint) bank.upgrade.play();
-
-        await state.addNotification(
-          newSprint
-            ? `Sprint ${Math.floor((currentDay + 1) / 7)}`
-            : `Jour ${currentDay + 1}`,
-          newSprint
-            ? "bg-upgrade text-upgrade-foreground"
-            : "bg-day text-day-foreground",
-        );
-
-        await state.triggerEvent("daily");
-
-        set((state) => ({
-          dayFull: false,
-          choiceOptions: newSprint
-            ? state.choiceOptions
-            : [
-                ...state.choiceOptions,
-                generateChoiceOptions(getState(), {
-                  filter: (c) => !c.effect.upgrade,
-                }),
-              ],
-        }));
-
-        if (newSprint) {
-          await state.triggerEvent("weekly");
-
-          const fullState = getState();
-
-          set((state) => ({
-            sprintFull: false,
-            choiceOptions: [
-              ...state.choiceOptions,
-              generateChoiceOptions(fullState, {
-                filter: (c) => !c.effect.upgrade && c.type === "action",
-              }),
-              generateChoiceOptions(fullState, {
-                filter: (c) => !!c.effect.upgrade,
-              }),
-            ],
-          }));
+        if (addedTime < ENERGY_TO_DAYS) {
+          state.throwError(
+            new Error(`Not enough energy to advance time: ${energy}`),
+          );
         }
 
-        await wait(1000);
-      }
+        let currentDay = Math.floor(state.day);
+        const afterTime = state.day + addedTime;
+        const afterDay = Math.floor(afterTime);
 
-      set({ day: afterTime, dayFull: null, sprintFull: null });
+        for (currentDay; currentDay < afterDay; currentDay++) {
+          const newSprint = currentDay !== 0 && (currentDay + 1) % 7 === 0;
 
-      state.setOperationInProgress("advanceTime", false);
+          // debugger;
+
+          set({
+            day: currentDay + 1,
+            dayFull: true,
+            sprintFull: newSprint,
+          });
+
+          // on joue le son de la banque
+          bank.bell.play();
+          if (newSprint) bank.upgrade.play();
+
+          await state.addNotification(
+            newSprint
+              ? `Sprint ${Math.floor((currentDay + 1) / 7)}`
+              : `Jour ${currentDay + 1}`,
+            newSprint
+              ? "bg-upgrade text-upgrade-foreground"
+              : "bg-day text-day-foreground",
+          );
+
+          await state.triggerEvent("daily");
+
+          set((state) => ({
+            dayFull: false,
+            choiceOptions: newSprint
+              ? state.choiceOptions
+              : [
+                  ...state.choiceOptions,
+                  generateChoiceOptions(getState(), {
+                    filter: (c) => !c.effect.upgrade,
+                  }),
+                ],
+          }));
+
+          if (newSprint) {
+            await state.triggerEvent("weekly");
+
+            const fullState = getState();
+
+            set((state) => ({
+              sprintFull: false,
+              choiceOptions: [
+                ...state.choiceOptions,
+                generateChoiceOptions(fullState, {
+                  filter: (c) => !c.effect.upgrade && c.type === "action",
+                }),
+                generateChoiceOptions(fullState, {
+                  filter: (c) => !!c.effect.upgrade,
+                }),
+              ],
+            }));
+          }
+
+          await wait(1000);
+        }
+
+        set({ day: afterTime, dayFull: null, sprintFull: null });
+
+        state.setOperationInProgress("advanceTime", false);
+      });
     },
 
     addLog: (log) => {
@@ -478,801 +506,834 @@ function cardGameMethods(
     },
 
     addNotification: async (text, className) => {
-      const state = getState();
+      await handleErrorsAsync(getState, async () => {
+        const state = getState();
 
-      if (state.notification.length > 0) {
-        // todo: create useGameError et <GameError /> pour afficher les erreurs et m'envoyer un crash report par email
-        //  (tout en laissant la possibilité a l'utilisateur soit de continuer sa partie, soit de recommencer)
-        //  trigger l'erreur ici
-        console.error(
-          "Trying to add a notification while one is already displayed",
-          "Displayed notification:",
-          state.notification[0],
-          "New notification:",
-          [text, className],
-        );
-      }
+        if (state.notification.length > 0) {
+          return state.throwError(
+            new Error(
+              `Trying to add a notification while one is already displayed: ${text} ${className}`,
+            ),
+          );
+        }
 
-      set((state) => ({
-        notification: [[text, className] as const, ...state.notification],
-      }));
+        set((state) => ({
+          notification: [[text, className] as const, ...state.notification],
+        }));
 
-      await wait(2000);
+        await wait(2000);
 
-      set((state) => ({
-        notification: state.notification.slice(1),
-      }));
+        set((state) => ({
+          notification: state.notification.slice(1),
+        }));
+      });
     },
 
     dangerouslyUpdate: (partial: Partial<CardGameState>) => set(partial),
 
     setOperationInProgress: (operation: string, value: boolean) => {
-      set((state) => ({
-        operationInProgress: value
-          ? [...state.operationInProgress, operation]
-          : state.operationInProgress.filter((op) => op !== operation),
-      }));
+      handleErrors(getState, () => {
+        set((state) => ({
+          operationInProgress: value
+            ? [...state.operationInProgress, operation]
+            : state.operationInProgress.filter((op) => op !== operation),
+        }));
+      });
     },
 
     updateScore: () => {
-      const state = getState();
+      handleErrors(getState, () => {
+        const state = getState();
 
-      // Coefficients de pondération pour chaque élément
-      const energyWeight = 1;
-      const reputationWeight = REPUTATION_TO_ENERGY;
-      const moneyWeight = 1 / ENERGY_TO_MONEY;
+        // Coefficients de pondération pour chaque élément
+        const energyWeight = 1;
+        const reputationWeight = REPUTATION_TO_ENERGY;
+        const moneyWeight = 1 / ENERGY_TO_MONEY;
 
-      // Calcul des points pour chaque élément
-      const energyPoints = state.energy * energyWeight;
-      const reputationPoints = state.reputation * reputationWeight;
-      const moneyPoints = state.money * moneyWeight;
+        // Calcul des points pour chaque élément
+        const energyPoints = state.energy * energyWeight;
+        const reputationPoints = state.reputation * reputationWeight;
+        const moneyPoints = state.money * moneyWeight;
 
-      // Calcul des points pour les améliorations
-      let upgradesPoints = 0;
-      state.upgrades.forEach((upgrade) => {
-        upgradesPoints +=
-          (typeof upgrade.cost === "string"
-            ? Number(upgrade.cost) / ENERGY_TO_MONEY
-            : upgrade.cost) * upgrade.cumul;
-      });
+        // Calcul des points pour les améliorations
+        let upgradesPoints = 0;
+        state.upgrades.forEach((upgrade) => {
+          upgradesPoints +=
+            (typeof upgrade.cost === "string"
+              ? Number(upgrade.cost) / ENERGY_TO_MONEY
+              : upgrade.cost) * upgrade.cumul;
+        });
 
-      // Calcul du multiplicateur en fonction des jours
-      let daysMultiplier = 1;
-      if (state.day <= 28) {
-        daysMultiplier = 2;
-      } else if (state.day <= 56) {
-        daysMultiplier = 1.5;
-      }
+        // Calcul du multiplicateur en fonction des jours
+        let daysMultiplier = 1;
+        if (state.day <= 28) {
+          daysMultiplier = 2;
+        } else if (state.day <= 56) {
+          daysMultiplier = 1.5;
+        }
 
-      // Calcul du multiplicateur en fonction de la difficulté
-      const difficultyMultiplier =
-        1 + (difficultyIndex[settings.difficulty] - 3) * 0.2; // Diff. 3 = x1, diff. 4 = x1.2, diff. 2 = x0.8, etc.
+        // Calcul du multiplicateur en fonction de la difficulté
+        const difficultyMultiplier =
+          1 + (difficultyIndex[settings.difficulty] - 3) * 0.2; // Diff. 3 = x1, diff. 4 = x1.2, diff. 2 = x0.8, etc.
 
-      // Calcul du score total
-      const baseScore =
-        energyPoints + reputationPoints + moneyPoints + upgradesPoints;
-      const finalScore = baseScore * daysMultiplier * difficultyMultiplier;
+        // Calcul du score total
+        const baseScore =
+          energyPoints + reputationPoints + moneyPoints + upgradesPoints;
+        const finalScore = baseScore * daysMultiplier * difficultyMultiplier;
 
-      const completion = state.money / MONEY_TO_REACH;
+        const completion = state.money / MONEY_TO_REACH;
 
-      set({
-        score: Math.round(finalScore * completion * 10),
+        set({
+          score: Math.round(finalScore * completion * 10),
+        });
       });
     },
 
     addEnergy: async (count, options) => {
-      const state = getState();
+      await handleErrorsAsync(getState, async () => {
+        const state = getState();
 
-      state.setOperationInProgress("energy", true);
+        state.setOperationInProgress("energy", true);
 
-      if (count > 0) {
-        const addedEnergy = Math.min(count, state.energyMax - state.energy);
+        if (count > 0) {
+          const addedEnergy = Math.min(count, state.energyMax - state.energy);
 
-        if (addedEnergy > 0) {
+          if (addedEnergy > 0) {
+            state.addLog({
+              value: addedEnergy,
+              type: "energy",
+              reason: options.reason,
+            });
+          }
+
+          set((state) => {
+            return {
+              energy: Math.max(
+                0,
+                Math.min(state.energyMax, state.energy + count),
+              ),
+            };
+          });
+
+          bank.gain.play();
+
+          await wait();
+        } else if (count < 0) {
+          const state = getState();
+
+          // on retire toute l'énergie et on puise dans la réputation pour le reste
+          const missingEnergy = Math.abs(count) - state.energy;
+          const consumedEnergy = Math.min(Math.abs(count), state.energy);
+
+          if (consumedEnergy > 0) {
+            state.addLog({
+              value: -consumedEnergy,
+              type: "energy",
+              reason: options.reason,
+            });
+          }
+
+          if (missingEnergy > 0) {
+            set({ energy: 0 });
+
+            await state.addReputation(-missingEnergy, options);
+          } else {
+            set((state) => {
+              return {
+                energy: state.energy + count,
+              };
+            });
+          }
+        }
+
+        state.setOperationInProgress("energy", false);
+      });
+    },
+
+    addMaxEnergy: async (count, options) => {
+      await handleErrorsAsync(getState, async () => {
+        if (count === 0) return;
+
+        const state = getState();
+
+        state.setOperationInProgress("maxEnergy", true);
+
+        set((state) => {
+          return {
+            energyMax: Math.max(0, state.energyMax + count),
+          };
+        });
+
+        if (count > 0) {
+          bank.powerUp.play();
+
+          await wait();
+
+          await state.addEnergy(count, options);
+        } else {
+          bank.loss.play();
+
+          await wait();
+
+          if (state.energy > state.energyMax) {
+            await state.addEnergy(state.energyMax - state.energy, options);
+          }
+        }
+
+        state.setOperationInProgress("maxEnergy", false);
+      });
+    },
+
+    addReputation: async (count, options) => {
+      await handleErrorsAsync(getState, async () => {
+        const state = getState();
+
+        state.setOperationInProgress("reputation", true);
+
+        // on joue le son de la banque
+        if (count === 10) bank.powerUp.play();
+        else if (count > 0) bank.gain.play();
+        else bank.loss.play();
+
+        if (count !== 0) {
           state.addLog({
-            value: addedEnergy,
-            type: "energy",
+            value: count,
+            type: "reputation",
             reason: options.reason,
           });
         }
 
         set((state) => {
           return {
-            energy: Math.max(
+            reputation: Math.max(
               0,
-              Math.min(state.energyMax, state.energy + count),
+              Math.min(MAX_REPUTATION, state.reputation + count),
             ),
           };
         });
 
-        bank.gain.play();
-
         await wait();
-      } else if (count < 0) {
-        const state = getState();
 
-        // on retire toute l'énergie et on puise dans la réputation pour le reste
-        const missingEnergy = Math.abs(count) - state.energy;
-        const consumedEnergy = Math.min(Math.abs(count), state.energy);
+        if (count < 0) await state.triggerEvent("onReputationDeclines");
 
-        if (consumedEnergy > 0) {
-          state.addLog({
-            value: -consumedEnergy,
-            type: "energy",
-            reason: options.reason,
-          });
+        if (!options?.skipGameOverPause && isGameOver(state)) {
+          await wait(2000);
         }
 
-        if (missingEnergy > 0) {
-          set({ energy: 0 });
-
-          await state.addReputation(-missingEnergy, options);
-        } else {
-          set((state) => {
-            return {
-              energy: state.energy + count,
-            };
-          });
-        }
-      }
-
-      state.setOperationInProgress("energy", false);
-    },
-
-    addMaxEnergy: async (count, options) => {
-      if (count === 0) return;
-
-      const state = getState();
-
-      state.setOperationInProgress("maxEnergy", true);
-
-      set((state) => {
-        return {
-          energyMax: Math.max(0, state.energyMax + count),
-        };
+        state.setOperationInProgress("reputation", false);
       });
-
-      if (count > 0) {
-        bank.powerUp.play();
-
-        await wait();
-
-        await state.addEnergy(count, options);
-      } else {
-        bank.loss.play();
-
-        await wait();
-
-        if (state.energy > state.energyMax) {
-          await state.addEnergy(state.energyMax - state.energy, options);
-        }
-      }
-
-      state.setOperationInProgress("maxEnergy", false);
-    },
-
-    addReputation: async (count, options) => {
-      const state = getState();
-
-      state.setOperationInProgress("reputation", true);
-
-      // on joue le son de la banque
-      if (count === 10) bank.powerUp.play();
-      else if (count > 0) bank.gain.play();
-      else bank.loss.play();
-
-      if (count !== 0) {
-        state.addLog({
-          value: count,
-          type: "reputation",
-          reason: options.reason,
-        });
-      }
-
-      set((state) => {
-        return {
-          reputation: Math.max(
-            0,
-            Math.min(MAX_REPUTATION, state.reputation + count),
-          ),
-        };
-      });
-
-      await wait();
-
-      if (count < 0) await state.triggerEvent("onReputationDeclines");
-
-      if (!options?.skipGameOverPause && isGameOver(state)) {
-        await wait(2000);
-      }
-
-      state.setOperationInProgress("reputation", false);
     },
 
     addMoney: async (count, options) => {
-      let state = getState();
+      await handleErrorsAsync(getState, async () => {
+        let state = getState();
 
-      state.setOperationInProgress("money", true);
+        state.setOperationInProgress("money", true);
 
-      if (count !== 0) {
-        state.addLog({
-          value: count,
-          type: "money",
-          reason: options?.reason,
+        if (count !== 0) {
+          state.addLog({
+            value: count,
+            type: "money",
+            reason: options?.reason,
+          });
+        }
+
+        if (count > 0) {
+          bank.cashing.play();
+
+          await wait();
+        }
+
+        set((state) => {
+          const money = state.money + count;
+
+          return { money };
         });
-      }
 
-      if (count > 0) {
-        bank.cashing.play();
+        state = getState();
 
-        await wait();
-      }
+        if (!options?.skipGameOverPause && state.money >= MONEY_TO_REACH) {
+          await wait(2000);
+        }
 
-      set((state) => {
-        const money = state.money + count;
-
-        return { money };
+        state.setOperationInProgress("money", false);
       });
-
-      state = getState();
-
-      if (!options?.skipGameOverPause && state.money >= MONEY_TO_REACH) {
-        await wait(2000);
-      }
-
-      state.setOperationInProgress("money", false);
     },
 
     upgrade: async (name) => {
-      const state = getState();
+      await handleErrorsAsync(getState, async () => {
+        const state = getState();
 
-      state.setOperationInProgress(`upgrade ${name}`, true);
+        state.setOperationInProgress(`upgrade ${name}`, true);
 
-      const rawUpgrade = upgrades.find((a) => a.name === name)!;
+        const rawUpgrade = upgrades.find((a) => a.name === name)!;
 
-      // on joue le son de la banque
-      bank.upgrade.play();
+        // on joue le son de la banque
+        bank.upgrade.play();
 
-      // si l'activité est déjà découverte, on augmente son cumul
-      if (state.upgrades.find((a) => a.name === name)) {
+        // si l'activité est déjà découverte, on augmente son cumul
+        if (state.upgrades.find((a) => a.name === name)) {
+          set((state) => {
+            return {
+              upgrades: state.upgrades.map((a) => {
+                if (a.name === name) {
+                  return { ...a, cumul: a.cumul + 1 };
+                }
+                return a;
+              }),
+            };
+          });
+        } else {
+          set((state) => {
+            return {
+              upgrades: [
+                ...state.upgrades,
+                {
+                  ...rawUpgrade,
+                  type: "upgrade",
+                  state: "appear",
+                  cumul: 1,
+                  max: rawUpgrade.max ?? Infinity,
+                },
+              ],
+            };
+          });
+        }
+
+        await wait();
+
+        // remet l'activité en idle
         set((state) => {
           return {
             upgrades: state.upgrades.map((a) => {
               if (a.name === name) {
-                return { ...a, cumul: a.cumul + 1 };
+                return { ...a, state: "idle" };
               }
               return a;
             }),
           };
         });
-      } else {
-        set((state) => {
-          return {
-            upgrades: [
-              ...state.upgrades,
-              {
-                ...rawUpgrade,
-                type: "upgrade",
-                state: "appear",
-                cumul: 1,
-                max: rawUpgrade.max ?? Infinity,
-              },
-            ],
-          };
-        });
-      }
 
-      await wait();
+        if (rawUpgrade.eventName === "onUpgradeThis") {
+          const upgrade = state.upgrades.find((a) => a.name === name)!;
+          await state.triggerUpgrade(name, { reason: upgrade });
+        }
 
-      // remet l'activité en idle
-      set((state) => {
-        return {
-          upgrades: state.upgrades.map((a) => {
-            if (a.name === name) {
-              return { ...a, state: "idle" };
-            }
-            return a;
-          }),
-        };
+        state.setOperationInProgress(`upgrade ${name}`, false);
       });
-
-      if (rawUpgrade.eventName === "onUpgradeThis") {
-        const upgrade = state.upgrades.find((a) => a.name === name)!;
-        await state.triggerUpgrade(name, { reason: upgrade });
-      }
-
-      state.setOperationInProgress(`upgrade ${name}`, false);
     },
 
     triggerUpgrade: async (name, options) => {
-      const state = getState();
-      const upgrade = state.upgrades.find((a) => a.name === name)!;
+      await handleErrorsAsync(getState, async () => {
+        const state = getState();
+        const upgrade = state.upgrades.find((a) => a.name === name)!;
 
-      if (!upgrade.condition || upgrade.condition(getState(), upgrade)) {
-        state.setOperationInProgress(`triggerUpgrade ${name}`, true);
+        if (!upgrade.condition || upgrade.condition(getState(), upgrade)) {
+          state.setOperationInProgress(`triggerUpgrade ${name}`, true);
 
-        // mettre l'activité en triggered
-        set({
-          upgrades: state.upgrades.map((a) => {
-            if (a.name === upgrade.name) {
-              return { ...a, state: "triggered" };
-            }
-            return a;
-          }),
-        });
+          // mettre l'activité en triggered
+          set({
+            upgrades: state.upgrades.map((a) => {
+              if (a.name === upgrade.name) {
+                return { ...a, state: "triggered" };
+              }
+              return a;
+            }),
+          });
 
-        await wait();
+          await wait();
 
-        await upgrade.onTrigger(
-          getState(),
-          upgrade,
-          options?.reason ?? upgrade,
-        );
+          await upgrade.onTrigger(
+            getState(),
+            upgrade,
+            options?.reason ?? upgrade,
+          );
 
-        // remettre l'activité en idle
-        set((state) => ({
-          upgrades: state.upgrades.map((a) => {
-            if (a.name === upgrade.name) {
-              return { ...a, state: "idle" };
-            }
-            return a;
-          }),
-        }));
+          // remettre l'activité en idle
+          set((state) => ({
+            upgrades: state.upgrades.map((a) => {
+              if (a.name === upgrade.name) {
+                return { ...a, state: "idle" };
+              }
+              return a;
+            }),
+          }));
 
-        state.setOperationInProgress(`triggerUpgrade ${name}`, false);
-      }
+          state.setOperationInProgress(`triggerUpgrade ${name}`, false);
+        }
+      });
     },
 
     triggerEvent: async (event) => {
-      const state = getState();
+      await handleErrorsAsync(getState, async () => {
+        const state = getState();
 
-      state.setOperationInProgress(`triggerUpgradeEvent ${event}`, true);
+        state.setOperationInProgress(`triggerUpgradeEvent ${event}`, true);
 
-      const upgrades = state.upgrades.filter(
-        (upgrade) => upgrade.eventName === event,
-      );
+        const upgrades = state.upgrades.filter(
+          (upgrade) => upgrade.eventName === event,
+        );
 
-      for (const upgrade of upgrades) {
-        await state.triggerUpgrade(upgrade.name, {
-          reason: upgrade,
-        });
-      }
+        for (const upgrade of upgrades) {
+          await state.triggerUpgrade(upgrade.name, {
+            reason: upgrade,
+          });
+        }
 
-      state.setOperationInProgress(`triggerUpgradeEvent ${event}`, false);
+        state.setOperationInProgress(`triggerUpgradeEvent ${event}`, false);
+      });
     },
 
     addCardModifier: async (name, params, options) => {
-      bank.powerUp.play();
+      await handleErrorsAsync(getState, async () => {
+        bank.powerUp.play();
 
-      const indice = [name, params] as unknown as CardModifierIndice;
+        const indice = [name, params] as unknown as CardModifierIndice;
 
-      set((state) => {
-        return {
-          cardModifiers: options?.before
-            ? [indice, ...state.cardModifiers]
-            : [...state.cardModifiers, indice],
-        };
+        set((state) => {
+          return {
+            cardModifiers: options?.before
+              ? [indice, ...state.cardModifiers]
+              : [...state.cardModifiers, indice],
+          };
+        });
       });
     },
 
     drawCard: async (count = 1, options) => {
-      let state = getState();
+      await handleErrorsAsync(getState, async () => {
+        let state = getState();
 
-      state.setOperationInProgress("draw", true);
+        state.setOperationInProgress("draw", true);
 
-      const fromKey = options?.fromDiscardPile ? "discard" : "draw";
+        const fromKey = options?.fromDiscardPile ? "discard" : "draw";
 
-      const hand = state.hand.slice();
-      const discard = state.discard.slice();
+        const hand = state.hand.slice();
+        const discard = state.discard.slice();
 
-      const from = state[fromKey].slice().filter((c) => {
-        if (options?.filter) return options.filter(c);
-        return true;
-      });
+        const from = state[fromKey].slice().filter((c) => {
+          if (options?.filter) return options.filter(c);
+          return true;
+        });
 
-      const drawn: string[] = [];
+        const drawn: string[] = [];
 
-      let handAdded = false;
+        let handAdded = false;
 
-      for (let i = 0; i < count; i++) {
-        if (from.length === 0) {
-          break;
+        for (let i = 0; i < count; i++) {
+          if (from.length === 0) {
+            break;
+          }
+
+          const card = from.pop()!;
+
+          card.state = "drawing";
+
+          drawn.push(card.name);
+
+          if (hand.length < MAX_HAND_SIZE) {
+            hand.push(card);
+            handAdded = true;
+          }
         }
 
-        const card = from.pop()!;
-
-        card.state = "drawing";
-
-        drawn.push(card.name);
-
-        if (hand.length < MAX_HAND_SIZE) {
-          hand.push(card);
-          handAdded = true;
+        if (handAdded) {
+          if (fromKey === "draw") bank.draw.play();
+          else bank.recycle.play();
         }
-      }
 
-      if (handAdded) {
-        if (fromKey === "draw") bank.draw.play();
-        else bank.recycle.play();
-      }
+        set({
+          hand,
+          discard,
+          [fromKey]: shuffle(
+            state[fromKey].filter((c) => !drawn.includes(c.name)),
+            2,
+          ),
+        });
 
-      set({
-        hand,
-        discard,
-        [fromKey]: shuffle(
-          state[fromKey].filter((c) => !drawn.includes(c.name)),
-          2,
-        ),
+        await wait();
+
+        // on passe la main en idle
+        set((state) => ({
+          hand: state.hand.map((c) => {
+            return { ...c, state: "idle" };
+          }),
+        }));
+
+        await state.triggerEvent("onDraw");
+
+        state = getState();
+
+        if (!options?.skipGameOverPause && isGameOver(state)) {
+          await wait(2000);
+        }
+
+        state.setOperationInProgress("draw", false);
       });
-
-      await wait();
-
-      // on passe la main en idle
-      set((state) => ({
-        hand: state.hand.map((c) => {
-          return { ...c, state: "idle" };
-        }),
-      }));
-
-      await state.triggerEvent("onDraw");
-
-      state = getState();
-
-      if (!options?.skipGameOverPause && isGameOver(state)) {
-        await wait(2000);
-      }
-
-      state.setOperationInProgress("draw", false);
     },
 
     discardCard: async (options) => {
-      const toKey = options?.toDraw ? "draw" : "discard";
+      await handleErrorsAsync(getState, async () => {
+        const toKey = options?.toDraw ? "draw" : "discard";
 
-      // on joue le son de la banque
-      bank.drop.play();
+        // on joue le son de la banque
+        bank.drop.play();
 
-      const state = getState();
+        const state = getState();
 
-      state.setOperationInProgress("discard", true);
+        state.setOperationInProgress("discard", true);
 
-      const hand = state.hand
-        .slice()
-        .filter(
-          (c) =>
-            c.state !== "playing" && (!options?.filter || options.filter(c)),
-        );
+        const hand = state.hand
+          .slice()
+          .filter(
+            (c) =>
+              c.state !== "playing" && (!options?.filter || options.filter(c)),
+          );
 
-      const dropped = options?.random
-        ? [hand[Math.floor(Math.random() * state.hand.length)]]
-        : hand;
+        const dropped = options?.random
+          ? [hand[Math.floor(Math.random() * state.hand.length)]]
+          : hand;
 
-      // on active l'animation de retrait des cartes
-      set({
-        hand: state.hand.map((c) => {
-          if (dropped.some((d) => d.name === c.name)) {
-            return { ...c, state: "discarding" };
-          }
-          return c;
-        }),
-      });
-
-      // on attend la fin de l'animation
-      await wait();
-
-      // les cartes retournent dans le deck et on vide la main
-      set((state) => ({
-        [toKey]: shuffle(
-          [
-            ...state.hand
-              .filter((c) => dropped.some((d) => d.name === c.name))
-              .map((c) => ({ ...c, state: null })),
-            ...state[toKey],
-          ],
-          2,
-        ),
-        hand: state.hand.filter((c) => !dropped.some((d) => d.name === c.name)),
-      }));
-
-      state.setOperationInProgress("discard", false);
-    },
-
-    removeCard: async (name) => {
-      const state = getState();
-
-      state.setOperationInProgress(`removeCard ${name}`, true);
-
-      if (state.hand.some((c) => c.name === name)) {
-        // on active l'animation de suppression de la carte
+        // on active l'animation de retrait des cartes
         set({
           hand: state.hand.map((c) => {
-            if (c.name === name) {
-              return { ...c, state: "removing" };
+            if (dropped.some((d) => d.name === c.name)) {
+              return { ...c, state: "discarding" };
             }
             return c;
           }),
         });
 
-        bank.remove.play();
-
         // on attend la fin de l'animation
-        await wait(1000);
-      }
+        await wait();
 
-      // on retire la carte de la main, du deck et de la défausse
+        // les cartes retournent dans le deck et on vide la main
+        set((state) => ({
+          [toKey]: shuffle(
+            [
+              ...state.hand
+                .filter((c) => dropped.some((d) => d.name === c.name))
+                .map((c) => ({ ...c, state: null })),
+              ...state[toKey],
+            ],
+            2,
+          ),
+          hand: state.hand.filter(
+            (c) => !dropped.some((d) => d.name === c.name),
+          ),
+        }));
 
-      const from = ["discard", "draw", "hand"] as const;
+        state.setOperationInProgress("discard", false);
+      });
+    },
 
-      set((state) => ({
-        ...from.reduce((acc, key) => {
-          return {
-            ...acc,
-            [key]: state[key].filter((c) => c.name !== name),
-          };
-        }, {} as Partial<CardGameState>),
-      }));
+    removeCard: async (name) => {
+      await handleErrorsAsync(getState, async () => {
+        const state = getState();
 
-      state.setOperationInProgress(`removeCard ${name}`, false);
+        state.setOperationInProgress(`removeCard ${name}`, true);
+
+        if (state.hand.some((c) => c.name === name)) {
+          // on active l'animation de suppression de la carte
+          set({
+            hand: state.hand.map((c) => {
+              if (c.name === name) {
+                return { ...c, state: "removing" };
+              }
+              return c;
+            }),
+          });
+
+          bank.remove.play();
+
+          // on attend la fin de l'animation
+          await wait(1000);
+        }
+
+        // on retire la carte de la main, du deck et de la défausse
+
+        const from = ["discard", "draw", "hand"] as const;
+
+        set((state) => ({
+          ...from.reduce((acc, key) => {
+            return {
+              ...acc,
+              [key]: state[key].filter((c) => c.name !== name),
+            };
+          }, {} as Partial<CardGameState>),
+        }));
+
+        state.setOperationInProgress(`removeCard ${name}`, false);
+      });
     },
 
     /**
      * Place des cartes de la défausse dans le deck
      */
     recycleCard: async (count = 1) => {
-      if (count <= 0) return;
+      await handleErrorsAsync(getState, async () => {
+        if (count <= 0) return;
 
-      const state = getState();
+        const state = getState();
 
-      if (state.discard.length === 0) return;
+        if (state.discard.length === 0) return;
 
-      state.setOperationInProgress("recycle", true);
+        state.setOperationInProgress("recycle", true);
 
-      // on joue le son de la banque
-      bank.recycle.play();
+        // on joue le son de la banque
+        bank.recycle.play();
 
-      const from = state.discard.slice();
-      const to = state.draw.slice();
+        const from = state.discard.slice();
+        const to = state.draw.slice();
 
-      const recycled: string[] = [];
+        const recycled: string[] = [];
 
-      for (let i = 0; i < count; i++) {
-        if (from.length === 0) {
-          break;
+        for (let i = 0; i < count; i++) {
+          if (from.length === 0) {
+            break;
+          }
+
+          const card = from.pop()!;
+
+          recycled.push(card.name);
+          to.push(card);
         }
 
-        const card = from.pop()!;
+        await wait();
 
-        recycled.push(card.name);
-        to.push(card);
-      }
+        set({
+          draw: shuffle(to),
+          discard: state.discard.filter((c) => !recycled.includes(c.name)),
+        });
 
-      await wait();
-
-      set({
-        draw: shuffle(to),
-        discard: state.discard.filter((c) => !recycled.includes(c.name)),
+        state.setOperationInProgress("recycle", false);
       });
-
-      state.setOperationInProgress("recycle", false);
     },
 
     playCard: async (card, options) => {
-      const free = !!options?.free;
+      await handleErrorsAsync(getState, async () => {
+        const free = !!options?.free;
 
-      let state = getState();
+        let state = getState();
 
-      const reason = options?.reason ?? card;
+        const reason = options?.reason ?? card;
 
-      const cantPlay = async () => {
-        // jouer le son de la banque
-        bank.unauthorized.play();
+        const cantPlay = async () => {
+          // jouer le son de la banque
+          bank.unauthorized.play();
 
-        // activer l'animation can't play
-        set({
-          hand: state.hand.map((c) => {
-            if (c.name === card.name) {
-              return { ...c, state: "unauthorized" };
-            }
-            return c;
-          }),
-        });
+          // activer l'animation can't play
+          set({
+            hand: state.hand.map((c) => {
+              if (c.name === card.name) {
+                return { ...c, state: "unauthorized" };
+              }
+              return c;
+            }),
+          });
 
-        // on attend la fin de l'animation
-        await wait();
+          // on attend la fin de l'animation
+          await wait();
 
-        // on remet la carte en idle
-        set({
-          hand: state.hand.map((c) => {
-            if (c.name === card.name) {
-              return { ...c, state: "idle" };
-            }
-            return c;
-          }),
-        });
-      };
+          // on remet la carte en idle
+          set({
+            hand: state.hand.map((c) => {
+              if (c.name === card.name) {
+                return { ...c, state: "idle" };
+              }
+              return c;
+            }),
+          });
+        };
 
-      // on vérifie la condition s'il y en a une (eval(effect.condition))
-      if (card.effect.condition && !card.effect.condition(state, card)) {
-        await cantPlay();
+        // on vérifie la condition s'il y en a une (eval(effect.condition))
+        if (card.effect.condition && !card.effect.condition(state, card)) {
+          await cantPlay();
 
-        return;
-      }
-
-      const { needs, cost, appliedModifiers } = parseCost(state, card, []);
-
-      if (
-        free ||
-        Number(card.effect.cost) === 0 ||
-        (needs === "money"
-          ? state.money >= cost
-          : state.reputation + state.energy >= cost)
-      ) {
-        state.setOperationInProgress(`play ${card.name}`, true);
-
-        set((state) => ({
-          hand: state.hand.map((c) => {
-            if (c.name === card.name) {
-              return { ...c, state: "selected" };
-            }
-            return c;
-          }),
-        }));
-
-        if (!free) {
-          await (needs === "money"
-            ? state.addMoney(-cost, { skipGameOverPause: true, reason })
-            : state.addEnergy(-cost, { skipGameOverPause: true, reason }));
+          return;
         }
-      } else {
-        await cantPlay();
 
-        return;
-      }
+        const { needs, cost, appliedModifiers } = parseCost(state, card, []);
 
-      // on joue le son de la banque
-      bank.play.play();
+        if (
+          free ||
+          Number(card.effect.cost) === 0 ||
+          (needs === "money"
+            ? state.money >= cost
+            : state.reputation + state.energy >= cost)
+        ) {
+          state.setOperationInProgress(`play ${card.name}`, true);
 
-      const removing = willBeRemoved(getState(), card);
+          set((state) => ({
+            hand: state.hand.map((c) => {
+              if (c.name === card.name) {
+                return { ...c, state: "selected" };
+              }
+              return c;
+            }),
+          }));
 
-      if (removing) {
-        wait(200).then(() => bank.remove.play());
-      }
+          if (!free) {
+            await (needs === "money"
+              ? state.addMoney(-cost, { skipGameOverPause: true, reason })
+              : state.addEnergy(-cost, { skipGameOverPause: true, reason }));
+          }
+        } else {
+          await cantPlay();
 
-      const cardManagement = async () => {
-        // on active l'animation de retrait de la carte
-        set((state) => ({
-          hand: state.hand.map((c) => {
-            if (c.name === card.name) {
-              return {
-                ...c,
-                state: removing ? "removing" : "playing",
-              };
-            }
-            return c;
-          }),
-        }));
+          return;
+        }
 
-        // on attend la fin de l'animation
-        await wait(removing ? 1000 : undefined);
+        // on joue le son de la banque
+        bank.play.play();
 
-        // la carte va dans la défausse et on retire la carte de la main
-        set((state) => ({
-          discard: removing
-            ? state.discard
-            : shuffle([{ ...card, state: null }, ...state.discard], 3),
-          hand: state.hand.filter((c) => c.name !== card.name),
-          cardModifiers: state.cardModifiers.filter((indice) => {
-            const modifier = reviveCardModifier(indice);
+        const removing = willBeRemoved(getState(), card);
 
-            return (
-              // s'il n'est pas unique
-              !modifier.once ||
-              // sinon s'il a été appliqué
-              !appliedModifiers.some((m) => m.toString() === indice.toString())
-            );
-          }),
-        }));
-      };
+        if (removing) {
+          wait(200).then(() => bank.remove.play());
+        }
 
-      const effectManagement = async () => {
-        // on applique l'effet de la carte (toujours via eval)
-        await card.effect.onPlayed(getState(), card, reason);
-      };
+        const cardManagement = async () => {
+          // on active l'animation de retrait de la carte
+          set((state) => ({
+            hand: state.hand.map((c) => {
+              if (c.name === card.name) {
+                return {
+                  ...c,
+                  state: removing ? "removing" : "playing",
+                };
+              }
+              return c;
+            }),
+          }));
 
-      if (card.effect.waitBeforePlay) {
-        await cardManagement();
-        await effectManagement();
-      } else {
-        await Promise.all([cardManagement(), effectManagement()]);
-      }
+          // on attend la fin de l'animation
+          await wait(removing ? 1000 : undefined);
 
-      await state.triggerEvent("onPlay");
+          // la carte va dans la défausse et on retire la carte de la main
+          set((state) => ({
+            discard: removing
+              ? state.discard
+              : shuffle([{ ...card, state: null }, ...state.discard], 3),
+            hand: state.hand.filter((c) => c.name !== card.name),
+            cardModifiers: state.cardModifiers.filter((indice) => {
+              const modifier = reviveCardModifier(indice);
 
-      // on vérifie si la main est vide
-      // si la main est vide, on pioche
+              return (
+                // s'il n'est pas unique
+                !modifier.once ||
+                // sinon s'il a été appliqué
+                !appliedModifiers.some(
+                  (m) => m.toString() === indice.toString(),
+                )
+              );
+            }),
+          }));
+        };
 
-      state = getState();
+        const effectManagement = async () => {
+          // on applique l'effet de la carte (toujours via eval)
+          await card.effect.onPlayed(getState(), card, reason);
+        };
 
-      if (state.hand.length === 0) {
-        await state.triggerEvent("onEmptyHand");
-        await state.drawCard(1, { reason });
-      }
+        if (card.effect.waitBeforePlay) {
+          await cardManagement();
+          await effectManagement();
+        } else {
+          await Promise.all([cardManagement(), effectManagement()]);
+        }
 
-      await state.advanceTime(
-        needs === "money" ? cost / ENERGY_TO_MONEY : cost,
-      );
+        await state.triggerEvent("onPlay");
 
-      if (!options?.skipGameOverPause && isGameOver(getState())) {
-        await wait(2000);
-      }
+        // on vérifie si la main est vide
+        // si la main est vide, on pioche
 
-      state.setOperationInProgress(`play ${card.name}`, false);
+        state = getState();
+
+        if (state.hand.length === 0) {
+          await state.triggerEvent("onEmptyHand");
+          await state.drawCard(1, { reason });
+        }
+
+        await state.advanceTime(
+          needs === "money" ? cost / ENERGY_TO_MONEY : cost,
+        );
+
+        if (!options?.skipGameOverPause && isGameOver(getState())) {
+          await wait(2000);
+        }
+
+        state.setOperationInProgress(`play ${card.name}`, false);
+      });
     },
 
     pickCard: async (card) => {
-      const state = getState();
+      await handleErrorsAsync(getState, async () => {
+        const state = getState();
 
-      state.setOperationInProgress(`pick ${card.name}`, true);
+        state.setOperationInProgress(`pick ${card.name}`, true);
 
-      // on joue le son de la banque
-      bank.gain.play();
-      if (state.choiceOptions[0].length > 1) bank.remove.play();
+        // on joue le son de la banque
+        bank.gain.play();
+        if (state.choiceOptions[0].length > 1) bank.remove.play();
 
-      // on active les animations
-      set({
-        choiceOptions: state.choiceOptions.map((options) => {
-          return options.map((c) => {
-            if (c.name === card.name) {
-              return { ...c, state: "playing" };
-            }
-            return { ...c, state: "removing" };
-          });
-        }),
+        // on active les animations
+        set({
+          choiceOptions: state.choiceOptions.map((options) => {
+            return options.map((c) => {
+              if (c.name === card.name) {
+                return { ...c, state: "playing" };
+              }
+              return { ...c, state: "removing" };
+            });
+          }),
+        });
+
+        await Promise.all([
+          (async () => {
+            // on attend la fin de l'animation "played"
+
+            await wait();
+
+            // on retire l'animation de "played" et on ajoute la carte à la pioche
+
+            set((state) => ({
+              choiceOptions: state.choiceOptions.map((options) => {
+                return options.map((c) => {
+                  if (c.name === card.name) return { ...c, state: "removed" };
+                  else return c;
+                });
+              }),
+            }));
+          })(),
+          (async () => {
+            // on attend la fin de l'animation "removed"
+
+            await wait(1000);
+
+            // on retire l'animation de "removed"
+
+            set((state) => ({
+              choiceOptions: state.choiceOptions.map((options) => {
+                return options.map((c) => {
+                  return { ...c, state: null };
+                });
+              }),
+            }));
+          })(),
+        ]);
+
+        // on retire un groupe de choix
+
+        set((state) => {
+          return {
+            choiceOptions: state.choiceOptions.slice(1),
+            draw: shuffle([...state.draw, { ...card, state: null }], 3),
+          };
+        });
+
+        state.setOperationInProgress(`pick ${card.name}`, false);
       });
-
-      await Promise.all([
-        (async () => {
-          // on attend la fin de l'animation "played"
-
-          await wait();
-
-          // on retire l'animation de "played" et on ajoute la carte à la pioche
-
-          set((state) => ({
-            choiceOptions: state.choiceOptions.map((options) => {
-              return options.map((c) => {
-                if (c.name === card.name) return { ...c, state: "removed" };
-                else return c;
-              });
-            }),
-          }));
-        })(),
-        (async () => {
-          // on attend la fin de l'animation "removed"
-
-          await wait(1000);
-
-          // on retire l'animation de "removed"
-
-          set((state) => ({
-            choiceOptions: state.choiceOptions.map((options) => {
-              return options.map((c) => {
-                return { ...c, state: null };
-              });
-            }),
-          }));
-        })(),
-      ]);
-
-      // on retire un groupe de choix
-
-      set((state) => {
-        return {
-          choiceOptions: state.choiceOptions.slice(1),
-          draw: shuffle([...state.draw, { ...card, state: null }], 3),
-        };
-      });
-
-      state.setOperationInProgress(`pick ${card.name}`, false);
     },
 
     win: () => {
@@ -1330,6 +1391,7 @@ useCardGame.subscribe(async (state, prevState) => {
     "save",
     JSON.stringify(
       {
+        error: state.error,
         choiceOptions: state.choiceOptions,
         choiceOptionCount: state.choiceOptionCount,
         draw: state.draw,

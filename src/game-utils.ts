@@ -22,6 +22,32 @@ import effects from "@/data/effects.ts";
 import upgrades from "@/data/upgrades.ts";
 import cards from "@/data/cards.ts";
 
+export function handleErrors(
+  getState: () => {
+    throwError: (error: Error) => void;
+  },
+  cb: () => void,
+) {
+  try {
+    cb();
+  } catch (error) {
+    getState().throwError(error as Error);
+  }
+}
+
+export async function handleErrorsAsync(
+  getState: () => {
+    throwError: (error: Error) => void;
+  },
+  cb: () => Promise<void>,
+) {
+  try {
+    await cb();
+  } catch (error) {
+    getState().throwError(error as Error);
+  }
+}
+
 interface ChoiceOptionsGeneratorOptions {
   exclude?: GameCardInfo[];
   filter?: (card: GameCardInfo, state: CardGameState) => boolean;

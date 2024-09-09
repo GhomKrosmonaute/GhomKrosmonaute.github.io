@@ -1,0 +1,12 @@
+{
+  "email": "camille.abella@proton.me",
+  "number": "+33 6 71 31 13 56",
+  "name": "Camille Abella",
+  "siret": "979 392 164 00013",
+  "address": {
+    "street": "5 Rue Agusanum",
+    "city": "Saint-Estève",
+    "zip": "66240",
+    "country": "France"
+  }
+}

@@ -10,8 +10,17 @@ export const GameDebugActions = () => {
   const runningOps = game.operationInProgress.length > 0;
 
   return (
-    <div className="group-hover/debug:block hidden space-y-4">
+    <div className="group-hover/debug:grid hidden grid-cols-2 gap-1 *:mx-auto">
       <Button
+        size="cta"
+        onClick={() => {
+          game.dangerouslyUpdate({ error: new Error("Test d'erreur") });
+        }}
+      >
+        Déclencher une erreur
+      </Button>
+      <Button
+        size="cta"
         onClick={() =>
           game.addNotification(
             "<span style='font-size: 32px'>Test d'une notif</span><br/>Une notification",
@@ -22,16 +31,18 @@ export const GameDebugActions = () => {
         Déclencher une notification
       </Button>
       <Button
+        size="cta"
         disabled={runningOps}
         onClick={async () => {
-          const day = 0.5;
+          const day = 1;
           const energy = Math.round(day / ENERGY_TO_DAYS);
           await game.advanceTime(energy);
         }}
       >
-        Ajouter 12h
+        Ajouter 1 jour
       </Button>
       <Button
+        size="cta"
         disabled={runningOps}
         className="text-upgrade"
         onClick={async () => {
@@ -52,6 +63,7 @@ export const GameDebugActions = () => {
         Toutes les améliorations
       </Button>
       <Button
+        size="cta"
         disabled={runningOps || game.hand.length === 0}
         onClick={() => game.removeCard(game.hand[0]?.name)}
       >
