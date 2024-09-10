@@ -1,10 +1,10 @@
 import React from "react";
-import { useGlobalState } from "@/hooks/useGlobalState.ts";
 import { TutorialOpaque } from "./TutorialOpaque";
 import { Progress } from "@/components/ui/progress.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import Forward from "@/assets/icons/forward.svg";
 import { bank } from "@/sound.ts";
+import { useSettings } from "@/hooks/useSettings.ts";
 
 export interface TutorialStep {
   id: string;
@@ -55,8 +55,8 @@ export const TutorialPrivateContext =
   React.createContext<TutorialPrivateContextType | null>(null);
 
 export const TutorialProvider = ({ steps, children, opaqueStyle }: Props) => {
-  const finishTutorial = useGlobalState(
-    (state) => () => state.setTutorial(false),
+  const finishTutorial = useSettings(
+    (state) => () => state.updateTutorial(false),
   );
 
   const [index, setIndex] = React.useState<number | null>(null);

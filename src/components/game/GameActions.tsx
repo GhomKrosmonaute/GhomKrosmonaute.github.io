@@ -46,7 +46,7 @@ export const GameActions = (props: { show: boolean }) => {
 
     if (
       game.choiceOptions.length > 0 &&
-      game.operationInProgress.includes("choices")
+      !game.operationInProgress.includes("choices")
     ) {
       game.setOperationInProgress("choices", true);
     }

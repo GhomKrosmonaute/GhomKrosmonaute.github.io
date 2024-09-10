@@ -367,7 +367,7 @@ function generateGameState(): Omit<
     choiceOptionCount: INITIAL_CHOICE_OPTION_COUNT,
     logs: [],
     notification: [],
-    operationInProgress: [],
+    operationInProgress: ["choices"],
     score: 0,
     reason: null,
     isWon: false,

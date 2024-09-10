@@ -81,13 +81,13 @@ export const GameCard = (
           [cn({
             "-translate-y-14": props.card.state === "selected",
             "hover:-translate-y-14": props.card.state !== "removing",
+            grayscale:
+              notAllowed ||
+              game.isGameOver ||
+              !game.parsedCost.canBeBuy ||
+              !game.canTriggerEffect,
             // "translate-y-8": !canTriggerEffect || !haveEnoughResources,
           })]: !props.isChoice,
-          grayscale:
-            notAllowed ||
-            game.isGameOver ||
-            !game.parsedCost.canBeBuy ||
-            !game.canTriggerEffect,
         },
       )}
       onClick={async () => {
