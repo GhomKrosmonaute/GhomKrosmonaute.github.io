@@ -108,6 +108,12 @@ export type GameLog = {
   reason: GameCardInfo | Upgrade | string;
 };
 
+export type GameNotification = {
+  header?: string;
+  message: string;
+  className: ColorClass;
+};
+
 export type MethodWhoCheckIfGameOver = {
   skipGameOverPause?: boolean;
 };

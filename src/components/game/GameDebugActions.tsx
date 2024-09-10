@@ -22,10 +22,11 @@ export const GameDebugActions = () => {
       <Button
         size="cta"
         onClick={() =>
-          game.addNotification(
-            "<span style='font-size: 32px'>Test d'une notif</span><br/>Une notification",
-            "bg-background text-foreground",
-          )
+          game.addNotification({
+            header: "Test de notif",
+            message: "Une notification",
+            className: "bg-background text-foreground",
+          })
         }
       >
         Déclencher une notification

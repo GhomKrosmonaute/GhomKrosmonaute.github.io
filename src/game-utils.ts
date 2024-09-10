@@ -70,6 +70,10 @@ export function generateChoiceOptions(
 
   const _cards = state.cards.filter(
     (card) =>
+      (state.choiceOptions.length === 0 ||
+        state.choiceOptions.every(
+          (o) => o.length === 0 || o.every((i) => i[0] !== card.name),
+        )) &&
       (state.draw.length === 0 ||
         state.draw.every((name) => name !== card.name)) &&
       (state.discard.length === 0 ||
@@ -121,6 +125,10 @@ export function energyCostColor(
     : state.energy > 0
       ? ["bg-energy", "bg-reputation"]
       : "bg-reputation";
+}
+
+export function isGameWon(state: GameState): boolean {
+  return !state.infinityMode && !state.isWon && state.money >= MONEY_TO_REACH;
 }
 
 export function isGameOver(state: GameState): GameOverReason | false {

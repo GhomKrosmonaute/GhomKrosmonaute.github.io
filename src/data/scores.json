@@ -1,5 +1,10 @@
 [
   {
+    "name": "Mel Andrew",
+    "score": 121190,
+    "mode": "normal"
+  },
+  {
     "name": "Ghom",
     "score": 3444,
     "mode": "easy"
@@ -12,16 +17,6 @@
   {
     "name": "Placeholder",
     "score": 1500,
-    "mode": "normal"
-  },
-  {
-    "name": "Placeholder",
-    "score": 1000,
-    "mode": "normal"
-  },
-  {
-    "name": "Placeholder",
-    "score": 500,
     "mode": "normal"
   }
 ]

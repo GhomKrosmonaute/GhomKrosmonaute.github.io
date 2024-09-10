@@ -26,7 +26,7 @@ export const EventNotifier = (props: { show: boolean }) => {
       {/* bande de gauche */}
       <div
         className={cn(
-          game.notification[0][1],
+          game.notification[0].className,
           "absolute animate-to-right rounded-r-full rounded-bl-full w-full h-[120px] opacity-50",
         )}
       />
@@ -34,7 +34,7 @@ export const EventNotifier = (props: { show: boolean }) => {
       {/* bande de droite */}
       <div
         className={cn(
-          game.notification[0][1],
+          game.notification[0].className,
           "absolute animate-to-left rounded-l-full rounded-tr-full w-full h-[120px] opacity-50",
         )}
       />
@@ -42,11 +42,18 @@ export const EventNotifier = (props: { show: boolean }) => {
       {/* texte de la notification */}
       <div
         className={cn(
-          game.notification[0][1],
-          "bg-transparent font-changa italic animate-notification text-6xl w-fit h-fit text-center",
+          game.notification[0].className,
+          "bg-transparent font-changa italic animate-notification w-fit h-fit text-center",
         )}
-        dangerouslySetInnerHTML={{ __html: game.notification[0][0] }}
-      />
+      >
+        {game.notification[0].header && (
+          <>
+            <span className="text-3xl">{game.notification[0].header}</span>
+            <br />
+          </>
+        )}
+        <span className="text-6xl">{game.notification[0].message}</span>
+      </div>
     </div>
   );
 };

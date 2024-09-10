@@ -1,5 +1,4 @@
 [
-  "Si tu n'as plus de @reputation, tu perds la partie.",
   "Si tu ne peux plus jouer de carte, tu perds la partie.",
   "Quand une carte est jouée, elle va dans la défausse.",
   "Les cartes @support sont importantes pour toujours avoir des cartes à jouer.",
@@ -7,6 +6,7 @@
   "Votre pioche est limitée. Jouez prudemment !",
   "Les cartes @action ont une bannière bleue.",
   "Lorsque tu n'as plus d'@energy, tu consommes la @reputation.",
+  "Si tu n'as plus de @reputation, tu perds la partie.",
   "Les cartes éphémères sont détruites après utilisation.",
   "Les effets des @upgrades sont cumulables !",
   "Tu ne peux pas avoir plus de MAX_HAND_SIZE cartes en main.",

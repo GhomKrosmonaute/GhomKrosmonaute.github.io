@@ -17,6 +17,7 @@ import type {
   MethodWhoLog,
   TriggerEventName,
   UpgradeIndice,
+  GameNotification,
 } from "@/game-typings";
 
 import {
@@ -46,6 +47,7 @@ import {
   reviveUpgrade,
   reviveCardModifier,
   fetchSettings,
+  isGameWon,
 } from "@/game-utils.ts";
 
 import { metadata } from "@/game-metadata.ts";
@@ -74,7 +76,7 @@ export interface GameState {
   choiceOptionCount: number;
   choiceOptions: GameCardIndice[][];
   logs: GameLog[];
-  notification: [text: string, className: string][];
+  notification: GameNotification[];
   operationInProgress: string[];
   setOperationInProgress: (operation: string, value: boolean) => void;
   reason: GameOverReason;
@@ -103,7 +105,7 @@ export interface GameState {
   }) => Promise<void>;
   advanceTime: (energy: number) => Promise<void>;
   addLog: (log: GameLog) => void;
-  addNotification: (notification: string, className: string) => Promise<void>;
+  addNotification: (options: GameNotification) => Promise<void>;
   dangerouslyUpdate: (partial: Partial<GameState>) => void;
   updateScore: () => void;
   addEnergy: (count: number, options: GameMethodOptions) => Promise<void>;
@@ -237,16 +239,17 @@ function generateGlobalGameMethods(
       await handleErrorsAsync(getState, async () => {
         set((state) => {
           return {
-            achievements: [...state.achievements, name],
+            achievements: Array.from(new Set([...state.achievements, name])),
           };
         });
 
         bank.achievement.play();
 
-        await getState().addNotification(
-          `<span style="font-size: 32px">Succès dévérouillé</span><br/>${name}`,
-          "bg-primary text-primary-foreground text-center",
-        );
+        await getState().addNotification({
+          header: "Succès déverrouillé",
+          message: name,
+          className: "bg-primary text-primary-foreground text-center",
+        });
 
         updateLocalStorage();
       });
@@ -376,7 +379,7 @@ function generateGameState(): Omit<
     draw: startingDeck.slice(MAX_HAND_SIZE - 2),
     hand: startingDeck
       .slice(0, MAX_HAND_SIZE - 2)
-      .map((name) => [name, "drawing"]),
+      .map((name) => [name, "idle"]),
     discard: [],
     upgrades: [],
     cardModifiers: [["upgrade cost threshold", []]],
@@ -417,10 +420,10 @@ function generateGameMethods(
         const result = Math.random() > 0.5;
 
         await Promise.all([
-          await state.addNotification(
-            result ? "Face" : "Pile",
-            "bg-background text-foreground",
-          ),
+          await state.addNotification({
+            message: result ? "Face" : "Pile",
+            className: "bg-background text-foreground",
+          }),
           await options[result ? "onHead" : "onTail"](state),
         ]);
 
@@ -463,14 +466,14 @@ function generateGameMethods(
           bank.bell.play();
           if (newSprint) bank.upgrade.play();
 
-          await state.addNotification(
-            newSprint
+          await state.addNotification({
+            message: newSprint
               ? `Sprint ${Math.floor((currentDay + 1) / 7)}`
               : `Jour ${currentDay + 1}`,
-            newSprint
+            className: newSprint
               ? "bg-upgrade text-upgrade-foreground"
               : "bg-day text-day-foreground",
-          );
+          });
 
           await state.triggerEvent("daily");
 
@@ -520,20 +523,20 @@ function generateGameMethods(
       }));
     },
 
-    addNotification: async (text, className) => {
+    addNotification: async (notification) => {
       await handleErrorsAsync(getState, async () => {
         const state = getState();
 
         if (state.notification.length > 0) {
           return state.throwError(
             new Error(
-              `Trying to add a notification while one is already displayed: ${text} ${className}`,
+              `Trying to add a notification while one is already displayed: ${JSON.stringify(notification)}`,
             ),
           );
         }
 
         set((state) => ({
-          notification: [[text, className] as const, ...state.notification],
+          notification: [notification, ...state.notification],
         }));
 
         await wait(2000);
@@ -1333,11 +1336,23 @@ function generateGameMethods(
         // on retire un groupe de choix et on ajoute la carte à la pioche
 
         set((state) => {
+          const to = state.hand.length < MAX_HAND_SIZE ? "hand" : "draw";
+
           return {
             choiceOptions: state.choiceOptions.slice(1),
-            draw: shuffle([...state.draw, card.name], 3),
+            [to]:
+              to === "draw"
+                ? shuffle([...state.draw, card.name], 3)
+                : [...state.hand, [card.name, "drawing"]],
           };
         });
+
+        await wait();
+
+        // on passe les cartes en idle
+        set((state) => ({
+          hand: state.hand.map((c) => [c[0], "idle"]),
+        }));
 
         state.setOperationInProgress(`pick ${card.name}`, false);
       });
@@ -1442,12 +1457,16 @@ useCardGame.subscribe(async (state, prevState) => {
       prevState.operationInProgress.join("") &&
     state.operationInProgress.length === 0
   ) {
+    if (isGameWon(state)) {
+      await state.addAchievement("Première victoire");
+    }
+
     // on vérifie les achievements
     await state.checkAchievements();
     state.checkDiscoveries();
 
     // on vérifie si le jeu est fini
-    if (!state.infinityMode && !state.isWon && state.money >= MONEY_TO_REACH) {
+    if (isGameWon(state)) {
       state.win();
       state.addWonGame();
     } else if (!state.isGameOver) {
