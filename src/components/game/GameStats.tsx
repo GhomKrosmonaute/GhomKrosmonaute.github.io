@@ -1,6 +1,6 @@
 import React from "react";
 
-import { formatText } from "@/game-utils.ts";
+import { formatText, reviveCard } from "@/game-utils.ts";
 import { useCardGame } from "@/hooks/useCardGame.ts";
 import { cn } from "@/utils.ts";
 
@@ -141,6 +141,7 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
                     ? [...game.draw, ...game.discard, ...game.hand]
                     : game[collection]
                   )
+                    .map(reviveCard)
                     .toSorted((a, b) => {
                       if (a.type === b.type) return a.effect.upgrade ? 1 : -1;
                       return b.type > a.type ? 1 : -1;

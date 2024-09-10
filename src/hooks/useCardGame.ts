@@ -8,6 +8,7 @@ import cardModifiers from "@/data/cardModifiers";
 
 import type {
   CardModifierIndice,
+  GameCardIndice,
   GameCardInfo,
   GameLog,
   GameMethodOptions,
@@ -15,7 +16,7 @@ import type {
   MethodWhoCheckIfGameOver,
   MethodWhoLog,
   TriggerEventName,
-  Upgrade,
+  UpgradeIndice,
 } from "@/game-typings";
 
 import {
@@ -31,16 +32,19 @@ import {
 } from "@/game-constants.ts";
 
 import {
+  getDeck,
   generateChoiceOptions,
   isGameOver,
   parseCost,
   parseSave,
-  reviveCardModifier,
   shuffle,
   wait,
   willBeRemoved,
   handleErrors,
   handleErrorsAsync,
+  reviveCard,
+  reviveUpgrade,
+  reviveCardModifier,
 } from "@/game-utils.ts";
 
 import { metadata } from "@/game-metadata.ts";
@@ -65,7 +69,7 @@ export interface CardGameState {
   error: Error | null;
   throwError: (error: Error) => never;
   choiceOptionCount: number;
-  choiceOptions: GameCardInfo[][];
+  choiceOptions: GameCardIndice[][];
   logs: GameLog[];
   notification: [text: string, className: string][];
   operationInProgress: string[];
@@ -74,10 +78,10 @@ export interface CardGameState {
   isWon: boolean;
   isGameOver: boolean;
   infinityMode: boolean;
-  draw: GameCardInfo[];
-  hand: GameCardInfo[];
-  discard: GameCardInfo[];
-  upgrades: Upgrade[];
+  draw: string[];
+  discard: string[];
+  hand: GameCardIndice[];
+  upgrades: UpgradeIndice[];
   cardModifiers: CardModifierIndice[];
   score: number;
   day: number;
@@ -208,11 +212,7 @@ function cardGameStatsMethods(
       handleErrors(getState, () => {
         const state = getState();
 
-        state.addDiscovery(
-          ...state.hand.map((c) => c.name),
-          ...state.draw.map((c) => c.name),
-          ...state.discard.map((c) => c.name),
-        );
+        state.addDiscovery(...getDeck(state).map(([name]) => name));
       });
     },
 
@@ -292,59 +292,62 @@ function generateInitialState(): Omit<
 
   localStorage.setItem("metadata", JSON.stringify(metadata));
 
-  let startingDeck: GameCardInfo[] = [];
+  let startingDeck: string[] = [];
 
   startingDeck.push(
-    cards.find((c) => c.effect.description.startsWith("Renvoie tout"))!,
+    cards.find((c) => c.effect.description.startsWith("Renvoie tout"))!.name,
   );
 
   startingDeck.push(
     ...cards
       .filter(
         (c) =>
-          startingDeck.every((_c) => _c.name !== c.name) &&
+          startingDeck.every((name) => name !== c.name) &&
           c.effect.description.startsWith("Pioche"),
       )
-      .slice(0, 4),
+      .slice(0, 4)
+      .map((c) => c.name),
   );
 
   startingDeck.push(
-    ...cards.filter(
-      (c) =>
-        startingDeck.every((_c) => _c.name !== c.name) &&
-        c.effect.description.startsWith("Recycle"),
-    ),
+    ...cards
+      .filter(
+        (c) =>
+          startingDeck.every((name) => name !== c.name) &&
+          c.effect.description.startsWith("Recycle"),
+      )
+      .map((c) => c.name),
   );
 
   startingDeck.push(
-    ...cards.filter(
-      (c) =>
-        startingDeck.every((_c) => _c.name !== c.name) &&
-        !c.effect.upgrade &&
-        c.effect.description.toLowerCase().includes("gagne") &&
-        c.effect.description.toLowerCase().includes("énergie"),
-    ),
+    ...cards
+      .filter(
+        (c) =>
+          startingDeck.every((name) => name !== c.name) &&
+          !c.effect.upgrade &&
+          c.effect.description.toLowerCase().includes("gagne") &&
+          c.effect.description.toLowerCase().includes("énergie"),
+      )
+      .map((c) => c.name),
   );
 
-  startingDeck = shuffle(startingDeck, 3).map(
-    (c) => ({ ...c, state: "drawing" }) as GameCardInfo,
-  );
+  startingDeck = shuffle(startingDeck, 3);
 
-  const startingChoices: GameCardInfo[][] = [];
+  const startingChoices: GameCardIndice[][] = [];
 
   for (let i = 0; i < INITIAL_CHOICE_COUNT; i++) {
     startingChoices.push(
       shuffle(
         cards.filter(
           (c) =>
-            startingChoices.every((o) => o.every((_c) => _c.name !== c.name)) &&
-            startingDeck.every((_c) => _c.name !== c.name) &&
+            startingChoices.every((o) => o.every((i) => i[0] !== c.name)) &&
+            startingDeck.every((name) => name !== c.name) &&
             !c.effect.upgrade,
         ),
         5,
       )
         .slice(0, INITIAL_CHOICE_OPTION_COUNT)
-        .map((c) => ({ ...c, state: "drawing" })),
+        .map((c) => [c.name, "drawing"]),
     );
   }
 
@@ -361,7 +364,9 @@ function generateInitialState(): Omit<
     isGameOver: false,
     infinityMode: false,
     draw: startingDeck.slice(MAX_HAND_SIZE - 2),
-    hand: startingDeck.slice(0, MAX_HAND_SIZE - 2),
+    hand: startingDeck
+      .slice(0, MAX_HAND_SIZE - 2)
+      .map((name) => [name, "drawing"]),
     discard: [],
     upgrades: [],
     cardModifiers: [["upgrade cost threshold", []]],
@@ -557,7 +562,9 @@ function cardGameMethods(
 
         // Calcul des points pour les améliorations
         let upgradesPoints = 0;
-        state.upgrades.forEach((upgrade) => {
+        state.upgrades.forEach((indice) => {
+          const upgrade = reviveUpgrade(indice);
+
           upgradesPoints +=
             (typeof upgrade.cost === "string"
               ? Number(upgrade.cost) / ENERGY_TO_MONEY
@@ -772,12 +779,12 @@ function cardGameMethods(
         bank.upgrade.play();
 
         // si l'activité est déjà découverte, on augmente son cumul
-        if (state.upgrades.find((a) => a.name === name)) {
+        if (state.upgrades.find((a) => a[0] === name)) {
           set((state) => {
             return {
               upgrades: state.upgrades.map((a) => {
-                if (a.name === name) {
-                  return { ...a, cumul: a.cumul + 1 };
+                if (a[0] === name) {
+                  return [a[0], a[1] + 1, a[2]];
                 }
                 return a;
               }),
@@ -786,16 +793,7 @@ function cardGameMethods(
         } else {
           set((state) => {
             return {
-              upgrades: [
-                ...state.upgrades,
-                {
-                  ...rawUpgrade,
-                  type: "upgrade",
-                  state: "appear",
-                  cumul: 1,
-                  max: rawUpgrade.max ?? Infinity,
-                },
-              ],
+              upgrades: [...state.upgrades, [rawUpgrade.name, 1, "appear"]],
             };
           });
         }
@@ -806,8 +804,8 @@ function cardGameMethods(
         set((state) => {
           return {
             upgrades: state.upgrades.map((a) => {
-              if (a.name === name) {
-                return { ...a, state: "idle" };
+              if (a[0] === name) {
+                return [a[0], a[1], "idle"];
               }
               return a;
             }),
@@ -815,8 +813,8 @@ function cardGameMethods(
         });
 
         if (rawUpgrade.eventName === "onUpgradeThis") {
-          const upgrade = state.upgrades.find((a) => a.name === name)!;
-          await state.triggerUpgrade(name, { reason: upgrade });
+          const upgrade = state.upgrades.find((a) => a[0] === name)!;
+          await state.triggerUpgrade(name, { reason: reviveUpgrade(upgrade) });
         }
 
         state.setOperationInProgress(`upgrade ${name}`, false);
@@ -826,7 +824,8 @@ function cardGameMethods(
     triggerUpgrade: async (name, options) => {
       await handleErrorsAsync(getState, async () => {
         const state = getState();
-        const upgrade = state.upgrades.find((a) => a.name === name)!;
+        const indice = state.upgrades.find((a) => a[0] === name)!;
+        const upgrade = reviveUpgrade(indice);
 
         if (!upgrade.condition || upgrade.condition(getState(), upgrade)) {
           state.setOperationInProgress(`triggerUpgrade ${name}`, true);
@@ -834,8 +833,8 @@ function cardGameMethods(
           // mettre l'activité en triggered
           set({
             upgrades: state.upgrades.map((a) => {
-              if (a.name === upgrade.name) {
-                return { ...a, state: "triggered" };
+              if (a[0] === upgrade.name) {
+                return [a[0], a[1], "triggered"];
               }
               return a;
             }),
@@ -852,8 +851,8 @@ function cardGameMethods(
           // remettre l'activité en idle
           set((state) => ({
             upgrades: state.upgrades.map((a) => {
-              if (a.name === upgrade.name) {
-                return { ...a, state: "idle" };
+              if (a[0] === upgrade.name) {
+                return [a[0], a[1], "idle"];
               }
               return a;
             }),
@@ -870,9 +869,9 @@ function cardGameMethods(
 
         state.setOperationInProgress(`triggerUpgradeEvent ${event}`, true);
 
-        const upgrades = state.upgrades.filter(
-          (upgrade) => upgrade.eventName === event,
-        );
+        const upgrades = state.upgrades
+          .map(reviveUpgrade)
+          .filter((upgrade) => upgrade.eventName === event);
 
         for (const upgrade of upgrades) {
           await state.triggerUpgrade(upgrade.name, {
@@ -912,7 +911,8 @@ function cardGameMethods(
         const discard = state.discard.slice();
 
         const from = state[fromKey].slice().filter((c) => {
-          if (options?.filter) return options.filter(c);
+          const card = reviveCard(c);
+          if (options?.filter) return options.filter(card);
           return true;
         });
 
@@ -925,14 +925,15 @@ function cardGameMethods(
             break;
           }
 
-          const card = from.pop()!;
+          const cardName = from.pop()!;
+          const card = reviveCard(cardName);
 
           card.state = "drawing";
 
           drawn.push(card.name);
 
           if (hand.length < MAX_HAND_SIZE) {
-            hand.push(card);
+            hand.push([card.name, "drawing"]);
             handAdded = true;
           }
         }
@@ -946,7 +947,7 @@ function cardGameMethods(
           hand,
           discard,
           [fromKey]: shuffle(
-            state[fromKey].filter((c) => !drawn.includes(c.name)),
+            state[fromKey].filter((c) => !drawn.includes(c)),
             2,
           ),
         });
@@ -956,7 +957,7 @@ function cardGameMethods(
         // on passe la main en idle
         set((state) => ({
           hand: state.hand.map((c) => {
-            return { ...c, state: "idle" };
+            return [c[0], "idle"];
           }),
         }));
 
@@ -987,7 +988,8 @@ function cardGameMethods(
           .slice()
           .filter(
             (c) =>
-              c.state !== "playing" && (!options?.filter || options.filter(c)),
+              c[1] !== "playing" &&
+              (!options?.filter || options.filter(reviveCard(c))),
           );
 
         const dropped = options?.random
@@ -997,8 +999,8 @@ function cardGameMethods(
         // on active l'animation de retrait des cartes
         set({
           hand: state.hand.map((c) => {
-            if (dropped.some((d) => d.name === c.name)) {
-              return { ...c, state: "discarding" };
+            if (dropped.some((d) => d[0] === c[0])) {
+              return [c[0], "discarding"];
             }
             return c;
           }),
@@ -1012,15 +1014,13 @@ function cardGameMethods(
           [toKey]: shuffle(
             [
               ...state.hand
-                .filter((c) => dropped.some((d) => d.name === c.name))
-                .map((c) => ({ ...c, state: null })),
+                .filter((c) => dropped.some((d) => d[0] === c[0]))
+                .map((c) => c[0]),
               ...state[toKey],
             ],
             2,
           ),
-          hand: state.hand.filter(
-            (c) => !dropped.some((d) => d.name === c.name),
-          ),
+          hand: state.hand.filter((c) => !dropped.some((d) => d[0] === c[0])),
         }));
 
         state.setOperationInProgress("discard", false);
@@ -1033,12 +1033,12 @@ function cardGameMethods(
 
         state.setOperationInProgress(`removeCard ${name}`, true);
 
-        if (state.hand.some((c) => c.name === name)) {
+        if (state.hand.some((c) => c[0] === name)) {
           // on active l'animation de suppression de la carte
           set({
             hand: state.hand.map((c) => {
-              if (c.name === name) {
-                return { ...c, state: "removing" };
+              if (c[0] === name) {
+                return [c[0], "removing"];
               }
               return c;
             }),
@@ -1058,7 +1058,7 @@ function cardGameMethods(
           ...from.reduce((acc, key) => {
             return {
               ...acc,
-              [key]: state[key].filter((c) => c.name !== name),
+              [key]: state[key].filter((c) => c[0] !== name),
             };
           }, {} as Partial<CardGameState>),
         }));
@@ -1095,15 +1095,15 @@ function cardGameMethods(
 
           const card = from.pop()!;
 
-          recycled.push(card.name);
+          recycled.push(card);
           to.push(card);
         }
 
         await wait();
 
         set({
-          draw: shuffle(to),
-          discard: state.discard.filter((c) => !recycled.includes(c.name)),
+          draw: shuffle(to, 2),
+          discard: state.discard.filter((name) => !recycled.includes(name)),
         });
 
         state.setOperationInProgress("recycle", false);
@@ -1125,8 +1125,8 @@ function cardGameMethods(
           // activer l'animation can't play
           set({
             hand: state.hand.map((c) => {
-              if (c.name === card.name) {
-                return { ...c, state: "unauthorized" };
+              if (c[0] === card.name) {
+                return [c[0], "unauthorized"];
               }
               return c;
             }),
@@ -1138,8 +1138,8 @@ function cardGameMethods(
           // on remet la carte en idle
           set({
             hand: state.hand.map((c) => {
-              if (c.name === card.name) {
-                return { ...c, state: "idle" };
+              if (c[0] === card.name) {
+                return [c[0], "idle"];
               }
               return c;
             }),
@@ -1166,8 +1166,8 @@ function cardGameMethods(
 
           set((state) => ({
             hand: state.hand.map((c) => {
-              if (c.name === card.name) {
-                return { ...c, state: "selected" };
+              if (c[0] === card.name) {
+                return [c[0], "selected"];
               }
               return c;
             }),
@@ -1197,11 +1197,8 @@ function cardGameMethods(
           // on active l'animation de retrait de la carte
           set((state) => ({
             hand: state.hand.map((c) => {
-              if (c.name === card.name) {
-                return {
-                  ...c,
-                  state: removing ? "removing" : "playing",
-                };
+              if (c[0] === card.name) {
+                return [c[0], removing ? "removing" : "playing"];
               }
               return c;
             }),
@@ -1214,8 +1211,8 @@ function cardGameMethods(
           set((state) => ({
             discard: removing
               ? state.discard
-              : shuffle([{ ...card, state: null }, ...state.discard], 3),
-            hand: state.hand.filter((c) => c.name !== card.name),
+              : shuffle([card.name, ...state.discard], 3),
+            hand: state.hand.filter((c) => c[0] !== card.name),
             cardModifiers: state.cardModifiers.filter((indice) => {
               const modifier = reviveCardModifier(indice);
 
@@ -1281,10 +1278,10 @@ function cardGameMethods(
         set({
           choiceOptions: state.choiceOptions.map((options) => {
             return options.map((c) => {
-              if (c.name === card.name) {
-                return { ...c, state: "playing" };
+              if (c[0] === card.name) {
+                return [c[0], "playing"];
               }
-              return { ...c, state: "removing" };
+              return [c[0], "removing"];
             });
           }),
         });
@@ -1300,7 +1297,7 @@ function cardGameMethods(
             set((state) => ({
               choiceOptions: state.choiceOptions.map((options) => {
                 return options.map((c) => {
-                  if (c.name === card.name) return { ...c, state: "removed" };
+                  if (c[0] === card.name) return [c[0], "removed"];
                   else return c;
                 });
               }),
@@ -1316,19 +1313,19 @@ function cardGameMethods(
             set((state) => ({
               choiceOptions: state.choiceOptions.map((options) => {
                 return options.map((c) => {
-                  return { ...c, state: null };
+                  return [c[0], null];
                 });
               }),
             }));
           })(),
         ]);
 
-        // on retire un groupe de choix
+        // on retire un groupe de choix et on ajoute la carte à la pioche
 
         set((state) => {
           return {
             choiceOptions: state.choiceOptions.slice(1),
-            draw: shuffle([...state.draw, { ...card, state: null }], 3),
+            draw: shuffle([...state.draw, card.name], 3),
           };
         });
 

@@ -4,7 +4,13 @@ import { INFINITE_DRAW_COST, MAX_HAND_SIZE } from "@/game-constants.ts";
 
 import { cn } from "@/utils.ts";
 import { bank } from "@/sound.ts";
-import { energyCostColor, formatText, isGameOver, wait } from "@/game-utils";
+import {
+  energyCostColor,
+  formatText,
+  isGameOver,
+  reviveCard,
+  wait,
+} from "@/game-utils";
 
 import { Button } from "@/components/ui/button.tsx";
 import { GameValueIcon } from "@/components/game/GameValueIcon.tsx";
@@ -128,8 +134,8 @@ export const GameActions = (props: { show: boolean }) => {
               return (
                 <div className="flex justify-center">
                   {/*{JSON.stringify(game.choiceOptions[0])}*/}
-                  {game.choiceOptions[0].map((option, i) => (
-                    <GameCard key={i} card={option} isChoice />
+                  {game.choiceOptions[0].map((indice, i) => (
+                    <GameCard key={i} card={reviveCard(indice)} isChoice />
                   ))}
                 </div>
               );

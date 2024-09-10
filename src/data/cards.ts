@@ -19,7 +19,7 @@ export const actionEffects = effects.filter(
   (effect) => effect.type === "action",
 );
 
-export const supports = technos.map((techno, i) => {
+export const supports: GameCardInfo[] = technos.map((techno, i) => {
   const mapping = map(i, 0, technos.length, 0, supportEffects.length, true);
   const effect = supportEffects[Math.floor(mapping)];
 
@@ -32,10 +32,10 @@ export const supports = technos.map((techno, i) => {
       ...effect,
       description: formatText(effect.description),
     },
-  } satisfies GameCardInfo;
+  };
 });
 
-export const actions = projects.map((project, i) => {
+export const actions: GameCardInfo[] = projects.map((project, i) => {
   const mapping = map(i, 0, projects.length, 0, actionEffects.length, true);
   const effect = actionEffects[Math.floor(mapping)];
 
@@ -48,10 +48,10 @@ export const actions = projects.map((project, i) => {
       ...effect,
       description: formatText(effect.description),
     },
-  } satisfies GameCardInfo;
+  };
 });
 
-export const upgradeActions = upgrades.map((upgrade) => {
+export const upgradeActions: GameCardInfo[] = upgrades.map((upgrade) => {
   return {
     type: "action",
     name: upgrade.name,
@@ -72,7 +72,7 @@ export const upgradeActions = upgrades.map((upgrade) => {
       cost: upgrade.cost,
       waitBeforePlay: false,
     },
-  } satisfies GameCardInfo;
+  };
 });
 
 export default [...supports, ...actions, ...upgradeActions];

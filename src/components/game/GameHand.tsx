@@ -2,6 +2,7 @@ import { cn } from "@/utils";
 import { useCardGame } from "@/hooks/useCardGame";
 import { useSettings } from "@/hooks/useSettings.ts";
 import { GameCard } from "@/components/game/GameCard";
+import { reviveCard } from "@/game-utils.ts";
 
 export const GameHand = (props: { show: boolean }) => {
   const quality = useSettings(({ animations }) => ({ animations }));
@@ -19,7 +20,9 @@ export const GameHand = (props: { show: boolean }) => {
       )}
     >
       {game.hand
-        .sort((a, b) => {
+        .sort((_a, _b) => {
+          const a = reviveCard(_a);
+          const b = reviveCard(_b);
           // trier par type de carte (action ou support) puis par type de prix (énergie ou $) puis par prix puis par description de l'effet
           const typeA = a.effect.type === "action" ? 1 : 0;
           const typeB = b.effect.type === "action" ? 1 : 0;
@@ -32,8 +35,8 @@ export const GameHand = (props: { show: boolean }) => {
           );
           return typeA - typeB || priceA - priceB || costA - costB || effect;
         })
-        .map((card, index) => (
-          <GameCard key={index} card={card} position={index} />
+        .map((indice, index) => (
+          <GameCard key={index} card={reviveCard(indice)} position={index} />
         ))}
     </div>
   );

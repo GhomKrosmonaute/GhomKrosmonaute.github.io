@@ -2,6 +2,10 @@ import type { CardGameState } from "@/hooks/useCardGame";
 import events from "@/data/events.ts";
 import React from "react";
 
+export type UpgradeState = "appear" | "idle" | "triggered";
+
+export type UpgradeIndice = [name: string, cumul: number, state: UpgradeState];
+
 export interface Upgrade {
   type: "upgrade";
   name: string;
@@ -15,7 +19,7 @@ export interface Upgrade {
     reason: GameLog["reason"],
   ) => Promise<unknown>;
   cost: number | string;
-  state: "appear" | "idle" | "triggered";
+  state: UpgradeState;
   cumul: number;
   max: number;
 }
@@ -78,6 +82,8 @@ export type CardModifier = {
   use: (card: GameCardInfo, state: CardGameState) => GameCardInfo;
   once?: boolean;
 };
+
+export type GameCardIndice = [name: string, state: GameCardState];
 
 export type CardModifierIndice = [name: string, params: unknown[]];
 

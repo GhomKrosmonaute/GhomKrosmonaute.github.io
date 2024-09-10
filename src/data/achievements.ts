@@ -1,5 +1,6 @@
 import type { CardGame, CardGameState } from "@/hooks/useCardGame.ts";
 import cards from "@/data/cards.ts";
+import { reviveCard } from "@/game-utils.ts";
 
 const achievements: {
   name: string;
@@ -25,7 +26,8 @@ const achievements: {
     name: "Trader",
     description: "Avoir 5 cartes @action en main",
     unlockCondition: (state) =>
-      state.hand.filter((card) => card.type === "action").length >= 5,
+      state.hand.filter((card) => reviveCard(card).type === "action").length >=
+      5,
   },
   {
     name: "Milliardaire",

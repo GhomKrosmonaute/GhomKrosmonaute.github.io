@@ -3,9 +3,11 @@ import type {
   CardModifier,
   CardModifierIndice,
   ColorClass,
+  GameCardIndice,
   GameCardInfo,
   GameOverReason,
   Upgrade,
+  UpgradeIndice,
 } from "@/game-typings";
 
 import type { CardGame, CardGameState } from "@/hooks/useCardGame";
@@ -18,7 +20,6 @@ import {
 } from "@/game-constants";
 
 import cardModifiers from "@/data/cardModifiers.ts";
-import effects from "@/data/effects.ts";
 import upgrades from "@/data/upgrades.ts";
 import cards from "@/data/cards.ts";
 
@@ -49,28 +50,31 @@ export async function handleErrorsAsync(
 }
 
 interface ChoiceOptionsGeneratorOptions {
-  exclude?: GameCardInfo[];
+  exclude?: string[];
   filter?: (card: GameCardInfo, state: CardGameState) => boolean;
 }
 
 export function generateChoiceOptions(
   state: CardGameState & CardGame,
   options?: ChoiceOptionsGeneratorOptions,
-): GameCardInfo[] {
+): GameCardIndice[] {
   const _cards = cards.filter(
     (card) =>
       (state.draw.length === 0 ||
-        state.draw.every((c) => c.name !== card.name)) &&
+        state.draw.every((name) => name !== card.name)) &&
       (state.discard.length === 0 ||
-        state.discard.every((c) => c.name !== card.name)) &&
+        state.discard.every((name) => name !== card.name)) &&
       (state.hand.length === 0 ||
-        state.hand.every((c) => c.name !== card.name)) &&
+        state.hand.every(([name]) => name !== card.name)) &&
       (!options?.exclude ||
-        options?.exclude?.every((c) => c.name !== card.name)) &&
+        options?.exclude?.every((name) => name !== card.name)) &&
       (!options?.filter || options?.filter?.(card, state)) &&
       (!card.effect.upgrade ||
         state.upgrades.length === 0 ||
-        state.upgrades.every((u) => u.name !== card.name || u.cumul < u.max)),
+        state.upgrades.every((u) => {
+          const up = reviveUpgrade(u);
+          return up.name !== card.name || up.cumul < up.max;
+        })),
   );
 
   if (_cards.length === 0) {
@@ -79,13 +83,23 @@ export function generateChoiceOptions(
 
   // todo: add random rarity to selected cards
 
-  const outputOptions: GameCardInfo[] = shuffle(_cards, 3)
+  const outputOptions: string[] = shuffle(_cards, 3)
     .slice(0, state.choiceOptionCount)
-    .map((c) => ({ ...c, state: "drawing" }));
+    .map((c) => c.name);
 
-  state.addDiscovery(...outputOptions.map((c) => c.name));
+  state.addDiscovery(...outputOptions);
 
-  return outputOptions;
+  return outputOptions.map((name) => [name, "drawing"]);
+}
+
+export function getDeck(state: CardGameState): GameCardIndice[] {
+  return [
+    ...[...state.draw, ...state.discard].map<GameCardIndice>((name) => [
+      name,
+      null,
+    ]),
+    ...state.hand,
+  ];
 }
 
 export function energyCostColor(
@@ -104,11 +118,14 @@ export function isGameOver(state: CardGameState): GameOverReason | false {
   if (state.draw.length === 0 && state.hand.length === 0) return "mill";
   if (
     state.hand.every((c) => {
+      const card = reviveCard(c);
+
       // on vérifie si la condition s'il y en
-      if (c.effect.condition && !c.effect.condition(state, c)) return true;
+      if (card.effect.condition && !card.effect.condition(state, card))
+        return true;
 
       // on vérifie si on a assez de resources
-      return !parseCost(state, c, []).canBeBuy;
+      return !parseCost(state, card, []).canBeBuy;
     }) &&
     (state.reputation + state.energy < INFINITE_DRAW_COST ||
       state.hand.length >= MAX_HAND_SIZE ||
@@ -212,9 +229,13 @@ export function willBeRemoved(state: CardGameState, card: GameCardInfo) {
     if (rawUpgrade.max) {
       if (rawUpgrade.max === 1) return true;
 
-      const upgrade = state.upgrades.find((u) => u.name === card.name);
+      const indice = state.upgrades.find((u) => u[0] === card.name);
 
-      return upgrade && upgrade.cumul >= upgrade.max - 1;
+      if (!indice) return false;
+
+      const upgrade = reviveUpgrade(indice);
+
+      return upgrade.cumul >= upgrade.max - 1;
     }
   }
 
@@ -304,7 +325,7 @@ export async function waitAnimationFrame() {
   return new Promise((resolve) => requestAnimationFrame(resolve));
 }
 
-export function shuffle(cards: GameCardInfo[], times = 1): GameCardInfo[] {
+export function shuffle<T>(cards: T[], times = 1): T[] {
   for (let i = 0; i < times; i++) {
     cards.sort(() => Math.random() - 0.5);
   }
@@ -350,38 +371,38 @@ export function reviveCardModifier(indice: CardModifierIndice): CardModifier {
   return cardModifiers[indice[0]](...indice[1]);
 }
 
+export function reviveCard(indice: GameCardIndice | string): GameCardInfo {
+  const card = cards.find((c) =>
+    typeof indice === "string" ? c.name === indice : c.name === indice[0],
+  );
+
+  if (!card) throw new Error(`Card ${indice} not found`);
+
+  if (typeof indice !== "string") card.state = indice[1];
+
+  return card;
+}
+
+export function reviveUpgrade(indice: UpgradeIndice | string): Upgrade {
+  const raw = upgrades.find((u) =>
+    typeof indice === "string" ? u.name === indice : u.name === indice[0],
+  );
+
+  if (!raw) throw new Error(`Upgrade ${indice} not found`);
+
+  return {
+    ...raw,
+    type: "upgrade",
+    state: typeof indice !== "string" ? indice[2] : "appear",
+    cumul: typeof indice !== "string" ? indice[1] : 1,
+    max: raw.max ?? Infinity,
+  };
+}
+
 export function parseSave(save: string) {
   return JSON.parse(save, (key, value) => {
     if (typeof value === "object") {
       switch (key) {
-        case "discard":
-        case "draw":
-        case "hand":
-          return value.map((card: GameCardInfo) => {
-            return {
-              ...card,
-              state: "idle",
-              effect: {
-                ...card.effect,
-                template: effects[card.effect.index]?.template,
-                onPlayed: card.effect.upgrade
-                  ? async (state) => await state.upgrade(card.name)
-                  : effects[card.effect.index]?.onPlayed,
-                condition: effects[card.effect.index]?.condition,
-              },
-            } as GameCardInfo;
-          });
-        case "upgrades":
-          return value.map((upgrade: Upgrade) => {
-            return {
-              ...upgrade,
-              state: "idle",
-              onTrigger: upgrades.find((u) => u.name === upgrade.name)
-                ?.onTrigger,
-              condition: upgrades.find((u) => u.name === upgrade.name)
-                ?.condition,
-            } as Upgrade;
-          });
         case "operationInProgress":
           return [];
       }

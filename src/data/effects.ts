@@ -8,6 +8,7 @@ import {
 } from "@/game-constants.ts";
 
 import { settings } from "@/game-settings.ts";
+import { parseCost, reviveCard } from "@/game-utils.ts";
 
 const advantage = GAME_ADVANTAGE[settings.difficulty];
 
@@ -76,7 +77,9 @@ const effects: Effect[] = (
         await state.addMoney(
           (2 + advantage) *
             ENERGY_TO_MONEY *
-            state.hand.filter((card) => card.effect.type === "action").length,
+            state.hand
+              .map(reviveCard)
+              .filter((card) => card.effect.type === "action").length,
           { skipGameOverPause: true, reason },
         );
       },
@@ -101,7 +104,7 @@ const effects: Effect[] = (
           : ""
       }`,
       onPlayed: async (state, _, reason) => {
-        await state.playCard(state.hand[state.hand.length - 1], {
+        await state.playCard(reviveCard(state.hand[state.hand.length - 1]), {
           free: true,
           skipGameOverPause: true,
           reason,
@@ -115,10 +118,13 @@ const effects: Effect[] = (
         }
       },
       condition: (state, card) => {
-        const target = state.hand[state.hand.length - 1];
+        const indice = state.hand[state.hand.length - 1];
+
+        if (!indice) return false;
+
+        const target = reviveCard(indice);
 
         return (
-          target &&
           target.name !== card.name &&
           target.state === "idle" &&
           card.state === "idle" &&
@@ -144,20 +150,29 @@ const effects: Effect[] = (
       //   return `(${cost} @energy${cost > 1 ? "s" : ""})`;
       // },
       onPlayed: async (state, _, reason) => {
-        const target = state.hand[state.hand.length - 1];
+        const target = reviveCard(state.hand[state.hand.length - 1]);
+
         await state.discardCard({
           filter: (card) => card.name === target.name,
           reason,
         });
+
         const cost =
           typeof target.effect.cost === "string"
             ? Math.ceil(Number(target.effect.cost) / ENERGY_TO_MONEY)
             : target.effect.cost;
+
         await state.addEnergy(cost, { skipGameOverPause: true, reason });
       },
-      condition: (state, card) =>
-        state.hand.length >= 1 &&
-        state.hand.indexOf(card) !== state.hand.length - 1,
+      condition: (state, card) => {
+        const indice = state.hand[state.hand.length - 1];
+
+        return (
+          state.hand.length > 1 &&
+          card.name !== indice[0] &&
+          parseCost(state, reviveCard(indice), []).cost > 0
+        );
+      },
       type: "action",
       cost: 0,
     },
@@ -221,7 +236,7 @@ const effects: Effect[] = (
         }
       },
       condition: (state) =>
-        state.draw.some((card) => card.effect.type === "action"),
+        state.draw.some((card) => reviveCard(card).effect.type === "action"),
       type: "support",
       cost: Math.max(0, 2 - advantage),
       waitBeforePlay: true,
@@ -247,8 +262,8 @@ const effects: Effect[] = (
         }
       },
       condition: (state) =>
-        state.hand.every((card) => card.effect.type !== "action") &&
-        state.draw.some((card) => card.effect.type === "action"),
+        state.hand.every((card) => reviveCard(card).effect.type !== "action") &&
+        state.draw.some((card) => reviveCard(card).effect.type === "action"),
       type: "support",
       cost: 1,
       waitBeforePlay: true,
@@ -372,7 +387,9 @@ const effects: Effect[] = (
         }
       },
       condition: (state) =>
-        state.hand.filter((card) => card.effect.type === "support").length > 1,
+        state.hand
+          .map(reviveCard)
+          .filter((card) => card.effect.type === "support").length > 1,
       type: "support",
       cost: 1,
       waitBeforePlay: true,
@@ -384,13 +401,14 @@ const effects: Effect[] = (
           filter: (card) => card.effect.type === "action",
           reason,
         });
+
         await state.drawCard(3 + advantage, {
           skipGameOverPause: true,
           reason,
         });
       },
       condition: (state) =>
-        state.hand.some((card) => card.effect.type === "action"),
+        state.hand.some((card) => reviveCard(card).effect.type === "action"),
       type: "support",
       cost: 0,
       waitBeforePlay: true,
@@ -438,7 +456,7 @@ const effects: Effect[] = (
         }
       },
       condition: (state) =>
-        state.draw.some((c) => typeof c.effect.cost === "number"),
+        state.draw.some((c) => typeof reviveCard(c).effect.cost === "number"),
       type: "support",
       cost: Math.max(0, 4 - advantage),
       waitBeforePlay: true,
@@ -477,7 +495,10 @@ const effects: Effect[] = (
       } @energys ou de ${(1 + advantage) * ENERGY_TO_MONEY}M$`,
       onPlayed: async (state, card) => {
         const handCardNames = state.hand
-          .filter((c) => c.name !== card.name && Number(card.effect.cost) > 0)
+          .map(reviveCard)
+          .filter(
+            (c) => c.name !== card.name && parseCost(state, card, []).cost > 0,
+          )
           .map((c) => c.name);
 
         state.addCardModifier("lowers price of hand cards", [
@@ -486,7 +507,9 @@ const effects: Effect[] = (
         ]);
       },
       condition: (state) =>
-        state.hand.some((card) => Number(card.effect.cost) > 0),
+        state.hand.some(
+          (card) => parseCost(state, reviveCard(card), []).cost > 0,
+        ),
       type: "support",
       cost: Math.max(0, MAX_HAND_SIZE - advantage),
       ephemeral: true,
