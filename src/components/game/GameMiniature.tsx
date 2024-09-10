@@ -2,26 +2,34 @@ import React from "react";
 import { cn } from "@/utils.ts";
 
 import type { GameLog, Upgrade, GameCardInfo } from "@/game-typings.ts";
+import { reviveCard, reviveUpgrade } from "@/game-utils.ts";
+import { useCardGame } from "@/hooks/useCardGame.ts";
 
 export const GameMiniature = (props: { item: GameLog["reason"] }) => {
+  const cards = useCardGame((state) => state.cards);
+
+  const revived = Array.isArray(props.item)
+    ? props.item.length === 2
+      ? reviveCard(props.item, { cards })
+      : reviveUpgrade(props.item)
+    : props.item;
+
   return (
     <span
       className={cn(
         "inline-flex items-center h-7 w-full rounded-full",
-        typeof props.item === "string"
+        typeof revived === "string"
           ? ""
           : {
-              "bg-action text-action-foreground": props.item.type === "action",
-              "bg-support text-support-foreground":
-                props.item.type === "support",
-              "bg-upgrade text-upgrade-foreground":
-                props.item.type === "upgrade",
+              "bg-action text-action-foreground": revived.type === "action",
+              "bg-support text-support-foreground": revived.type === "support",
+              "bg-upgrade text-upgrade-foreground": revived.type === "upgrade",
             },
       )}
     >
-      {typeof props.item === "object" && <MiniatureImage item={props.item} />}
+      {typeof revived === "object" && <MiniatureImage item={revived} />}
       <div className="px-2">
-        {typeof props.item === "object" ? props.item?.name : props.item}
+        {typeof revived === "object" ? revived.name : revived}
       </div>
     </span>
   );

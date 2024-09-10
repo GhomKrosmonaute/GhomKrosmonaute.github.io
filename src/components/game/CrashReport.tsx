@@ -37,7 +37,7 @@ export const CrashReportProvider = ({ children }: React.PropsWithChildren) => {
     (error: Error, state: GameState & GlobalGameState) => {
       bank.error.play();
       navigator.clipboard
-        .writeText(JSON.stringify(state))
+        .writeText(JSON.stringify({ ...state, cards: null }))
         .catch(() =>
           alert(
             "Impossible de copier le contenu de la sauvegarde dans votre presse-papier...",

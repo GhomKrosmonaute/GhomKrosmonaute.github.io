@@ -826,8 +826,7 @@ function generateGameMethods(
         });
 
         if (rawUpgrade.eventName === "onUpgradeThis") {
-          const upgrade = state.upgrades.find((a) => a[0] === name)!;
-          await state.triggerUpgrade(name, { reason: reviveUpgrade(upgrade) });
+          await state.triggerUpgrade(name, {});
         }
 
         state.setOperationInProgress(`upgrade ${name}`, false);

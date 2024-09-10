@@ -105,7 +105,7 @@ export type GameOverReason =
 export type GameLog = {
   type: "money" | "reputation" | "energy";
   value: number;
-  reason: GameCardInfo | Upgrade | string;
+  reason: GameCardInfo | Upgrade | GameCardIndice | UpgradeIndice | string;
 };
 
 export type GameNotification = {
