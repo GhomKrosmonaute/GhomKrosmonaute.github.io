@@ -63,6 +63,10 @@ export const GameCard = (
       ? props.position - (game.handSize - 1) / 2
       : 0;
 
+  const notAllowed = props.isChoice
+    ? game.operationInProgress.filter((o) => o !== "choices").length > 0
+    : game.operationInProgress.length > 0;
+
   return (
     <div
       key={props.card.name}
@@ -72,13 +76,13 @@ export const GameCard = (
         "-mx-3.5 z-10 hover:z-20 cursor-pointer select-none",
         {
           "cursor-not-allowed":
-            game.operationInProgress.length > 0 ||
-            (!props.isChoice && game.choiceOptions.length > 0),
+            notAllowed || (!props.isChoice && game.choiceOptions.length > 0),
           [cn("transition-transform", props.card.state)]: quality.animation,
           [cn({
             "-translate-y-14": props.card.state === "selected",
             "hover:-translate-y-14": props.card.state !== "removing",
             grayscale:
+              notAllowed ||
               game.isGameOver ||
               !game.parsedCost.canBeBuy ||
               !game.canTriggerEffect,
@@ -90,24 +94,20 @@ export const GameCard = (
         if (!props.isChoice) {
           if (
             game.choiceOptions.length === 0 &&
-            game.operationInProgress.length === 0 &&
+            !notAllowed &&
             !game.isGameOver
           ) {
             await game.play(props.card, { reason: props.card });
           }
         } else {
-          if (
-            game.choiceOptions.length > 0 &&
-            game.operationInProgress.length === 0
-          ) {
+          if (game.choiceOptions.length > 0 && !notAllowed) {
             await game.pick(props.card);
           }
         }
       }}
       onContextMenu={(e) => {
-        e.preventDefault();
-
         if (isActionCardInfo(props.card) && props.card.url) {
+          e.preventDefault();
           // open new tab with project url
           window.open(props.card.url, "_blank");
         }

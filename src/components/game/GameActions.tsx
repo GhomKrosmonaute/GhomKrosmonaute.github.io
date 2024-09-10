@@ -30,17 +30,27 @@ export const GameActions = (props: { show: boolean }) => {
     [game.day],
   );
 
-  const disabled =
+  const drawButtonDisabled =
     game.energy + game.reputation < INFINITE_DRAW_COST ||
     game.hand.length >= MAX_HAND_SIZE ||
     game.draw.length === 0 ||
     runningOps;
 
   React.useEffect(() => {
-    if (game.choiceOptions.length === 0) {
+    if (
+      game.choiceOptions.length === 0 &&
+      game.operationInProgress.includes("choices")
+    ) {
       game.setOperationInProgress("choices", false);
     }
-  }, [game.choiceOptions.length]);
+
+    if (
+      game.choiceOptions.length > 0 &&
+      game.operationInProgress.includes("choices")
+    ) {
+      game.setOperationInProgress("choices", true);
+    }
+  }, [game.choiceOptions.length, game.operationInProgress]);
 
   return (
     <div
@@ -56,7 +66,7 @@ export const GameActions = (props: { show: boolean }) => {
       <div className="space-y-4 group/actions bg-background/80 p-2 rounded-xl relative">
         <h2
           className={cn(
-            "text-3xl",
+            "text-3xl ml-2",
             game.choiceOptions.length > 0 ? "text-left" : "text-center",
           )}
         >
@@ -82,7 +92,9 @@ export const GameActions = (props: { show: boolean }) => {
         </h2>
         {game.choiceOptions.length === 0 ? (
           <Button
-            className={cn("flex justify-start gap-2", { grayscale: disabled })}
+            className={cn("flex justify-start gap-2", {
+              grayscale: drawButtonDisabled,
+            })}
             onClick={async () => {
               game.setOperationInProgress("infinity-draw", true);
 
@@ -104,7 +116,7 @@ export const GameActions = (props: { show: boolean }) => {
 
               game.setOperationInProgress("infinity-draw", false);
             }}
-            disabled={disabled}
+            disabled={drawButtonDisabled}
             size="cta"
           >
             <GameValueIcon
