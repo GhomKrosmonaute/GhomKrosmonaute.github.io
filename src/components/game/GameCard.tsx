@@ -31,12 +31,12 @@ export const GameCard = (
   }>,
 ) => {
   const quality = useSettings((state) => ({
-    blur: state.blur,
-    shadows: state.shadows,
-    perspective: state.perspective,
-    animation: state.animations,
-    transparency: state.transparency,
-    tilt: state.tilt,
+    blur: state.quality.blur,
+    shadows: state.quality.shadows,
+    perspective: state.quality.perspective,
+    animation: state.quality.animations,
+    transparency: state.quality.transparency,
+    tilt: state.quality.tilt,
   }));
 
   const game = useCardGame((state) => {
@@ -334,10 +334,10 @@ const GameCardProject = (
 ) => {
   const { shadows, perspective, transparency, animation } = useSettings(
     (state) => ({
-      shadows: state.shadows,
-      perspective: state.perspective,
-      transparency: state.transparency,
-      animation: state.animations,
+      shadows: state.quality.shadows,
+      perspective: state.quality.perspective,
+      transparency: state.quality.transparency,
+      animation: state.quality.animations,
     }),
   );
 
@@ -393,8 +393,8 @@ const GameCardTechno = (
   props: React.PropsWithoutRef<{ card: SupportCardInfo }>,
 ) => {
   const { perspective, animation } = useSettings((state) => ({
-    perspective: state.perspective,
-    animation: state.animations,
+    perspective: state.quality.perspective,
+    animation: state.quality.animations,
   }));
 
   return (

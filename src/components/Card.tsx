@@ -11,8 +11,8 @@ export const Card = React.forwardRef<
     }>
 >(({ borderLightAppearOnHover, ...props }, ref) => {
   const quality = useSettings((state) => ({
-    transparency: state.transparency,
-    cardBlur: state.blur,
+    transparency: state.quality.transparency,
+    cardBlur: state.quality.blur,
   }));
 
   return (

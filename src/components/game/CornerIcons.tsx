@@ -17,8 +17,8 @@ export const CornerIcons = (props: { show: boolean }) => {
   );
 
   const [animation, transparency] = useSettings((state) => [
-    state.animations,
-    state.transparency,
+    state.quality.animations,
+    state.quality.transparency,
   ]);
 
   const { toggleRules, toggleSettings, toggleMuted, muted } = useGlobalState(

@@ -21,9 +21,10 @@ import { useSettings } from "@/hooks/useSettings.ts";
 
 export const GameActions = (props: { show: boolean }) => {
   const game = useCardGame();
-  const animation = useSettings((state) => state.animations);
+  const animation = useSettings((state) => state.quality.animations);
 
-  const runningOps = game.operationInProgress.length > 0;
+  const runningOps =
+    game.operationInProgress.filter((o) => o !== "choices").length > 0;
   const newSprint = React.useMemo(
     () => Math.floor(game.day) !== 0 && Math.floor(game.day) % 7 === 0,
     [game.day],
@@ -34,6 +35,12 @@ export const GameActions = (props: { show: boolean }) => {
     game.hand.length >= MAX_HAND_SIZE ||
     game.draw.length === 0 ||
     runningOps;
+
+  React.useEffect(() => {
+    if (game.choiceOptions.length === 0) {
+      game.setOperationInProgress("choices", false);
+    }
+  }, [game.choiceOptions.length]);
 
   return (
     <div
@@ -47,7 +54,12 @@ export const GameActions = (props: { show: boolean }) => {
       )}
     >
       <div className="space-y-4 group/actions bg-background/80 p-2 rounded-xl relative">
-        <h2 className="text-3xl text-center">
+        <h2
+          className={cn(
+            "text-3xl",
+            game.choiceOptions.length > 0 ? "text-left" : "text-center",
+          )}
+        >
           {game.choiceOptions.length > 0 ? (
             <>
               Choisis une carte{" "}
@@ -111,17 +123,25 @@ export const GameActions = (props: { show: boolean }) => {
               onClick={async () => {
                 bank.play.play();
 
-                await game.addEnergy(5, {
-                  reason: "Bouton passer",
-                  skipGameOverPause: true,
-                });
+                await game.addEnergy(
+                  newSprint && game.choiceOptions.length === 1 ? 10 : 5,
+                  {
+                    reason: "Bouton passer",
+                    skipGameOverPause: true,
+                  },
+                );
 
                 game.dangerouslyUpdate({
                   choiceOptions: game.choiceOptions.slice(1),
                 });
               }}
             >
-              <GameValueIcon value={5} symbol miniature colors="bg-energy" />
+              <GameValueIcon
+                value={newSprint && game.choiceOptions.length === 1 ? 10 : 5}
+                symbol
+                miniature
+                colors="bg-energy"
+              />
               Passer
             </Button>
             {(() => {
@@ -135,7 +155,11 @@ export const GameActions = (props: { show: boolean }) => {
                 <div className="flex justify-center">
                   {/*{JSON.stringify(game.choiceOptions[0])}*/}
                   {game.choiceOptions[0].map((indice, i) => (
-                    <GameCard key={i} card={reviveCard(indice)} isChoice />
+                    <GameCard
+                      key={i}
+                      card={reviveCard(indice, game)}
+                      isChoice
+                    />
                   ))}
                 </div>
               );

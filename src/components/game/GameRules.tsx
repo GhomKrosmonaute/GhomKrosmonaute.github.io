@@ -13,7 +13,6 @@ import { Button } from "@/components/ui/button.tsx";
 import { useGlobalState } from "@/hooks/useGlobalState.ts";
 import Cross from "@/assets/icons/cross.svg";
 import { useCardGame } from "@/hooks/useCardGame.ts";
-import cards from "@/data/cards.ts";
 import achievements from "@/data/achievements.ts";
 import { GameCardPopover } from "@/components/game/GameCardPopover.tsx";
 import {
@@ -36,6 +35,7 @@ export const GameRules = (props: { show: boolean }) => {
     addAchievement: state.addAchievement,
     addWonGame: state.addWonGame,
     addPlayedGame: state.addPlayedGame,
+    cards: state.cards,
   }));
 
   const [value, setValue] = React.useState(0);
@@ -178,7 +178,7 @@ export const GameRules = (props: { show: boolean }) => {
                     <tr>
                       <td>Cartes découvertes</td>
                       <td>
-                        {stats.discoveries.length} / {cards.length}
+                        {stats.discoveries.length} / {stats.cards.length}
                       </td>
                     </tr>
                     <tr>
@@ -197,7 +197,7 @@ export const GameRules = (props: { show: boolean }) => {
                   {stats.discoveries.length > 0
                     ? stats.discoveries.map((discovery, i) => (
                         <GameCardPopover
-                          card={cards.find((c) => c.name === discovery)!}
+                          card={stats.cards.find((c) => c.name === discovery)!}
                           key={i}
                         >
                           <li>{discovery}</li>

@@ -1,11 +1,10 @@
-import type { CardGame, CardGameState } from "@/hooks/useCardGame.ts";
-import cards from "@/data/cards.ts";
+import type { GlobalGameState, GameState } from "@/hooks/useCardGame.ts";
 import { reviveCard } from "@/game-utils.ts";
 
 const achievements: {
   name: string;
   description: string;
-  unlockCondition: (state: CardGameState & CardGame) => boolean;
+  unlockCondition: (state: GameState & GlobalGameState) => boolean;
 }[] = [
   {
     name: "Première victoire",
@@ -26,8 +25,8 @@ const achievements: {
     name: "Trader",
     description: "Avoir 5 cartes @action en main",
     unlockCondition: (state) =>
-      state.hand.filter((card) => reviveCard(card).type === "action").length >=
-      5,
+      state.hand.filter((card) => reviveCard(card, state).type === "action")
+        .length >= 5,
   },
   {
     name: "Milliardaire",
@@ -42,7 +41,7 @@ const achievements: {
   {
     name: "Complétionniste",
     description: "Découvrir toutes les cartes",
-    unlockCondition: (state) => state.discoveries.length === cards.length,
+    unlockCondition: (state) => state.discoveries.length === state.cards.length,
   },
 ];
 

@@ -8,9 +8,9 @@ import { translations } from "@/game-settings.ts";
 
 export const Scoreboard = (props: { show: boolean }) => {
   const { shadows, animation, transparency } = useSettings((state) => ({
-    shadows: state.shadows,
-    animation: state.animations,
-    transparency: state.transparency,
+    shadows: state.quality.shadows,
+    animation: state.quality.animations,
+    transparency: state.quality.transparency,
   }));
 
   return (

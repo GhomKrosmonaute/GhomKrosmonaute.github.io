@@ -8,8 +8,8 @@ export const EventNotifier = (props: { show: boolean }) => {
   }));
 
   const quality = useSettings((state) => ({
-    animations: state.animations,
-    transparency: state.transparency,
+    animations: state.quality.animations,
+    transparency: state.quality.transparency,
   }));
 
   if (

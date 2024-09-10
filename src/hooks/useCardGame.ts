@@ -1,10 +1,10 @@
 import { bank } from "@/sound.ts";
 import { create } from "zustand";
 
-import cards from "@/data/cards.ts";
 import upgrades from "@/data/upgrades";
 import achievements from "@/data/achievements.ts";
 import cardModifiers from "@/data/cardModifiers";
+import generateCards from "@/data/cards.ts";
 
 import type {
   CardModifierIndice,
@@ -45,12 +45,13 @@ import {
   reviveCard,
   reviveUpgrade,
   reviveCardModifier,
+  fetchSettings,
 } from "@/game-utils.ts";
 
 import { metadata } from "@/game-metadata.ts";
-import { difficultyIndex, settings } from "@/game-settings.ts";
+import { Difficulty, difficultyIndex, settings } from "@/game-settings.ts";
 
-export interface CardGame {
+export interface GlobalGameState {
   scoreAverage: number;
   totalMoney: number;
   wonGames: number;
@@ -65,7 +66,9 @@ export interface CardGame {
   checkDiscoveries: () => void;
 }
 
-export interface CardGameState {
+export interface GameState {
+  cards: GameCardInfo[];
+  difficulty: Difficulty;
   error: Error | null;
   throwError: (error: Error) => never;
   choiceOptionCount: number;
@@ -95,13 +98,13 @@ export interface CardGameState {
   reputation: number;
   money: number;
   coinFlip: (options: {
-    onHead: (state: CardGameState) => Promise<void>;
-    onTail: (state: CardGameState) => Promise<void>;
+    onHead: (state: GameState) => Promise<void>;
+    onTail: (state: GameState) => Promise<void>;
   }) => Promise<void>;
   advanceTime: (energy: number) => Promise<void>;
   addLog: (log: GameLog) => void;
   addNotification: (notification: string, className: string) => Promise<void>;
-  dangerouslyUpdate: (partial: Partial<CardGameState>) => void;
+  dangerouslyUpdate: (partial: Partial<GameState>) => void;
   updateScore: () => void;
   addEnergy: (count: number, options: GameMethodOptions) => Promise<void>;
   addMaxEnergy: (count: number, options: GameMethodOptions) => Promise<void>;
@@ -145,9 +148,9 @@ export interface CardGameState {
   enableInfinityMode: () => void;
 }
 
-function generateCardGameStats(): Omit<
-  CardGame,
-  keyof ReturnType<typeof cardGameStatsMethods>
+function generateGlobalGameState(): Omit<
+  GlobalGameState,
+  keyof ReturnType<typeof generateGlobalGameMethods>
 > {
   const save = localStorage.getItem("card-game-stats");
 
@@ -165,15 +168,17 @@ function generateCardGameStats(): Omit<
   }
 }
 
-function cardGameStatsMethods(
+function generateGlobalGameMethods(
   set: (
     partial:
-      | CardGame
-      | Partial<CardGame>
-      | ((state: CardGame) => CardGame | Partial<CardGame>),
+      | GlobalGameState
+      | Partial<GlobalGameState>
+      | ((
+          state: GlobalGameState,
+        ) => GlobalGameState | Partial<GlobalGameState>),
     replace?: boolean | undefined,
   ) => void,
-  getState: () => CardGame & CardGameState,
+  getState: () => GlobalGameState & GameState,
 ) {
   const updateLocalStorage = () => {
     const state = getState();
@@ -187,8 +192,8 @@ function cardGameStatsMethods(
         scoreAverage: state.scoreAverage,
         totalMoney: state.totalMoney,
       } satisfies Omit<
-        CardGame,
-        keyof ReturnType<typeof cardGameStatsMethods>
+        GlobalGameState,
+        keyof ReturnType<typeof generateGlobalGameMethods>
       >),
     );
   };
@@ -276,21 +281,24 @@ function cardGameStatsMethods(
         updateLocalStorage();
       });
     },
-  } satisfies Partial<CardGame>;
+  } satisfies Partial<GlobalGameState>;
 }
 
-function generateInitialState(): Omit<
-  CardGameState,
-  keyof ReturnType<typeof cardGameMethods>
+function generateGameState(): Omit<
+  GameState,
+  keyof ReturnType<typeof generateGameMethods>
 > {
+  const difficulty = fetchSettings().difficulty;
   const saveMetadata = localStorage.getItem("metadata");
   const save = localStorage.getItem("save");
 
   if (save && JSON.stringify(metadata) === saveMetadata) {
-    return parseSave(save);
+    return parseSave(save, difficulty);
   }
 
   localStorage.setItem("metadata", JSON.stringify(metadata));
+
+  const cards = generateCards(difficulty);
 
   let startingDeck: string[] = [];
 
@@ -352,6 +360,8 @@ function generateInitialState(): Omit<
   }
 
   return {
+    cards,
+    difficulty,
     error: null,
     choiceOptions: startingChoices,
     choiceOptionCount: INITIAL_CHOICE_OPTION_COUNT,
@@ -380,15 +390,15 @@ function generateInitialState(): Omit<
   };
 }
 
-function cardGameMethods(
+function generateGameMethods(
   set: (
     partial:
-      | CardGameState
-      | Partial<CardGameState>
-      | ((state: CardGameState) => CardGameState | Partial<CardGameState>),
+      | GameState
+      | Partial<GameState>
+      | ((state: GameState) => GameState | Partial<GameState>),
     replace?: boolean | undefined,
   ) => void,
-  getState: () => CardGameState & CardGame,
+  getState: () => GameState & GlobalGameState,
 ) {
   return {
     throwError: (error: Error) => {
@@ -534,13 +544,13 @@ function cardGameMethods(
       });
     },
 
-    dangerouslyUpdate: (partial: Partial<CardGameState>) => set(partial),
+    dangerouslyUpdate: (partial: Partial<GameState>) => set(partial),
 
     setOperationInProgress: (operation: string, value: boolean) => {
       handleErrors(getState, () => {
         set((state) => ({
           operationInProgress: value
-            ? [...state.operationInProgress, operation]
+            ? Array.from(new Set([...state.operationInProgress, operation]))
             : state.operationInProgress.filter((op) => op !== operation),
         }));
       });
@@ -911,7 +921,7 @@ function cardGameMethods(
         const discard = state.discard.slice();
 
         const from = state[fromKey].slice().filter((c) => {
-          const card = reviveCard(c);
+          const card = reviveCard(c, state);
           if (options?.filter) return options.filter(card);
           return true;
         });
@@ -926,7 +936,7 @@ function cardGameMethods(
           }
 
           const cardName = from.pop()!;
-          const card = reviveCard(cardName);
+          const card = reviveCard(cardName, state);
 
           card.state = "drawing";
 
@@ -989,7 +999,7 @@ function cardGameMethods(
           .filter(
             (c) =>
               c[1] !== "playing" &&
-              (!options?.filter || options.filter(reviveCard(c))),
+              (!options?.filter || options.filter(reviveCard(c, state))),
           );
 
         const dropped = options?.random
@@ -1060,7 +1070,7 @@ function cardGameMethods(
               ...acc,
               [key]: state[key].filter((c) => c[0] !== name),
             };
-          }, {} as Partial<CardGameState>),
+          }, {} as Partial<GameState>),
         }));
 
         state.setOperationInProgress(`removeCard ${name}`, false);
@@ -1351,7 +1361,10 @@ function cardGameMethods(
       localStorage.removeItem("metadata");
       localStorage.removeItem("save");
 
-      set(generateInitialState());
+      set({
+        ...generateGameState(),
+        ...generateGlobalGameState(),
+      });
     },
 
     enableInfinityMode: () => {
@@ -1361,15 +1374,15 @@ function cardGameMethods(
         isWon: false,
       });
     },
-  } satisfies Partial<CardGameState>;
+  } satisfies Partial<GameState>;
 }
 
-export const useCardGame = create<CardGameState & CardGame>(
+export const useCardGame = create<GameState & GlobalGameState>(
   (set, getState) => ({
-    ...generateCardGameStats(),
-    ...generateInitialState(),
-    ...cardGameMethods(set, getState),
-    ...cardGameStatsMethods(set, getState),
+    ...generateGameState(),
+    ...generateGameMethods(set, getState),
+    ...generateGlobalGameState(),
+    ...generateGlobalGameMethods(set, getState),
   }),
 );
 
@@ -1388,6 +1401,7 @@ useCardGame.subscribe(async (state, prevState) => {
     "save",
     JSON.stringify(
       {
+        difficulty: state.difficulty,
         error: state.error,
         choiceOptions: state.choiceOptions,
         choiceOptionCount: state.choiceOptionCount,
@@ -1411,7 +1425,10 @@ useCardGame.subscribe(async (state, prevState) => {
         infinityMode: state.infinityMode,
         logs: state.logs,
         score: state.score,
-      } satisfies Omit<CardGameState, keyof ReturnType<typeof cardGameMethods>>,
+      } satisfies Omit<
+        GameState,
+        keyof ReturnType<typeof generateGameMethods> | "cards"
+      >,
       (key, value) => {
         if (typeof value === "function" && !(key in state)) return undefined;
         return value;
@@ -1423,8 +1440,7 @@ useCardGame.subscribe(async (state, prevState) => {
   if (
     state.operationInProgress.join(",") !==
       prevState.operationInProgress.join("") &&
-    state.operationInProgress.length === 0 &&
-    state.choiceOptions.length === 0
+    state.operationInProgress.length === 0
   ) {
     // on vérifie les achievements
     await state.checkAchievements();

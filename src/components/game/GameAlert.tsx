@@ -7,13 +7,13 @@ import { formatText } from "@/game-utils.ts";
 
 export const GameAlert = (props: { show?: boolean }) => {
   const quality = useSettings((state) => ({
-    animations: state.animations,
-    transparency: state.transparency,
+    animations: state.quality.animations,
+    transparency: state.quality.transparency,
   }));
 
   const game = useCardGame((state) => ({
     handOverflow: state.hand.length >= MAX_HAND_SIZE,
-    almostEmptyDraw: state.draw.length <= 5 && state.draw.length > 0,
+    almostEmptyDraw: state.draw.length < 4 && state.draw.length > 0,
     emptyDraw: state.draw.length === 0,
     almostEmptyReputation: state.reputation <= 5,
   }));

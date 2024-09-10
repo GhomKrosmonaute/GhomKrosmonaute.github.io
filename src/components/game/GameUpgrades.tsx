@@ -3,7 +3,7 @@ import { useSettings } from "@/hooks/useSettings.ts";
 
 import events from "@/data/events.ts";
 
-import { formatText, formatUpgradeText } from "@/game-utils.ts";
+import { formatText, formatUpgradeText, reviveUpgrade } from "@/game-utils.ts";
 import { cn } from "@/utils.ts";
 
 import { Card } from "@/components/Card.tsx";
@@ -13,8 +13,8 @@ import { EventText } from "@/components/game/EventText.tsx";
 
 export const GameUpgrades = (props: { show: boolean }) => {
   const quality = useSettings((state) => ({
-    shadows: state.shadows,
-    animation: state.animations,
+    shadows: state.quality.shadows,
+    animation: state.quality.animations,
     transparency: state,
   }));
 
@@ -53,7 +53,9 @@ export const GameUpgrades = (props: { show: boolean }) => {
               },
             )}
           >
-            {upgrades.map((upgrade, index) => {
+            {upgrades.map((indice, index) => {
+              const upgrade = reviveUpgrade(indice);
+
               const event = events[upgrade.eventName];
 
               return (

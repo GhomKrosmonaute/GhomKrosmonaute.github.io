@@ -37,8 +37,8 @@ export default function App() {
 
   const { godRays, animation, theme } = useSettings((state) => ({
     theme: state.theme,
-    godRays: state.godRays,
-    animation: state.animations,
+    godRays: state.quality.godRays,
+    animation: state.quality.animations,
   }));
 
   const [isCardGameVisible, setCardGameVisibility] = useGlobalState((state) => [

@@ -37,35 +37,25 @@ import themes from "@/data/themes.json";
 import { FPS } from "@/components/game/FPS.tsx";
 
 export const Settings = (props: { show: boolean }) => {
-  const score = useCardGame((state) => state.score);
+  const [score, difficulty] = useCardGame((state) => [
+    state.score,
+    state.difficulty,
+  ]);
   const toggleSettings = useGlobalState((state) => state.toggleSettings);
   const settingsCache = useSettings();
 
-  const [difficulty, setDifficulty] = React.useState(settings.difficulty);
-
-  const [newDifficulty, needReload] = React.useMemo(() => {
+  const [hasChangedDifficulty, needReload] = React.useMemo(() => {
     return [
-      difficulty !== settings.difficulty,
-      settingsCache.animations !== settings.quality.animations,
+      difficulty !== settingsCache.difficulty,
+      settingsCache.quality.animations !== settings.quality.animations,
     ];
-  }, [difficulty, settingsCache.animations]);
+  }, [difficulty, settingsCache.quality.animations, settingsCache.difficulty]);
 
   const apply = React.useCallback(() => {
-    // Apply settings
-    localStorage.setItem(
-      "settings",
-      JSON.stringify({
-        ...JSON.parse(
-          localStorage.getItem("settings") ?? JSON.stringify(settings),
-        ),
-        difficulty,
-      }),
-    );
-
     if (needReload) {
       window.location.search = "?game";
     } else toggleSettings();
-  }, [difficulty, needReload, toggleSettings]);
+  }, [needReload, toggleSettings]);
 
   return (
     <div
@@ -74,9 +64,9 @@ export const Settings = (props: { show: boolean }) => {
         "flex items-center justify-center pointer-events-none",
         {
           "transition-opacity duration-500 ease-in-out":
-            settingsCache.animations,
-          "opacity-0 bg-background/80": settingsCache.transparency,
-          hidden: !settingsCache.transparency,
+            settingsCache.quality.animations,
+          "opacity-0 bg-background/80": settingsCache.quality.transparency,
+          hidden: !settingsCache.quality.transparency,
           "opacity-100 flex pointer-events-auto": props.show,
         },
       )}
@@ -98,8 +88,8 @@ export const Settings = (props: { show: boolean }) => {
           className={cn(
             "flex gap-5 *:space-y-4 *:border *:rounded-xl *:py-4 *:px-6",
             {
-              "*:bg-card/30": settingsCache.transparency,
-              "*:bg-card": !settingsCache.transparency,
+              "*:bg-card/30": settingsCache.quality.transparency,
+              "*:bg-card": !settingsCache.quality.transparency,
             },
           )}
         >
@@ -107,9 +97,11 @@ export const Settings = (props: { show: boolean }) => {
             <div className="text-2xl">Difficulté</div>
             <RadioGroup
               className="space-y-0 gap-0"
-              value={difficulty}
+              value={settingsCache.difficulty}
               onValueChange={(d) => {
-                setDifficulty(d as keyof typeof GAME_ADVANTAGE);
+                settingsCache.updateDifficulty(
+                  d as keyof typeof GAME_ADVANTAGE,
+                );
               }}
             >
               {Object.keys(GAME_ADVANTAGE).map((key) => (
@@ -131,10 +123,12 @@ export const Settings = (props: { show: boolean }) => {
                 >
                   <Checkbox
                     defaultChecked={
-                      settingsCache[key as keyof QualityOptions] as boolean
+                      settingsCache.quality[
+                        key as keyof QualityOptions
+                      ] as boolean
                     }
                     onCheckedChange={(value) =>
-                      settingsCache.update({ [key]: value })
+                      settingsCache.updateQuality({ [key]: value })
                     }
                   />
                   {translations[key as keyof QualityOptions]}
@@ -159,7 +153,7 @@ export const Settings = (props: { show: boolean }) => {
 
                 root.classList.add(`theme-${theme}`);
 
-                settingsCache.update({ theme });
+                settingsCache.updateTheme(theme);
               }}
             >
               {themes.map((theme) => (
@@ -173,23 +167,23 @@ export const Settings = (props: { show: boolean }) => {
         </div>
 
         <div className="flex gap-5">
-          {newDifficulty && (
+          {hasChangedDifficulty && (
             <Button
               variant="default"
               onClick={() => {
-                setDifficulty(settings.difficulty);
+                settingsCache.updateDifficulty(settings.difficulty);
                 toggleSettings();
               }}
             >
               Annuler
             </Button>
           )}
-          {score > 0 && newDifficulty ? (
+          {score > 0 && hasChangedDifficulty ? (
             <AlertDialog>
               <AlertDialogTrigger>
                 <Button
-                  variant={newDifficulty ? "cta" : "default"}
-                  disabled={!newDifficulty}
+                  variant={hasChangedDifficulty ? "cta" : "default"}
+                  disabled={!hasChangedDifficulty}
                 >
                   Appliquer
                 </Button>
@@ -199,9 +193,9 @@ export const Settings = (props: { show: boolean }) => {
                   <AlertDialogTitle className="text-2xl">
                     Une partie est en cours !
                   </AlertDialogTitle>
-                  <AlertDialogDescription>
+                  <AlertDialogDescription className="text-xl leading-5">
                     Le nouveau mode de difficulté sera <br />
-                    appliqué lors d'une prochaine partie.
+                    appliqué à la prochaine partie.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -218,7 +212,7 @@ export const Settings = (props: { show: boolean }) => {
             </Button>
           )}
 
-          {(needReload || newDifficulty) && (
+          {(needReload || hasChangedDifficulty) && (
             <div className="flex-grow border rounded-lg flex items-center gap-3 px-3">
               <Warning className="w-5" />{" "}
               {needReload

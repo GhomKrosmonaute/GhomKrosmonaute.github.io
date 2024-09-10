@@ -11,8 +11,8 @@ import { cn } from "@/utils.ts";
 
 export const GameValues = (props: { show: boolean }) => {
   const { shadows, animation } = useSettings((state) => ({
-    shadows: state.shadows,
-    animation: state.animations,
+    shadows: state.quality.shadows,
+    animation: state.quality.animations,
   }));
 
   const [delayControl, setDelayControl] = React.useState(true);

@@ -16,8 +16,8 @@ const AlertDialogOverlay = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Overlay>
 >(({ className, ...props }, ref) => {
   const quality = useSettings((state) => ({
-    transparency: state.transparency,
-    animation: state.animations,
+    transparency: state.quality.transparency,
+    animation: state.quality.animations,
   }));
 
   return (

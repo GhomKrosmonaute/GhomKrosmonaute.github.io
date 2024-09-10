@@ -18,9 +18,9 @@ export const CenterCard = (
   const modalRef = React.useRef<HTMLDivElement>(null);
   const matches = useMediaQuery("(width >= 768px) and (height >= 768px)");
   const quality = useSettings((state) => ({
-    blur: state.blur,
-    shadows: state.shadows,
-    animations: state.animations,
+    blur: state.quality.blur,
+    shadows: state.quality.shadows,
+    animations: state.quality.animations,
   }));
 
   React.useEffect(() => {

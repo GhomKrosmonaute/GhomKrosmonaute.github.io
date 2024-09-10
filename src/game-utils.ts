@@ -1,3 +1,5 @@
+import type { GlobalGameState, GameState } from "@/hooks/useCardGame";
+
 import type {
   ActionCardInfo,
   CardModifier,
@@ -10,8 +12,6 @@ import type {
   UpgradeIndice,
 } from "@/game-typings";
 
-import type { CardGame, CardGameState } from "@/hooks/useCardGame";
-
 import {
   INFINITE_DRAW_COST,
   MAX_HAND_SIZE,
@@ -19,9 +19,17 @@ import {
   UPGRADE_COST_THRESHOLDS,
 } from "@/game-constants";
 
+import { defaultSettings, Difficulty, Settings } from "@/game-settings.ts";
+
 import cardModifiers from "@/data/cardModifiers.ts";
 import upgrades from "@/data/upgrades.ts";
-import cards from "@/data/cards.ts";
+import generateCards from "@/data/cards.ts";
+
+export function fetchSettings(): Settings {
+  return localStorage.getItem("settings")
+    ? JSON.parse(localStorage.getItem("settings")!)
+    : defaultSettings;
+}
 
 export function handleErrors(
   getState: () => {
@@ -51,14 +59,16 @@ export async function handleErrorsAsync(
 
 interface ChoiceOptionsGeneratorOptions {
   exclude?: string[];
-  filter?: (card: GameCardInfo, state: CardGameState) => boolean;
+  filter?: (card: GameCardInfo, state: GameState) => boolean;
 }
 
 export function generateChoiceOptions(
-  state: CardGameState & CardGame,
+  state: GameState & GlobalGameState,
   options?: ChoiceOptionsGeneratorOptions,
 ): GameCardIndice[] {
-  const _cards = cards.filter(
+  state.setOperationInProgress("choices", true);
+
+  const _cards = state.cards.filter(
     (card) =>
       (state.draw.length === 0 ||
         state.draw.every((name) => name !== card.name)) &&
@@ -92,7 +102,7 @@ export function generateChoiceOptions(
   return outputOptions.map((name) => [name, "drawing"]);
 }
 
-export function getDeck(state: CardGameState): GameCardIndice[] {
+export function getDeck(state: GameState): GameCardIndice[] {
   return [
     ...[...state.draw, ...state.discard].map<GameCardIndice>((name) => [
       name,
@@ -103,7 +113,7 @@ export function getDeck(state: CardGameState): GameCardIndice[] {
 }
 
 export function energyCostColor(
-  state: CardGameState,
+  state: GameState,
   cost: number,
 ): ColorClass | [ColorClass, ColorClass] {
   return state.energy >= cost
@@ -113,12 +123,12 @@ export function energyCostColor(
       : "bg-reputation";
 }
 
-export function isGameOver(state: CardGameState): GameOverReason | false {
+export function isGameOver(state: GameState): GameOverReason | false {
   if (state.reputation === 0) return "reputation";
   if (state.draw.length === 0 && state.hand.length === 0) return "mill";
   if (
     state.hand.every((c) => {
-      const card = reviveCard(c);
+      const card = reviveCard(c, state);
 
       // on vérifie si la condition s'il y en
       if (card.effect.condition && !card.effect.condition(state, card))
@@ -145,7 +155,7 @@ export function rankColor(rank: number) {
 }
 
 export function getUpgradeCost(
-  state: CardGameState,
+  state: GameState,
   card: GameCardInfo,
 ): number | string {
   const index = state.upgrades.length;
@@ -169,7 +179,7 @@ export function cloneSomething<T>(something: T): T {
 }
 
 export function applyCardModifiers(
-  state: CardGameState,
+  state: GameState,
   card: GameCardInfo,
   used: string[],
 ): { card: GameCardInfo; appliedModifiers: CardModifierIndice[] } {
@@ -201,7 +211,7 @@ export function applyCardModifiers(
 }
 
 export function parseCost(
-  state: CardGameState,
+  state: GameState,
   card: GameCardInfo,
   used: string[],
 ) {
@@ -220,7 +230,7 @@ export function parseCost(
   return { needs, cost, canBeBuy, appliedModifiers } as const;
 }
 
-export function willBeRemoved(state: CardGameState, card: GameCardInfo) {
+export function willBeRemoved(state: GameState, card: GameCardInfo) {
   if (card.effect.ephemeral) return true;
 
   if (card.effect.upgrade) {
@@ -371,8 +381,11 @@ export function reviveCardModifier(indice: CardModifierIndice): CardModifier {
   return cardModifiers[indice[0]](...indice[1]);
 }
 
-export function reviveCard(indice: GameCardIndice | string): GameCardInfo {
-  const card = cards.find((c) =>
+export function reviveCard(
+  indice: GameCardIndice | string,
+  state: { cards: GameCardInfo[] },
+): GameCardInfo {
+  const card = state.cards.find((c) =>
     typeof indice === "string" ? c.name === indice : c.name === indice[0],
   );
 
@@ -399,19 +412,24 @@ export function reviveUpgrade(indice: UpgradeIndice | string): Upgrade {
   };
 }
 
-export function parseSave(save: string) {
-  return JSON.parse(save, (key, value) => {
-    if (typeof value === "object") {
-      switch (key) {
-        case "operationInProgress":
-          return [];
+export function parseSave(save: string, difficulty: Difficulty) {
+  const cards = generateCards(difficulty);
+
+  return {
+    ...JSON.parse(save, (key, value) => {
+      if (typeof value === "object") {
+        switch (key) {
+          case "operationInProgress":
+            return [];
+        }
       }
-    }
 
-    if (key === "isOperationInProgress") {
-      return false;
-    }
+      if (key === "isOperationInProgress") {
+        return false;
+      }
 
-    return value;
-  });
+      return value;
+    }),
+    cards,
+  };
 }

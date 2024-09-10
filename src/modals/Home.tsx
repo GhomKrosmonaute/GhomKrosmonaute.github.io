@@ -11,7 +11,7 @@ import { useSettings } from "@/hooks/useSettings.ts";
 
 export const Home = () => {
   const navigate = useNavigate();
-  const animation = useSettings((state) => state.animations);
+  const animation = useSettings((state) => state.quality.animations);
   const largeScreen = useMediaQuery("(width >= 768px) and (height >= 768px)");
   const [isCardGameVisible, setCardGameVisibility] = useGlobalState((state) => [
     state.isCardGameVisible,

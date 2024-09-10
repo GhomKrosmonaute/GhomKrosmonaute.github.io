@@ -1,11 +1,11 @@
 import React from "react";
-import type { CardGame, CardGameState } from "@/hooks/useCardGame.ts";
+import type { GlobalGameState, GameState } from "@/hooks/useCardGame.ts";
 
 export const CrashReportContext = React.createContext<{
   resetCrashReport: () => void;
-  addCrashReport: (error: Error, state: CardGameState & CardGame) => Error;
+  addCrashReport: (error: Error, state: GameState & GlobalGameState) => Error;
   crashReport: Error | null;
-  gameState: (CardGameState & CardGame) | null;
+  gameState: (GameState & GlobalGameState) | null;
 } | null>(null);
 
 export function useCrashReport() {

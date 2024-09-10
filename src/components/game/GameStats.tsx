@@ -16,7 +16,7 @@ import Draw from "@/assets/icons/game/draw.svg";
 
 import { GameGauge } from "@/components/game/GameGauge.tsx";
 import { MAX_REPUTATION, MONEY_TO_REACH } from "@/game-constants.ts";
-import { settings, translations } from "@/game-settings.ts";
+import { translations } from "@/game-settings.ts";
 import { MiniatureImage } from "@/components/game/GameMiniature.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
 import { useSettings } from "@/hooks/useSettings.ts";
@@ -55,12 +55,14 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
     infinity: state.infinityMode,
     day: state.day,
     dayFull: state.dayFull,
+    difficulty: state.difficulty,
+    cards: state.cards,
   }));
 
-  const quality = useSettings((state) => ({
-    shadows: state.shadows,
-    animation: state.animations,
-    transparency: state.transparency,
+  const settings = useSettings((state) => ({
+    shadows: state.quality.shadows,
+    animation: state.quality.animations,
+    transparency: state.quality.transparency,
   }));
 
   return (
@@ -141,7 +143,7 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
                     ? [...game.draw, ...game.discard, ...game.hand]
                     : game[collection]
                   )
-                    .map(reviveCard)
+                    .map((c) => reviveCard(c, game))
                     .toSorted((a, b) => {
                       if (a.type === b.type) return a.effect.upgrade ? 1 : -1;
                       return b.type > a.type ? 1 : -1;
@@ -197,7 +199,7 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
       <div
         className={cn(
           "flex flex-col gap-y-2 items-start *:flex *:items-center *:gap-2 *:h-20 text-6xl text-left rounded-xl p-2",
-          quality.transparency ? "bg-card/60" : "bg-card",
+          settings.transparency ? "bg-card/60" : "bg-card",
           props.className,
         )}
       >
@@ -231,9 +233,7 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
           Icon={Settings}
           name="Mode"
           value={
-            <span className="capitalize">
-              {translations[settings.difficulty]}
-            </span>
+            <span className="capitalize">{translations[game.difficulty]}</span>
           }
         />
         {game.infinity && (

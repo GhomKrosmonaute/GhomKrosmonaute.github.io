@@ -1,4 +1,4 @@
-import type { CardGameState } from "@/hooks/useCardGame";
+import type { GameState } from "@/hooks/useCardGame";
 import events from "@/data/events.ts";
 import React from "react";
 
@@ -12,9 +12,9 @@ export interface Upgrade {
   description: string;
   image: string;
   eventName: TriggerEventName;
-  condition?: (state: CardGameState, upgrade: Upgrade) => boolean;
+  condition?: (state: GameState, upgrade: Upgrade) => boolean;
   onTrigger: (
-    state: CardGameState,
+    state: GameState,
     upgrade: Upgrade,
     reason: GameLog["reason"],
   ) => Promise<unknown>;
@@ -30,13 +30,13 @@ export interface Effect {
   type: "action" | "support";
   cost: number | string;
   template?: (
-    state: CardGameState,
+    state: GameState,
     card: GameCardInfo,
     condition: boolean,
   ) => string;
-  condition?: (state: CardGameState, card: GameCardInfo) => boolean;
+  condition?: (state: GameState, card: GameCardInfo) => boolean;
   onPlayed: (
-    state: CardGameState,
+    state: GameState,
     card: GameCardInfo,
     reason: GameLog["reason"],
   ) => Promise<unknown>;
@@ -78,8 +78,8 @@ export type GameCardState =
 export type GameCardInfo = ActionCardInfo | SupportCardInfo;
 
 export type CardModifier = {
-  condition?: (card: GameCardInfo, state: CardGameState) => boolean;
-  use: (card: GameCardInfo, state: CardGameState) => GameCardInfo;
+  condition?: (card: GameCardInfo, state: GameState) => boolean;
+  use: (card: GameCardInfo, state: GameState) => GameCardInfo;
   once?: boolean;
 };
 

@@ -32,7 +32,9 @@ export const Tilt: React.FC<TiltProps> = ({
   children,
   style,
 }) => {
-  const enabled = useSettings((state) => state.tilt && state.animations);
+  const enabled = useSettings(
+    (state) => state.quality.tilt && state.quality.animations,
+  );
   const containerRef = React.useRef<HTMLDivElement>(null);
   const isHovered = useHover(containerRef);
   const [styleState, setStyle] = React.useState<React.CSSProperties>({});
@@ -127,7 +129,7 @@ export const Tilt: React.FC<TiltProps> = ({
 
 export const TiltFoil: React.FC = () => {
   const tiltContext = React.useContext(TiltContext);
-  const enabled = useSettings((state) => state.foil);
+  const enabled = useSettings((state) => state.quality.foil);
 
   if (!enabled) {
     return <></>;

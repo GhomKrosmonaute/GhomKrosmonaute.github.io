@@ -65,7 +65,7 @@ export const GameDebugActions = () => {
       <Button
         size="cta"
         disabled={runningOps || game.hand.length === 0}
-        onClick={() => game.removeCard(game.hand[0]?.name)}
+        onClick={() => game.removeCard(game.hand[0]?.[0])}
       >
         Supprime la première carte
       </Button>

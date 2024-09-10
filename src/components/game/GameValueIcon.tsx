@@ -27,9 +27,9 @@ export const GameValueIcon = ({
   symbol?: boolean;
   miniature?: boolean;
 }) => {
-  const quality = useSettings(({ perspective, shadows }) => ({
-    perspective,
-    shadows,
+  const quality = useSettings((state) => ({
+    perspective: state.quality.perspective,
+    shadows: state.quality.shadows,
   }));
 
   if (isCost && value === 0) return null;

@@ -20,9 +20,9 @@ import { bank } from "@/sound.ts";
 
 export const GameOver = (props: { show: boolean }) => {
   const quality = useSettings((state) => ({
-    shadows: state.shadows,
-    animation: state.animations,
-    transparency: state.transparency,
+    shadows: state.quality.shadows,
+    animation: state.quality.animations,
+    transparency: state.quality.transparency,
   }));
 
   const [setVisible, toggleSettings] = useGlobalState((state) => [

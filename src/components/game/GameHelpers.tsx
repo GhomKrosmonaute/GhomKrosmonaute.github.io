@@ -16,9 +16,9 @@ export const GameHelpers = (props: { show: boolean }) => {
   const isHovered = useHover(ref);
 
   const { animation, shadow, transparency } = useSettings((state) => ({
-    animation: state.animations,
-    transparency: state.transparency,
-    shadow: state.shadows,
+    animation: state.quality.animations,
+    transparency: state.quality.transparency,
+    shadow: state.quality.shadows,
   }));
 
   const [helpIndex, setHelpIndex] = React.useState<number>(0);

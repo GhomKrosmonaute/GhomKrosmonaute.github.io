@@ -3,7 +3,11 @@ import React from "react";
 import ghom from "@/data/ghom.json";
 
 import { CrashReportContext, useCrashReport } from "@/hooks/useCrashReport.ts";
-import { CardGame, CardGameState, useCardGame } from "@/hooks/useCardGame.ts";
+import {
+  GlobalGameState,
+  GameState,
+  useCardGame,
+} from "@/hooks/useCardGame.ts";
 
 import { cloneSomething } from "@/game-utils.ts";
 
@@ -19,7 +23,7 @@ export const CrashReportProvider = ({ children }: React.PropsWithChildren) => {
 
   const [crashReport, setCrashReport] = React.useState<Error | null>(null);
   const [gameState, setGameState] = React.useState<
-    (CardGameState & CardGame) | null
+    (GameState & GlobalGameState) | null
   >(null);
 
   React.useEffect(() => {
@@ -30,7 +34,7 @@ export const CrashReportProvider = ({ children }: React.PropsWithChildren) => {
   }, [gameError]);
 
   const addCrashReport = React.useCallback(
-    (error: Error, state: CardGameState & CardGame) => {
+    (error: Error, state: GameState & GlobalGameState) => {
       bank.error.play();
       navigator.clipboard
         .writeText(JSON.stringify(state))

@@ -22,9 +22,12 @@ export interface BorderLightProps {
 export const BorderLight = (
   props: React.ComponentProps<"div"> & BorderLightProps,
 ) => {
-  const shadows = useSettings((state) => state.shadows);
+  const shadows = useSettings((state) => state.quality.shadows);
   const activated = useSettings(
-    (state) => state.borderLights && state.transparency && state.animations,
+    (state) =>
+      state.quality.borderLights &&
+      state.quality.transparency &&
+      state.quality.animations,
   );
 
   const currentGroup = props.groupName
