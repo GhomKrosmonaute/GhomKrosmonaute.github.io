@@ -141,7 +141,7 @@ export function isGameOver(state: GameState): GameOverReason | false {
       state.hand.length >= MAX_HAND_SIZE ||
       state.draw.length === 0)
   )
-    return "soft-lock";
+    return state.draw.length === 0 ? "mill-lock" : "soft-lock";
 
   return false;
 }

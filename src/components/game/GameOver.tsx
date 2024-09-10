@@ -85,6 +85,7 @@ export const GameOver = (props: { show: boolean }) => {
                     reputation: "Tu as utilisé toute ta jauge de réputation...",
                     mill: "Tu n'as plus de carte...",
                     "soft-lock": "Ta main est injouable...",
+                    "mill-lock": "Tu n'as plus de carte à piocher...",
                   }[game.reason]
                 }
               </p>
@@ -158,21 +159,31 @@ export const GameOver = (props: { show: boolean }) => {
                       case "reputation":
                         return (
                           helper.includes("@reputation") ||
-                          helper.includes("gagnez la partie")
+                          helper.includes("gagnes la partie")
                         );
                       case "mill":
                         return (
                           helper.includes("plus jouer") ||
                           helper.includes("défausse") ||
                           helper.includes("limitée") ||
-                          helper.includes("gagnez la partie")
+                          helper.includes("Recycler") ||
+                          helper.includes("gagnes la partie")
                         );
                       case "soft-lock":
                         return (
                           helper.includes("plus jouer") ||
                           helper.includes("progressivement") ||
                           helper.includes("cartes à jouer") ||
-                          helper.includes("gagnez la partie")
+                          helper.includes("gagnes la partie")
+                        );
+                      case "mill-lock":
+                        return (
+                          helper.includes("plus jouer") ||
+                          helper.includes("pioche") ||
+                          helper.includes("Quand une carte est jouée") ||
+                          helper.includes("cartes à jouer") ||
+                          helper.includes("Recycler") ||
+                          helper.includes("gagnes la partie")
                         );
                       default:
                         return false;

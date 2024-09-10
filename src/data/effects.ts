@@ -280,12 +280,18 @@ export default function generateEffects(difficulty: Difficulty): Effect[] {
       },
       {
         description: `Défausse une carte aléatoire, pioche ${advantage >= 1 ? 2 : "une"} carte${advantage > 1 ? "s" : ""} et gagne ${(2 + advantage - 1) * ENERGY_TO_MONEY}M$`, // -2 +1 +2 = +1
-        onPlayed: async (state, _, reason) => {
-          await state.discardCard({ random: true, reason });
+        onPlayed: async (state, card, reason) => {
+          await state.discardCard({
+            random: true,
+            reason,
+            filter: (c) => c.name !== card.name,
+          });
+
           await state.drawCard(advantage >= 1 ? 2 : 1, {
             skipGameOverPause: true,
             reason,
           });
+
           await state.addMoney((2 + advantage - 1) * ENERGY_TO_MONEY, {
             skipGameOverPause: true,
             reason,

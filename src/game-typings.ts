@@ -95,7 +95,12 @@ export type TriggerEvent = {
   colors?: ColorClass | [ColorClass, ColorClass];
 };
 
-export type GameOverReason = "mill" | "soft-lock" | "reputation" | null;
+export type GameOverReason =
+  | "mill"
+  | "soft-lock"
+  | "mill-lock"
+  | "reputation"
+  | null;
 
 export type GameLog = {
   type: "money" | "reputation" | "energy";
