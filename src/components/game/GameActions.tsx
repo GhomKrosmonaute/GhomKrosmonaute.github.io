@@ -1,56 +1,56 @@
-import React from "react";
+import React from "react"
 
-import { INFINITE_DRAW_COST, MAX_HAND_SIZE } from "@/game-constants.ts";
+import { INFINITE_DRAW_COST, MAX_HAND_SIZE } from "@/game-constants.ts"
 
-import { cn } from "@/utils.ts";
-import { bank } from "@/sound.ts";
+import { cn } from "@/utils.ts"
+import { bank } from "@/sound.ts"
 import {
   energyCostColor,
   formatText,
   isGameOver,
   reviveCard,
   wait,
-} from "@/game-utils";
+} from "@/game-utils"
 
-import { Button } from "@/components/ui/button.tsx";
-import { GameValueIcon } from "@/components/game/GameValueIcon.tsx";
-import { GameCard } from "@/components/game/GameCard.tsx";
+import { Button } from "@/components/ui/button.tsx"
+import { GameValueIcon } from "@/components/game/GameValueIcon.tsx"
+import { GameCard } from "@/components/game/GameCard.tsx"
 
-import { useCardGame } from "@/hooks/useCardGame.ts";
-import { useSettings } from "@/hooks/useSettings.ts";
+import { useCardGame } from "@/hooks/useCardGame.ts"
+import { useSettings } from "@/hooks/useSettings.ts"
 
 export const GameActions = (props: { show: boolean }) => {
-  const game = useCardGame();
-  const animation = useSettings((state) => state.quality.animations);
+  const game = useCardGame()
+  const animation = useSettings((state) => state.quality.animations)
 
   const runningOps =
-    game.operationInProgress.filter((o) => o !== "choices").length > 0;
+    game.operationInProgress.filter((o) => o !== "choices").length > 0
   const newSprint = React.useMemo(
     () => Math.floor(game.day) !== 0 && Math.floor(game.day) % 7 === 0,
     [game.day],
-  );
+  )
 
   const drawButtonDisabled =
     game.energy + game.reputation < INFINITE_DRAW_COST ||
     game.hand.length >= MAX_HAND_SIZE ||
     game.draw.length === 0 ||
-    runningOps;
+    runningOps
 
   React.useEffect(() => {
     if (
       game.choiceOptions.length === 0 &&
       game.operationInProgress.includes("choices")
     ) {
-      game.setOperationInProgress("choices", false);
+      game.setOperationInProgress("choices", false)
     }
 
     if (
       game.choiceOptions.length > 0 &&
       !game.operationInProgress.includes("choices")
     ) {
-      game.setOperationInProgress("choices", true);
+      game.setOperationInProgress("choices", true)
     }
-  }, [game.choiceOptions.length, game.operationInProgress]);
+  }, [game.choiceOptions.length, game.operationInProgress])
 
   return (
     <div
@@ -66,8 +66,10 @@ export const GameActions = (props: { show: boolean }) => {
       <div className="space-y-4 group/actions bg-background/80 p-2 rounded-xl relative">
         <h2
           className={cn(
-            "text-3xl ml-2",
-            game.choiceOptions.length > 0 ? "text-left" : "text-center",
+            "text-3xl ml-2 select-none",
+            game.choiceOptions.length > 0 && game.choiceOptions[0].length < 4
+              ? "text-left"
+              : "text-center",
           )}
         >
           {game.choiceOptions.length > 0 ? (
@@ -96,25 +98,25 @@ export const GameActions = (props: { show: boolean }) => {
               grayscale: drawButtonDisabled,
             })}
             onClick={async () => {
-              game.setOperationInProgress("infinity-draw", true);
+              game.setOperationInProgress("infinity-draw", true)
 
-              bank.play.play();
+              bank.play.play()
 
               await game.addEnergy(-INFINITE_DRAW_COST, {
                 skipGameOverPause: true,
                 reason: "Bouton pioche",
-              });
+              })
 
               await game.drawCard(1, {
                 skipGameOverPause: true,
                 reason: "Bouton pioche",
-              });
+              })
 
-              await game.advanceTime(INFINITE_DRAW_COST);
+              await game.advanceTime(INFINITE_DRAW_COST)
 
-              if (isGameOver(game)) await wait(2000);
+              if (isGameOver(game)) await wait(2000)
 
-              game.setOperationInProgress("infinity-draw", false);
+              game.setOperationInProgress("infinity-draw", false)
             }}
             disabled={drawButtonDisabled}
             size="cta"
@@ -133,7 +135,7 @@ export const GameActions = (props: { show: boolean }) => {
               className="flex gap-3 absolute right-2 -top-2"
               disabled={runningOps}
               onClick={async () => {
-                bank.play.play();
+                bank.play.play()
 
                 await game.addEnergy(
                   newSprint && game.choiceOptions.length === 1 ? 10 : 5,
@@ -141,11 +143,11 @@ export const GameActions = (props: { show: boolean }) => {
                     reason: "Bouton passer",
                     skipGameOverPause: true,
                   },
-                );
+                )
 
                 game.dangerouslyUpdate({
                   choiceOptions: game.choiceOptions.slice(1),
-                });
+                })
               }}
             >
               <GameValueIcon
@@ -160,12 +162,20 @@ export const GameActions = (props: { show: boolean }) => {
               if (game.choiceOptions[0].length === 0) {
                 game.dangerouslyUpdate({
                   choiceOptions: game.choiceOptions.slice(1),
-                });
+                })
               }
 
               return (
-                <div className="flex justify-center">
-                  {/*{JSON.stringify(game.choiceOptions[0])}*/}
+                <div
+                  className={cn("flex justify-center", {
+                    "grid grid-cols-3": game.choiceOptions[0].length < 3,
+                  })}
+                >
+                  <div
+                    className={cn({
+                      hidden: game.choiceOptions[0].length !== 1,
+                    })}
+                  />
                   {game.choiceOptions[0].map((indice, i) => (
                     <GameCard
                       key={i}
@@ -174,11 +184,11 @@ export const GameActions = (props: { show: boolean }) => {
                     />
                   ))}
                 </div>
-              );
+              )
             })()}
           </>
         )}
       </div>
     </div>
-  );
-};
+  )
+}

@@ -1,12 +1,12 @@
-import type { TriggerEvent } from "@/game-typings.ts";
+import type { TriggerEvent } from "@/game-typings.ts"
 
-import Day from "@/assets/icons/game/day.svg";
-import Play from "@/assets/icons/game/play.svg";
-import Sprint from "@/assets/icons/game/sprint.svg";
-import Draw from "@/assets/icons/game/draw.svg";
-import Down from "@/assets/icons/game/down.svg";
-import Cross from "@/assets/icons/cross.svg";
-import Up from "@/assets/icons/game/up.svg";
+import Day from "@/assets/icons/game/day.svg"
+import Play from "@/assets/icons/game/play.svg"
+import Sprint from "@/assets/icons/game/sprint.svg"
+import Draw from "@/assets/icons/game/draw.svg"
+import Down from "@/assets/icons/game/down.svg"
+import Cross from "@/assets/icons/cross.svg"
+import Upgrade from "@/assets/icons/game/upgrade.svg"
 
 const events = {
   daily: {
@@ -38,9 +38,9 @@ const events = {
   },
   onUpgradeThis: {
     name: "Quand tu obtiens cette amélioration",
-    icon: Up,
+    icon: Upgrade,
     colors: "bg-upgrade",
   },
-} satisfies Record<string, TriggerEvent>;
+} satisfies Record<string, TriggerEvent>
 
-export default events;
+export default events

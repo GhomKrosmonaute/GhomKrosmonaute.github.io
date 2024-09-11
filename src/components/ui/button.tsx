@@ -1,14 +1,14 @@
-import * as React from "react";
-import { Slot } from "@radix-ui/react-slot";
-import { cva, type VariantProps } from "class-variance-authority";
+import * as React from "react"
+import { Slot } from "@radix-ui/react-slot"
+import { cva, type VariantProps } from "class-variance-authority"
 
-import { cn } from "@/utils";
-import { BorderLight } from "@/components/ui/border-light.tsx";
-import { useSettings } from "@/hooks/useSettings.ts";
+import { cn } from "@/utils"
+import { BorderLight } from "@/components/ui/border-light.tsx"
+import { useSettings } from "@/hooks/useSettings.ts"
 
 const buttonVariants = cva(
   cn(
-    "button group/button",
+    "button group/button select-none",
     "flex items-center justify-center whitespace-nowrap rounded-md text-sm font-sans font-medium transition-colors focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50",
     "ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
     "relative overflow-hidden xs:px-4 xs:py-2 xs:max-w-fit",
@@ -40,18 +40,18 @@ const buttonVariants = cva(
       size: "default",
     },
   },
-);
+)
 
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
-  asChild?: boolean;
+  asChild?: boolean
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, ...props }, ref) => {
-    const shadows = useSettings((state) => state.quality.shadows);
-    const Comp = asChild ? Slot : "button";
+    const shadows = useSettings((state) => state.quality.shadows)
+    const Comp = asChild ? Slot : "button"
     return (
       <Comp
         {...props}
@@ -74,10 +74,10 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           fast
         />
       </Comp>
-    );
+    )
   },
-);
-Button.displayName = "Button";
+)
+Button.displayName = "Button"
 
 // eslint-disable-next-line react-refresh/only-export-components
-export { Button, buttonVariants };
+export { Button, buttonVariants }

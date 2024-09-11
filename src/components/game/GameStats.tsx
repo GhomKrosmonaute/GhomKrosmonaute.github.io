@@ -1,26 +1,28 @@
-import React from "react";
+import React from "react"
 
-import { formatText, reviveCard } from "@/game-utils.ts";
-import { useCardGame } from "@/hooks/useCardGame.ts";
-import { cn } from "@/utils.ts";
+import { formatText, reviveCard } from "@/game-utils.ts"
+import { useCardGame } from "@/hooks/useCardGame.ts"
+import { cn } from "@/utils.ts"
 
-import Day from "@/assets/icons/game/day.svg";
-import Deck from "@/assets/icons/game/deck.svg";
-import Discard from "@/assets/icons/game/discard.svg";
-import Infinity from "@/assets/icons/game/infinity.svg";
-import Money from "@/assets/icons/game/money.svg";
-import Score from "@/assets/icons/game/score.svg";
-import Settings from "@/assets/icons/settings.svg";
-import Sprint from "@/assets/icons/game/sprint.svg";
-import Draw from "@/assets/icons/game/draw.svg";
+import Day from "@/assets/icons/game/day.svg"
+import Deck from "@/assets/icons/game/deck.svg"
+import Discard from "@/assets/icons/game/discard.svg"
+import Infinity from "@/assets/icons/game/infinity.svg"
+import Money from "@/assets/icons/game/money.svg"
+import Score from "@/assets/icons/game/score.svg"
+import Settings from "@/assets/icons/settings.svg"
+import Sprint from "@/assets/icons/game/sprint.svg"
+import Draw from "@/assets/icons/game/draw.svg"
+import Energy from "@/assets/icons/game/energy.svg"
+import Reputation from "@/assets/icons/game/reputation.svg"
 
-import { GameGauge } from "@/components/game/GameGauge.tsx";
-import { MAX_REPUTATION, MONEY_TO_REACH } from "@/game-constants.ts";
-import { translations } from "@/game-settings.ts";
-import { MiniatureImage } from "@/components/game/GameMiniature.tsx";
-import { Separator } from "@/components/ui/separator.tsx";
-import { useSettings } from "@/hooks/useSettings.ts";
-import { GameCardPopover } from "@/components/game/GameCardPopover.tsx";
+import { GameGauge } from "@/components/game/GameGauge.tsx"
+import { MAX_REPUTATION, MONEY_TO_REACH } from "@/game-constants.ts"
+import { translations } from "@/game-settings.ts"
+import { MiniatureImage } from "@/components/game/GameMiniature.tsx"
+import { Separator } from "@/components/ui/separator.tsx"
+import { useSettings } from "@/hooks/useSettings.ts"
+import { GameCardPopover } from "@/components/game/GameCardPopover.tsx"
 
 export const Stat = ({
   name,
@@ -28,22 +30,27 @@ export const Stat = ({
   value,
   ...props
 }: {
-  name: string;
-  Icon: React.FunctionComponent<React.ComponentProps<"div">>;
-  value: React.ReactNode;
+  name: string
+  Icon: React.FunctionComponent<React.ComponentProps<"div">>
+  value?: React.ReactNode
 } & React.ComponentProps<"div">) => {
   return (
     <div {...props} className={cn("flex items-center gap-1", props.className)}>
       <Icon className="h-full aspect-square w-fit self-center justify-self-start" />
       <span className="inline-flex items-baseline whitespace-nowrap gap-1">
-        <span>{name} :</span> {value}
+        <span>
+          {name}
+          {value != void 0 ? " :" : ""}
+        </span>{" "}
+        {value}
       </span>
     </div>
-  );
-};
+  )
+}
 
 export const Stats = (props: { className?: string; forHUD?: boolean }) => {
   const game = useCardGame((state) => ({
+    debug: state.debug,
     money: state.money,
     score: state.score,
     energy: state.energy,
@@ -57,13 +64,13 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
     dayFull: state.dayFull,
     difficulty: state.difficulty,
     cards: state.cards,
-  }));
+  }))
 
   const settings = useSettings((state) => ({
     shadows: state.quality.shadows,
     animation: state.quality.animations,
     transparency: state.quality.transparency,
-  }));
+  }))
 
   return (
     <>
@@ -77,8 +84,8 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
                 max={game.energyMax}
                 color="bg-energy"
               />
-              <div className="capitalize last:col-span-1 flex items-center">
-                énergie
+              <div className="last:col-span-1 flex items-center">
+                <Stat Icon={Energy} name="Energie" className="h-5" />
               </div>
             </div>
             <div id="reputation">
@@ -89,7 +96,7 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
                 color="bg-reputation"
               />
               <div className="last:col-span-1 flex items-center">
-                Réputation
+                <Stat Icon={Reputation} name="Réputation" className="h-5" />
               </div>
             </div>
             <div id="day">
@@ -145,8 +152,8 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
                   )
                     .map((c) => reviveCard(c, game))
                     .toSorted((a, b) => {
-                      if (a.type === b.type) return a.effect.upgrade ? 1 : -1;
-                      return b.type > a.type ? 1 : -1;
+                      if (a.type === b.type) return a.effect.upgrade ? 1 : -1
+                      return b.type > a.type ? 1 : -1
                     })
                     .map((c, i) => (
                       <GameCardPopover key={i} card={c}>
@@ -233,7 +240,10 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
           Icon={Settings}
           name="Mode"
           value={
-            <span className="capitalize">{translations[game.difficulty]}</span>
+            <span className="capitalize">
+              {translations[game.difficulty]}
+              {game.debug && " [debug]"}
+            </span>
           }
         />
         {game.infinity && (
@@ -241,5 +251,5 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
         )}
       </div>
     </>
-  );
-};
+  )
+}
