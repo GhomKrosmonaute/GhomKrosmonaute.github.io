@@ -21,9 +21,10 @@ import { useSettings } from "@/hooks/useSettings.ts"
 import Theme from "@/assets/icons/theme.svg"
 
 import themes from "@/data/themes.json"
+import { Macbook } from "@/components/ui/macbook.tsx"
 
 const SplineMacbook = React.lazy(() =>
-  import("@/components/ui/spline-macbook.tsx").then((mod) => ({
+  import("@/components/ui/macbook-animated.tsx").then((mod) => ({
     default: mod.SplineMacbook,
   })),
 )
@@ -124,21 +125,20 @@ export default function App() {
           )}
         >
           {desktop && animation ? (
-            <React.Suspense>
-              <SplineMacbook />
-            </React.Suspense>
+            <>
+              <React.Suspense>
+                <SplineMacbook />
+              </React.Suspense>
+              <Macbook />
+            </>
           ) : (
-            <img
-              src="images/spline-placeholder.png"
-              alt="Image stylisée d'un Mac book pro"
-              className="absolute"
-            />
+            <Macbook force />
           )}
         </div>
       )}
 
       <Button
-        onClick={toggleDarkMode}
+        onClick={() => toggleDarkMode()}
         variant="icon"
         size="icon"
         className="fixed m-4 right-0 top-0 z-50"

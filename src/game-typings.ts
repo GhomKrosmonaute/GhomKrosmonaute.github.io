@@ -24,6 +24,19 @@ export interface Upgrade {
   max: number
 }
 
+export type RawUpgrade = Pick<
+  Upgrade,
+  | "name"
+  | "description"
+  | "image"
+  | "onTrigger"
+  | "cost"
+  | "condition"
+  | "eventName"
+> & {
+  max?: number
+}
+
 export interface Effect {
   index: number
   description: string

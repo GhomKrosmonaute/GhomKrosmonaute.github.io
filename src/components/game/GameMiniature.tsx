@@ -6,12 +6,15 @@ import { reviveCard, reviveUpgrade } from "@/game-utils.ts"
 import { useCardGame } from "@/hooks/useCardGame.ts"
 
 export const GameMiniature = (props: { item: GameLog["reason"] }) => {
-  const cards = useCardGame((state) => state.cards)
+  const [cards, rawUpgrades] = useCardGame((state) => [
+    state.cards,
+    state.rawUpgrades,
+  ])
 
   const revived = Array.isArray(props.item)
     ? props.item.length === 2
       ? reviveCard(props.item, { cards })
-      : reviveUpgrade(props.item)
+      : reviveUpgrade(props.item, { rawUpgrades })
     : props.item
 
   return (

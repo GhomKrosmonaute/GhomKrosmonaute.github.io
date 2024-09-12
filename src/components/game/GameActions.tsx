@@ -8,6 +8,7 @@ import {
   energyCostColor,
   formatText,
   isGameOver,
+  isNewSprint,
   reviveCard,
   wait,
 } from "@/game-utils"
@@ -25,10 +26,8 @@ export const GameActions = (props: { show: boolean }) => {
 
   const runningOps =
     game.operationInProgress.filter((o) => o !== "choices").length > 0
-  const newSprint = React.useMemo(
-    () => Math.floor(game.day) !== 0 && Math.floor(game.day) % 7 === 0,
-    [game.day],
-  )
+
+  const newSprint = React.useMemo(() => isNewSprint(game.day), [game.day])
 
   const drawButtonDisabled =
     game.energy + game.reputation < INFINITE_DRAW_COST ||
@@ -135,19 +134,7 @@ export const GameActions = (props: { show: boolean }) => {
               className="flex gap-3 absolute right-2 -top-2"
               disabled={runningOps}
               onClick={async () => {
-                bank.play.play()
-
-                await game.addEnergy(
-                  newSprint && game.choiceOptions.length === 1 ? 10 : 5,
-                  {
-                    reason: "Bouton passer",
-                    skipGameOverPause: true,
-                  },
-                )
-
-                game.dangerouslyUpdate({
-                  choiceOptions: game.choiceOptions.slice(1),
-                })
+                await game.skip({ reason: "Bouton passer" })
               }}
             >
               <GameValueIcon

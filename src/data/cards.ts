@@ -2,7 +2,6 @@ import React from "react"
 import ReactDOMServer from "react-dom/server"
 
 import projects from "@/data/projects.json"
-import upgrades from "@/data/upgrades.ts"
 import technos from "@/data/techno.json"
 
 import { map, formatText, formatUpgradeText } from "@/game-utils.ts"
@@ -14,9 +13,11 @@ import { EventText } from "@/components/game/EventText.tsx"
 import generateEffects from "@/data/effects.ts"
 
 import type { Difficulty } from "@/game-settings.ts"
+import generateUpgrades from "@/data/upgrades.ts"
 
 export default function generateCards(difficulty: Difficulty): GameCardInfo[] {
   const effects = generateEffects(difficulty)
+  const upgrades = generateUpgrades(difficulty)
 
   const supportEffects = effects.filter((effect) => effect.type === "support")
   const actionEffects = effects.filter((effect) => effect.type === "action")

@@ -8,6 +8,7 @@ import type {
   GameCardIndice,
   GameCardInfo,
   GameOverReason,
+  RawUpgrade,
   Upgrade,
   UpgradeIndice,
 } from "@/game-typings"
@@ -22,8 +23,9 @@ import {
 import { defaultSettings, Difficulty, Settings } from "@/game-settings.ts"
 
 import cardModifiers from "@/data/cardModifiers.ts"
-import upgrades from "@/data/upgrades.ts"
+
 import generateCards from "@/data/cards.ts"
+import generateUpgrades from "@/data/upgrades.ts"
 
 export function fetchSettings(): Settings {
   return localStorage.getItem("settings")
@@ -86,7 +88,7 @@ export function generateChoiceOptions(
       (!card.effect.upgrade ||
         state.upgrades.length === 0 ||
         state.upgrades.every((u) => {
-          const up = reviveUpgrade(u)
+          const up = reviveUpgrade(u, state)
           return up.name !== card.name || up.cumul < up.max
         })),
   )
@@ -125,6 +127,10 @@ export function energyCostColor(
     : state.energy > 0
       ? ["bg-energy", "bg-reputation"]
       : "bg-reputation"
+}
+
+export function isNewSprint(day: number) {
+  return Math.floor(day) !== 0 && Math.floor(day) % 7 === 0
 }
 
 export function isGameWon(state: GameState): boolean {
@@ -242,7 +248,7 @@ export function willBeRemoved(state: GameState, card: GameCardInfo) {
   if (card.effect.ephemeral) return true
 
   if (card.effect.upgrade) {
-    const rawUpgrade = upgrades.find((u) => u.name === card.name)!
+    const rawUpgrade = state.rawUpgrades.find((u) => u.name === card.name)!
 
     if (rawUpgrade.max) {
       if (rawUpgrade.max === 1) return true
@@ -251,7 +257,7 @@ export function willBeRemoved(state: GameState, card: GameCardInfo) {
 
       if (!indice) return false
 
-      const upgrade = reviveUpgrade(indice)
+      const upgrade = reviveUpgrade(indice, state)
 
       return upgrade.cumul >= upgrade.max - 1
     }
@@ -404,8 +410,11 @@ export function reviveCard(
   return card
 }
 
-export function reviveUpgrade(indice: UpgradeIndice | string): Upgrade {
-  const raw = upgrades.find((u) =>
+export function reviveUpgrade(
+  indice: UpgradeIndice | string,
+  state: { rawUpgrades: RawUpgrade[] },
+): Upgrade {
+  const raw = state.rawUpgrades.find((u) =>
     typeof indice === "string" ? u.name === indice : u.name === indice[0],
   )
 
@@ -422,6 +431,7 @@ export function reviveUpgrade(indice: UpgradeIndice | string): Upgrade {
 
 export function parseSave(save: string, difficulty: Difficulty) {
   const cards = generateCards(difficulty)
+  const rawUpgrades = generateUpgrades(difficulty)
 
   return {
     ...JSON.parse(save, (key, value) => {
@@ -439,5 +449,6 @@ export function parseSave(save: string, difficulty: Difficulty) {
       return value
     }),
     cards,
+    rawUpgrades,
   }
 }

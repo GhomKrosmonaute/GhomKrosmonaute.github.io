@@ -1,5 +1,6 @@
 import type { GlobalGameState, GameState } from "@/hooks/useCardGame.ts"
-import { reviveCard } from "@/game-utils.ts"
+import { fetchSettings, parseCost, reviveCard } from "@/game-utils.ts"
+import { MAX_HAND_SIZE } from "@/game-constants.ts"
 
 const achievements: {
   name: string
@@ -17,9 +18,57 @@ const achievements: {
     unlockCondition: (state) => state.wonGames >= 5,
   },
   {
+    name: "Try harder",
+    description: "Gagner 25 parties",
+    unlockCondition: (state) => state.wonGames >= 10,
+  },
+  {
     name: "Maître du jeu",
-    description: "Utiliser 5 améliorations différentes",
+    description: "Utiliser 5 améliorations différentes en une partie",
     unlockCondition: (state) => state.upgrades.length >= 5,
+  },
+  {
+    name: "Enutrof",
+    description: "Utiliser toutes les améliorations économiques en une partie",
+    unlockCondition: (state) =>
+      state.rawUpgrades
+        .filter((raw) => raw.description.includes("M$"))
+        .every((raw) =>
+          state.upgrades.some((upgrade) => upgrade[0] === raw.name),
+        ),
+  },
+  {
+    name: "Eliatrop",
+    description: "Utiliser toutes les améliorations énergétiques en une partie",
+    unlockCondition: (state) =>
+      state.rawUpgrades
+        .filter((raw) => raw.description.includes("@energy"))
+        .every((raw) =>
+          state.upgrades.some((upgrade) => upgrade[0] === raw.name),
+        ),
+  },
+  {
+    name: "Ecaflip",
+    description: "Faire 20 lancés de pièce en une partie",
+    unlockCondition: (state) => state.coinFlips >= 20,
+  },
+  {
+    name: "Xelor",
+    description: `Avoir ${MAX_HAND_SIZE} cartes en main qui coutent zéro`,
+    unlockCondition: (state) =>
+      state.hand.filter(
+        (card) => parseCost(state, reviveCard(card, state), []).cost === 0,
+      ).length >= 5,
+  },
+  {
+    name: "Sadida",
+    description: "Recycler 150 cartes en une partie",
+    unlockCondition: (state) => state.recycledCards >= 150,
+  },
+  {
+    name: "Sacrieur",
+    description: "Défausser 50 cartes en une partie",
+    unlockCondition: (state) => state.discardedCards >= 50,
   },
   {
     name: "Trader",
@@ -39,9 +88,41 @@ const achievements: {
     unlockCondition: (state) => state.discoveries.length >= 20,
   },
   {
+    name: "Perfectionniste",
+    description: "Découvrir toutes les cartes @upgrade",
+    unlockCondition: (state) =>
+      state.rawUpgrades.every((raw) => state.discoveries.includes(raw.name)),
+  },
+  {
     name: "Complétionniste",
     description: "Découvrir toutes les cartes",
     unlockCondition: (state) => state.discoveries.length === state.cards.length,
+  },
+  {
+    name: "Retro gamer",
+    description: "Utiliser le Konami code",
+    unlockCondition: (state) => state.debug,
+  },
+  {
+    name: "Changer de thême",
+    description: "Changer le thême du jeu",
+    unlockCondition: () => fetchSettings().theme !== "default",
+  },
+  {
+    name: "Procrastinateur",
+    description: "Faire durer la partie plus de 90 jours",
+    unlockCondition: (state) => state.day >= 90,
+  },
+  {
+    name: "Sélectif",
+    description: "Passer 20 choix de carte en une partie",
+    unlockCondition: (state) => state.skippedChoices >= 20,
+  },
+  {
+    name: "Jour, nuit, jour, nuit...",
+    description: "Passer du thème clair au thème sombre 2 fois",
+    unlockCondition: () =>
+      +(localStorage.getItem("Jour, nuit, jour, nuit...") ?? 0) >= 4,
   },
 ]
 

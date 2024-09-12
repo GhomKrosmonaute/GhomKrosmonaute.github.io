@@ -18,7 +18,10 @@ export const GameUpgrades = (props: { show: boolean }) => {
     transparency: state,
   }))
 
-  const upgrades = useCardGame((state) => state.upgrades)
+  const [upgrades, rawUpgrades] = useCardGame((state) => [
+    state.upgrades,
+    state.rawUpgrades,
+  ])
 
   return (
     <>
@@ -54,7 +57,7 @@ export const GameUpgrades = (props: { show: boolean }) => {
             )}
           >
             {upgrades.map((indice, index) => {
-              const upgrade = reviveUpgrade(indice)
+              const upgrade = reviveUpgrade(indice, { rawUpgrades })
 
               const event = events[upgrade.eventName]
 

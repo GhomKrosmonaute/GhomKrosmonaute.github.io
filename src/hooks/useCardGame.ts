@@ -1,10 +1,10 @@
 import { bank } from "@/sound.ts"
 import { create } from "zustand"
 
-import upgrades from "@/data/upgrades"
 import achievements from "@/data/achievements.ts"
 import cardModifiers from "@/data/cardModifiers"
 import generateCards from "@/data/cards.ts"
+import generateUpgrades from "@/data/upgrades.ts"
 
 import type {
   CardModifierIndice,
@@ -18,6 +18,7 @@ import type {
   TriggerEventName,
   UpgradeIndice,
   GameNotification,
+  RawUpgrade,
 } from "@/game-typings"
 
 import {
@@ -48,6 +49,7 @@ import {
   reviveCardModifier,
   fetchSettings,
   isGameWon,
+  isNewSprint,
 } from "@/game-utils.ts"
 
 import { metadata } from "@/game-metadata.ts"
@@ -71,6 +73,12 @@ export interface GlobalGameState {
 }
 
 export interface GameState {
+  coinFlips: number
+  recycledCards: number
+  discardedCards: number
+  skippedChoices: number
+  increments: (key: keyof GameState, count?: number) => Promise<void>
+  rawUpgrades: RawUpgrade[]
   cards: GameCardInfo[]
   difficulty: Difficulty
   error: Error | null
@@ -145,6 +153,7 @@ export interface GameState {
     card: GameCardInfo,
     options: GameMethodOptions & { free?: boolean },
   ) => Promise<void>
+  skip: (options: MethodWhoLog) => Promise<void>
   pickCard: (card: GameCardInfo) => Promise<void>
   win: () => void
   defeat: (reason: GameOverReason) => void
@@ -156,13 +165,13 @@ function generateGlobalGameState(): Omit<
   GlobalGameState,
   keyof ReturnType<typeof generateGlobalGameMethods>
 > {
-  const save = localStorage.getItem("card-game-stats")
+  const save = localStorage.getItem("globals")
 
   if (save) {
     return JSON.parse(save)
   } else {
     return {
-      debug: false,
+      debug: import.meta.env.DEV,
       scoreAverage: 0,
       totalMoney: 0,
       wonGames: 0,
@@ -188,7 +197,7 @@ function generateGlobalGameMethods(
   const updateLocalStorage = () => {
     const state = getState()
     localStorage.setItem(
-      "card-game-stats",
+      "globals",
       JSON.stringify({
         debug: state.debug,
         wonGames: state.wonGames,
@@ -218,9 +227,13 @@ function generateGlobalGameMethods(
           if (state.achievements.includes(achievement.name)) continue
 
           if (achievement.unlockCondition(getState())) {
+            state.setOperationInProgress("checkAchievements", true)
+
             await state.addAchievement(achievement.name)
           }
         }
+
+        state.setOperationInProgress("checkAchievements", false)
       })
     },
 
@@ -311,6 +324,7 @@ function generateGameState(): Omit<
   localStorage.setItem("metadata", JSON.stringify(metadata))
 
   const cards = generateCards(difficulty)
+  const rawUpgrades = generateUpgrades(difficulty)
 
   let startingDeck: string[] = []
 
@@ -372,6 +386,11 @@ function generateGameState(): Omit<
   }
 
   return {
+    coinFlips: 0,
+    recycledCards: 0,
+    discardedCards: 0,
+    skippedChoices: 0,
+    rawUpgrades,
     cards,
     difficulty,
     error: null,
@@ -413,6 +432,38 @@ function generateGameMethods(
   getState: () => GameState & GlobalGameState,
 ) {
   return {
+    skip: async (options) => {
+      await handleErrorsAsync(getState, async () => {
+        bank.play.play()
+
+        const state = getState()
+
+        await state.addEnergy(
+          isNewSprint(state.day) && state.choiceOptions.length === 1 ? 10 : 5,
+          {
+            reason: options.reason,
+            skipGameOverPause: true,
+          },
+        )
+
+        set({
+          choiceOptions: state.choiceOptions.slice(1),
+        })
+
+        await state.increments("skippedChoices")
+      })
+    },
+
+    increments: async (key, count) => {
+      const state = getState()
+
+      if (typeof state[key] !== "number") return
+
+      set({ [key]: state[key] + (count ?? 1) })
+
+      await state.checkAchievements()
+    },
+
     throwError: (error: unknown) => {
       if (error instanceof Error) {
         set({ error })
@@ -438,6 +489,8 @@ function generateGameMethods(
           }),
           await options[result ? "onHead" : "onTail"](state),
         ])
+
+        await state.increments("coinFlips")
 
         state.setOperationInProgress("coinFlip", false)
       })
@@ -588,7 +641,7 @@ function generateGameMethods(
         // Calcul des points pour les améliorations
         let upgradesPoints = 0
         state.upgrades.forEach((indice) => {
-          const upgrade = reviveUpgrade(indice)
+          const upgrade = reviveUpgrade(indice, state)
 
           upgradesPoints +=
             (typeof upgrade.cost === "string"
@@ -798,7 +851,7 @@ function generateGameMethods(
 
         state.setOperationInProgress(`upgrade ${name}`, true)
 
-        const rawUpgrade = upgrades.find((a) => a.name === name)!
+        const rawUpgrade = state.rawUpgrades.find((a) => a.name === name)!
 
         // on joue le son de la banque
         bank.upgrade.play()
@@ -849,7 +902,7 @@ function generateGameMethods(
       await handleErrorsAsync(getState, async () => {
         const state = getState()
         const indice = state.upgrades.find((a) => a[0] === name)!
-        const upgrade = reviveUpgrade(indice)
+        const upgrade = reviveUpgrade(indice, state)
 
         if (!upgrade.condition || upgrade.condition(getState(), upgrade)) {
           state.setOperationInProgress(`triggerUpgrade ${name}`, true)
@@ -894,7 +947,7 @@ function generateGameMethods(
         state.setOperationInProgress(`triggerUpgradeEvent ${event}`, true)
 
         const upgrades = state.upgrades
-          .map(reviveUpgrade)
+          .map((indice) => reviveUpgrade(indice, state))
           .filter((upgrade) => upgrade.eventName === event)
 
         for (const upgrade of upgrades) {
@@ -1016,14 +1069,14 @@ function generateGameMethods(
               (!options?.filter || options.filter(reviveCard(c, state))),
           )
 
-        const dropped = options?.random
+        const discarded = options?.random
           ? [hand[Math.floor(Math.random() * state.hand.length)]]
           : hand
 
         // on active l'animation de retrait des cartes
         set({
           hand: state.hand.map((c) => {
-            if (dropped.some((d) => d[0] === c[0])) {
+            if (discarded.some((d) => d[0] === c[0])) {
               return [c[0], "discarding"]
             }
             return c
@@ -1038,14 +1091,16 @@ function generateGameMethods(
           [toKey]: shuffle(
             [
               ...state.hand
-                .filter((c) => dropped.some((d) => d[0] === c[0]))
+                .filter((c) => discarded.some((d) => d[0] === c[0]))
                 .map((c) => c[0]),
               ...state[toKey],
             ],
             2,
           ),
-          hand: state.hand.filter((c) => !dropped.some((d) => d[0] === c[0])),
+          hand: state.hand.filter((c) => !discarded.some((d) => d[0] === c[0])),
         }))
+
+        await state.increments("discardedCards", discarded.length)
 
         state.setOperationInProgress("discard", false)
       })
@@ -1110,8 +1165,6 @@ function generateGameMethods(
         const from = state.discard.slice()
         const to = state.draw.slice()
 
-        const recycled: string[] = []
-
         for (let i = 0; i < count; i++) {
           if (from.length === 0) {
             break
@@ -1119,7 +1172,6 @@ function generateGameMethods(
 
           const card = from.pop()!
 
-          recycled.push(card)
           to.push(card)
         }
 
@@ -1127,8 +1179,10 @@ function generateGameMethods(
 
         set({
           draw: shuffle(to, 2),
-          discard: state.discard.filter((name) => !recycled.includes(name)),
+          discard: state.discard.filter((name) => !to.includes(name)),
         })
+
+        await state.increments("recycledCards", to.length)
 
         state.setOperationInProgress("recycle", false)
       })
@@ -1427,6 +1481,10 @@ useCardGame.subscribe(async (state, prevState) => {
     "save",
     JSON.stringify(
       {
+        coinFlips: state.coinFlips,
+        recycledCards: state.recycledCards,
+        discardedCards: state.discardedCards,
+        skippedChoices: state.skippedChoices,
         difficulty: state.difficulty,
         error: state.error,
         choiceOptions: state.choiceOptions,
@@ -1453,7 +1511,7 @@ useCardGame.subscribe(async (state, prevState) => {
         score: state.score,
       } satisfies Omit<
         GameState,
-        keyof ReturnType<typeof generateGameMethods> | "cards"
+        keyof ReturnType<typeof generateGameMethods> | "cards" | "rawUpgrades"
       >,
       (key, value) => {
         if (typeof value === "function" && !(key in state)) return undefined

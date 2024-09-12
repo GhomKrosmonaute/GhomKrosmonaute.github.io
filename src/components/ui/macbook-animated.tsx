@@ -25,13 +25,13 @@ export const SplineMacbook = () => {
     <Spline
       scene="https://prod.spline.design/jotuSLcx9NOHdvVx/scene.splinecode"
       className={cn("absolute", {
-        "pointer-events-none": !isLoaded,
+        "pointer-events-none opacity-0": !isLoaded,
       })}
-      onLoad={() => {
-        if (!isLoaded) {
-          setIsLoaded(true)
-        }
-      }}
+      // onLoad={() => {
+      //   if (!isLoaded) {
+      //     setIsLoaded(true)
+      //   }
+      // }}
     />
   )
 }

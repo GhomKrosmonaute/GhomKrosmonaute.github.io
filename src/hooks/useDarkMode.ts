@@ -1,7 +1,7 @@
 import { useEffect, useCallback } from "react"
 
 export const useDarkMode = () => {
-  const toggleDarkMode = useCallback(() => {
+  const toggleDarkMode = useCallback((auto?: boolean) => {
     const html = document.querySelector("html")
     if (html) {
       const theme = html.classList.toggle("dark") ? "dark" : "light"
@@ -9,6 +9,12 @@ export const useDarkMode = () => {
       html.classList.toggle("light")
 
       localStorage.setItem("theme", theme)
+
+      if (!auto && theme === "dark")
+        localStorage.setItem(
+          "Jour, nuit, jour, nuit...",
+          String(+(localStorage.getItem("Jour, nuit, jour, nuit...") ?? 0) + 1),
+        )
     }
   }, [])
 
@@ -19,13 +25,13 @@ export const useDarkMode = () => {
       theme === "dark" &&
       !document.querySelector("html")?.classList.contains("dark")
     ) {
-      toggleDarkMode()
+      toggleDarkMode(true)
     } else if (!theme) {
       const prefersDarkScheme = window.matchMedia(
         "(prefers-color-scheme: dark)",
       )
       if (prefersDarkScheme.matches) {
-        toggleDarkMode()
+        toggleDarkMode(true)
       }
     }
   }, [toggleDarkMode])

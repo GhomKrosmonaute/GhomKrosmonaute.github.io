@@ -3,6 +3,7 @@ import React from "react"
 import { useCardGame } from "@/hooks/useCardGame.ts"
 import { useKonamiCode } from "@/hooks/useKonamiCode.ts"
 import { useGlobalState } from "@/hooks/useGlobalState.ts"
+import { useGameWatching } from "@/hooks/useGameWatching.ts"
 
 import steps from "@/data/tutorial.tsx"
 
@@ -26,6 +27,7 @@ import { GameHand } from "@/components/game/GameHand.tsx"
 
 export const Game = () => {
   useKonamiCode()
+  useGameWatching()
 
   const [debug, throwError] = useCardGame((state) => [
     state.debug,
@@ -54,7 +56,7 @@ export const Game = () => {
       window.removeEventListener("error", handleError)
       window.removeEventListener("unhandledrejection", handleError)
     }
-  }, [])
+  }, [handleError])
 
   return (
     <TutorialProvider

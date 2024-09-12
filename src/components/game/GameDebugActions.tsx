@@ -1,8 +1,9 @@
-import { Button } from "@/components/ui/button.tsx"
-import { ENERGY_TO_DAYS } from "@/game-constants.ts"
-import upgrades from "@/data/upgrades.ts"
 import { wait } from "@/game-utils.ts"
+import { ENERGY_TO_DAYS } from "@/game-constants.ts"
+
 import { useCardGame } from "@/hooks/useCardGame.ts"
+
+import { Button } from "@/components/ui/button.tsx"
 
 export const GameDebugActions = () => {
   const game = useCardGame()
@@ -49,7 +50,7 @@ export const GameDebugActions = () => {
         onClick={async () => {
           game.upgrades = []
 
-          for (const raw of upgrades) {
+          for (const raw of game.rawUpgrades) {
             await Promise.all(
               new Array(raw.max ?? 10).fill(0).map(async (_, i) => {
                 await wait(100 * i)
