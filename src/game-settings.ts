@@ -1,6 +1,7 @@
 import { GAME_ADVANTAGE } from "@/game-constants.ts"
 
 export type Difficulty = keyof typeof GAME_ADVANTAGE
+
 export interface QualityOptions {
   shadows: boolean // ajoute les ombres
   transparency: boolean // backgrounds transparents
@@ -13,6 +14,14 @@ export interface QualityOptions {
   perspective: boolean // transformStyle: "preserve-3d" | "flat"
 }
 
+export enum Speed {
+  Auto = "auto",
+  Slow = "slow",
+  Normal = "normal",
+  Fast = "fast",
+  Extreme = "extreme",
+}
+
 export const difficultyIndex = Object.entries(GAME_ADVANTAGE).reduce(
   (acc, entry, index) => ({ ...acc, [entry[0]]: index + 1 }),
   {} as Record<Difficulty, number>,
@@ -22,6 +31,7 @@ export const defaultSettings: Settings = {
   difficulty: "normal",
   tutorial: true,
   theme: "default",
+  speed: Speed.Auto,
   quality: {
     shadows: true,
     transparency: true,
@@ -38,8 +48,27 @@ export const defaultSettings: Settings = {
 export interface Settings {
   theme: string
   tutorial: boolean
+  speed: Speed
   difficulty: Difficulty
   quality: QualityOptions
+}
+
+export function updateGameSpeed(speed: Speed) {
+  document.documentElement.style.setProperty(
+    "--game-speed",
+    speed === Speed.Auto
+      ? "var(--game-auto-speed)"
+      : `${
+          (
+            {
+              [Speed.Slow]: 1000,
+              [Speed.Normal]: 500,
+              [Speed.Fast]: 250,
+              [Speed.Extreme]: 100,
+            } as Record<Speed, number>
+          )[speed]
+        }ms`,
+  )
 }
 
 function getKeysRecursively(obj: object, keys: string[] = []): string[] {
@@ -73,7 +102,14 @@ if (settings.theme !== "default") {
   root.classList.add(`theme-${settings.theme}`)
 }
 
-export const translations: Record<keyof QualityOptions | Difficulty, string> = {
+if (settings.speed !== Speed.Auto) {
+  updateGameSpeed(settings.speed)
+}
+
+export const translations: Record<
+  keyof QualityOptions | Difficulty | Speed,
+  string
+> = {
   noob: "Débutant",
   easy: "Facile",
   normal: "Normal",
@@ -88,4 +124,8 @@ export const translations: Record<keyof QualityOptions | Difficulty, string> = {
   foil: "Reflets et textures",
   animations: "Animations",
   perspective: "Profondeur",
+  auto: "Auto",
+  slow: "Lent",
+  fast: "Rapide",
+  extreme: "Extrême",
 }

@@ -4,19 +4,19 @@
   top: 0;
 }
 .game-card.playing {
-  animation: play 0.5s ease-in-out forwards;
+  animation: play var(--game-speed) ease-in-out forwards;
 }
 .game-card.discarding {
-  animation: drop 0.5s ease-in-out forwards;
+  animation: drop var(--game-speed) ease-in-out forwards;
 }
 .game-card.drawing {
-  animation: draw 0.5s ease-in-out forwards;
+  animation: draw var(--game-speed) ease-in-out forwards;
 }
 .game-card.unauthorized {
-  animation: unauthorized 0.5s ease-in-out forwards;
+  animation: unauthorized var(--game-speed) ease-in-out forwards;
 }
 .game-card.removing {
-  animation: disappear 1s ease-out forwards;
+  animation: disappear var(--game-speed) ease-out forwards;
 }
 
 .inset-shadow:after {
@@ -130,7 +130,7 @@
 /* SVG broken card */
 
 #ei4vTKagxuI2_to {
-  animation: ei4vTKagxuI2_to__to 1000ms linear 1 normal forwards;
+  animation: ei4vTKagxuI2_to__to var(--game-speed) linear 1 normal forwards;
 }
 @keyframes ei4vTKagxuI2_to__to {
   0% {
@@ -145,7 +145,7 @@
   }
 }
 #ei4vTKagxuI3_to {
-  animation: ei4vTKagxuI3_to__to 1000ms linear 1 normal forwards;
+  animation: ei4vTKagxuI3_to__to var(--game-speed) linear 1 normal forwards;
 }
 @keyframes ei4vTKagxuI3_to__to {
   0% {
@@ -163,7 +163,7 @@
   }
 }
 #ei4vTKagxuI4_to {
-  animation: ei4vTKagxuI4_to__to 1000ms linear 1 normal forwards;
+  animation: ei4vTKagxuI4_to__to var(--game-speed) linear 1 normal forwards;
 }
 @keyframes ei4vTKagxuI4_to__to {
   0% {

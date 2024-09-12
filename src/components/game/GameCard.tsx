@@ -82,7 +82,7 @@ export const GameCard = (
             "-translate-y-14": props.card.state === "selected",
             "hover:-translate-y-14": props.card.state !== "removing",
             grayscale:
-              notAllowed ||
+              game.choiceOptions.length > 0 ||
               game.isGameOver ||
               !game.parsedCost.canBeBuy ||
               !game.canTriggerEffect,

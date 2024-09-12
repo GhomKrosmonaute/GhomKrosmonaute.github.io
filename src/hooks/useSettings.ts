@@ -2,9 +2,11 @@ import { create } from "zustand"
 
 import {
   settings,
+  updateGameSpeed,
   QualityOptions,
-  Settings,
   Difficulty,
+  Settings,
+  Speed,
 } from "@/game-settings.ts"
 
 export const useSettings = create<
@@ -13,6 +15,7 @@ export const useSettings = create<
     updateTheme: (theme: string) => void
     updateDifficulty: (difficulty: Difficulty) => void
     updateTutorial: (tutorial: boolean) => void
+    updateSpeed: (speed: Speed) => void
   }
 >((set) => ({
   ...settings,
@@ -23,6 +26,12 @@ export const useSettings = create<
   updateTheme: (theme) => set({ theme }),
   updateDifficulty: (difficulty) => set({ difficulty }),
   updateTutorial: (tutorial) => set({ tutorial }),
+  updateSpeed: (speed) => {
+    set({ speed })
+
+    // change the css variable --game-speed from the root element
+    updateGameSpeed(speed)
+  },
 }))
 
 useSettings.subscribe((state) => {

@@ -27,10 +27,38 @@ import cardModifiers from "@/data/cardModifiers.ts"
 import generateCards from "@/data/cards.ts"
 import generateUpgrades from "@/data/upgrades.ts"
 
+export function log<T>(items: T): T {
+  if (import.meta.env.DEV) console.log(items)
+  return items
+}
+
 export function fetchSettings(): Settings {
   return localStorage.getItem("settings")
     ? JSON.parse(localStorage.getItem("settings")!)
     : defaultSettings
+}
+
+export function updateGameAutoSpeed(state: GameState): number {
+  const upgradeCompletion = state.upgrades.length / state.rawUpgrades.length
+  const moneyCompletion = state.money / MONEY_TO_REACH
+  const completion = upgradeCompletion * 0.5 + moneyCompletion * 0.5
+
+  // 50ms to 500ms - Plus on est avancé dans la partie, plus c'est rapide
+  const speed = Math.floor(50 + 950 * (1 - completion))
+
+  document.documentElement.style.setProperty("--game-auto-speed", `${speed}ms`)
+
+  return speed
+}
+
+export function getGameSpeed(): number {
+  return log(
+    Number(
+      getComputedStyle(document.documentElement)
+        .getPropertyValue("--game-speed")
+        .replace("ms", ""),
+    ),
+  )
 }
 
 export function handleErrors(
@@ -341,8 +369,8 @@ export function formatUpgradeText(text: string, cumul: number) {
     .replace(/@s/g, cumul > 1 ? "s" : "")
 }
 
-export async function wait(ms = 500) {
-  return new Promise((resolve) => setTimeout(resolve, ms))
+export async function wait(ms?: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms ?? getGameSpeed()))
 }
 
 export async function waitAnimationFrame() {

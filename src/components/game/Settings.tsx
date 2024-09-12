@@ -23,11 +23,13 @@ import { useGlobalState } from "@/hooks/useGlobalState.ts"
 import { useSettings } from "@/hooks/useSettings.ts"
 
 import {
+  Speed,
   Difficulty,
   QualityOptions,
   settings,
   translations,
 } from "@/game-settings.ts"
+
 import { GAME_ADVANTAGE } from "@/game-constants.ts"
 
 import Warning from "@/assets/icons/warning.svg"
@@ -158,6 +160,24 @@ export const Settings = (props: { show: boolean }) => {
                 <Label className="flex items-center gap-2 py-2" key={theme[0]}>
                   <RadioGroupItem value={theme[0] as string} />
                   {theme[0]}
+                </Label>
+              ))}
+            </RadioGroup>
+          </div>
+
+          <div>
+            <div className="text-2xl">Vitesse</div>
+            <RadioGroup
+              className="space-y-0 gap-0"
+              value={settingsCache.speed}
+              onValueChange={(speed) =>
+                settingsCache.updateSpeed(speed as Speed)
+              }
+            >
+              {Object.values(Speed).map((key) => (
+                <Label className="flex items-center gap-2 py-2" key={key}>
+                  <RadioGroupItem value={key} />
+                  {translations[key as keyof typeof translations]}
                 </Label>
               ))}
             </RadioGroup>

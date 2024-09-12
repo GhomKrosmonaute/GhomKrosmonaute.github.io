@@ -81,6 +81,9 @@
     --image-foil: 293 100% 60%;
     --day: 150 100% 54%;
     --day-foreground: 0 0% 0%;
+
+    --game-auto-speed: 500ms;
+    --game-speed: var(--game-auto-speed);
   }
 
   .dark {

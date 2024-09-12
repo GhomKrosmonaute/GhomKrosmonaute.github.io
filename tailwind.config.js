@@ -1,4 +1,4 @@
-const colors = require("tailwindcss/colors");
+const colors = require("tailwindcss/colors")
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
@@ -218,8 +218,9 @@ module.exports = {
         "border-light-opposed-fast-disappear":
           "border-light-opposed-disappear 1s infinite linear",
         "spin-forward": "spin 3s linear infinite",
-        appear: "appear 0.25s ease-in-out forwards 0.25s",
-        trigger: "trigger 0.25s ease-in-out forwards 0.25s",
+        appear: "appear calc(var(--game-speed) / 2) ease-in-out forwards 0.25s",
+        trigger:
+          "trigger calc(var(--game-speed) / 2) ease-in-out forwards 0.25s",
         "ping-forwards": "ping 2s cubic-bezier(0, 0, 0.2, 1) forwards",
         notification: "notification 2s forwards",
         "to-right": "to-right 2s ease-in-out forwards",
@@ -228,4 +229,4 @@ module.exports = {
     },
   },
   plugins: [require("tailwindcss-animate")],
-};
+}

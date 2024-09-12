@@ -10,7 +10,8 @@ export const GameDebug = () => {
   const [logs, setLogs] = React.useState<string[]>([])
 
   React.useEffect(() => {
-    setLogs((logs) => [...logs, ops.join(" | ")].slice(-50))
+    if (ops.join(" | ") !== logs[logs.length - 1])
+      setLogs((logs) => [...logs, ops.join(" | ")].slice(-50))
   }, [ops])
 
   return (

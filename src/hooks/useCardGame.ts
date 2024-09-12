@@ -50,6 +50,8 @@ import {
   fetchSettings,
   isGameWon,
   isNewSprint,
+  updateGameAutoSpeed,
+  getGameSpeed,
 } from "@/game-utils.ts"
 
 import { metadata } from "@/game-metadata.ts"
@@ -1126,7 +1128,7 @@ function generateGameMethods(
           bank.remove.play()
 
           // on attend la fin de l'animation
-          await wait(1000)
+          await wait()
         }
 
         // on retire la carte de la main, du deck et de la défausse
@@ -1268,7 +1270,7 @@ function generateGameMethods(
         const removing = willBeRemoved(getState(), card)
 
         if (removing) {
-          wait(200).then(() => bank.remove.play())
+          wait(getGameSpeed() / 2).then(() => bank.remove.play())
         }
 
         const cardManagement = async () => {
@@ -1283,7 +1285,7 @@ function generateGameMethods(
           }))
 
           // on attend la fin de l'animation
-          await wait(removing ? 1000 : undefined)
+          await wait()
 
           // la carte va dans la défausse et on retire la carte de la main
           set((state) => ({
@@ -1384,7 +1386,7 @@ function generateGameMethods(
           (async () => {
             // on attend la fin de l'animation "removed"
 
-            await wait(1000)
+            await wait()
 
             // on retire l'animation de "removed"
 
@@ -1533,6 +1535,8 @@ useCardGame.subscribe(async (state, prevState) => {
     // on vérifie les achievements
     await state.checkAchievements()
     state.checkDiscoveries()
+
+    updateGameAutoSpeed(state)
 
     // on vérifie si le jeu est fini
     if (isGameWon(state)) {
