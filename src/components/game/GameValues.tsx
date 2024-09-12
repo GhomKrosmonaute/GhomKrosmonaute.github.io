@@ -1,35 +1,35 @@
-import React from "react";
+import React from "react"
 
-import { useSettings } from "@/hooks/useSettings.ts";
+import { useSettings } from "@/hooks/useSettings.ts"
 
-import { GameControl } from "@/components/game/GameControl.tsx";
-import { GameLogs } from "@/components/game/GameLogs.tsx";
-import { Stats } from "@/components/game/GameStats.tsx";
-import { Card } from "@/components/Card.tsx";
+import { GameControl } from "@/components/game/GameControl.tsx"
+import { GameLogs } from "@/components/game/GameLogs.tsx"
+import { Stats } from "@/components/game/GameStats.tsx"
+import { Card } from "@/components/Card.tsx"
 
-import { cn } from "@/utils.ts";
+import { cn } from "@/utils.ts"
 
 export const GameValues = (props: { show: boolean }) => {
   const { shadows, animation } = useSettings((state) => ({
     shadows: state.quality.shadows,
     animation: state.quality.animations,
-  }));
+  }))
 
-  const [delayControl, setDelayControl] = React.useState(true);
-  const [delayDiv, setDelayDiv] = React.useState(false);
+  const [delayControl, setDelayControl] = React.useState(true)
+  const [delayDiv, setDelayDiv] = React.useState(false)
 
   // use an effect for delay the transmission of "props.show" to the "GameControl"
   // component but only if it's true, otherwise it's the parent div that will be delayed
 
   React.useEffect(() => {
     if (props.show) {
-      setDelayDiv(true);
-      setDelayControl(false);
+      setDelayDiv(true)
+      setDelayControl(false)
     } else {
-      setDelayControl(true);
-      setDelayDiv(false);
+      setDelayControl(true)
+      setDelayDiv(false)
     }
-  }, [props.show]);
+  }, [props.show])
 
   return (
     <div
@@ -59,5 +59,5 @@ export const GameValues = (props: { show: boolean }) => {
         <Stats className="*:h-6 text-lg" forHUD />
       </Card>
     </div>
-  );
-};
+  )
+}

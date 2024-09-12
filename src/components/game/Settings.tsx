@@ -1,11 +1,11 @@
-import React from "react";
+import React from "react"
 
-import { cn } from "@/utils.ts";
-import { Card } from "@/components/Card.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { Label } from "@/components/ui/label.tsx";
-import { Checkbox } from "@/components/ui/checkbox.tsx";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
+import { cn } from "@/utils.ts"
+import { Card } from "@/components/Card.tsx"
+import { Button } from "@/components/ui/button.tsx"
+import { Label } from "@/components/ui/label.tsx"
+import { Checkbox } from "@/components/ui/checkbox.tsx"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,46 +16,46 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog.tsx";
+} from "@/components/ui/alert-dialog.tsx"
 
-import { useCardGame } from "@/hooks/useCardGame.ts";
-import { useGlobalState } from "@/hooks/useGlobalState.ts";
-import { useSettings } from "@/hooks/useSettings.ts";
+import { useCardGame } from "@/hooks/useCardGame.ts"
+import { useGlobalState } from "@/hooks/useGlobalState.ts"
+import { useSettings } from "@/hooks/useSettings.ts"
 
 import {
   Difficulty,
   QualityOptions,
   settings,
   translations,
-} from "@/game-settings.ts";
-import { GAME_ADVANTAGE } from "@/game-constants.ts";
+} from "@/game-settings.ts"
+import { GAME_ADVANTAGE } from "@/game-constants.ts"
 
-import Warning from "@/assets/icons/warning.svg";
+import Warning from "@/assets/icons/warning.svg"
 
-import themes from "@/data/themes.json";
+import themes from "@/data/themes.json"
 
-import { FPS } from "@/components/game/FPS.tsx";
+import { FPS } from "@/components/game/FPS.tsx"
 
 export const Settings = (props: { show: boolean }) => {
   const [score, difficulty] = useCardGame((state) => [
     state.score,
     state.difficulty,
-  ]);
-  const toggleSettings = useGlobalState((state) => state.toggleSettings);
-  const settingsCache = useSettings();
+  ])
+  const toggleSettings = useGlobalState((state) => state.toggleSettings)
+  const settingsCache = useSettings()
 
   const [hasChangedDifficulty, needReload] = React.useMemo(() => {
     return [
       difficulty !== settingsCache.difficulty,
       settingsCache.quality.animations !== settings.quality.animations,
-    ];
-  }, [difficulty, settingsCache.quality.animations, settingsCache.difficulty]);
+    ]
+  }, [difficulty, settingsCache.quality.animations, settingsCache.difficulty])
 
   const apply = React.useCallback(() => {
     if (needReload) {
-      window.location.search = "?game";
-    } else toggleSettings();
-  }, [needReload, toggleSettings]);
+      window.location.search = "?game"
+    } else toggleSettings()
+  }, [needReload, toggleSettings])
 
   return (
     <div
@@ -99,9 +99,7 @@ export const Settings = (props: { show: boolean }) => {
               className="space-y-0 gap-0"
               value={settingsCache.difficulty}
               onValueChange={(d) => {
-                settingsCache.updateDifficulty(
-                  d as keyof typeof GAME_ADVANTAGE,
-                );
+                settingsCache.updateDifficulty(d as keyof typeof GAME_ADVANTAGE)
               }}
             >
               {Object.keys(GAME_ADVANTAGE).map((key) => (
@@ -143,17 +141,17 @@ export const Settings = (props: { show: boolean }) => {
               className="space-y-0 gap-0"
               defaultValue={settings.theme}
               onValueChange={(theme) => {
-                const root = document.body; //document.getElementsByTagName("html")[0];
+                const root = document.body //document.getElementsByTagName("html")[0];
 
                 const oldTheme = Array.from(root.classList.values()).find((c) =>
                   c.startsWith("theme-"),
-                );
+                )
 
-                if (oldTheme) root.classList.remove(oldTheme);
+                if (oldTheme) root.classList.remove(oldTheme)
 
-                root.classList.add(`theme-${theme}`);
+                root.classList.add(`theme-${theme}`)
 
-                settingsCache.updateTheme(theme);
+                settingsCache.updateTheme(theme)
               }}
             >
               {themes.map((theme) => (
@@ -171,8 +169,8 @@ export const Settings = (props: { show: boolean }) => {
             <Button
               variant="default"
               onClick={() => {
-                settingsCache.updateDifficulty(settings.difficulty);
-                toggleSettings();
+                settingsCache.updateDifficulty(settings.difficulty)
+                toggleSettings()
               }}
             >
               Annuler
@@ -223,5 +221,5 @@ export const Settings = (props: { show: boolean }) => {
         </div>
       </Card>
     </div>
-  );
-};
+  )
+}

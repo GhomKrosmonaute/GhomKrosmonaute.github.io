@@ -1,17 +1,17 @@
-import Trophy from "@/assets/icons/game/trophy.svg";
-import { Card } from "@/components/Card.tsx";
-import scores from "@/data/scores.json";
-import { rankColor } from "@/game-utils.ts";
-import { useSettings } from "@/hooks/useSettings.ts";
-import { cn } from "@/utils.ts";
-import { translations } from "@/game-settings.ts";
+import Trophy from "@/assets/icons/game/trophy.svg"
+import { Card } from "@/components/Card.tsx"
+import scores from "@/data/scores.json"
+import { rankColor } from "@/game-utils.ts"
+import { useSettings } from "@/hooks/useSettings.ts"
+import { cn } from "@/utils.ts"
+import { translations } from "@/game-settings.ts"
 
 export const Scoreboard = (props: { show: boolean }) => {
   const { shadows, animation, transparency } = useSettings((state) => ({
     shadows: state.quality.shadows,
     animation: state.quality.animations,
     transparency: state.quality.transparency,
-  }));
+  }))
 
   return (
     <div
@@ -102,5 +102,5 @@ export const Scoreboard = (props: { show: boolean }) => {
         </div>
       </Card>
     </div>
-  );
-};
+  )
+}

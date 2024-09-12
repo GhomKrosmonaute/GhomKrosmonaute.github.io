@@ -1,14 +1,14 @@
-import type { Upgrade } from "@/game-typings";
+import type { Upgrade } from "@/game-typings"
 import {
   ENERGY_TO_MONEY,
   GAME_ADVANTAGE,
   MAX_HAND_SIZE,
   MAX_REPUTATION,
-} from "@/game-constants.ts";
+} from "@/game-constants.ts"
 
-import { settings } from "@/game-settings.ts";
+import { settings } from "@/game-settings.ts"
 
-const advantage = GAME_ADVANTAGE[settings.difficulty];
+const advantage = GAME_ADVANTAGE[settings.difficulty]
 
 type RawUpgrade = Pick<
   Upgrade,
@@ -20,8 +20,8 @@ type RawUpgrade = Pick<
   | "condition"
   | "eventName"
 > & {
-  max?: number;
-};
+  max?: number
+}
 
 const upgrades: RawUpgrade[] = [
   {
@@ -31,7 +31,7 @@ const upgrades: RawUpgrade[] = [
     image: "starbucks.png",
     condition: (state) => state.energy < state.energyMax,
     onTrigger: async (state, upgrade, reason) => {
-      await state.addEnergy(upgrade.cumul, { skipGameOverPause: true, reason });
+      await state.addEnergy(upgrade.cumul, { skipGameOverPause: true, reason })
     },
     max: 3,
     cost: String(Math.max(0, 20 - advantage) * ENERGY_TO_MONEY),
@@ -47,7 +47,7 @@ const upgrades: RawUpgrade[] = [
       await state.drawCard(
         Math.min(upgrade.cumul, MAX_HAND_SIZE - state.hand.length),
         { skipGameOverPause: true, reason },
-      );
+      )
     },
     max: 3,
     cost: String(Math.max(0, 20 - advantage) * ENERGY_TO_MONEY),
@@ -62,7 +62,7 @@ const upgrades: RawUpgrade[] = [
       await state.addMoney(Math.ceil(upgrade.cumul * (state.money / 5)), {
         skipGameOverPause: true,
         reason,
-      });
+      })
     },
     max: 5,
     cost: String(Math.max(0, 10 - advantage) * ENERGY_TO_MONEY),
@@ -74,7 +74,7 @@ const upgrades: RawUpgrade[] = [
     image: "recyclage.png",
     condition: (state) => state.discard.length > 0,
     onTrigger: async (state, upgrade, reason) => {
-      await state.recycleCard(upgrade.cumul, { reason });
+      await state.recycleCard(upgrade.cumul, { reason })
     },
     max: 3,
     cost: String(Math.max(0, 20 - advantage) * ENERGY_TO_MONEY),
@@ -89,7 +89,7 @@ const upgrades: RawUpgrade[] = [
       await state.addMoney(upgrade.cumul * state.discard.length, {
         skipGameOverPause: true,
         reason,
-      });
+      })
     },
     cost: String(Math.max(0, 80 - advantage) * ENERGY_TO_MONEY),
   },
@@ -103,7 +103,7 @@ const upgrades: RawUpgrade[] = [
       await state.addReputation(upgrade.cumul, {
         skipGameOverPause: true,
         reason,
-      });
+      })
     },
     max: 5,
     cost: Math.max(0, 20 - advantage),
@@ -118,7 +118,7 @@ const upgrades: RawUpgrade[] = [
       await state.addMoney(upgrade.cumul * state.energy, {
         skipGameOverPause: true,
         reason,
-      });
+      })
     },
     max: 2,
     cost: String(Math.max(0, 40 - advantage) * ENERGY_TO_MONEY),
@@ -133,7 +133,7 @@ const upgrades: RawUpgrade[] = [
       await state.addMoney(upgrade.cumul * state.hand.length, {
         skipGameOverPause: true,
         reason,
-      });
+      })
     },
     max: 5,
     cost: String(Math.max(0, 20 - advantage) * ENERGY_TO_MONEY),
@@ -149,7 +149,7 @@ const upgrades: RawUpgrade[] = [
       await state.drawCard(
         Math.min(upgrade.cumul, MAX_HAND_SIZE - state.hand.length),
         { skipGameOverPause: true, reason },
-      );
+      )
     },
     max: Math.floor(MAX_HAND_SIZE / 2),
     cost: String(Math.max(0, 20 - advantage) * ENERGY_TO_MONEY),
@@ -160,7 +160,7 @@ const upgrades: RawUpgrade[] = [
     description: "Augmente la taille de la jauge d'@energy de 5",
     image: "data-center.png",
     onTrigger: async (state, _, reason) => {
-      await state.addMaxEnergy(5, { reason });
+      await state.addMaxEnergy(5, { reason })
     },
     max: 4,
     cost: String(Math.max(0, 50 - advantage) * ENERGY_TO_MONEY),
@@ -173,7 +173,7 @@ const upgrades: RawUpgrade[] = [
     onTrigger: async (state) => {
       state.dangerouslyUpdate({
         choiceOptionCount: state.choiceOptionCount + 1,
-      });
+      })
     },
     max: 3,
     cost: String(Math.max(0, 50 - advantage) * ENERGY_TO_MONEY),
@@ -185,11 +185,11 @@ const upgrades: RawUpgrade[] = [
     image: "anti-virus.png",
     condition: (state) => state.energy < state.energyMax,
     onTrigger: async (state, upgrade, reason) => {
-      await state.addEnergy(upgrade.cumul, { skipGameOverPause: true, reason });
+      await state.addEnergy(upgrade.cumul, { skipGameOverPause: true, reason })
     },
     max: 5,
     cost: String(Math.max(0, 20 - advantage) * ENERGY_TO_MONEY),
   },
-];
+]
 
-export default upgrades;
+export default upgrades

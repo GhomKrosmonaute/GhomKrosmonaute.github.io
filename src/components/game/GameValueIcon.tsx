@@ -1,7 +1,7 @@
-import { useSettings } from "@/hooks/useSettings.ts";
-import { cn } from "@/utils.ts";
-import React from "react";
-import { ColorClass } from "@/game-typings.ts";
+import { useSettings } from "@/hooks/useSettings.ts"
+import { cn } from "@/utils.ts"
+import React from "react"
+import { ColorClass } from "@/game-typings.ts"
 
 const foregrounds: Record<ColorClass, string> = {
   "bg-energy": "text-energy-foreground",
@@ -11,7 +11,7 @@ const foregrounds: Record<ColorClass, string> = {
   "bg-action": "text-action-foreground",
   "bg-support": "text-support-foreground",
   "bg-background": "text-foreground",
-};
+}
 
 export const GameValueIcon = ({
   isCost,
@@ -21,18 +21,18 @@ export const GameValueIcon = ({
   symbol,
   ...props
 }: React.ComponentProps<"div"> & {
-  value: number | React.ReactNode;
-  colors: ColorClass | [ColorClass, ColorClass];
-  isCost?: boolean;
-  symbol?: boolean;
-  miniature?: boolean;
+  value: number | React.ReactNode
+  colors: ColorClass | [ColorClass, ColorClass]
+  isCost?: boolean
+  symbol?: boolean
+  miniature?: boolean
 }) => {
   const quality = useSettings((state) => ({
     perspective: state.quality.perspective,
     shadows: state.quality.shadows,
-  }));
+  }))
 
-  if (isCost && value === 0) return null;
+  if (isCost && value === 0) return null
 
   return (
     <div
@@ -81,5 +81,5 @@ export const GameValueIcon = ({
         {value}
       </div>
     </div>
-  );
-};
+  )
+}

@@ -1,36 +1,36 @@
-import type * as Polymorphic from "./polymorphic";
+import type * as Polymorphic from "./polymorphic"
 import type {
   InferVariantProps,
   Variants,
   $$ClassedProps,
   $$ClassedVariants,
   VariantConfig,
-} from "./core";
-import * as Util from "./core/util";
+} from "./core"
+import * as Util from "./core/util"
 
-export { InferVariantProps, Variants, VariantConfig };
+export { InferVariantProps, Variants, VariantConfig }
 
 interface InferableClassedType {
   [$$ClassedVariants]: {
-    variants?: {} | unknown;
-    defaultVariants?: {} | unknown;
-  };
+    variants?: {} | unknown
+    defaultVariants?: {} | unknown
+  }
 }
 
-export type AnyComponent = React.ComponentType<any>;
-type AnyClassedComponent = ClassedComponentType<any, {}, {}>;
+export type AnyComponent = React.ComponentType<any>
+type AnyClassedComponent = ClassedComponentType<any, {}, {}>
 export type ComponentProps<Component> = Component extends (
   ...args: any[]
 ) => any
   ? Parameters<Component>[0]
-  : never;
+  : never
 
 /**
  * Returns the variant props of the given component.
  */
 export type VariantProps<T extends InferableClassedType> = InferVariantProps<
   T[$$ClassedVariants]["variants"]
->;
+>
 
 /**
  * Creates a strict version of the given component.
@@ -44,7 +44,7 @@ export type StrictComponentType<
 > = ClassedComponentType<
   T,
   Required<Pick<VProps, U extends unknown ? PickRequiredVariants<T> : U>>
->;
+>
 
 export type PickRequiredVariants<
   T extends AnyClassedComponent & InferableClassedType,
@@ -52,7 +52,7 @@ export type PickRequiredVariants<
   ? keyof Required<
       Omit<VariantProps<T>, keyof T[$$ClassedVariants]["defaultVariants"]>
     >
-  : never;
+  : never
 
 /**
  * Defines a Classed component.
@@ -62,8 +62,8 @@ export interface ClassedComponentType<
   Props extends {} = {},
   TComposedVariants extends {} = {},
 > extends Polymorphic.ForwardRefComponent<Type, Props> {
-  [$$ClassedProps]: Props;
-  [$$ClassedVariants]: TComposedVariants;
+  [$$ClassedProps]: Props
+  [$$ClassedVariants]: TComposedVariants
 }
 
 /**
@@ -74,7 +74,7 @@ export type DerivedComponentType<
   Type extends keyof JSX.IntrinsicElements | React.ComponentType<any>,
   Props extends {} = {},
   TComposedVariants extends {} = {},
-> = ClassedComponentType<Type, Omit<Props, "as">, TComposedVariants>;
+> = ClassedComponentType<Type, Omit<Props, "as">, TComposedVariants>
 
 /** Returns the cumulative props from the given array of compositions. */
 export type ClassedComponentProps<T extends any[]> =
@@ -83,7 +83,7 @@ export type ClassedComponentProps<T extends any[]> =
     : T[0] extends { variants: { [name: string]: unknown } }
       ? InferVariantProps<T[0]["variants"]>
       : {}) &
-    (T extends [lead: any, ...tail: infer V] ? ClassedComponentProps<V> : {});
+    (T extends [lead: any, ...tail: infer V] ? ClassedComponentProps<V> : {})
 
 /** Returns the cumulative variants from the given array of compositions. */
 export type ClassedComponentVariants<T extends any[]> =
@@ -92,9 +92,7 @@ export type ClassedComponentVariants<T extends any[]> =
     : T[0] extends { variants: { [name: string]: unknown } }
       ? Pick<T[0], "variants" | "defaultVariants" | "dataAttributes">
       : {}) &
-    (T extends [lead: any, ...tail: infer V]
-      ? ClassedComponentVariants<V>
-      : {});
+    (T extends [lead: any, ...tail: infer V] ? ClassedComponentVariants<V> : {})
 
 /**
  * Defines the classed function. Used to create classed components.
@@ -106,10 +104,10 @@ export interface ClassedFunctionType {
       | string
       | Util.Function
       | {
-          base?: string;
-          variants?: { [name: string]: unknown };
-          defaultVariants?: { [name: string]: unknown };
-          defaultProps?: React.ComponentProps<Type>;
+          base?: string
+          variants?: { [name: string]: unknown }
+          defaultVariants?: { [name: string]: unknown }
+          defaultProps?: React.ComponentProps<Type>
         }
     )[],
   >(
@@ -120,40 +118,40 @@ export interface ClassedFunctionType {
         : Composers[K] extends string | Util.Function
           ? Composers[K]
           : {
-              base?: string;
-              variants?: Variants;
+              base?: string
+              variants?: Variants
               defaultVariants?: "variants" extends keyof Composers[K]
                 ? {
                     [Name in keyof Composers[K]["variants"]]?: Util.Widen<
                       keyof Composers[K]["variants"][Name]
-                    >;
+                    >
                   }
-                : {};
+                : {}
 
               compoundVariants?: (("variants" extends keyof Composers[K]
                 ? {
                     [Name in keyof Composers[K]["variants"]]?:
                       | Util.Widen<keyof Composers[K]["variants"][Name]>
                       | Array<Util.Widen<keyof Composers[K]["variants"][Name]>>
-                      | Util.String;
+                      | Util.String
                   }
                 : never) & {
-                className?: Util.String;
-                class?: Util.String;
-              })[];
+                className?: Util.String
+                class?: Util.String
+              })[]
 
               dataAttributes?: "variants" extends keyof Composers[K]
                 ? Array<keyof Composers[K]["variants"]>
-                : Array<string>;
+                : Array<string>
 
-              defaultProps?: React.ComponentProps<Type>;
-            };
+              defaultProps?: React.ComponentProps<Type>
+            }
     }
   ): ClassedComponentType<
     Type,
     ClassedComponentProps<Composers>,
     ClassedComponentVariants<Composers>
-  >;
+  >
 }
 
 /**
@@ -167,10 +165,10 @@ export interface ClassedProxyFunctionType<
       | string
       | Util.Function
       | {
-          base?: string;
-          variants?: { [name: string]: unknown };
-          defaultVariants?: { [name: string]: unknown };
-          defaultProps?: React.ComponentProps<Type>;
+          base?: string
+          variants?: { [name: string]: unknown }
+          defaultVariants?: { [name: string]: unknown }
+          defaultProps?: React.ComponentProps<Type>
         }
     )[],
   >(
@@ -180,40 +178,40 @@ export interface ClassedProxyFunctionType<
         : Composers[K] extends string | Util.Function
           ? Composers[K]
           : {
-              base?: string;
-              variants?: Variants;
+              base?: string
+              variants?: Variants
               defaultVariants?: "variants" extends keyof Composers[K]
                 ? {
                     [Name in keyof Composers[K]["variants"]]?: Util.Widen<
                       keyof Composers[K]["variants"][Name]
-                    >;
+                    >
                   }
-                : {};
+                : {}
 
               compoundVariants?: (("variants" extends keyof Composers[K]
                 ? {
                     [Name in keyof Composers[K]["variants"]]?:
                       | Util.Widen<keyof Composers[K]["variants"][Name]>
                       | Array<Util.Widen<keyof Composers[K]["variants"][Name]>>
-                      | Util.String;
+                      | Util.String
                   }
                 : never) & {
-                className?: Util.String;
-                class?: Util.String;
-              })[];
+                className?: Util.String
+                class?: Util.String
+              })[]
 
               dataAttributes?: "variants" extends keyof Composers[K]
                 ? Array<keyof Composers[K]["variants"]>
-                : Array<string>;
+                : Array<string>
 
-              defaultProps?: React.ComponentProps<Type>;
-            };
+              defaultProps?: React.ComponentProps<Type>
+            }
     }
   ): ClassedComponentType<
     Type,
     ClassedComponentProps<Composers>,
     ClassedComponentVariants<Composers>
-  >;
+  >
 }
 
 /**
@@ -232,5 +230,5 @@ export interface ClassedProxyFunctionType<
  * })
  */
 export type ClassedFunctionProxy = ClassedFunctionType & {
-  [K in keyof JSX.IntrinsicElements]: ClassedProxyFunctionType<K>;
-};
+  [K in keyof JSX.IntrinsicElements]: ClassedProxyFunctionType<K>
+}

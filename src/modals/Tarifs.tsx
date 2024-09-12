@@ -1,24 +1,24 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom"
 
-import { Modal } from "@/components/Modal.tsx";
-import { Products } from "../components/Products.tsx";
-import { Hosting } from "../components/Hosting.tsx";
-import { Button } from "@/components/ui/button.tsx";
+import { Modal } from "@/components/Modal.tsx"
+import { Products } from "../components/Products.tsx"
+import { Hosting } from "../components/Hosting.tsx"
+import { Button } from "@/components/ui/button.tsx"
 
-import tarifs from "../data/tarifs.json";
-import { useGlobalState } from "@/hooks/useGlobalState.ts";
-import React from "react";
+import tarifs from "../data/tarifs.json"
+import { useGlobalState } from "@/hooks/useGlobalState.ts"
+import React from "react"
 
 export const Tarifs = () => {
-  const navigate = useNavigate();
+  const navigate = useNavigate()
   const [isCardGameVisible, setCardGameVisibility] = useGlobalState((state) => [
     state.isCardGameVisible,
     state.setCardGameVisibility,
-  ]);
+  ])
 
   React.useEffect(() => {
-    if (isCardGameVisible) setCardGameVisibility(false);
-  }, [isCardGameVisible]);
+    if (isCardGameVisible) setCardGameVisibility(false)
+  }, [isCardGameVisible])
 
   return (
     <Modal modalName="/pricing" big>
@@ -37,8 +37,14 @@ export const Tarifs = () => {
         <Hosting />
 
         <div className="flex flex-col items-center gap-4">
-          <h2 className="text-2xl">Pour plus d'informations</h2>
-          <Button onClick={() => navigate("/contact")} variant="cta" size="cta">
+          <h2 className="text-2xl hidden xs:block">Pour plus d'informations</h2>
+          <h2 className="text-2xl xs:hidden">Intéressé ?</h2>
+          <Button
+            onClick={() => navigate("/contact")}
+            variant="cta"
+            size="cta"
+            className="w-full"
+          >
             Contactez-moi !
           </Button>
           <p className="italic text-muted-foreground max-w-xl">
@@ -49,5 +55,5 @@ export const Tarifs = () => {
         </div>
       </div>
     </Modal>
-  );
-};
+  )
+}

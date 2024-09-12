@@ -1,17 +1,17 @@
-import type { Effect } from "@/game-typings";
+import type { Effect } from "@/game-typings"
 
 import {
   ENERGY_TO_MONEY,
   GAME_ADVANTAGE,
   MAX_HAND_SIZE,
   REPUTATION_TO_ENERGY,
-} from "@/game-constants.ts";
+} from "@/game-constants.ts"
 
-import { parseCost, reviveCard } from "@/game-utils.ts";
-import type { Difficulty } from "@/game-settings.ts";
+import { parseCost, reviveCard } from "@/game-utils.ts"
+import type { Difficulty } from "@/game-settings.ts"
 
 export default function generateEffects(difficulty: Difficulty): Effect[] {
-  const advantage = GAME_ADVANTAGE[difficulty];
+  const advantage = GAME_ADVANTAGE[difficulty]
 
   return (
     [
@@ -82,7 +82,7 @@ export default function generateEffects(difficulty: Difficulty): Effect[] {
                 .map((c) => reviveCard(c, state))
                 .filter((card) => card.effect.type === "action").length,
             { skipGameOverPause: true, reason },
-          );
+          )
         },
         type: "action",
         cost: 4,
@@ -112,28 +112,28 @@ export default function generateEffects(difficulty: Difficulty): Effect[] {
               skipGameOverPause: true,
               reason,
             },
-          );
+          )
 
           if (advantage > 4) {
             await state.addEnergy(advantage - 4, {
               skipGameOverPause: true,
               reason,
-            });
+            })
           }
         },
         condition: (state, card) => {
-          const indice = state.hand[state.hand.length - 1];
+          const indice = state.hand[state.hand.length - 1]
 
-          if (!indice) return false;
+          if (!indice) return false
 
-          const target = reviveCard(indice, state);
+          const target = reviveCard(indice, state)
 
           return (
             target.name !== card.name &&
             target.state === "idle" &&
             card.state === "idle" &&
             (!target.effect.condition || target.effect.condition(state, target))
-          );
+          )
         },
         type: "action",
         cost: Math.max(0, 4 - advantage), // ~ middle cost
@@ -154,28 +154,28 @@ export default function generateEffects(difficulty: Difficulty): Effect[] {
         //   return `(${cost} @energy${cost > 1 ? "s" : ""})`;
         // },
         onPlayed: async (state, _, reason) => {
-          const target = reviveCard(state.hand[state.hand.length - 1], state);
+          const target = reviveCard(state.hand[state.hand.length - 1], state)
 
           await state.discardCard({
             filter: (card) => card.name === target.name,
             reason,
-          });
+          })
 
           const cost =
             typeof target.effect.cost === "string"
               ? Math.ceil(Number(target.effect.cost) / ENERGY_TO_MONEY)
-              : target.effect.cost;
+              : target.effect.cost
 
-          await state.addEnergy(cost, { skipGameOverPause: true, reason });
+          await state.addEnergy(cost, { skipGameOverPause: true, reason })
         },
         condition: (state, card) => {
-          const indice = state.hand[state.hand.length - 1];
+          const indice = state.hand[state.hand.length - 1]
 
           return (
             state.hand.length > 1 &&
             card.name !== indice[0] &&
             parseCost(state, reviveCard(indice, state), []).cost > 0
-          );
+          )
         },
         type: "action",
         cost: 0,
@@ -230,13 +230,13 @@ export default function generateEffects(difficulty: Difficulty): Effect[] {
               skipGameOverPause: true,
               reason,
             },
-          );
+          )
 
           if (advantage >= 2 && advantage % 2 !== 0) {
             await state.addEnergy(advantage % 2, {
               skipGameOverPause: true,
               reason,
-            });
+            })
           }
         },
         condition: (state) =>
@@ -258,13 +258,13 @@ export default function generateEffects(difficulty: Difficulty): Effect[] {
             filter: (card) => card.effect.type === "action",
             skipGameOverPause: true,
             reason,
-          });
+          })
 
           if (advantage % 2 !== 0) {
             await state.addMoney((advantage % 2) * ENERGY_TO_MONEY, {
               skipGameOverPause: true,
               reason,
-            });
+            })
           }
         },
         condition: (state) =>
@@ -285,17 +285,17 @@ export default function generateEffects(difficulty: Difficulty): Effect[] {
             random: true,
             reason,
             filter: (c) => c.name !== card.name,
-          });
+          })
 
           await state.drawCard(advantage >= 1 ? 2 : 1, {
             skipGameOverPause: true,
             reason,
-          });
+          })
 
           await state.addMoney((2 + advantage - 1) * ENERGY_TO_MONEY, {
             skipGameOverPause: true,
             reason,
-          });
+          })
         },
         condition: (state) => state.hand.length >= 2 && state.draw.length >= 1,
         type: "support",
@@ -305,11 +305,11 @@ export default function generateEffects(difficulty: Difficulty): Effect[] {
       {
         description: `Renvoie une carte aléatoire dans la pioche, pioche ${advantage >= 1 ? 1 + advantage : "une"} carte${advantage >= 1 ? "s" : ""}`,
         onPlayed: async (state, _, reason) => {
-          await state.discardCard({ toDraw: true, random: true, reason });
+          await state.discardCard({ toDraw: true, random: true, reason })
           await state.drawCard(advantage >= 1 ? 1 + advantage : 1, {
             skipGameOverPause: true,
             reason,
-          });
+          })
         },
         condition: (state) => state.hand.length >= 2,
         type: "support",
@@ -332,11 +332,11 @@ export default function generateEffects(difficulty: Difficulty): Effect[] {
       {
         description: `Défausse les cartes en main, pioche ${5 + advantage} cartes`,
         onPlayed: async (state, _, reason) => {
-          await state.discardCard({ reason });
+          await state.discardCard({ reason })
           await state.drawCard(5 + advantage, {
             skipGameOverPause: true,
             reason,
-          });
+          })
         },
         condition: (state) => state.draw.length >= 1,
         type: "support",
@@ -348,11 +348,11 @@ export default function generateEffects(difficulty: Difficulty): Effect[] {
           advantage > 5 ? 5 + (advantage - 5) : 5
         } cartes`,
         onPlayed: async (state, _, reason) => {
-          await state.discardCard({ toDraw: true, reason });
+          await state.discardCard({ toDraw: true, reason })
           await state.drawCard(advantage > 5 ? 5 + (advantage - 5) : 5, {
             skipGameOverPause: true,
             reason,
-          });
+          })
         },
         type: "support",
         cost: Math.max(0, 5 - advantage),
@@ -368,13 +368,13 @@ export default function generateEffects(difficulty: Difficulty): Effect[] {
           await state.drawCard(state.upgrades.length, {
             skipGameOverPause: true,
             reason,
-          });
+          })
 
           if (advantage > 3) {
             await state.addMoney((advantage - 3) * ENERGY_TO_MONEY, {
               skipGameOverPause: true,
               reason,
-            });
+            })
           }
         },
         condition: (state) =>
@@ -391,18 +391,18 @@ export default function generateEffects(difficulty: Difficulty): Effect[] {
           await state.discardCard({
             filter: (card) => card.effect.type === "support",
             reason,
-          });
+          })
           await state.drawCard(2, {
             filter: (card) => card.effect.type === "action",
             skipGameOverPause: true,
             reason,
-          });
+          })
 
           if (advantage > 0) {
             await state.addMoney(advantage * ENERGY_TO_MONEY, {
               skipGameOverPause: true,
               reason,
-            });
+            })
           }
         },
         condition: (state) =>
@@ -419,12 +419,12 @@ export default function generateEffects(difficulty: Difficulty): Effect[] {
           await state.discardCard({
             filter: (card) => card.effect.type === "action",
             reason,
-          });
+          })
 
           await state.drawCard(3 + advantage, {
             skipGameOverPause: true,
             reason,
-          });
+          })
         },
         condition: (state) =>
           state.hand.some(
@@ -437,7 +437,7 @@ export default function generateEffects(difficulty: Difficulty): Effect[] {
       {
         description: "Recycle toutes les cartes de la défausse",
         onPlayed: async (state, _, reason) => {
-          await state.recycleCard(state.discard.length + 1, { reason });
+          await state.recycleCard(state.discard.length + 1, { reason })
         },
         condition: (state) => state.discard.length > 0,
         type: "support",
@@ -449,7 +449,7 @@ export default function generateEffects(difficulty: Difficulty): Effect[] {
         onPlayed: async (state, _, reason) => {
           // on ajoute 1 pour que ça compte la carte qui est jouée, car elle
           // est déjà dans la défausse malgrès qu'on lui ai dit d'attendre avant d'être jouée
-          await state.recycleCard(2 + advantage, { reason });
+          await state.recycleCard(2 + advantage, { reason })
         },
         condition: (state) => state.discard.length > 0,
         type: "support",
@@ -467,13 +467,13 @@ export default function generateEffects(difficulty: Difficulty): Effect[] {
             filter: (c) => typeof c.effect.cost === "number",
             skipGameOverPause: true,
             reason,
-          });
+          })
 
           if (advantage > 4) {
             await state.addEnergy(advantage - 4, {
               skipGameOverPause: true,
               reason,
-            });
+            })
           }
         },
         condition: (state) =>
@@ -491,13 +491,13 @@ export default function generateEffects(difficulty: Difficulty): Effect[] {
             : ""
         }`, // 4 (middle effect) - 1 (easy condition) = 3
         onPlayed: async (state, _, reason) => {
-          state.addCardModifier("next card half cost", []);
+          state.addCardModifier("next card half cost", [])
 
           if (advantage > 3) {
             await state.addEnergy(advantage - 3, {
               skipGameOverPause: true,
               reason,
-            });
+            })
           }
         },
         type: "support",
@@ -507,7 +507,7 @@ export default function generateEffects(difficulty: Difficulty): Effect[] {
         description:
           "La prochaine carte qui coûte de l'argent coûte maintenant de l'@energy",
         onPlayed: async (state) => {
-          state.addCardModifier("next money card cost energy", []);
+          state.addCardModifier("next money card cost energy", [])
         },
         type: "support",
         cost: 0,
@@ -523,12 +523,12 @@ export default function generateEffects(difficulty: Difficulty): Effect[] {
               (c) =>
                 c.name !== card.name && parseCost(state, card, []).cost > 0,
             )
-            .map((c) => c.name);
+            .map((c) => c.name)
 
           state.addCardModifier("lowers price of hand cards", [
             handCardNames,
             1 + advantage,
-          ]);
+          ])
         },
         condition: (state) =>
           state.hand.some(
@@ -545,13 +545,13 @@ export default function generateEffects(difficulty: Difficulty): Effect[] {
             await state.addEnergy(advantage - 4, {
               skipGameOverPause: true,
               reason,
-            });
+            })
           }
 
           await state.addEnergy(state.energy, {
             skipGameOverPause: true,
             reason,
-          });
+          })
         },
         type: "action",
         cost: String(Math.max(0, 4 - advantage) * ENERGY_TO_MONEY),
@@ -593,5 +593,5 @@ export default function generateEffects(difficulty: Difficulty): Effect[] {
   ).map((effect, index) => ({
     ...effect,
     index,
-  }));
+  }))
 }

@@ -1,9 +1,9 @@
-import tarifs from "../data/tarifs.json";
+import tarifs from "../data/tarifs.json"
 
 export const Hosting = () => {
   return (
     <>
-      <h2 className="text-2xl">Hébergement</h2>
+      <h2 className="text-2xl text-center md:text-left">Hébergement</h2>
 
       <p className="hidden md:block">
         J'héberge vos projets si vous ne savez pas comment le faire vous-même.{" "}
@@ -32,5 +32,5 @@ export const Hosting = () => {
         </tbody>
       </table>
     </>
-  );
-};
+  )
+}

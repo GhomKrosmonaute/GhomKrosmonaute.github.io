@@ -1,6 +1,6 @@
-import type { CardModifier } from "@/game-typings";
-import { ENERGY_TO_MONEY } from "@/game-constants.ts";
-import { getUpgradeCost, parseCost } from "@/game-utils";
+import type { CardModifier } from "@/game-typings"
+import { ENERGY_TO_MONEY } from "@/game-constants.ts"
+import { getUpgradeCost, parseCost } from "@/game-utils"
 
 const cardModifiers = {
   "upgrade cost threshold": () => ({
@@ -13,9 +13,9 @@ const cardModifiers = {
             ...card.effect,
             cost: getUpgradeCost(state, card),
           },
-        };
+        }
       }
-      return card;
+      return card
     },
   }),
   "lowers price of hand cards": (
@@ -43,8 +43,8 @@ const cardModifiers = {
     condition: (card, state) => {
       const parsed = parseCost(state, card, [
         '["next money card cost energy",[]]',
-      ]);
-      return parsed.needs === "money" && parsed.cost > 0;
+      ])
+      return parsed.needs === "money" && parsed.cost > 0
     },
     use: (card) => ({
       ...card,
@@ -72,6 +72,6 @@ const cardModifiers = {
       },
     }),
   }),
-} satisfies Record<string, (...params: never[]) => CardModifier>;
+} satisfies Record<string, (...params: never[]) => CardModifier>
 
-export default cardModifiers;
+export default cardModifiers

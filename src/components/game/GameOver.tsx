@@ -1,34 +1,34 @@
-import React from "react";
+import React from "react"
 
-import { useCardGame } from "@/hooks/useCardGame.ts";
-import { useSettings } from "@/hooks/useSettings.ts";
-import { useGlobalState } from "@/hooks/useGlobalState.ts";
+import { useCardGame } from "@/hooks/useCardGame.ts"
+import { useSettings } from "@/hooks/useSettings.ts"
+import { useGlobalState } from "@/hooks/useGlobalState.ts"
 
-import { settings } from "@/game-settings.ts";
-import { formatText, rankColor } from "@/game-utils.ts";
+import { settings } from "@/game-settings.ts"
+import { formatText, rankColor } from "@/game-utils.ts"
 
-import scores from "@/data/scores.json";
-import helpers from "@/data/helpers.json";
+import scores from "@/data/scores.json"
+import helpers from "@/data/helpers.json"
 
-import { Button } from "@/components/ui/button.tsx";
-import { Stats } from "@/components/game/GameStats.tsx";
-import { Tilt } from "@/components/game/Tilt.tsx";
-import { cn } from "@/utils.ts";
+import { Button } from "@/components/ui/button.tsx"
+import { Stats } from "@/components/game/GameStats.tsx"
+import { Tilt } from "@/components/game/Tilt.tsx"
+import { cn } from "@/utils.ts"
 
-import { confettiFireworks } from "@/components/ui/confetti";
-import { bank } from "@/sound.ts";
+import { confettiFireworks } from "@/components/ui/confetti"
+import { bank } from "@/sound.ts"
 
 export const GameOver = (props: { show: boolean }) => {
   const quality = useSettings((state) => ({
     shadows: state.quality.shadows,
     animation: state.quality.animations,
     transparency: state.quality.transparency,
-  }));
+  }))
 
   const [setVisible, toggleSettings] = useGlobalState((state) => [
     state.setCardGameVisibility,
     state.toggleSettings,
-  ]);
+  ])
 
   const game = useCardGame((state) => ({
     isGameOver: state.isGameOver,
@@ -37,18 +37,18 @@ export const GameOver = (props: { show: boolean }) => {
     score: state.score,
     reset: state.reset,
     continue: state.enableInfinityMode,
-  }));
+  }))
 
   const rank = scores
     .sort((a, b) => b.score - a.score)
-    .findIndex(({ score }) => game.score >= score);
+    .findIndex(({ score }) => game.score >= score)
 
   React.useEffect(() => {
     if (game.isGameOver && game.isWon && quality.animation && props.show) {
-      bank.victory.play();
-      confettiFireworks();
+      bank.victory.play()
+      confettiFireworks()
     }
-  }, [game.isGameOver, game.isWon, quality.animation, props.show]);
+  }, [game.isGameOver, game.isWon, quality.animation, props.show])
 
   return (
     <div className={props.show ? "block" : "hidden"}>
@@ -160,7 +160,7 @@ export const GameOver = (props: { show: boolean }) => {
                         return (
                           helper.includes("@reputation") ||
                           helper.includes("gagnes la partie")
-                        );
+                        )
                       case "mill":
                         return (
                           helper.includes("plus jouer") ||
@@ -168,14 +168,14 @@ export const GameOver = (props: { show: boolean }) => {
                           helper.includes("limitée") ||
                           helper.includes("Recycler") ||
                           helper.includes("gagnes la partie")
-                        );
+                        )
                       case "soft-lock":
                         return (
                           helper.includes("plus jouer") ||
                           helper.includes("progressivement") ||
                           helper.includes("cartes à jouer") ||
                           helper.includes("gagnes la partie")
-                        );
+                        )
                       case "mill-lock":
                         return (
                           helper.includes("plus jouer") ||
@@ -184,9 +184,9 @@ export const GameOver = (props: { show: boolean }) => {
                           helper.includes("cartes à jouer") ||
                           helper.includes("Recycler") ||
                           helper.includes("gagnes la partie")
-                        );
+                        )
                       default:
-                        return false;
+                        return false
                     }
                   })
                   .map((helper, i) => (
@@ -266,5 +266,5 @@ export const GameOver = (props: { show: boolean }) => {
         </div>
       )}
     </div>
-  );
-};
+  )
+}

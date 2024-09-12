@@ -1,6 +1,6 @@
-import React from "react";
-import { cn } from "@/utils";
-import { useSettings } from "@/hooks/useSettings.ts";
+import React from "react"
+import { cn } from "@/utils"
+import { useSettings } from "@/hooks/useSettings.ts"
 
 const groupHover = [
   "group-hover/card:opacity-100",
@@ -9,32 +9,32 @@ const groupHover = [
   "md:group-hover/button:opacity-100",
   "group-hover/game-card:opacity-100",
   "md:group-hover/game-card:opacity-100",
-];
+]
 
 export interface BorderLightProps {
-  groupName?: string;
-  opposed?: boolean;
-  fast?: boolean;
-  appearOnHover?: boolean;
-  disappearOnCorners?: boolean;
+  groupName?: string
+  opposed?: boolean
+  fast?: boolean
+  appearOnHover?: boolean
+  disappearOnCorners?: boolean
 }
 
 export const BorderLight = (
   props: React.ComponentProps<"div"> & BorderLightProps,
 ) => {
-  const shadows = useSettings((state) => state.quality.shadows);
+  const shadows = useSettings((state) => state.quality.shadows)
   const activated = useSettings(
     (state) =>
       state.quality.borderLights &&
       state.quality.transparency &&
       state.quality.animations,
-  );
+  )
 
   const currentGroup = props.groupName
     ? groupHover.filter((x) => x.includes(props.groupName!))
-    : [];
+    : []
 
-  if (!activated || !shadows) return <></>;
+  if (!activated || !shadows) return <></>
 
   return (
     <div
@@ -76,5 +76,5 @@ export const BorderLight = (
         transitionDuration: "1s",
       }}
     />
-  );
-};
+  )
+}

@@ -1,16 +1,16 @@
-import React from "react";
-import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button.tsx";
-import { CenterCard } from "@/components/CenterCard.tsx";
+import React from "react"
+import { useNavigate } from "react-router-dom"
+import { Button } from "@/components/ui/button.tsx"
+import { CenterCard } from "@/components/CenterCard.tsx"
 
 export const Modal = (
   props: React.PropsWithChildren<{
-    modalName: "/" | "/contact" | "/pricing" | "/card-game";
-    style?: React.CSSProperties;
-    big?: boolean;
+    modalName: "/" | "/contact" | "/pricing" | "/card-game"
+    style?: React.CSSProperties
+    big?: boolean
   }>,
 ) => {
-  const navigate = useNavigate();
+  const navigate = useNavigate()
 
   return (
     <>
@@ -18,7 +18,7 @@ export const Modal = (
         big={props.big}
         style={props.style}
         onClose={() => {
-          navigate("/", { replace: true });
+          navigate("/", { replace: true })
         }}
       >
         {props.children}
@@ -27,12 +27,12 @@ export const Modal = (
         variant="opaque"
         className="md:mdh:hidden fixed m-4 right-0 bottom-0 z-50"
         onClick={() => {
-          window.location.pathname = "/";
+          window.location.pathname = "/"
         }}
       >
         {/*<img src={cross} alt="back" />*/}
         Retour
       </Button>
     </>
-  );
-};
+  )
+}

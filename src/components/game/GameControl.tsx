@@ -1,17 +1,17 @@
-import { Button } from "@/components/ui/button.tsx";
+import { Button } from "@/components/ui/button.tsx"
 
-import { cn } from "@/utils.ts";
+import { cn } from "@/utils.ts"
 
-import { useCardGame } from "@/hooks/useCardGame.ts";
-import { useGlobalState } from "@/hooks/useGlobalState.ts";
-import { useSettings } from "@/hooks/useSettings.ts";
+import { useCardGame } from "@/hooks/useCardGame.ts"
+import { useGlobalState } from "@/hooks/useGlobalState.ts"
+import { useSettings } from "@/hooks/useSettings.ts"
 
 export const GameControl = (props: { show: boolean; delay: boolean }) => {
-  const animation = useSettings((state) => state.quality.animations);
-  const reset = useCardGame((state) => state.reset);
+  const animation = useSettings((state) => state.quality.animations)
+  const reset = useCardGame((state) => state.reset)
   const exit = useGlobalState(
     (state) => () => state.setCardGameVisibility(false),
-  );
+  )
 
   return (
     <div
@@ -30,5 +30,5 @@ export const GameControl = (props: { show: boolean; delay: boolean }) => {
         </Button>
       </div>
     </div>
-  );
-};
+  )
+}

@@ -1,4 +1,4 @@
-import { Howl } from "howler";
+import { Howl } from "howler"
 
 export const bank = {
   error: new Howl({
@@ -85,4 +85,4 @@ export const bank = {
     volume: 0.5,
     preload: true,
   }),
-};
+}

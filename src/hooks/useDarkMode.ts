@@ -1,34 +1,34 @@
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback } from "react"
 
 export const useDarkMode = () => {
   const toggleDarkMode = useCallback(() => {
-    const html = document.querySelector("html");
+    const html = document.querySelector("html")
     if (html) {
-      const theme = html.classList.toggle("dark") ? "dark" : "light";
+      const theme = html.classList.toggle("dark") ? "dark" : "light"
 
-      html.classList.toggle("light");
+      html.classList.toggle("light")
 
-      localStorage.setItem("theme", theme);
+      localStorage.setItem("theme", theme)
     }
-  }, []);
+  }, [])
 
   useEffect(() => {
-    const theme = localStorage.getItem("theme");
+    const theme = localStorage.getItem("theme")
 
     if (
       theme === "dark" &&
       !document.querySelector("html")?.classList.contains("dark")
     ) {
-      toggleDarkMode();
+      toggleDarkMode()
     } else if (!theme) {
       const prefersDarkScheme = window.matchMedia(
         "(prefers-color-scheme: dark)",
-      );
+      )
       if (prefersDarkScheme.matches) {
-        toggleDarkMode();
+        toggleDarkMode()
       }
     }
-  }, [toggleDarkMode]);
+  }, [toggleDarkMode])
 
-  return toggleDarkMode;
-};
+  return toggleDarkMode
+}

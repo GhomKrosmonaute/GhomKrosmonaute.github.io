@@ -1,16 +1,16 @@
-import { cn } from "@/utils.ts";
-import { useCardGame } from "@/hooks/useCardGame.ts";
-import { useSettings } from "@/hooks/useSettings.ts";
+import { cn } from "@/utils.ts"
+import { useCardGame } from "@/hooks/useCardGame.ts"
+import { useSettings } from "@/hooks/useSettings.ts"
 
 export const EventNotifier = (props: { show: boolean }) => {
   const game = useCardGame((state) => ({
     notification: state.notification,
-  }));
+  }))
 
   const quality = useSettings((state) => ({
     animations: state.quality.animations,
     transparency: state.quality.transparency,
-  }));
+  }))
 
   if (
     !props.show ||
@@ -18,7 +18,7 @@ export const EventNotifier = (props: { show: boolean }) => {
     !quality.animations ||
     game.notification.length === 0
   )
-    return null;
+    return null
 
   //new code avec l'animation décrite plus haut:
   return (
@@ -55,5 +55,5 @@ export const EventNotifier = (props: { show: boolean }) => {
         <span className="text-6xl">{game.notification[0].message}</span>
       </div>
     </div>
-  );
-};
+  )
+}

@@ -1,25 +1,25 @@
-import { useGlobalState } from "@/hooks/useGlobalState.ts";
-import { cn } from "@/utils.ts";
-import Spline from "@splinetool/react-spline";
-import { useEffect } from "react";
+import { useGlobalState } from "@/hooks/useGlobalState.ts"
+import { cn } from "@/utils.ts"
+import Spline from "@splinetool/react-spline"
+import { useEffect } from "react"
 
 export const SplineMacbook = () => {
   const [isLoaded, setIsLoaded] = useGlobalState((state) => [
     state.splineLoaded,
     state.setSplineLoaded,
-  ]);
+  ])
 
   useEffect(() => {
-    let timeoutId = null;
+    let timeoutId = null
 
     if (!isLoaded) {
       timeoutId = setTimeout(() => {
-        setIsLoaded(true);
-      }, 1000);
+        setIsLoaded(true)
+      }, 1000)
     }
 
-    return () => clearTimeout(timeoutId!);
-  }, [isLoaded, setIsLoaded]);
+    return () => clearTimeout(timeoutId!)
+  }, [isLoaded, setIsLoaded])
 
   return (
     <Spline
@@ -29,9 +29,9 @@ export const SplineMacbook = () => {
       })}
       onLoad={() => {
         if (!isLoaded) {
-          setIsLoaded(true);
+          setIsLoaded(true)
         }
       }}
     />
-  );
-};
+  )
+}

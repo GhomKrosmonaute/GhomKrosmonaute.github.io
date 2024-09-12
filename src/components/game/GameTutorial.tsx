@@ -1,16 +1,16 @@
-import React from "react";
-import { useTutorial } from "@/hooks/useTutorial";
-import { useGlobalState } from "@/hooks/useGlobalState.ts";
+import React from "react"
+import { useTutorial } from "@/hooks/useTutorial"
+import { useGlobalState } from "@/hooks/useGlobalState.ts"
 
 export const GameTutorial = (props: { show: boolean }) => {
-  const { start } = useTutorial();
-  const tutorial = useGlobalState(({ tutorial }) => tutorial);
+  const { start } = useTutorial()
+  const tutorial = useGlobalState(({ tutorial }) => tutorial)
 
   React.useEffect(() => {
     if (props.show && tutorial) {
-      start();
+      start()
     }
-  }, [props.show, tutorial]);
+  }, [props.show, tutorial])
 
-  return null;
-};
+  return null
+}

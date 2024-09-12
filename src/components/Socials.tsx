@@ -1,13 +1,13 @@
-import React from "react";
-import socials from "../data/socials.json";
-import { cn } from "@/utils.ts";
+import React from "react"
+import socials from "../data/socials.json"
+import { cn } from "@/utils.ts"
 
-import Discord from "@/assets/icons/social/discord.svg";
-import Linkedin from "@/assets/icons/social/linkedin.svg";
-import Facebook from "@/assets/icons/social/facebook.svg";
-import Github from "@/assets/icons/social/github.svg";
-import Twitter from "@/assets/icons/social/twitter.svg";
-import Instagram from "@/assets/icons/social/instagram.svg";
+import Discord from "@/assets/icons/social/discord.svg"
+import Linkedin from "@/assets/icons/social/linkedin.svg"
+import Facebook from "@/assets/icons/social/facebook.svg"
+import Github from "@/assets/icons/social/github.svg"
+import Twitter from "@/assets/icons/social/twitter.svg"
+import Instagram from "@/assets/icons/social/instagram.svg"
 
 const icons = {
   discord: <Discord className="text-[#9A37B2]" />,
@@ -16,7 +16,7 @@ const icons = {
   github: <Github className="text-[#9A37B2]" />,
   twitter: <Twitter className="text-[#9A37B2]" />,
   instagram: <Instagram className="text-[#9A37B2]" />,
-} as Record<string, React.ReactElement>;
+} as Record<string, React.ReactElement>
 
 export const Socials = () => {
   return (
@@ -39,5 +39,5 @@ export const Socials = () => {
         </a>
       ))}
     </div>
-  );
-};
+  )
+}

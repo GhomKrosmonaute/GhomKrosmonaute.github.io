@@ -1,18 +1,18 @@
-import React from "react";
-import { confettiFireworks } from "@/components/ui/confetti";
-import { Tutorial } from "@/components/game/Tutorial.tsx";
-import { TutorialStep } from "@/components/game/TutorialProvider.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { MONEY_TO_REACH } from "@/game-constants.ts";
-import { formatText } from "@/game-utils.ts";
-import { bank } from "@/sound.ts";
+import React from "react"
+import { confettiFireworks } from "@/components/ui/confetti"
+import { Tutorial } from "@/components/game/Tutorial.tsx"
+import { TutorialStep } from "@/components/game/TutorialProvider.tsx"
+import { Button } from "@/components/ui/button.tsx"
+import { MONEY_TO_REACH } from "@/game-constants.ts"
+import { formatText } from "@/game-utils.ts"
+import { bank } from "@/sound.ts"
 
 const cardStyle: React.CSSProperties = {
   backgroundColor: "hsl(var(--card))",
   padding: "1rem",
   borderRadius: "0.5rem",
   boxShadow: "0 0 4rem 0 rgba(255,255,255, 0.3)",
-};
+}
 
 const steps: TutorialStep[] = [
   {
@@ -97,7 +97,7 @@ const steps: TutorialStep[] = [
             </Button>
           </div>
         </Tutorial>
-      );
+      )
     },
   },
   {
@@ -268,9 +268,9 @@ const steps: TutorialStep[] = [
             variant="cta"
             size="cta"
             onClick={() => {
-              bank.victory.play();
-              confettiFireworks();
-              next();
+              bank.victory.play()
+              confettiFireworks()
+              next()
             }}
           >
             Suivant
@@ -301,6 +301,6 @@ const steps: TutorialStep[] = [
       </Tutorial>
     ),
   },
-];
+]
 
-export default steps;
+export default steps

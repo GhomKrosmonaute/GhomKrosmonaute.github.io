@@ -1,33 +1,33 @@
-import React from "react";
+import React from "react"
 
-import "./GameCard.css";
+import "./GameCard.css"
 
-import BrokenCard from "@/assets/icons/game/broken-card.svg";
-import QuoteLeft from "@/assets/icons/quote-left.svg";
-import QuoteRight from "@/assets/icons/quote-right.svg";
+import BrokenCard from "@/assets/icons/game/broken-card.svg"
+import QuoteLeft from "@/assets/icons/quote-left.svg"
+import QuoteRight from "@/assets/icons/quote-right.svg"
 
 import type {
   ActionCardInfo,
   GameCardInfo,
   SupportCardInfo,
-} from "@/game-typings";
+} from "@/game-typings"
 
-import { useCardGame } from "@/hooks/useCardGame.ts";
+import { useCardGame } from "@/hooks/useCardGame.ts"
 
-import { energyCostColor, isActionCardInfo, parseCost } from "@/game-utils.ts";
+import { energyCostColor, isActionCardInfo, parseCost } from "@/game-utils.ts"
 
-import { GameMoneyIcon } from "@/components/game/GameMoneyIcon.tsx";
-import { Tilt, TiltFoil } from "@/components/game/Tilt.tsx";
-import { GameValueIcon } from "@/components/game/GameValueIcon.tsx";
-import { BorderLight } from "@/components/ui/border-light.tsx";
-import { useSettings } from "@/hooks/useSettings.ts";
-import { cn } from "@/utils.ts";
+import { GameMoneyIcon } from "@/components/game/GameMoneyIcon.tsx"
+import { Tilt, TiltFoil } from "@/components/game/Tilt.tsx"
+import { GameValueIcon } from "@/components/game/GameValueIcon.tsx"
+import { BorderLight } from "@/components/ui/border-light.tsx"
+import { useSettings } from "@/hooks/useSettings.ts"
+import { cn } from "@/utils.ts"
 
 export const GameCard = (
   props: React.PropsWithoutRef<{
-    card: GameCardInfo;
-    position?: number;
-    isChoice?: boolean;
+    card: GameCardInfo
+    position?: number
+    isChoice?: boolean
   }>,
 ) => {
   const quality = useSettings((state) => ({
@@ -37,11 +37,11 @@ export const GameCard = (
     animation: state.quality.animations,
     transparency: state.quality.transparency,
     tilt: state.quality.tilt,
-  }));
+  }))
 
   const game = useCardGame((state) => {
-    const parsedCost = parseCost(state, props.card, []);
-    const energyColor = energyCostColor(state, parsedCost.cost);
+    const parsedCost = parseCost(state, props.card, [])
+    const energyColor = energyCostColor(state, parsedCost.cost)
 
     return {
       handSize: state.hand.length,
@@ -55,17 +55,17 @@ export const GameCard = (
       canTriggerEffect:
         !props.card.effect.condition ||
         props.card.effect.condition(state, props.card),
-    };
-  });
+    }
+  })
 
   const positionFromCenter =
     typeof props.position === "number"
       ? props.position - (game.handSize - 1) / 2
-      : 0;
+      : 0
 
   const notAllowed = props.isChoice
     ? game.operationInProgress.filter((o) => o !== "choices").length > 0
-    : game.operationInProgress.length > 0;
+    : game.operationInProgress.length > 0
 
   return (
     <div
@@ -97,19 +97,19 @@ export const GameCard = (
             !notAllowed &&
             !game.isGameOver
           ) {
-            await game.play(props.card, { reason: props.card });
+            await game.play(props.card, { reason: props.card })
           }
         } else {
           if (game.choiceOptions.length > 0 && !notAllowed) {
-            await game.pick(props.card);
+            await game.pick(props.card)
           }
         }
       }}
       onContextMenu={(e) => {
         if (isActionCardInfo(props.card) && props.card.url) {
-          e.preventDefault();
+          e.preventDefault()
           // open new tab with project url
-          window.open(props.card.url, "_blank");
+          window.open(props.card.url, "_blank")
         }
       }}
       style={{
@@ -326,8 +326,8 @@ export const GameCard = (
         </Tilt>
       )}
     </div>
-  );
-};
+  )
+}
 
 const GameCardProject = (
   props: React.PropsWithoutRef<{ card: ActionCardInfo }>,
@@ -339,7 +339,7 @@ const GameCardProject = (
       transparency: state.quality.transparency,
       animation: state.quality.animations,
     }),
-  );
+  )
 
   return (
     <div
@@ -384,10 +384,10 @@ const GameCardProject = (
         </div>
       )}
     </div>
-  );
-};
+  )
+}
 
-const spinners = ["React", "Knex"];
+const spinners = ["React", "Knex"]
 
 const GameCardTechno = (
   props: React.PropsWithoutRef<{ card: SupportCardInfo }>,
@@ -395,7 +395,7 @@ const GameCardTechno = (
   const { perspective, animation } = useSettings((state) => ({
     perspective: state.quality.perspective,
     animation: state.quality.animations,
-  }));
+  }))
 
   return (
     <>
@@ -415,5 +415,5 @@ const GameCardTechno = (
         />
       </div>
     </>
-  );
-};
+  )
+}

@@ -1,24 +1,24 @@
-import { useCardGame } from "@/hooks/useCardGame.ts";
-import { useSettings } from "@/hooks/useSettings.ts";
+import { useCardGame } from "@/hooks/useCardGame.ts"
+import { useSettings } from "@/hooks/useSettings.ts"
 
-import events from "@/data/events.ts";
+import events from "@/data/events.ts"
 
-import { formatText, formatUpgradeText, reviveUpgrade } from "@/game-utils.ts";
-import { cn } from "@/utils.ts";
+import { formatText, formatUpgradeText, reviveUpgrade } from "@/game-utils.ts"
+import { cn } from "@/utils.ts"
 
-import { Card } from "@/components/Card.tsx";
-import { Progress } from "@/components/ui/progress.tsx";
-import { GameValueIcon } from "@/components/game/GameValueIcon.tsx";
-import { EventText } from "@/components/game/EventText.tsx";
+import { Card } from "@/components/Card.tsx"
+import { Progress } from "@/components/ui/progress.tsx"
+import { GameValueIcon } from "@/components/game/GameValueIcon.tsx"
+import { EventText } from "@/components/game/EventText.tsx"
 
 export const GameUpgrades = (props: { show: boolean }) => {
   const quality = useSettings((state) => ({
     shadows: state.quality.shadows,
     animation: state.quality.animations,
     transparency: state,
-  }));
+  }))
 
-  const upgrades = useCardGame((state) => state.upgrades);
+  const upgrades = useCardGame((state) => state.upgrades)
 
   return (
     <>
@@ -54,9 +54,9 @@ export const GameUpgrades = (props: { show: boolean }) => {
             )}
           >
             {upgrades.map((indice, index) => {
-              const upgrade = reviveUpgrade(indice);
+              const upgrade = reviveUpgrade(indice)
 
-              const event = events[upgrade.eventName];
+              const event = events[upgrade.eventName]
 
               return (
                 <div key={index} className="group/upgrade shrink-0 relative">
@@ -132,11 +132,11 @@ export const GameUpgrades = (props: { show: boolean }) => {
                     <EventText eventName={upgrade.eventName} />
                   </Card>
                 </div>
-              );
+              )
             })}
           </div>
         </div>
       </div>
     </>
-  );
-};
+  )
+}

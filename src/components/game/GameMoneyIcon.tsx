@@ -1,16 +1,16 @@
-import React from "react";
-import { cn } from "@/utils.ts";
+import React from "react"
+import { cn } from "@/utils.ts"
 
 export const GameMoneyIcon = (
   props: React.PropsWithChildren<{
-    value: string;
-    className?: string;
-    style?: React.CSSProperties;
-    miniature?: boolean;
-    symbol?: boolean;
+    value: string
+    className?: string
+    style?: React.CSSProperties
+    miniature?: boolean
+    symbol?: boolean
   }>,
 ) => {
-  if (props.value === "0") return <></>;
+  if (props.value === "0") return <></>
 
   return (
     <div
@@ -32,5 +32,5 @@ export const GameMoneyIcon = (
         M$
       </div>
     </div>
-  );
-};
+  )
+}

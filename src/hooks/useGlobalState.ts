@@ -1,22 +1,22 @@
-import { create } from "zustand";
-import { defaultSettings, settings } from "@/game-settings.ts";
+import { create } from "zustand"
+import { defaultSettings, settings } from "@/game-settings.ts"
 
 type State = {
-  tutorial: boolean;
-  musicMuted: boolean;
-  musicVolume: number;
-  isCardGameVisible: boolean;
-  splineLoaded: boolean;
-  rulesVisible: boolean;
-  settingsVisible: boolean;
-  setCardGameVisibility: (visible: boolean) => void;
-  setSplineLoaded: (loaded: boolean) => void;
-  toggleRules: () => void;
-  toggleSettings: () => void;
-  toggleMusicMuted: () => void;
-  setMusicVolume: (cb: (currentVolume: number) => number) => void;
-  setTutorial: (enable: boolean) => void;
-};
+  tutorial: boolean
+  musicMuted: boolean
+  musicVolume: number
+  isCardGameVisible: boolean
+  splineLoaded: boolean
+  rulesVisible: boolean
+  settingsVisible: boolean
+  setCardGameVisibility: (visible: boolean) => void
+  setSplineLoaded: (loaded: boolean) => void
+  toggleRules: () => void
+  toggleSettings: () => void
+  toggleMusicMuted: () => void
+  setMusicVolume: (cb: (currentVolume: number) => number) => void
+  setTutorial: (enable: boolean) => void
+}
 
 export const useGlobalState = create<State>((set) => ({
   tutorial: settings.tutorial,
@@ -32,8 +32,8 @@ export const useGlobalState = create<State>((set) => ({
     set((state) => ({ settingsVisible: !state.settingsVisible })),
   toggleMusicMuted: () =>
     set((state) => {
-      localStorage.setItem("muted", JSON.stringify(!state.musicMuted));
-      return { musicMuted: !state.musicMuted };
+      localStorage.setItem("muted", JSON.stringify(!state.musicMuted))
+      return { musicMuted: !state.musicMuted }
     }),
   setMusicVolume: (volume) =>
     set((state) => ({ musicVolume: volume(state.musicVolume) })),
@@ -47,7 +47,7 @@ export const useGlobalState = create<State>((set) => ({
           : defaultSettings),
         tutorial: enable,
       }),
-    );
-    set({ tutorial: enable });
+    )
+    set({ tutorial: enable })
   },
-}));
+}))

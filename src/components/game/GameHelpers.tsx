@@ -1,36 +1,36 @@
-import React from "react";
+import React from "react"
 
-import helpers from "@/data/helpers.json";
+import helpers from "@/data/helpers.json"
 
-import { useSettings } from "@/hooks/useSettings.ts";
+import { useSettings } from "@/hooks/useSettings.ts"
 
-import Question from "@/assets/icons/question.svg";
+import Question from "@/assets/icons/question.svg"
 
-import { useHover } from "usehooks-ts";
-import { formatText } from "@/game-utils";
-import { cn } from "@/utils.ts";
+import { useHover } from "usehooks-ts"
+import { formatText } from "@/game-utils"
+import { cn } from "@/utils.ts"
 
 export const GameHelpers = (props: { show: boolean }) => {
-  const ref = React.useRef<HTMLDivElement>(null);
+  const ref = React.useRef<HTMLDivElement>(null)
 
-  const isHovered = useHover(ref);
+  const isHovered = useHover(ref)
 
   const { animation, shadow, transparency } = useSettings((state) => ({
     animation: state.quality.animations,
     transparency: state.quality.transparency,
     shadow: state.quality.shadows,
-  }));
+  }))
 
-  const [helpIndex, setHelpIndex] = React.useState<number>(0);
+  const [helpIndex, setHelpIndex] = React.useState<number>(0)
 
   // Change the helper index all 5 seconds, but only if the helper is not hovered
   React.useEffect(() => {
     const interval = setInterval(() => {
-      if (!isHovered) setHelpIndex((helpIndex + 1) % helpers.length);
-    }, 5000);
+      if (!isHovered) setHelpIndex((helpIndex + 1) % helpers.length)
+    }, 5000)
 
-    return () => clearInterval(interval);
-  }, [helpIndex, isHovered]);
+    return () => clearInterval(interval)
+  }, [helpIndex, isHovered])
 
   return (
     <div
@@ -60,5 +60,5 @@ export const GameHelpers = (props: { show: boolean }) => {
         </div>
       </div>
     </div>
-  );
-};
+  )
+}

@@ -1,77 +1,77 @@
-import React from "react";
-import DeviceDetector from "device-detector-js";
-import { RouterProvider, createBrowserRouter } from "react-router-dom";
+import React from "react"
+import DeviceDetector from "device-detector-js"
+import { RouterProvider, createBrowserRouter } from "react-router-dom"
 
-import "./App.css";
+import "./App.css"
 
-import { Button } from "@/components/ui/button.tsx";
+import { Button } from "@/components/ui/button.tsx"
 
-import { useMediaQuery } from "usehooks-ts";
-import { useDarkMode } from "@/hooks/useDarkMode.ts";
+import { useMediaQuery } from "usehooks-ts"
+import { useDarkMode } from "@/hooks/useDarkMode.ts"
 
-import { Home } from "./modals/Home.tsx";
-import { Tarifs } from "./modals/Tarifs.tsx";
-import { Contact } from "./modals/Contact.tsx";
+import { Home } from "./modals/Home.tsx"
+import { Tarifs } from "./modals/Tarifs.tsx"
+import { Contact } from "./modals/Contact.tsx"
 
-import { cn } from "@/utils.ts";
+import { cn } from "@/utils.ts"
 
-import { useGlobalState } from "@/hooks/useGlobalState.ts";
-import { useSettings } from "@/hooks/useSettings.ts";
+import { useGlobalState } from "@/hooks/useGlobalState.ts"
+import { useSettings } from "@/hooks/useSettings.ts"
 
-import Theme from "@/assets/icons/theme.svg";
+import Theme from "@/assets/icons/theme.svg"
 
-import themes from "@/data/themes.json";
+import themes from "@/data/themes.json"
 
 const SplineMacbook = React.lazy(() =>
   import("@/components/ui/spline-macbook.tsx").then((mod) => ({
     default: mod.SplineMacbook,
   })),
-);
+)
 
 const Game = React.lazy(() =>
   import("@/modals/Game.tsx").then((mod) => ({ default: mod.Game })),
-);
+)
 
 export default function App() {
-  const toggleDarkMode = useDarkMode();
+  const toggleDarkMode = useDarkMode()
 
   const { godRays, animation, theme } = useSettings((state) => ({
     theme: state.theme,
     godRays: state.quality.godRays,
     animation: state.quality.animations,
-  }));
+  }))
 
   const [isCardGameVisible, setCardGameVisibility] = useGlobalState((state) => [
     state.isCardGameVisible,
     state.setCardGameVisibility,
-  ]);
+  ])
 
   // const isSplineLoaded = useGlobalState((state) => state.splineLoaded);
-  const largeScreen = useMediaQuery("(width >= 768px) and (height >= 768px)");
-  const largeWidth = useMediaQuery("(width >= 768px)");
-  const [desktop, setDesktop] = React.useState(false);
+  const largeScreen = useMediaQuery("(width >= 768px) and (height >= 768px)")
+  const largeWidth = useMediaQuery("(width >= 768px)")
+  const [desktop, setDesktop] = React.useState(false)
 
   React.useEffect(() => {
-    const deviceDetector = new DeviceDetector();
-    const userAgent = navigator.userAgent;
-    const device = deviceDetector.parse(userAgent);
+    const deviceDetector = new DeviceDetector()
+    const userAgent = navigator.userAgent
+    const device = deviceDetector.parse(userAgent)
 
     if (device.device) {
       switch (device.device.type) {
         case "desktop":
         case "television":
         case "smart display":
-          setDesktop(true);
-          break;
+          setDesktop(true)
+          break
       }
     }
-  }, []);
+  }, [])
 
   React.useEffect(() => {
     if (!largeScreen && process.env.NODE_ENV !== "development") {
-      setCardGameVisibility(false);
+      setCardGameVisibility(false)
     }
-  }, [largeScreen]);
+  }, [largeScreen])
 
   const router = React.useMemo(
     () =>
@@ -90,7 +90,7 @@ export default function App() {
         },
       ]),
     [],
-  );
+  )
 
   return (
     <div className="font-zain text-xl leading-5">
@@ -154,5 +154,5 @@ export default function App() {
         </React.Suspense>
       )}
     </div>
-  );
+  )
 }

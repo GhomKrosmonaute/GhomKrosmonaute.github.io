@@ -1,13 +1,13 @@
-import { cn } from "@/utils.ts";
-import { useCardGame } from "@/hooks/useCardGame.ts";
-import { GameMiniature } from "@/components/game/GameMiniature.tsx";
-import { GameMoneyIcon } from "@/components/game/GameMoneyIcon.tsx";
-import { GameValueIcon } from "@/components/game/GameValueIcon.tsx";
+import { cn } from "@/utils.ts"
+import { useCardGame } from "@/hooks/useCardGame.ts"
+import { GameMiniature } from "@/components/game/GameMiniature.tsx"
+import { GameMoneyIcon } from "@/components/game/GameMoneyIcon.tsx"
+import { GameValueIcon } from "@/components/game/GameValueIcon.tsx"
 
-const SIZE = 10;
+const SIZE = 10
 
 export const GameLogs = (props: { show: boolean }) => {
-  const logs = useCardGame((state) => state.logs.toReversed());
+  const logs = useCardGame((state) => state.logs.toReversed())
 
   return (
     <div
@@ -22,7 +22,7 @@ export const GameLogs = (props: { show: boolean }) => {
       <table>
         <tbody>
           {new Array(SIZE).fill(0).map((_, index) => {
-            const log = logs.slice()[SIZE - 1 - index];
+            const log = logs.slice()[SIZE - 1 - index]
 
             return log ? (
               <tr
@@ -67,10 +67,10 @@ export const GameLogs = (props: { show: boolean }) => {
                 </td>
                 <td></td>
               </tr>
-            );
+            )
           })}
         </tbody>
       </table>
     </div>
-  );
-};
+  )
+}

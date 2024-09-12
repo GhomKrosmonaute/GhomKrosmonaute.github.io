@@ -1,54 +1,50 @@
-import React from "react";
+import React from "react"
 
-import ghom from "@/data/ghom.json";
+import ghom from "@/data/ghom.json"
 
-import { CrashReportContext, useCrashReport } from "@/hooks/useCrashReport.ts";
-import {
-  GlobalGameState,
-  GameState,
-  useCardGame,
-} from "@/hooks/useCardGame.ts";
+import { CrashReportContext, useCrashReport } from "@/hooks/useCrashReport.ts"
+import { GlobalGameState, GameState, useCardGame } from "@/hooks/useCardGame.ts"
 
-import { cloneSomething } from "@/game-utils.ts";
+import { cloneSomething } from "@/game-utils.ts"
 
-import { Button, buttonVariants } from "@/components/ui/button.tsx";
-import { bank } from "@/sound.ts";
+import { Button, buttonVariants } from "@/components/ui/button.tsx"
+import { bank } from "@/sound.ts"
 
 export const CrashReportProvider = ({ children }: React.PropsWithChildren) => {
   const [gameError, update, getState] = useCardGame((state) => [
     state.error,
     state.dangerouslyUpdate,
     () => state,
-  ]);
+  ])
 
-  const [crashReport, setCrashReport] = React.useState<Error | null>(null);
+  const [crashReport, setCrashReport] = React.useState<Error | null>(null)
   const [gameState, setGameState] = React.useState<
     (GameState & GlobalGameState) | null
-  >(null);
+  >(null)
 
   React.useEffect(() => {
     if (gameError) {
-      addCrashReport(gameError, getState());
-      update({ error: null });
+      addCrashReport(gameError, getState())
+      update({ error: null })
     }
-  }, [gameError]);
+  }, [gameError])
 
   const addCrashReport = React.useCallback(
     (error: Error, state: GameState & GlobalGameState) => {
-      bank.error.play();
+      bank.error.play()
       navigator.clipboard
         .writeText(JSON.stringify({ ...state, cards: null }))
         .catch(() =>
           alert(
             "Impossible de copier le contenu de la sauvegarde dans votre presse-papier...",
           ),
-        );
-      setCrashReport(error);
-      setGameState(cloneSomething(state));
-      return error;
+        )
+      setCrashReport(error)
+      setGameState(cloneSomething(state))
+      return error
     },
     [],
-  );
+  )
 
   return (
     <CrashReportContext.Provider
@@ -57,21 +53,21 @@ export const CrashReportProvider = ({ children }: React.PropsWithChildren) => {
         crashReport,
         addCrashReport,
         resetCrashReport: () => {
-          setCrashReport(null);
-          setGameState(null);
+          setCrashReport(null)
+          setGameState(null)
         },
       }}
     >
       {crashReport ? <CrashReport /> : children}
     </CrashReportContext.Provider>
-  );
-};
+  )
+}
 
 export const CrashReport = () => {
-  const reset = useCardGame((state) => state.reset);
-  const { resetCrashReport, crashReport, gameState } = useCrashReport();
+  const reset = useCardGame((state) => state.reset)
+  const { resetCrashReport, crashReport, gameState } = useCrashReport()
 
-  if (!crashReport || !gameState) return null;
+  if (!crashReport || !gameState) return null
 
   return (
     <div className="absolute inset-0 bg-background/50">
@@ -91,8 +87,8 @@ export const CrashReport = () => {
           <div className="grid grid-cols-2 gap-2 w-fit mx-auto">
             <Button
               onClick={() => {
-                resetCrashReport();
-                reset();
+                resetCrashReport()
+                reset()
               }}
               size="cta"
               className="text-red-600"
@@ -101,8 +97,8 @@ export const CrashReport = () => {
             </Button>
             <Button
               onClick={() => {
-                resetCrashReport();
-                window.location.reload();
+                resetCrashReport()
+                window.location.reload()
               }}
               size="cta"
             >
@@ -126,5 +122,5 @@ export const CrashReport = () => {
         </div>
       </div>
     </div>
-  );
-};
+  )
+}

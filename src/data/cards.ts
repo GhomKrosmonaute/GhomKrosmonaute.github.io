@@ -1,29 +1,29 @@
-import React from "react";
-import ReactDOMServer from "react-dom/server";
+import React from "react"
+import ReactDOMServer from "react-dom/server"
 
-import projects from "@/data/projects.json";
-import upgrades from "@/data/upgrades.ts";
-import technos from "@/data/techno.json";
+import projects from "@/data/projects.json"
+import upgrades from "@/data/upgrades.ts"
+import technos from "@/data/techno.json"
 
-import { map, formatText, formatUpgradeText } from "@/game-utils.ts";
+import { map, formatText, formatUpgradeText } from "@/game-utils.ts"
 
-import type { GameCardInfo } from "@/game-typings.ts";
+import type { GameCardInfo } from "@/game-typings.ts"
 
-import { EventText } from "@/components/game/EventText.tsx";
+import { EventText } from "@/components/game/EventText.tsx"
 
-import generateEffects from "@/data/effects.ts";
+import generateEffects from "@/data/effects.ts"
 
-import type { Difficulty } from "@/game-settings.ts";
+import type { Difficulty } from "@/game-settings.ts"
 
 export default function generateCards(difficulty: Difficulty): GameCardInfo[] {
-  const effects = generateEffects(difficulty);
+  const effects = generateEffects(difficulty)
 
-  const supportEffects = effects.filter((effect) => effect.type === "support");
-  const actionEffects = effects.filter((effect) => effect.type === "action");
+  const supportEffects = effects.filter((effect) => effect.type === "support")
+  const actionEffects = effects.filter((effect) => effect.type === "action")
 
   const supports: GameCardInfo[] = technos.map((techno, i) => {
-    const mapping = map(i, 0, technos.length, 0, supportEffects.length, true);
-    const effect = supportEffects[Math.floor(mapping)];
+    const mapping = map(i, 0, technos.length, 0, supportEffects.length, true)
+    const effect = supportEffects[Math.floor(mapping)]
 
     return {
       ...techno,
@@ -34,12 +34,12 @@ export default function generateCards(difficulty: Difficulty): GameCardInfo[] {
         ...effect,
         description: formatText(effect.description),
       },
-    };
-  });
+    }
+  })
 
   const actions: GameCardInfo[] = projects.map((project, i) => {
-    const mapping = map(i, 0, projects.length, 0, actionEffects.length, true);
-    const effect = actionEffects[Math.floor(mapping)];
+    const mapping = map(i, 0, projects.length, 0, actionEffects.length, true)
+    const effect = actionEffects[Math.floor(mapping)]
 
     return {
       ...project,
@@ -50,8 +50,8 @@ export default function generateCards(difficulty: Difficulty): GameCardInfo[] {
         ...effect,
         description: formatText(effect.description),
       },
-    };
-  });
+    }
+  })
 
   const upgradeActions: GameCardInfo[] = upgrades.map((upgrade) => {
     return {
@@ -74,8 +74,8 @@ export default function generateCards(difficulty: Difficulty): GameCardInfo[] {
         cost: upgrade.cost,
         waitBeforePlay: false,
       },
-    };
-  });
+    }
+  })
 
-  return [...supports, ...actions, ...upgradeActions];
+  return [...supports, ...actions, ...upgradeActions]
 }

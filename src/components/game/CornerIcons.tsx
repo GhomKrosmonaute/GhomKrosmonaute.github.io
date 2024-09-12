@@ -1,25 +1,25 @@
-import { useGlobalState } from "@/hooks/useGlobalState.ts";
-import { useSettings } from "@/hooks/useSettings.ts";
+import { useGlobalState } from "@/hooks/useGlobalState.ts"
+import { useSettings } from "@/hooks/useSettings.ts"
 
-import Sound from "@/assets/icons/sound.svg";
-import Muted from "@/assets/icons/muted.svg";
-import Rules from "@/assets/icons/rules.svg";
-import Settings from "@/assets/icons/settings.svg";
-import Question from "@/assets/icons/question.svg";
+import Sound from "@/assets/icons/sound.svg"
+import Muted from "@/assets/icons/muted.svg"
+import Rules from "@/assets/icons/rules.svg"
+import Settings from "@/assets/icons/settings.svg"
+import Question from "@/assets/icons/question.svg"
 
-import { cn } from "@/utils.ts";
+import { cn } from "@/utils.ts"
 
-import { Button } from "@/components/ui/button.tsx";
+import { Button } from "@/components/ui/button.tsx"
 
 export const CornerIcons = (props: { show: boolean }) => {
   const enableTutorial = useGlobalState(
     (state) => () => state.setTutorial(true),
-  );
+  )
 
   const [animation, transparency] = useSettings((state) => [
     state.quality.animations,
     state.quality.transparency,
-  ]);
+  ])
 
   const { toggleRules, toggleSettings, toggleMuted, muted } = useGlobalState(
     (state) => ({
@@ -28,7 +28,7 @@ export const CornerIcons = (props: { show: boolean }) => {
       toggleRules: state.toggleRules,
       muted: state.musicMuted,
     }),
-  );
+  )
 
   return (
     <div
@@ -78,5 +78,5 @@ export const CornerIcons = (props: { show: boolean }) => {
       </Button>
       <div className="w-10 h-10 " />
     </div>
-  );
-};
+  )
+}

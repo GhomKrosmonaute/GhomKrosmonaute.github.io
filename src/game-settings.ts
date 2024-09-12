@@ -1,22 +1,22 @@
-import { GAME_ADVANTAGE } from "@/game-constants.ts";
+import { GAME_ADVANTAGE } from "@/game-constants.ts"
 
-export type Difficulty = keyof typeof GAME_ADVANTAGE;
+export type Difficulty = keyof typeof GAME_ADVANTAGE
 export interface QualityOptions {
-  shadows: boolean; // ajoute les ombres
-  transparency: boolean; // backgrounds transparents
-  borderLights: boolean; // ajoute les lumières sur les bords
-  godRays: boolean; // ajoute les god rays
-  blur: boolean; // background blur sur toutes les cartes du site
-  tilt: boolean; // utilise Tilt ou non (agis sur cardFoil et cardPerspective)
-  foil: boolean; // montre le reflet et la texture des cartes ou non
-  animations: boolean; // utilise les keyframes ou non
-  perspective: boolean; // transformStyle: "preserve-3d" | "flat"
+  shadows: boolean // ajoute les ombres
+  transparency: boolean // backgrounds transparents
+  borderLights: boolean // ajoute les lumières sur les bords
+  godRays: boolean // ajoute les god rays
+  blur: boolean // background blur sur toutes les cartes du site
+  tilt: boolean // utilise Tilt ou non (agis sur cardFoil et cardPerspective)
+  foil: boolean // montre le reflet et la texture des cartes ou non
+  animations: boolean // utilise les keyframes ou non
+  perspective: boolean // transformStyle: "preserve-3d" | "flat"
 }
 
 export const difficultyIndex = Object.entries(GAME_ADVANTAGE).reduce(
   (acc, entry, index) => ({ ...acc, [entry[0]]: index + 1 }),
   {} as Record<Difficulty, number>,
-);
+)
 
 export const defaultSettings: Settings = {
   difficulty: "normal",
@@ -33,29 +33,29 @@ export const defaultSettings: Settings = {
     animations: true,
     perspective: true,
   },
-};
+}
 
 export interface Settings {
-  theme: string;
-  tutorial: boolean;
-  difficulty: Difficulty;
-  quality: QualityOptions;
+  theme: string
+  tutorial: boolean
+  difficulty: Difficulty
+  quality: QualityOptions
 }
 
 function getKeysRecursively(obj: object, keys: string[] = []): string[] {
   for (const key in obj) {
     if (typeof obj[key as keyof typeof obj] === "object") {
-      getKeysRecursively(obj[key as keyof typeof obj], keys);
+      getKeysRecursively(obj[key as keyof typeof obj], keys)
     } else {
-      keys.push(key);
+      keys.push(key)
     }
   }
-  return keys;
+  return keys
 }
 
-const saved = JSON.parse(localStorage.getItem("settings") ?? "{}");
-const savedKeys = getKeysRecursively(saved);
-const defaultKeys = getKeysRecursively(defaultSettings);
+const saved = JSON.parse(localStorage.getItem("settings") ?? "{}")
+const savedKeys = getKeysRecursively(saved)
+const defaultKeys = getKeysRecursively(defaultSettings)
 
 // si une sauvegarde existe, si elle possède les mêmes clés que les settings par défaut, on la charge
 // sinon on charge les settings par défaut
@@ -66,11 +66,11 @@ export const settings: Settings = JSON.parse(
       ? localStorage.getItem("settings")!
       : JSON.stringify(defaultSettings)
     : JSON.stringify(defaultSettings),
-);
+)
 
 if (settings.theme !== "default") {
-  const root = document.body; //document.getElementsByTagName("html")[0];
-  root.classList.add(`theme-${settings.theme}`);
+  const root = document.body //document.getElementsByTagName("html")[0];
+  root.classList.add(`theme-${settings.theme}`)
 }
 
 export const translations: Record<keyof QualityOptions | Difficulty, string> = {
@@ -88,4 +88,4 @@ export const translations: Record<keyof QualityOptions | Difficulty, string> = {
   foil: "Reflets et textures",
   animations: "Animations",
   perspective: "Profondeur",
-};
+}

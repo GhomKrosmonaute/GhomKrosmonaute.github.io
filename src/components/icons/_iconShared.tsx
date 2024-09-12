@@ -1,8 +1,8 @@
-import type React from "react";
+import type React from "react"
 
 export interface IconProps extends React.SVGProps<SVGSVGElement> {
-  className?: string;
-  title?: string;
+  className?: string
+  title?: string
 }
 
 export function SvgIcon({ children, className, title, ...props }: IconProps) {
@@ -23,5 +23,5 @@ export function SvgIcon({ children, className, title, ...props }: IconProps) {
       <title>{title || "Icon"}</title>
       {children}
     </svg>
-  );
+  )
 }

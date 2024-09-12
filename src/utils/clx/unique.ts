@@ -1,8 +1,8 @@
-import { ClassedComponentType } from "./types";
+import { ClassedComponentType } from "./types"
 
 export const COMPONENT_SYMBOL: unique symbol = Symbol.for(
   "tw-classed.component",
-);
+)
 
 export const isClassedComponent = (
   value: unknown,
@@ -10,5 +10,5 @@ export const isClassedComponent = (
   return (
     (typeof value === "object" || typeof value === "function") &&
     Reflect.has(value!, COMPONENT_SYMBOL)
-  );
-};
+  )
+}

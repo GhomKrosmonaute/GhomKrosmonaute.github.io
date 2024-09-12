@@ -1,10 +1,10 @@
-import type { GlobalGameState, GameState } from "@/hooks/useCardGame.ts";
-import { reviveCard } from "@/game-utils.ts";
+import type { GlobalGameState, GameState } from "@/hooks/useCardGame.ts"
+import { reviveCard } from "@/game-utils.ts"
 
 const achievements: {
-  name: string;
-  description: string;
-  unlockCondition: (state: GameState & GlobalGameState) => boolean;
+  name: string
+  description: string
+  unlockCondition: (state: GameState & GlobalGameState) => boolean
 }[] = [
   {
     name: "Première victoire",
@@ -43,6 +43,6 @@ const achievements: {
     description: "Découvrir toutes les cartes",
     unlockCondition: (state) => state.discoveries.length === state.cards.length,
   },
-];
+]
 
-export default achievements;
+export default achievements

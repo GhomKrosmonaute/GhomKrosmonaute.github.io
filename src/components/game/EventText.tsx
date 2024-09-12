@@ -1,13 +1,13 @@
-import { TriggerEventName } from "@/game-typings.ts";
-import { formatText } from "@/game-utils.ts";
-import events from "@/data/events.ts";
-import { cn } from "@/utils.ts";
+import { TriggerEventName } from "@/game-typings.ts"
+import { formatText } from "@/game-utils.ts"
+import events from "@/data/events.ts"
+import { cn } from "@/utils.ts"
 
 export const EventText = (props: {
-  eventName: TriggerEventName;
-  className?: string;
+  eventName: TriggerEventName
+  className?: string
 }) => {
-  const event = events[props.eventName];
+  const event = events[props.eventName]
 
   return (
     <div className={cn("flex items-center gap-1", props.className)}>
@@ -19,5 +19,5 @@ export const EventText = (props: {
         }}
       />
     </div>
-  );
-};
+  )
+}

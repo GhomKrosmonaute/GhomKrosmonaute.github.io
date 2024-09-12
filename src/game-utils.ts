@@ -1,4 +1,4 @@
-import type { GlobalGameState, GameState } from "@/hooks/useCardGame";
+import type { GlobalGameState, GameState } from "@/hooks/useCardGame"
 
 import type {
   ActionCardInfo,
@@ -10,63 +10,63 @@ import type {
   GameOverReason,
   Upgrade,
   UpgradeIndice,
-} from "@/game-typings";
+} from "@/game-typings"
 
 import {
   INFINITE_DRAW_COST,
   MAX_HAND_SIZE,
   MONEY_TO_REACH,
   UPGRADE_COST_THRESHOLDS,
-} from "@/game-constants";
+} from "@/game-constants"
 
-import { defaultSettings, Difficulty, Settings } from "@/game-settings.ts";
+import { defaultSettings, Difficulty, Settings } from "@/game-settings.ts"
 
-import cardModifiers from "@/data/cardModifiers.ts";
-import upgrades from "@/data/upgrades.ts";
-import generateCards from "@/data/cards.ts";
+import cardModifiers from "@/data/cardModifiers.ts"
+import upgrades from "@/data/upgrades.ts"
+import generateCards from "@/data/cards.ts"
 
 export function fetchSettings(): Settings {
   return localStorage.getItem("settings")
     ? JSON.parse(localStorage.getItem("settings")!)
-    : defaultSettings;
+    : defaultSettings
 }
 
 export function handleErrors(
   getState: () => {
-    throwError: (error: Error) => void;
+    throwError: (error: Error) => void
   },
   cb: () => void,
 ) {
   try {
-    cb();
+    cb()
   } catch (error) {
-    getState().throwError(error as Error);
+    getState().throwError(error as Error)
   }
 }
 
 export async function handleErrorsAsync(
   getState: () => {
-    throwError: (error: Error) => void;
+    throwError: (error: Error) => void
   },
   cb: () => Promise<void>,
 ) {
   try {
-    await cb();
+    await cb()
   } catch (error) {
-    getState().throwError(error as Error);
+    getState().throwError(error as Error)
   }
 }
 
 interface ChoiceOptionsGeneratorOptions {
-  exclude?: string[];
-  filter?: (card: GameCardInfo, state: GameState) => boolean;
+  exclude?: string[]
+  filter?: (card: GameCardInfo, state: GameState) => boolean
 }
 
 export function generateChoiceOptions(
   state: GameState & GlobalGameState,
   options?: ChoiceOptionsGeneratorOptions,
 ): GameCardIndice[] {
-  state.setOperationInProgress("choices", true);
+  state.setOperationInProgress("choices", true)
 
   const _cards = state.cards.filter(
     (card) =>
@@ -86,24 +86,24 @@ export function generateChoiceOptions(
       (!card.effect.upgrade ||
         state.upgrades.length === 0 ||
         state.upgrades.every((u) => {
-          const up = reviveUpgrade(u);
-          return up.name !== card.name || up.cumul < up.max;
+          const up = reviveUpgrade(u)
+          return up.name !== card.name || up.cumul < up.max
         })),
-  );
+  )
 
   if (_cards.length === 0) {
-    return [];
+    return []
   }
 
   // todo: add random rarity to selected cards
 
   const outputOptions: string[] = shuffle(_cards, 3)
     .slice(0, state.choiceOptionCount)
-    .map((c) => c.name);
+    .map((c) => c.name)
 
-  state.addDiscovery(...outputOptions);
+  state.addDiscovery(...outputOptions)
 
-  return outputOptions.map((name) => [name, "drawing"]);
+  return outputOptions.map((name) => [name, "drawing"])
 }
 
 export function getDeck(state: GameState): GameCardIndice[] {
@@ -113,7 +113,7 @@ export function getDeck(state: GameState): GameCardIndice[] {
       null,
     ]),
     ...state.hand,
-  ];
+  ]
 }
 
 export function energyCostColor(
@@ -124,34 +124,34 @@ export function energyCostColor(
     ? "bg-energy"
     : state.energy > 0
       ? ["bg-energy", "bg-reputation"]
-      : "bg-reputation";
+      : "bg-reputation"
 }
 
 export function isGameWon(state: GameState): boolean {
-  return !state.infinityMode && !state.isWon && state.money >= MONEY_TO_REACH;
+  return !state.infinityMode && !state.isWon && state.money >= MONEY_TO_REACH
 }
 
 export function isGameOver(state: GameState): GameOverReason | false {
-  if (state.reputation === 0) return "reputation";
-  if (state.draw.length === 0 && state.hand.length === 0) return "mill";
+  if (state.reputation === 0) return "reputation"
+  if (state.draw.length === 0 && state.hand.length === 0) return "mill"
   if (
     state.hand.every((c) => {
-      const card = reviveCard(c, state);
+      const card = reviveCard(c, state)
 
       // on vérifie si la condition s'il y en
       if (card.effect.condition && !card.effect.condition(state, card))
-        return true;
+        return true
 
       // on vérifie si on a assez de resources
-      return !parseCost(state, card, []).canBeBuy;
+      return !parseCost(state, card, []).canBeBuy
     }) &&
     (state.reputation + state.energy < INFINITE_DRAW_COST ||
       state.hand.length >= MAX_HAND_SIZE ||
       state.draw.length === 0)
   )
-    return state.draw.length === 0 ? "mill-lock" : "soft-lock";
+    return state.draw.length === 0 ? "mill-lock" : "soft-lock"
 
-  return false;
+  return false
 }
 
 export function rankColor(rank: number) {
@@ -159,23 +159,23 @@ export function rankColor(rank: number) {
     "text-upgrade": rank === 0,
     "text-zinc-400": rank === 1,
     "text-orange-600": rank === 2,
-  };
+  }
 }
 
 export function getUpgradeCost(
   state: GameState,
   card: GameCardInfo,
 ): number | string {
-  const index = state.upgrades.length;
+  const index = state.upgrades.length
 
   const priceThreshold =
     UPGRADE_COST_THRESHOLDS[typeof card.effect.cost as "string" | "number"][
       index
-    ] ?? Infinity;
+    ] ?? Infinity
 
   return (typeof card.effect.cost == "string" ? String : Number)(
     Math.min(Number(priceThreshold), Number(card.effect.cost)),
-  );
+  )
 }
 
 export function cloneSomething<T>(something: T): T {
@@ -183,7 +183,7 @@ export function cloneSomething<T>(something: T): T {
     JSON.stringify(something, (_key, value) =>
       typeof value === "function" ? undefined : value,
     ),
-  );
+  )
 }
 
 export function applyCardModifiers(
@@ -191,20 +191,20 @@ export function applyCardModifiers(
   card: GameCardInfo,
   used: string[],
 ): { card: GameCardInfo; appliedModifiers: CardModifierIndice[] } {
-  const clone = cloneSomething(card);
-  const modifiers = state.cardModifiers.slice();
+  const clone = cloneSomething(card)
+  const modifiers = state.cardModifiers.slice()
 
   return modifiers.reduce<{
-    card: GameCardInfo;
-    appliedModifiers: CardModifierIndice[];
+    card: GameCardInfo
+    appliedModifiers: CardModifierIndice[]
   }>(
     (previousValue, indice) => {
-      const stringIndice = JSON.stringify(indice);
+      const stringIndice = JSON.stringify(indice)
 
-      if (used.includes(stringIndice)) return previousValue;
-      else used.push(stringIndice);
+      if (used.includes(stringIndice)) return previousValue
+      else used.push(stringIndice)
 
-      const modifier = reviveCardModifier(indice);
+      const modifier = reviveCardModifier(indice)
 
       return !modifier.condition ||
         modifier.condition(previousValue.card, state)
@@ -212,10 +212,10 @@ export function applyCardModifiers(
             card: modifier.use(previousValue.card, state),
             appliedModifiers: [...previousValue.appliedModifiers, indice],
           }
-        : previousValue;
+        : previousValue
     },
     { card: clone, appliedModifiers: [] },
-  );
+  )
 }
 
 export function parseCost(
@@ -227,37 +227,37 @@ export function parseCost(
     state,
     card,
     used,
-  );
-  const needs = typeof tempCard.effect.cost === "number" ? "energy" : "money";
-  const cost = Number(tempCard.effect.cost);
+  )
+  const needs = typeof tempCard.effect.cost === "number" ? "energy" : "money"
+  const cost = Number(tempCard.effect.cost)
   const canBeBuy =
     needs === "money"
       ? state[needs] >= cost
-      : state[needs] + state.reputation >= cost;
+      : state[needs] + state.reputation >= cost
 
-  return { needs, cost, canBeBuy, appliedModifiers } as const;
+  return { needs, cost, canBeBuy, appliedModifiers } as const
 }
 
 export function willBeRemoved(state: GameState, card: GameCardInfo) {
-  if (card.effect.ephemeral) return true;
+  if (card.effect.ephemeral) return true
 
   if (card.effect.upgrade) {
-    const rawUpgrade = upgrades.find((u) => u.name === card.name)!;
+    const rawUpgrade = upgrades.find((u) => u.name === card.name)!
 
     if (rawUpgrade.max) {
-      if (rawUpgrade.max === 1) return true;
+      if (rawUpgrade.max === 1) return true
 
-      const indice = state.upgrades.find((u) => u[0] === card.name);
+      const indice = state.upgrades.find((u) => u[0] === card.name)
 
-      if (!indice) return false;
+      if (!indice) return false
 
-      const upgrade = reviveUpgrade(indice);
+      const upgrade = reviveUpgrade(indice)
 
-      return upgrade.cumul >= upgrade.max - 1;
+      return upgrade.cumul >= upgrade.max - 1
     }
   }
 
-  return false;
+  return false
 }
 
 export function formatText(text: string) {
@@ -276,11 +276,11 @@ export function formatText(text: string) {
     .replace(/MONEY_TO_REACH/g, String(MONEY_TO_REACH))
     .replace(/MAX_HAND_SIZE/g, String(MAX_HAND_SIZE))
     .replace(/\b([\de+.]+)M\$/g, (_, n) => {
-      const amount = Number(n);
+      const amount = Number(n)
 
       return amount >= 1000
         ? `${(amount / 1000).toFixed(2).replace(".00", "").replace(/\.0\b/, "")}B$`
-        : `${amount}M$`;
+        : `${amount}M$`
     })
     .replace(
       /@action([^\s.:,)]*)/g,
@@ -323,7 +323,7 @@ export function formatText(text: string) {
       >
         $1
       </span>`,
-    );
+    )
 }
 
 export function formatUpgradeText(text: string, cumul: number) {
@@ -332,22 +332,22 @@ export function formatUpgradeText(text: string, cumul: number) {
       /@cumul/g,
       `<span style="color: #f59e0b; font-weight: bold">${cumul}</span>`,
     )
-    .replace(/@s/g, cumul > 1 ? "s" : "");
+    .replace(/@s/g, cumul > 1 ? "s" : "")
 }
 
 export async function wait(ms = 500) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 export async function waitAnimationFrame() {
-  return new Promise((resolve) => requestAnimationFrame(resolve));
+  return new Promise((resolve) => requestAnimationFrame(resolve))
 }
 
 export function shuffle<T>(cards: T[], times = 1): T[] {
   for (let i = 0; i < times; i++) {
-    cards.sort(() => Math.random() - 0.5);
+    cards.sort(() => Math.random() - 0.5)
   }
-  return cards;
+  return cards
 }
 
 /**
@@ -369,24 +369,24 @@ export function map(
   withinBounds: boolean = false,
 ): number {
   const newValue =
-    ((value - start1) / (stop1 - start1)) * (stop2 - start2) + start2;
+    ((value - start1) / (stop1 - start1)) * (stop2 - start2) + start2
   if (!withinBounds) {
-    return newValue;
+    return newValue
   }
   if (start2 < stop2) {
-    return Math.max(Math.min(newValue, stop2), start2);
+    return Math.max(Math.min(newValue, stop2), start2)
   } else {
-    return Math.max(Math.min(newValue, start2), stop2);
+    return Math.max(Math.min(newValue, start2), stop2)
   }
 }
 
 export function isActionCardInfo(card: GameCardInfo): card is ActionCardInfo {
-  return card.type === "action";
+  return card.type === "action"
 }
 
 export function reviveCardModifier(indice: CardModifierIndice): CardModifier {
   // @ts-expect-error C'est normal
-  return cardModifiers[indice[0]](...indice[1]);
+  return cardModifiers[indice[0]](...indice[1])
 }
 
 export function reviveCard(
@@ -395,21 +395,21 @@ export function reviveCard(
 ): GameCardInfo {
   const card = state.cards.find((c) =>
     typeof indice === "string" ? c.name === indice : c.name === indice[0],
-  );
+  )
 
-  if (!card) throw new Error(`Card ${indice} not found`);
+  if (!card) throw new Error(`Card ${indice} not found`)
 
-  if (typeof indice !== "string") card.state = indice[1];
+  if (typeof indice !== "string") card.state = indice[1]
 
-  return card;
+  return card
 }
 
 export function reviveUpgrade(indice: UpgradeIndice | string): Upgrade {
   const raw = upgrades.find((u) =>
     typeof indice === "string" ? u.name === indice : u.name === indice[0],
-  );
+  )
 
-  if (!raw) throw new Error(`Upgrade ${indice} not found`);
+  if (!raw) throw new Error(`Upgrade ${indice} not found`)
 
   return {
     ...raw,
@@ -417,27 +417,27 @@ export function reviveUpgrade(indice: UpgradeIndice | string): Upgrade {
     state: typeof indice !== "string" ? indice[2] : "appear",
     cumul: typeof indice !== "string" ? indice[1] : 1,
     max: raw.max ?? Infinity,
-  };
+  }
 }
 
 export function parseSave(save: string, difficulty: Difficulty) {
-  const cards = generateCards(difficulty);
+  const cards = generateCards(difficulty)
 
   return {
     ...JSON.parse(save, (key, value) => {
       if (typeof value === "object") {
         switch (key) {
           case "operationInProgress":
-            return [];
+            return []
         }
       }
 
       if (key === "isOperationInProgress") {
-        return false;
+        return false
       }
 
-      return value;
+      return value
     }),
     cards,
-  };
+  }
 }

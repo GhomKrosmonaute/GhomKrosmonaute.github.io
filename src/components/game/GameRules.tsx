@@ -1,28 +1,28 @@
-import React from "react";
-import { cn } from "@/utils.ts";
-import helpers from "@/data/helpers.json";
-import { formatText } from "@/game-utils.ts";
+import React from "react"
+import { cn } from "@/utils.ts"
+import helpers from "@/data/helpers.json"
+import { formatText } from "@/game-utils.ts"
 import {
   ENERGY_TO_MONEY,
   REPUTATION_TO_ENERGY,
   ENERGY_TO_DAYS,
-} from "@/game-constants.ts";
-import { Input } from "@/components/ui/input.tsx";
-import { Label } from "@/components/ui/label.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { useGlobalState } from "@/hooks/useGlobalState.ts";
-import Cross from "@/assets/icons/cross.svg";
-import { useCardGame } from "@/hooks/useCardGame.ts";
-import achievements from "@/data/achievements.ts";
-import { GameCardPopover } from "@/components/game/GameCardPopover.tsx";
+} from "@/game-constants.ts"
+import { Input } from "@/components/ui/input.tsx"
+import { Label } from "@/components/ui/label.tsx"
+import { Button } from "@/components/ui/button.tsx"
+import { useGlobalState } from "@/hooks/useGlobalState.ts"
+import Cross from "@/assets/icons/cross.svg"
+import { useCardGame } from "@/hooks/useCardGame.ts"
+import achievements from "@/data/achievements.ts"
+import { GameCardPopover } from "@/components/game/GameCardPopover.tsx"
 import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
-} from "@/components/ui/hover-card.tsx";
+} from "@/components/ui/hover-card.tsx"
 
 export const GameRules = (props: { show: boolean }) => {
-  const close = useGlobalState((state) => state.toggleRules);
+  const close = useGlobalState((state) => state.toggleRules)
 
   const stats = useCardGame((state) => ({
     scoreAverage: state.scoreAverage,
@@ -36,16 +36,16 @@ export const GameRules = (props: { show: boolean }) => {
     addWonGame: state.addWonGame,
     addPlayedGame: state.addPlayedGame,
     cards: state.cards,
-  }));
+  }))
 
-  const [value, setValue] = React.useState(0);
+  const [value, setValue] = React.useState(0)
 
   return (
     <div
       onClick={(e) => {
         // it the target isn't the background, don't close the modal
-        if (e.target !== e.currentTarget) return;
-        close();
+        if (e.target !== e.currentTarget) return
+        close()
       }}
       className={cn(
         "absolute z-50 w-screen h-svh flex justify-center items-center bg-background/80",
@@ -238,5 +238,5 @@ export const GameRules = (props: { show: boolean }) => {
         </div>
       </div>
     </div>
-  );
-};
+  )
+}

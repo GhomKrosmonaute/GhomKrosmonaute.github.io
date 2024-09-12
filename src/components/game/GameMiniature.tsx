@@ -1,18 +1,18 @@
-import React from "react";
-import { cn } from "@/utils.ts";
+import React from "react"
+import { cn } from "@/utils.ts"
 
-import type { GameLog, Upgrade, GameCardInfo } from "@/game-typings.ts";
-import { reviveCard, reviveUpgrade } from "@/game-utils.ts";
-import { useCardGame } from "@/hooks/useCardGame.ts";
+import type { GameLog, Upgrade, GameCardInfo } from "@/game-typings.ts"
+import { reviveCard, reviveUpgrade } from "@/game-utils.ts"
+import { useCardGame } from "@/hooks/useCardGame.ts"
 
 export const GameMiniature = (props: { item: GameLog["reason"] }) => {
-  const cards = useCardGame((state) => state.cards);
+  const cards = useCardGame((state) => state.cards)
 
   const revived = Array.isArray(props.item)
     ? props.item.length === 2
       ? reviveCard(props.item, { cards })
       : reviveUpgrade(props.item)
-    : props.item;
+    : props.item
 
   return (
     <span
@@ -32,14 +32,14 @@ export const GameMiniature = (props: { item: GameLog["reason"] }) => {
         {typeof revived === "object" ? revived.name : revived}
       </div>
     </span>
-  );
-};
+  )
+}
 
 export const MiniatureImage = ({
   item,
   ...props
 }: React.ComponentProps<"img"> & {
-  item: Upgrade | GameCardInfo;
+  item: Upgrade | GameCardInfo
 }) => {
   return (
     <img
@@ -60,5 +60,5 @@ export const MiniatureImage = ({
         props.className,
       )}
     />
-  );
-};
+  )
+}

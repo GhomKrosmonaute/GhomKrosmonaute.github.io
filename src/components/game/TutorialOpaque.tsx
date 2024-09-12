@@ -1,27 +1,27 @@
-import React from "react";
-import { createPortal } from "react-dom";
-import { useTutorialPrivate } from "@/hooks/useTutorial.ts";
+import React from "react"
+import { createPortal } from "react-dom"
+import { useTutorialPrivate } from "@/hooks/useTutorial.ts"
 
-export const PADDING = 5;
+export const PADDING = 5
 
 const sharedStyle: React.CSSProperties = {
   position: "fixed",
   zIndex: 10010,
   backgroundColor: "rgba(0, 0, 0, 0.5)",
   overflow: "hidden",
-};
+}
 
 const animationStyle: React.CSSProperties = {
   transition: "all 0.3s linear",
-};
+}
 
 export const TutorialOpaque = ({
   children,
   style,
 }: React.PropsWithChildren<{ style?: React.CSSProperties }>) => {
-  const { position, highlight } = useTutorialPrivate();
+  const { position, highlight } = useTutorialPrivate()
 
-  const client = window.document.documentElement.getBoundingClientRect();
+  const client = window.document.documentElement.getBoundingClientRect()
 
   if (!position || !highlight)
     return (
@@ -34,7 +34,7 @@ export const TutorialOpaque = ({
       >
         {children}
       </div>
-    );
+    )
 
   return createPortal(
     <>
@@ -106,5 +106,5 @@ export const TutorialOpaque = ({
       </div>
     </>,
     document.body,
-  );
-};
+  )
+}

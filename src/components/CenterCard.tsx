@@ -1,65 +1,65 @@
-import React from "react";
-import Cross from "@/assets/icons/cross.svg";
+import React from "react"
+import Cross from "@/assets/icons/cross.svg"
 
-import { cn } from "@/utils.ts";
-import { useMediaQuery } from "usehooks-ts";
-import { Card } from "@/components/Card.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { useSettings } from "@/hooks/useSettings.ts";
+import { cn } from "@/utils.ts"
+import { useMediaQuery } from "usehooks-ts"
+import { Card } from "@/components/Card.tsx"
+import { Button } from "@/components/ui/button.tsx"
+import { useSettings } from "@/hooks/useSettings.ts"
 
 export const CenterCard = (
   props: React.PropsWithChildren<{
-    onClose?: () => unknown;
-    className?: string;
-    style?: React.CSSProperties;
-    big?: boolean;
+    onClose?: () => unknown
+    className?: string
+    style?: React.CSSProperties
+    big?: boolean
   }>,
 ) => {
-  const modalRef = React.useRef<HTMLDivElement>(null);
-  const matches = useMediaQuery("(width >= 768px) and (height >= 768px)");
+  const modalRef = React.useRef<HTMLDivElement>(null)
+  const matches = useMediaQuery("(width >= 768px) and (height >= 768px)")
   const quality = useSettings((state) => ({
     blur: state.quality.blur,
     shadows: state.quality.shadows,
     animations: state.quality.animations,
-  }));
+  }))
 
   React.useEffect(() => {
     if (modalRef.current) {
       const focusableElements = modalRef.current.querySelectorAll<HTMLElement>(
         'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
-      );
+      )
 
-      const firstElement = focusableElements[0];
-      const lastElement = focusableElements[focusableElements.length - 1];
+      const firstElement = focusableElements[0]
+      const lastElement = focusableElements[focusableElements.length - 1]
 
       const trapFocus = (event: KeyboardEvent) => {
         if (event.key === "Tab") {
           if (event.shiftKey) {
             // Si Shift + Tab
             if (document.activeElement === firstElement) {
-              event.preventDefault();
-              lastElement.focus(); // Boucle vers le dernier élément
+              event.preventDefault()
+              lastElement.focus() // Boucle vers le dernier élément
             }
           } else {
             // Si juste Tab
             if (document.activeElement === lastElement) {
-              event.preventDefault();
-              firstElement.focus(); // Boucle vers le premier élément
+              event.preventDefault()
+              firstElement.focus() // Boucle vers le premier élément
             }
           }
         }
-      };
+      }
 
-      modalRef.current.addEventListener("keydown", trapFocus);
+      modalRef.current.addEventListener("keydown", trapFocus)
 
       // Focus sur le premier élément focusable à l'ouverture de la modal
       //firstElement?.focus();
 
       return () => {
-        modalRef.current?.removeEventListener("keydown", trapFocus);
-      };
+        modalRef.current?.removeEventListener("keydown", trapFocus)
+      }
     }
-  }, [modalRef]);
+  }, [modalRef])
 
   return (
     <>
@@ -117,5 +117,5 @@ export const CenterCard = (
         </Card>
       </div>
     </>
-  );
-};
+  )
+}

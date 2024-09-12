@@ -15,34 +15,34 @@
 //
 // refreshLoop();
 
-import React from "react";
+import React from "react"
 
 export const FPS = (props: React.ComponentProps<"span">) => {
-  const [fps, setFps] = React.useState(0);
+  const [fps, setFps] = React.useState(0)
 
   React.useEffect(() => {
-    const times: number[] = [];
+    const times: number[] = []
 
-    let continueLoop = true;
+    let continueLoop = true
 
     function refreshLoop() {
       window.requestAnimationFrame(() => {
-        const now = performance.now();
+        const now = performance.now()
         while (times.length > 0 && times[0] <= now - 1000) {
-          times.shift();
+          times.shift()
         }
-        times.push(now);
-        setFps(times.length);
-        if (continueLoop) refreshLoop();
-      });
+        times.push(now)
+        setFps(times.length)
+        if (continueLoop) refreshLoop()
+      })
     }
 
-    refreshLoop();
+    refreshLoop()
 
     return () => {
-      continueLoop = false;
-    };
-  }, []);
+      continueLoop = false
+    }
+  }, [])
 
-  return <span {...props}>{fps} FPS</span>;
-};
+  return <span {...props}>{fps} FPS</span>
+}

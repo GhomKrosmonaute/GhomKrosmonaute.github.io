@@ -1,18 +1,18 @@
-import { create } from "zustand";
+import { create } from "zustand"
 
 import {
   settings,
   QualityOptions,
   Settings,
   Difficulty,
-} from "@/game-settings.ts";
+} from "@/game-settings.ts"
 
 export const useSettings = create<
   Settings & {
-    updateQuality: (quality: Partial<QualityOptions>) => void;
-    updateTheme: (theme: string) => void;
-    updateDifficulty: (difficulty: Difficulty) => void;
-    updateTutorial: (tutorial: boolean) => void;
+    updateQuality: (quality: Partial<QualityOptions>) => void
+    updateTheme: (theme: string) => void
+    updateDifficulty: (difficulty: Difficulty) => void
+    updateTutorial: (tutorial: boolean) => void
   }
 >((set) => ({
   ...settings,
@@ -23,8 +23,8 @@ export const useSettings = create<
   updateTheme: (theme) => set({ theme }),
   updateDifficulty: (difficulty) => set({ difficulty }),
   updateTutorial: (tutorial) => set({ tutorial }),
-}));
+}))
 
 useSettings.subscribe((state) => {
-  localStorage.setItem("settings", JSON.stringify(state));
-});
+  localStorage.setItem("settings", JSON.stringify(state))
+})

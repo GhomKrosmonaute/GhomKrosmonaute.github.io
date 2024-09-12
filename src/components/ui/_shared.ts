@@ -41,7 +41,7 @@ export const STYLES = {
     "relative flex min-h-[300px]  h-full w-full items-center justify-center rounded-lg border bg-background p-20 md:shadow-xl  overflow-hidden",
   DEMO_TITLE:
     "z-10 whitespace-pre-wrap text-center text-5xl font-medium tracking-tighter text-black dark:text-white",
-} as const;
+} as const
 
 //
 
@@ -174,4 +174,4 @@ export const MOTION = {
   ANIMATE_SPIN: "animate-spin", // by default with Tailwind
   ANIMATE_PING: "animate-ping", // by default with Tailwind
   //  ------------- 👆 [ANIMATIONS] 👆 ------------- //
-} as const;
+} as const

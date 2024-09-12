@@ -1,7 +1,7 @@
-import { GameValueIcon } from "@/components/game/GameValueIcon.tsx";
-import { Progress } from "@/components/ui/progress.tsx";
-import { cn } from "@/utils";
-import React from "react";
+import { GameValueIcon } from "@/components/game/GameValueIcon.tsx"
+import { Progress } from "@/components/ui/progress.tsx"
+import { cn } from "@/utils"
+import React from "react"
 
 export const GameGauge = ({
   iconClassName,
@@ -14,14 +14,14 @@ export const GameGauge = ({
   increaseOnly,
   ...props
 }: React.ComponentProps<"div"> & {
-  iconClassName?: string;
-  barClassName?: string;
-  value: number;
-  display?: (fraction: number) => React.ReactNode;
-  max: number;
-  color?: `bg-${string}` & string;
-  title: string;
-  increaseOnly?: boolean;
+  iconClassName?: string
+  barClassName?: string
+  value: number
+  display?: (fraction: number) => React.ReactNode
+  max: number
+  color?: `bg-${string}` & string
+  title: string
+  increaseOnly?: boolean
 }) => {
   return (
     <div
@@ -42,5 +42,5 @@ export const GameGauge = ({
         increaseOnly={increaseOnly}
       />
     </div>
-  );
-};
+  )
+}

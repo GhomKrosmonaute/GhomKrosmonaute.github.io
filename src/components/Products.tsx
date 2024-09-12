@@ -1,9 +1,9 @@
-import tarifs from "../data/tarifs.json";
+import tarifs from "../data/tarifs.json"
 
 export const Products = () => {
   return (
     <>
-      <h2 className="text-2xl">
+      <h2 className="text-2xl text-center md:text-left">
         Prestations{" "}
         <span className="md:hidden" title="En tant que produit">
           AAP
@@ -32,5 +32,5 @@ export const Products = () => {
         </tbody>
       </table>
     </>
-  );
-};
+  )
+}

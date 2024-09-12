@@ -1,17 +1,17 @@
-import * as React from "react";
-import * as ProgressPrimitive from "@radix-ui/react-progress";
+import * as React from "react"
+import * as ProgressPrimitive from "@radix-ui/react-progress"
 
-import { cn } from "@/utils";
-import { usePrevious } from "@/hooks/usePrevious.ts";
+import { cn } from "@/utils"
+import { usePrevious } from "@/hooks/usePrevious.ts"
 
 const Progress = React.forwardRef<
   React.ElementRef<typeof ProgressPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof ProgressPrimitive.Root> & {
-    barColor?: `bg-${string}`;
-    increaseOnly?: boolean;
+    barColor?: `bg-${string}`
+    increaseOnly?: boolean
   }
 >(({ barColor, className, value, increaseOnly, ...props }, ref) => {
-  const previous = usePrevious(value);
+  const previous = usePrevious(value)
 
   return (
     <ProgressPrimitive.Root
@@ -38,8 +38,8 @@ const Progress = React.forwardRef<
         }}
       />
     </ProgressPrimitive.Root>
-  );
-});
-Progress.displayName = ProgressPrimitive.Root.displayName;
+  )
+})
+Progress.displayName = ProgressPrimitive.Root.displayName
 
-export { Progress };
+export { Progress }
