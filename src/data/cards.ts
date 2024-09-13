@@ -10,15 +10,19 @@ import type { GameCardInfo } from "@/game-typings.ts"
 
 import { EventText } from "@/components/game/EventText.tsx"
 
-import generateEffects from "@/data/effects.ts"
+import effects from "@/data/effects.ts"
 import generateUpgrades from "@/data/upgrades.ts"
 
+/**
+ * @param advantage is only transmitted to generateUpgrades
+ */
 export default function generateCards(advantage: number): GameCardInfo[] {
-  const effects = generateEffects(advantage)
   const upgrades = generateUpgrades(advantage)
 
-  const supportEffects = effects.filter((effect) => effect.type === "support")
-  const actionEffects = effects.filter((effect) => effect.type === "action")
+  const supportEffects = effects.filter(
+    (effect) => effect(0).type === "support",
+  )
+  const actionEffects = effects.filter((effect) => effect(0).type === "action")
 
   const supports: GameCardInfo[] = technos.map((techno, i) => {
     const mapping = map(i, 0, technos.length, 0, supportEffects.length, true)
@@ -29,10 +33,7 @@ export default function generateCards(advantage: number): GameCardInfo[] {
       type: "support" as const,
       image: `images/techno/${techno.image}`,
       state: "idle" as const,
-      effect: {
-        ...effect,
-        description: formatText(effect.description),
-      },
+      effect,
     }
   })
 
@@ -45,10 +46,7 @@ export default function generateCards(advantage: number): GameCardInfo[] {
       type: "action" as const,
       image: `images/projects/${project.image}`,
       state: "idle" as const,
-      effect: {
-        ...effect,
-        description: formatText(effect.description),
-      },
+      effect,
     }
   })
 
@@ -58,7 +56,7 @@ export default function generateCards(advantage: number): GameCardInfo[] {
       name: upgrade.name,
       image: `images/upgrades/${upgrade.image}`,
       state: "idle",
-      effect: {
+      effect: () => ({
         index: -1,
         upgrade: true,
         ephemeral: upgrade.max === 1,
@@ -72,7 +70,7 @@ export default function generateCards(advantage: number): GameCardInfo[] {
         type: "action",
         cost: upgrade.cost,
         waitBeforePlay: false,
-      },
+      }),
     }
   })
 

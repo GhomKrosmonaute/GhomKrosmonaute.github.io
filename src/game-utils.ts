@@ -122,7 +122,7 @@ export function generateChoiceOptions(
       (!options?.exclude ||
         options?.exclude?.every((name) => name !== card.name)) &&
       (!options?.filter || options?.filter?.(card, state)) &&
-      (!card.effect.upgrade ||
+      (!card.effect(0).upgrade ||
         state.upgrades.length === 0 ||
         state.upgrades.every((u) => {
           const up = reviveUpgrade(u, state)
@@ -205,7 +205,7 @@ export function rankColor(rank: number) {
 
 export function getUpgradeCost(
   state: GameState,
-  card: GameCardInfo,
+  card: GameCardInfo<true>,
 ): number | string {
   const index = state.upgrades.length
 
@@ -241,16 +241,16 @@ export function cloneSomething<T>(something: T): T {
 
 export function applyGlobalCardModifiers(
   state: GameState,
-  card: GameCardInfo,
+  card: GameCardInfo<true>,
   used: string[],
-): { card: GameCardInfo; appliedModifiers: CardModifierIndice[] } {
+): { card: GameCardInfo<true>; appliedModifiers: CardModifierIndice[] } {
   const clone = cloneSomething(card)
   const modifiers = state.globalCardModifiers.slice().toSorted((a, b) => {
     return a[2] - b[2]
   })
 
   return modifiers.reduce<{
-    card: GameCardInfo
+    card: GameCardInfo<true>
     appliedModifiers: CardModifierIndice[]
   }>(
     (previousValue, indice) => {
@@ -275,7 +275,7 @@ export function applyGlobalCardModifiers(
 
 export function parseCost(
   state: GameState,
-  card: GameCardInfo,
+  card: GameCardInfo<true>,
   used: string[],
 ) {
   const { card: tempCard, appliedModifiers } = applyGlobalCardModifiers(
@@ -293,7 +293,7 @@ export function parseCost(
   return { needs, cost, canBeBuy, appliedModifiers } as const
 }
 
-export function willBeRemoved(state: GameState, card: GameCardInfo) {
+export function willBeRemoved(state: GameState, card: GameCardInfo<true>) {
   if (card.effect.ephemeral) return true
 
   if (card.effect.upgrade) {
@@ -439,7 +439,9 @@ export function map(
   }
 }
 
-export function isActionCardInfo(card: GameCardInfo): card is ActionCardInfo {
+export function isActionCardInfo(
+  card: GameCardInfo<true>,
+): card is ActionCardInfo<true> {
   return card.type === "action"
 }
 
@@ -450,8 +452,8 @@ export function reviveCardModifier(indice: CardModifierIndice): CardModifier {
 
 export function reviveCard(
   indice: GameCardIndice | string,
-  state: { cards: GameCardInfo[] },
-): GameCardInfo {
+  state: { cards: GameCardInfo[]; difficulty: Difficulty; inflation: number },
+): GameCardInfo<true> {
   const card = state.cards.find((c) =>
     typeof indice === "string" ? c.name === indice : c.name === indice[0],
   )
@@ -460,7 +462,10 @@ export function reviveCard(
 
   if (typeof indice !== "string") card.state = indice[1]
 
-  return card
+  return {
+    ...card,
+    effect: card.effect(GAME_ADVANTAGE[state.difficulty] - state.inflation),
+  }
 }
 
 export function reviveUpgrade(

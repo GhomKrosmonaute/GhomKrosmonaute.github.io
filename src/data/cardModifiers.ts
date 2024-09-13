@@ -4,7 +4,7 @@ import { updateCost, getUpgradeCost, parseCost } from "@/game-utils"
 
 const cardModifiers = {
   "upgrade cost threshold": () => ({
-    condition: (card) => !!card.effect.upgrade,
+    condition: (card) => Boolean(card.effect(0).upgrade),
     use: (card, state) => {
       if (card.effect.upgrade) {
         return {

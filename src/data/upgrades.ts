@@ -40,12 +40,12 @@ export default function generateUpgrades(advantage: number): RawUpgrade[] {
     },
     {
       name: "Bourse",
-      eventName: "daily",
-      description: "Gagne @cumul fois 5% de ton capital",
+      eventName: "weekly",
+      description: "Gagne @cumul% de ton capital",
       image: "bourse.png",
       condition: (state) => state.money > 0,
       onTrigger: async (state, upgrade, reason) => {
-        await state.addMoney(Math.ceil(upgrade.cumul * (state.money / 5)), {
+        await state.addMoney(Math.ceil(upgrade.cumul * (state.money / 100)), {
           skipGameOverPause: true,
           reason,
         })

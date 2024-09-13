@@ -144,23 +144,23 @@ export interface GameState {
     options: GameMethodOptions &
       Partial<{
         fromDiscardPile: boolean
-        filter: (card: GameCardInfo) => boolean
+        filter: (card: GameCardInfo<true>) => boolean
       }>,
   ) => Promise<void>
   discardCard: (options: {
     toDraw?: boolean
     random?: boolean
     reason: GameLog["reason"]
-    filter?: (card: GameCardInfo) => boolean
+    filter?: (card: GameCardInfo<true>) => boolean
   }) => Promise<void>
   removeCard: (name: string) => Promise<void>
   recycleCard: (count: number, options: GameMethodOptions) => Promise<void>
   playCard: (
-    card: GameCardInfo,
+    card: GameCardInfo<true>,
     options: GameMethodOptions & { free?: boolean },
   ) => Promise<void>
   skip: (options: MethodWhoLog) => Promise<void>
-  pickCard: (card: GameCardInfo) => Promise<void>
+  pickCard: (card: GameCardInfo<true>) => Promise<void>
   win: () => void
   defeat: (reason: GameOverReason) => void
   reset: () => void
@@ -337,7 +337,7 @@ function generateGameState(): Omit<
   let startingDeck: string[] = []
 
   startingDeck.push(
-    cards.find((c) => c.effect.description.startsWith("Renvoie tout"))!.name,
+    cards.find((c) => c.effect(0).description.startsWith("Renvoie tout"))!.name,
   )
 
   startingDeck.push(
@@ -345,7 +345,7 @@ function generateGameState(): Omit<
       .filter(
         (c) =>
           startingDeck.every((name) => name !== c.name) &&
-          c.effect.description.startsWith("Pioche"),
+          c.effect(0).description.startsWith("Pioche"),
       )
       .slice(0, 4)
       .map((c) => c.name),
@@ -356,7 +356,7 @@ function generateGameState(): Omit<
       .filter(
         (c) =>
           startingDeck.every((name) => name !== c.name) &&
-          c.effect.description.startsWith("Recycle"),
+          c.effect(0).description.startsWith("Recycle"),
       )
       .map((c) => c.name),
   )
@@ -366,9 +366,9 @@ function generateGameState(): Omit<
       .filter(
         (c) =>
           startingDeck.every((name) => name !== c.name) &&
-          !c.effect.upgrade &&
-          c.effect.description.toLowerCase().includes("gagne") &&
-          c.effect.description.toLowerCase().includes("énergie"),
+          !c.effect(0).upgrade &&
+          c.effect(0).description.toLowerCase().includes("gagne") &&
+          c.effect(0).description.toLowerCase().includes("énergie"),
       )
       .map((c) => c.name),
   )
@@ -384,7 +384,7 @@ function generateGameState(): Omit<
           (c) =>
             startingChoices.every((o) => o.every((i) => i[0] !== c.name)) &&
             startingDeck.every((name) => name !== c.name) &&
-            !c.effect.upgrade,
+            !c.effect(0).upgrade,
         ),
         5,
       )
@@ -579,7 +579,7 @@ function generateGameMethods(
               : [
                   ...state.choiceOptions,
                   generateChoiceOptions(getState(), {
-                    filter: (c) => !c.effect.upgrade,
+                    filter: (c) => !c.effect(0).upgrade,
                   }),
                 ],
           }))
@@ -594,10 +594,10 @@ function generateGameMethods(
               choiceOptions: [
                 ...state.choiceOptions,
                 generateChoiceOptions(fullState, {
-                  filter: (c) => !c.effect.upgrade && c.type === "action",
+                  filter: (c) => !c.effect(0).upgrade && c.type === "action",
                 }),
                 generateChoiceOptions(fullState, {
-                  filter: (c) => !!c.effect.upgrade,
+                  filter: (c) => Boolean(c.effect(0).upgrade),
                 }),
               ],
             }))

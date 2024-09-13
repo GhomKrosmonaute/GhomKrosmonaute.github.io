@@ -14,7 +14,12 @@ import type {
 
 import { useCardGame } from "@/hooks/useCardGame.ts"
 
-import { energyCostColor, isActionCardInfo, parseCost } from "@/game-utils.ts"
+import {
+  energyCostColor,
+  formatText,
+  isActionCardInfo,
+  parseCost,
+} from "@/game-utils.ts"
 
 import { GameMoneyIcon } from "@/components/game/GameMoneyIcon.tsx"
 import { Tilt, TiltFoil } from "@/components/game/Tilt.tsx"
@@ -25,7 +30,7 @@ import { cn } from "@/utils.ts"
 
 export const GameCard = (
   props: React.PropsWithoutRef<{
-    card: GameCardInfo
+    card: GameCardInfo<true>
     position?: number
     isChoice?: boolean
   }>,
@@ -298,7 +303,7 @@ export const GameCard = (
                 transformStyle: quality.perspective ? "preserve-3d" : "flat",
               }}
               dangerouslySetInnerHTML={{
-                __html: props.card.effect.description,
+                __html: formatText(props.card.effect.description),
               }}
             />
 
@@ -330,7 +335,7 @@ export const GameCard = (
 }
 
 const GameCardProject = (
-  props: React.PropsWithoutRef<{ card: ActionCardInfo }>,
+  props: React.PropsWithoutRef<{ card: ActionCardInfo<true> }>,
 ) => {
   const { shadows, perspective, transparency, animation } = useSettings(
     (state) => ({
@@ -390,7 +395,7 @@ const GameCardProject = (
 const spinners = ["React", "Knex"]
 
 const GameCardTechno = (
-  props: React.PropsWithoutRef<{ card: SupportCardInfo }>,
+  props: React.PropsWithoutRef<{ card: SupportCardInfo<true> }>,
 ) => {
   const { perspective, animation } = useSettings((state) => ({
     perspective: state.quality.perspective,

@@ -37,8 +37,9 @@ export type RawUpgrade = Pick<
   max?: number
 }
 
+export type EffectBuilder = (advantage: number) => Effect
+
 export interface Effect {
-  index: number
   description: string
   type: "action" | "support"
   cost: number | string
@@ -47,10 +48,10 @@ export interface Effect {
     card: GameCardInfo,
     condition: boolean,
   ) => string
-  condition?: (state: GameState, card: GameCardInfo) => boolean
+  condition?: (state: GameState, card: GameCardInfo<true>) => boolean
   onPlayed: (
     state: GameState,
-    card: GameCardInfo,
+    card: GameCardInfo<true>,
     reason: GameLog["reason"],
   ) => Promise<unknown>
   waitBeforePlay?: boolean
@@ -58,22 +59,22 @@ export interface Effect {
   upgrade?: boolean
 }
 
-export interface ActionCardInfo {
+export interface ActionCardInfo<Resolved = false> {
   type: "action"
   name: string
   image: string
-  effect: Effect
+  effect: Resolved extends true ? Effect : EffectBuilder
   state: GameCardState
   description?: string
   detail?: string
   url?: string
 }
 
-export interface SupportCardInfo {
+export interface SupportCardInfo<Resolved = false> {
   type: "support"
   name: string
   image: string
-  effect: Effect
+  effect: Resolved extends true ? Effect : EffectBuilder
   state: GameCardState
 }
 
@@ -88,11 +89,13 @@ export type GameCardState =
   | "idle"
   | null
 
-export type GameCardInfo = ActionCardInfo | SupportCardInfo
+export type GameCardInfo<Resolved = false> =
+  | ActionCardInfo<Resolved>
+  | SupportCardInfo<Resolved>
 
 export type CardModifier = {
-  condition?: (card: GameCardInfo, state: GameState) => boolean
-  use: (card: GameCardInfo, state: GameState) => GameCardInfo
+  condition?: (card: GameCardInfo<true>, state: GameState) => boolean
+  use: (card: GameCardInfo<true>, state: GameState) => GameCardInfo<true>
   once?: boolean
 }
 
@@ -122,7 +125,7 @@ export type GameOverReason =
 export type GameLog = {
   type: "money" | "reputation" | "energy"
   value: number
-  reason: GameCardInfo | Upgrade | GameCardIndice | UpgradeIndice | string
+  reason: GameCardInfo<true> | Upgrade | GameCardIndice | UpgradeIndice | string
 }
 
 export type GameNotification = {
