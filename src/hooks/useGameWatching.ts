@@ -9,10 +9,12 @@ export const useGameWatching = () => {
   )
 
   const checkAchievements = useCardGame((state) => state.checkAchievements)
+  const checkDiscoveries = useCardGame((state) => state.checkDiscoveries)
 
   React.useEffect(() => {
     const interval = setInterval(() => {
       if (show && !isOperationInProgress) {
+        checkDiscoveries()
         checkAchievements().then()
       }
     }, 1000)

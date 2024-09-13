@@ -19,6 +19,11 @@ const events = {
     icon: Sprint,
     colors: "bg-upgrade",
   },
+  monthly: {
+    name: "Tous les mois",
+    icon: Sprint,
+    colors: "bg-inflation",
+  },
   onPlay: {
     name: "À chaque carte jouée",
     icon: Play,

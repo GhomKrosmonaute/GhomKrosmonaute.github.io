@@ -100,6 +100,10 @@ module.exports = {
           DEFAULT: "hsl(var(--day))",
           foreground: "hsl(var(--day-foreground))",
         },
+        inflation: {
+          DEFAULT: "hsl(var(--inflation))",
+          foreground: "hsl(var(--inflation-foreground))",
+        },
       },
       boxShadow: {
         "glow-20": "0 0 20px var(--tw-shadow-color)",

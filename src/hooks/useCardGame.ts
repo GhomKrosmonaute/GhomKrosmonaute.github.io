@@ -31,6 +31,7 @@ import {
   REPUTATION_TO_ENERGY,
   INITIAL_CHOICE_COUNT,
   INITIAL_CHOICE_OPTION_COUNT,
+  GAME_ADVANTAGE,
 } from "@/game-constants.ts"
 
 import {
@@ -52,6 +53,7 @@ import {
   isNewSprint,
   updateGameAutoSpeed,
   getGameSpeed,
+  GlobalCardModifierIndex,
 } from "@/game-utils.ts"
 
 import { metadata } from "@/game-metadata.ts"
@@ -75,11 +77,13 @@ export interface GlobalGameState {
 }
 
 export interface GameState {
+  inflation: number
   coinFlips: number
   recycledCards: number
   discardedCards: number
   skippedChoices: number
   increments: (key: keyof GameState, count?: number) => Promise<void>
+  incrementsInflation: () => void
   rawUpgrades: RawUpgrade[]
   cards: GameCardInfo[]
   difficulty: Difficulty
@@ -99,7 +103,7 @@ export interface GameState {
   discard: string[]
   hand: GameCardIndice[]
   upgrades: UpgradeIndice[]
-  cardModifiers: CardModifierIndice[]
+  globalCardModifiers: CardModifierIndice[]
   score: number
   day: number
   dayFull: boolean | null
@@ -130,10 +134,10 @@ export interface GameState {
     options: MethodWhoCheckIfGameOver & Partial<MethodWhoLog>,
   ) => Promise<void>
   triggerEvent: (event: TriggerEventName) => Promise<void>
-  addCardModifier: <CardModifierName extends keyof typeof cardModifiers>(
+  addGlobalCardModifier: <CardModifierName extends keyof typeof cardModifiers>(
     name: CardModifierName,
     params: Parameters<(typeof cardModifiers)[CardModifierName]>,
-    options?: { before?: boolean },
+    index: number,
   ) => unknown
   drawCard: (
     count: number,
@@ -325,8 +329,10 @@ function generateGameState(): Omit<
 
   localStorage.setItem("metadata", JSON.stringify(metadata))
 
-  const cards = generateCards(difficulty)
-  const rawUpgrades = generateUpgrades(difficulty)
+  const advantage = GAME_ADVANTAGE[difficulty]
+
+  const cards = generateCards(advantage)
+  const rawUpgrades = generateUpgrades(advantage)
 
   let startingDeck: string[] = []
 
@@ -412,7 +418,10 @@ function generateGameState(): Omit<
       .map((name) => [name, "idle"]),
     discard: [],
     upgrades: [],
-    cardModifiers: [["upgrade cost threshold", []]],
+    globalCardModifiers: [
+      ["upgrade cost threshold", [], GlobalCardModifierIndex.First],
+      ["all card inflation", [], GlobalCardModifierIndex.Last],
+    ],
     day: 0,
     dayFull: false,
     sprintFull: false,
@@ -420,6 +429,7 @@ function generateGameState(): Omit<
     energyMax: MAX_ENERGY,
     reputation: MAX_REPUTATION,
     money: 0,
+    inflation: 0,
   }
 }
 
@@ -464,6 +474,23 @@ function generateGameMethods(
       set({ [key]: state[key] + (count ?? 1) })
 
       await state.checkAchievements()
+    },
+
+    incrementsInflation: () => {
+      const state = getState()
+      const newInflation = state.inflation + 1
+
+      if (state.inflation < GAME_ADVANTAGE[state.difficulty]) {
+        const baseGameAdvantage = GAME_ADVANTAGE[settings.difficulty]
+
+        set({
+          inflation: newInflation,
+          cards: generateCards(baseGameAdvantage - newInflation),
+          rawUpgrades: generateUpgrades(baseGameAdvantage - newInflation),
+        })
+      } else {
+        set({ inflation: newInflation })
+      }
     },
 
     throwError: (error: unknown) => {
@@ -520,6 +547,7 @@ function generateGameMethods(
 
         for (currentDay; currentDay < afterDay; currentDay++) {
           const newSprint = currentDay !== 0 && (currentDay + 1) % 7 === 0
+          const newMonth = newSprint && (currentDay + 1) % 28 === 0
 
           // debugger;
 
@@ -573,6 +601,18 @@ function generateGameMethods(
                 }),
               ],
             }))
+
+            if (newMonth) {
+              await state.addNotification({
+                header: "L'inflation augmente",
+                message: `Mois ${Math.floor((currentDay + 1) / 7)}`,
+                className: "bg-inflation text-inflation-foreground",
+              })
+
+              state.incrementsInflation()
+
+              await state.triggerEvent("monthly")
+            }
           }
 
           await wait(1000)
@@ -962,17 +1002,15 @@ function generateGameMethods(
       })
     },
 
-    addCardModifier: async (name, params, options) => {
+    addGlobalCardModifier: async (name, params, index) => {
       await handleErrorsAsync(getState, async () => {
         bank.powerUp.play()
 
-        const indice = [name, params] as unknown as CardModifierIndice
+        const indice = [name, params, index] as unknown as CardModifierIndice
 
         set((state) => {
           return {
-            cardModifiers: options?.before
-              ? [indice, ...state.cardModifiers]
-              : [...state.cardModifiers, indice],
+            globalCardModifiers: [...state.globalCardModifiers, indice],
           }
         })
       })
@@ -1293,7 +1331,7 @@ function generateGameMethods(
               ? state.discard
               : shuffle([card.name, ...state.discard], 3),
             hand: state.hand.filter((c) => c[0] !== card.name),
-            cardModifiers: state.cardModifiers.filter((indice) => {
+            globalCardModifiers: state.globalCardModifiers.filter((indice) => {
               const modifier = reviveCardModifier(indice)
 
               return (
@@ -1460,12 +1498,20 @@ function generateGameMethods(
 }
 
 export const useCardGame = create<GameState & GlobalGameState>(
-  (set, getState) => ({
-    ...generateGameState(),
-    ...generateGameMethods(set, getState),
-    ...generateGlobalGameState(),
-    ...generateGlobalGameMethods(set, getState),
-  }),
+  (set, getState) => {
+    const state = {
+      ...generateGameState(),
+      ...generateGameMethods(set, getState),
+      ...generateGlobalGameState(),
+      ...generateGlobalGameMethods(set, getState),
+    }
+
+    state.discoveries = Array.from(
+      new Set([...state.discoveries, ...getDeck(state).map((c) => c[0])]),
+    )
+
+    return state
+  },
 )
 
 useCardGame.subscribe(async (state, prevState) => {
@@ -1495,7 +1541,7 @@ useCardGame.subscribe(async (state, prevState) => {
         hand: state.hand,
         discard: state.discard,
         upgrades: state.upgrades,
-        cardModifiers: state.cardModifiers,
+        globalCardModifiers: state.globalCardModifiers,
         day: state.day,
         energy: state.energy,
         energyMax: state.energyMax,
@@ -1511,6 +1557,7 @@ useCardGame.subscribe(async (state, prevState) => {
         infinityMode: state.infinityMode,
         logs: state.logs,
         score: state.score,
+        inflation: state.inflation,
       } satisfies Omit<
         GameState,
         keyof ReturnType<typeof generateGameMethods> | "cards" | "rawUpgrades"
@@ -1532,9 +1579,9 @@ useCardGame.subscribe(async (state, prevState) => {
       await state.addAchievement("Première victoire")
     }
 
-    // on vérifie les achievements
-    await state.checkAchievements()
     state.checkDiscoveries()
+
+    await state.checkAchievements()
 
     updateGameAutoSpeed(state)
 

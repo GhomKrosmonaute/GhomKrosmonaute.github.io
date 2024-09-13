@@ -11,13 +11,11 @@ import type { GameCardInfo } from "@/game-typings.ts"
 import { EventText } from "@/components/game/EventText.tsx"
 
 import generateEffects from "@/data/effects.ts"
-
-import type { Difficulty } from "@/game-settings.ts"
 import generateUpgrades from "@/data/upgrades.ts"
 
-export default function generateCards(difficulty: Difficulty): GameCardInfo[] {
-  const effects = generateEffects(difficulty)
-  const upgrades = generateUpgrades(difficulty)
+export default function generateCards(advantage: number): GameCardInfo[] {
+  const effects = generateEffects(advantage)
+  const upgrades = generateUpgrades(advantage)
 
   const supportEffects = effects.filter((effect) => effect.type === "support")
   const actionEffects = effects.filter((effect) => effect.type === "action")

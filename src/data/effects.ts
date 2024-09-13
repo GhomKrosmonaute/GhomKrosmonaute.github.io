@@ -2,17 +2,13 @@ import type { Effect } from "@/game-typings"
 
 import {
   ENERGY_TO_MONEY,
-  GAME_ADVANTAGE,
   MAX_HAND_SIZE,
   REPUTATION_TO_ENERGY,
 } from "@/game-constants.ts"
 
-import { parseCost, reviveCard } from "@/game-utils.ts"
-import type { Difficulty } from "@/game-settings.ts"
+import { GlobalCardModifierIndex, parseCost, reviveCard } from "@/game-utils.ts"
 
-export default function generateEffects(difficulty: Difficulty): Effect[] {
-  const advantage = GAME_ADVANTAGE[difficulty]
-
+export default function generateEffects(advantage: number): Effect[] {
   return (
     [
       {
@@ -491,7 +487,11 @@ export default function generateEffects(difficulty: Difficulty): Effect[] {
             : ""
         }`, // 4 (middle effect) - 1 (easy condition) = 3
         onPlayed: async (state, _, reason) => {
-          state.addCardModifier("next card half cost", [])
+          state.addGlobalCardModifier(
+            "next card half cost",
+            [],
+            GlobalCardModifierIndex.MultiplyOrDivide,
+          )
 
           if (advantage > 3) {
             await state.addEnergy(advantage - 3, {
@@ -507,7 +507,11 @@ export default function generateEffects(difficulty: Difficulty): Effect[] {
         description:
           "La prochaine carte qui coûte de l'argent coûte maintenant de l'@energy",
         onPlayed: async (state) => {
-          state.addCardModifier("next money card cost energy", [])
+          state.addGlobalCardModifier(
+            "next money card cost energy",
+            [],
+            GlobalCardModifierIndex.Last,
+          )
         },
         type: "support",
         cost: 0,
@@ -525,10 +529,11 @@ export default function generateEffects(difficulty: Difficulty): Effect[] {
             )
             .map((c) => c.name)
 
-          state.addCardModifier("lowers price of hand cards", [
-            handCardNames,
-            1 + advantage,
-          ])
+          state.addGlobalCardModifier(
+            "lowers price of hand cards",
+            [handCardNames, 1 + advantage],
+            GlobalCardModifierIndex.AddOrSubtract,
+          )
         },
         condition: (state) =>
           state.hand.some(

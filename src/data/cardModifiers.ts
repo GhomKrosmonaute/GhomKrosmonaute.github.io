@@ -1,6 +1,6 @@
 import type { CardModifier } from "@/game-typings"
-import { ENERGY_TO_MONEY } from "@/game-constants.ts"
-import { getUpgradeCost, parseCost } from "@/game-utils"
+import { ENERGY_TO_MONEY, GAME_ADVANTAGE } from "@/game-constants.ts"
+import { updateCost, getUpgradeCost, parseCost } from "@/game-utils"
 
 const cardModifiers = {
   "upgrade cost threshold": () => ({
@@ -18,6 +18,23 @@ const cardModifiers = {
       return card
     },
   }),
+
+  "all card inflation": () => ({
+    condition: () => true,
+    use: (card, state) => ({
+      ...card,
+      effect: {
+        ...card.effect,
+        cost: updateCost(
+          card.effect.cost,
+          (cost) =>
+            cost +
+            Math.max(0, state.inflation - GAME_ADVANTAGE[state.difficulty]),
+        ),
+      },
+    }),
+  }),
+
   "lowers price of hand cards": (
     handCardNames: string[],
     discount: number,
@@ -27,17 +44,13 @@ const cardModifiers = {
       ...card,
       effect: {
         ...card.effect,
-        cost: (typeof card.effect.cost === "string" ? String : Number)(
-          Math.max(
-            0,
-            Number(card.effect.cost) -
-              discount *
-                (typeof card.effect.cost === "string" ? ENERGY_TO_MONEY : 1),
-          ),
+        cost: updateCost(card.effect.cost, (cost) =>
+          Math.max(0, cost - discount),
         ),
       },
     }),
   }),
+
   "next money card cost energy": () => ({
     once: true,
     condition: (card, state) => {
@@ -57,6 +70,7 @@ const cardModifiers = {
       },
     }),
   }),
+
   "next card half cost": () => ({
     once: true,
     condition: (card, state) =>
@@ -65,10 +79,7 @@ const cardModifiers = {
       ...card,
       effect: {
         ...card.effect,
-        cost:
-          typeof card.effect.cost === "number"
-            ? Math.ceil(card.effect.cost / 2)
-            : String(Math.ceil(Number(card.effect.cost) / 2)),
+        cost: updateCost(card.effect.cost, (cost) => Math.ceil(cost / 2)),
       },
     }),
   }),

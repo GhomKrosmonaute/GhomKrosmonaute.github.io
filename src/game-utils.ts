@@ -14,6 +14,8 @@ import type {
 } from "@/game-typings"
 
 import {
+  ENERGY_TO_MONEY,
+  GAME_ADVANTAGE,
   INFINITE_DRAW_COST,
   MAX_HAND_SIZE,
   MONEY_TO_REACH,
@@ -26,6 +28,13 @@ import cardModifiers from "@/data/cardModifiers.ts"
 
 import generateCards from "@/data/cards.ts"
 import generateUpgrades from "@/data/upgrades.ts"
+
+export enum GlobalCardModifierIndex {
+  First = 0,
+  AddOrSubtract = 1,
+  MultiplyOrDivide = 2,
+  Last = 3,
+}
 
 export function log<T>(items: T): T {
   if (import.meta.env.DEV) console.log(items)
@@ -131,8 +140,6 @@ export function generateChoiceOptions(
     .slice(0, state.choiceOptionCount)
     .map((c) => c.name)
 
-  state.addDiscovery(...outputOptions)
-
   return outputOptions.map((name) => [name, "drawing"])
 }
 
@@ -212,6 +219,18 @@ export function getUpgradeCost(
   )
 }
 
+export function updateCost<T extends string | number>(
+  cost: T,
+  modifier: (energyCost: number) => number,
+): T {
+  const energyCost =
+    typeof cost === "string" ? Number(cost) / ENERGY_TO_MONEY : (cost as number)
+  const newEnergyCost = modifier(energyCost)
+  return (typeof cost === "string" ? String : Number)(
+    typeof cost === "string" ? newEnergyCost * ENERGY_TO_MONEY : newEnergyCost,
+  ) as T
+}
+
 export function cloneSomething<T>(something: T): T {
   return JSON.parse(
     JSON.stringify(something, (_key, value) =>
@@ -220,13 +239,15 @@ export function cloneSomething<T>(something: T): T {
   )
 }
 
-export function applyCardModifiers(
+export function applyGlobalCardModifiers(
   state: GameState,
   card: GameCardInfo,
   used: string[],
 ): { card: GameCardInfo; appliedModifiers: CardModifierIndice[] } {
   const clone = cloneSomething(card)
-  const modifiers = state.cardModifiers.slice()
+  const modifiers = state.globalCardModifiers.slice().toSorted((a, b) => {
+    return a[2] - b[2]
+  })
 
   return modifiers.reduce<{
     card: GameCardInfo
@@ -257,7 +278,7 @@ export function parseCost(
   card: GameCardInfo,
   used: string[],
 ) {
-  const { card: tempCard, appliedModifiers } = applyCardModifiers(
+  const { card: tempCard, appliedModifiers } = applyGlobalCardModifiers(
     state,
     card,
     used,
@@ -343,6 +364,10 @@ export function formatText(text: string) {
     .replace(
       /@day([^\s.:,)]*)/g,
       '<span style="color: hsl(var(--day)); transform: translateZ(5px); font-weight: bold;">Jour$1</span>',
+    )
+    .replace(
+      /@inflation([^\s.:,)]*)/g,
+      '<span style="color: hsl(var(--inflation)); transform: translateZ(5px); font-weight: bold;">Inflation$1</span>',
     )
     .replace(
       /((?:[\de+.]+|<span[^>]*>[\de+.]+<\/span>)[MB]\$)/g,
@@ -458,10 +483,9 @@ export function reviveUpgrade(
 }
 
 export function parseSave(save: string, difficulty: Difficulty) {
-  const cards = generateCards(difficulty)
-  const rawUpgrades = generateUpgrades(difficulty)
+  const baseAdvantage = GAME_ADVANTAGE[difficulty]
 
-  return {
+  const state: GameState & GlobalGameState = {
     ...JSON.parse(save, (key, value) => {
       if (typeof value === "object") {
         switch (key) {
@@ -476,7 +500,10 @@ export function parseSave(save: string, difficulty: Difficulty) {
 
       return value
     }),
-    cards,
-    rawUpgrades,
   }
+
+  state.cards = generateCards(baseAdvantage - state.inflation)
+  state.rawUpgrades = generateUpgrades(baseAdvantage - state.inflation)
+
+  return state
 }

@@ -98,7 +98,11 @@ export type CardModifier = {
 
 export type GameCardIndice = [name: string, state: GameCardState]
 
-export type CardModifierIndice = [name: string, params: unknown[]]
+export type CardModifierIndice = [
+  name: string,
+  params: unknown[],
+  index: number,
+]
 
 export type TriggerEventName = keyof typeof events
 

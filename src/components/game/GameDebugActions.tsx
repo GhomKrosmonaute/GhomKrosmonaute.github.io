@@ -64,12 +64,8 @@ export const GameDebugActions = () => {
       >
         Toutes les améliorations
       </Button>
-      <Button
-        size="cta"
-        disabled={runningOps || game.hand.length === 0}
-        onClick={() => game.removeCard(game.hand[0]?.[0])}
-      >
-        Supprime la première carte
+      <Button size="cta" onClick={() => game.incrementsInflation()}>
+        Augmenter l'inflation
       </Button>
       <div className="flex">
         <Button

@@ -1,16 +1,11 @@
 import type { RawUpgrade } from "@/game-typings"
 import {
   ENERGY_TO_MONEY,
-  GAME_ADVANTAGE,
   MAX_HAND_SIZE,
   MAX_REPUTATION,
 } from "@/game-constants.ts"
 
-import type { Difficulty } from "@/game-settings.ts"
-
-export default function generateUpgrades(difficulty: Difficulty): RawUpgrade[] {
-  const advantage = GAME_ADVANTAGE[difficulty]
-
+export default function generateUpgrades(advantage: number): RawUpgrade[] {
   return [
     {
       name: "Starbucks",

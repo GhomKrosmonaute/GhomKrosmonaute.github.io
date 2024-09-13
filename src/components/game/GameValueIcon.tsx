@@ -4,12 +4,13 @@ import React from "react"
 import { ColorClass } from "@/game-typings.ts"
 
 const foregrounds: Record<ColorClass, string> = {
-  "bg-energy": "text-energy-foreground",
-  "bg-reputation": "text-reputation-foreground",
   "bg-day": "text-day-foreground",
-  "bg-upgrade": "text-upgrade-foreground",
+  "bg-energy": "text-energy-foreground",
   "bg-action": "text-action-foreground",
+  "bg-upgrade": "text-upgrade-foreground",
   "bg-support": "text-support-foreground",
+  "bg-inflation": "text-inflation-foreground",
+  "bg-reputation": "text-reputation-foreground",
   "bg-background": "text-foreground",
 }
 
