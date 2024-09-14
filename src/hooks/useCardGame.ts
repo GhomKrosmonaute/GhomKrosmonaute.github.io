@@ -32,6 +32,7 @@ import {
   INITIAL_CHOICE_COUNT,
   INITIAL_CHOICE_OPTION_COUNT,
   GAME_ADVANTAGE,
+  LOCAL_ADVANTAGE,
 } from "@/game-constants.ts"
 
 import {
@@ -54,6 +55,11 @@ import {
   updateGameAutoSpeed,
   getGameSpeed,
   GlobalCardModifierIndex,
+  generateRandomAdvantage,
+  excludeCard,
+  updateCardState,
+  cardInfoToIndice,
+  includeCard,
 } from "@/game-utils.ts"
 
 import { metadata } from "@/game-metadata.ts"
@@ -88,7 +94,7 @@ export interface GameState {
   cards: GameCardInfo[]
   difficulty: Difficulty
   error: Error | null
-  throwError: (error: unknown) => never
+  handleError: <T>(error: T) => T
   choiceOptionCount: number
   choiceOptions: GameCardIndice[][]
   logs: GameLog[]
@@ -99,8 +105,8 @@ export interface GameState {
   isWon: boolean
   isGameOver: boolean
   infinityMode: boolean
-  draw: string[]
-  discard: string[]
+  draw: GameCardIndice[]
+  discard: GameCardIndice[]
   hand: GameCardIndice[]
   upgrades: UpgradeIndice[]
   globalCardModifiers: CardModifierIndice[]
@@ -334,7 +340,7 @@ function generateGameState(): Omit<
   const cards = generateCards(advantage)
   const rawUpgrades = generateUpgrades(advantage)
 
-  let startingDeck: string[] = []
+  const startingDeck: string[] = []
 
   startingDeck.push(
     cards.find((c) => c.effect(0).description.startsWith("Renvoie tout"))!.name,
@@ -347,7 +353,7 @@ function generateGameState(): Omit<
           startingDeck.every((name) => name !== c.name) &&
           c.effect(0).description.startsWith("Pioche"),
       )
-      .slice(0, 4)
+      .slice(0, 2)
       .map((c) => c.name),
   )
 
@@ -373,7 +379,7 @@ function generateGameState(): Omit<
       .map((c) => c.name),
   )
 
-  startingDeck = shuffle(startingDeck, 3)
+  // startingDeck = shuffle(startingDeck, 3)
 
   const startingChoices: GameCardIndice[][] = []
 
@@ -382,14 +388,16 @@ function generateGameState(): Omit<
       shuffle(
         cards.filter(
           (c) =>
-            startingChoices.every((o) => o.every((i) => i[0] !== c.name)) &&
+            startingChoices.every((o) =>
+              o.every(([name]) => name !== c.name),
+            ) &&
             startingDeck.every((name) => name !== c.name) &&
             !c.effect(0).upgrade,
         ),
         5,
       )
         .slice(0, INITIAL_CHOICE_OPTION_COUNT)
-        .map((c) => [c.name, "drawing"]),
+        .map((c) => [c.name, "drawing", generateRandomAdvantage()]),
     )
   }
 
@@ -412,10 +420,12 @@ function generateGameState(): Omit<
     isWon: false,
     isGameOver: false,
     infinityMode: false,
-    draw: startingDeck.slice(MAX_HAND_SIZE - 2),
+    draw: startingDeck
+      .slice(MAX_HAND_SIZE - 2)
+      .map((name) => [name, "idle", LOCAL_ADVANTAGE.common]),
     hand: startingDeck
       .slice(0, MAX_HAND_SIZE - 2)
-      .map((name) => [name, "idle"]),
+      .map((name) => [name, "idle", LOCAL_ADVANTAGE.common]),
     discard: [],
     upgrades: [],
     globalCardModifiers: [
@@ -481,7 +491,7 @@ function generateGameMethods(
       const newInflation = state.inflation + 1
 
       if (state.inflation < GAME_ADVANTAGE[state.difficulty]) {
-        const baseGameAdvantage = GAME_ADVANTAGE[settings.difficulty]
+        const baseGameAdvantage = GAME_ADVANTAGE[state.difficulty]
 
         set({
           inflation: newInflation,
@@ -493,12 +503,14 @@ function generateGameMethods(
       }
     },
 
-    throwError: (error: unknown) => {
+    handleError: (error) => {
       if (error instanceof Error) {
         set({ error })
+      } else {
+        set({ error: new Error(String(error)) })
       }
 
-      throw error
+      return error
     },
 
     coinFlip: async (options) => {
@@ -536,7 +548,7 @@ function generateGameMethods(
         const addedTime = Math.max(ENERGY_TO_DAYS, energy * ENERGY_TO_DAYS)
 
         if (addedTime < ENERGY_TO_DAYS) {
-          state.throwError(
+          throw state.handleError(
             new Error(`Not enough energy to advance time: ${energy}`),
           )
         }
@@ -635,7 +647,7 @@ function generateGameMethods(
         const state = getState()
 
         if (state.notification.length > 0) {
-          return state.throwError(
+          throw state.handleError(
             new Error(
               `Trying to add a notification while one is already displayed: ${JSON.stringify(notification)}`,
             ),
@@ -1025,7 +1037,6 @@ function generateGameMethods(
         const fromKey = options?.fromDiscardPile ? "discard" : "draw"
 
         const hand = state.hand.slice()
-        const discard = state.discard.slice()
 
         const from = state[fromKey].slice().filter((c) => {
           const card = reviveCard(c, state)
@@ -1033,7 +1044,7 @@ function generateGameMethods(
           return true
         })
 
-        const drawn: string[] = []
+        const drawn: GameCardIndice[] = []
 
         let handAdded = false
 
@@ -1042,15 +1053,14 @@ function generateGameMethods(
             break
           }
 
-          const cardName = from.pop()!
-          const card = reviveCard(cardName, state)
+          const cardIndice = from.pop()!
 
-          card.state = "drawing"
+          cardIndice[1] = "drawing"
 
-          drawn.push(card.name)
+          drawn.push(cardIndice)
 
           if (hand.length < MAX_HAND_SIZE) {
-            hand.push([card.name, "drawing"])
+            hand.push(cardIndice)
             handAdded = true
           }
         }
@@ -1062,9 +1072,11 @@ function generateGameMethods(
 
         set({
           hand,
-          discard,
           [fromKey]: shuffle(
-            state[fromKey].filter((c) => !drawn.includes(c)),
+            excludeCard(
+              state[fromKey],
+              drawn.map(([name]) => name),
+            ),
             2,
           ),
         })
@@ -1073,9 +1085,7 @@ function generateGameMethods(
 
         // on passe la main en idle
         set((state) => ({
-          hand: state.hand.map((c) => {
-            return [c[0], "idle"]
-          }),
+          hand: updateCardState(state.hand, "idle"),
         }))
 
         await state.triggerEvent("onDraw")
@@ -1109,18 +1119,15 @@ function generateGameMethods(
               (!options?.filter || options.filter(reviveCard(c, state))),
           )
 
-        const discarded = options?.random
-          ? [hand[Math.floor(Math.random() * state.hand.length)]]
-          : hand
+        const discarded = (
+          options?.random
+            ? [hand[Math.floor(Math.random() * state.hand.length)]]
+            : hand
+        ).map(([name]) => name)
 
         // on active l'animation de retrait des cartes
         set({
-          hand: state.hand.map((c) => {
-            if (discarded.some((d) => d[0] === c[0])) {
-              return [c[0], "discarding"]
-            }
-            return c
-          }),
+          hand: updateCardState(state.hand, discarded, "discarding"),
         })
 
         // on attend la fin de l'animation
@@ -1129,15 +1136,10 @@ function generateGameMethods(
         // les cartes retournent dans le deck et on vide la main
         set((state) => ({
           [toKey]: shuffle(
-            [
-              ...state.hand
-                .filter((c) => discarded.some((d) => d[0] === c[0]))
-                .map((c) => c[0]),
-              ...state[toKey],
-            ],
+            [...includeCard(state.hand, discarded), ...state[toKey]],
             2,
           ),
-          hand: state.hand.filter((c) => !discarded.some((d) => d[0] === c[0])),
+          hand: excludeCard(state.hand, discarded),
         }))
 
         await state.increments("discardedCards", discarded.length)
@@ -1155,12 +1157,7 @@ function generateGameMethods(
         if (state.hand.some((c) => c[0] === name)) {
           // on active l'animation de suppression de la carte
           set({
-            hand: state.hand.map((c) => {
-              if (c[0] === name) {
-                return [c[0], "removing"]
-              }
-              return c
-            }),
+            hand: updateCardState(state.hand, name, "removing"),
           })
 
           bank.remove.play()
@@ -1202,27 +1199,31 @@ function generateGameMethods(
         // on joue le son de la banque
         bank.recycle.play()
 
-        const from = state.discard.slice()
-        const to = state.draw.slice()
+        const discard = shuffle(state.discard, 2).slice()
+        const draw = state.draw.slice()
+
+        let recycled = 0
 
         for (let i = 0; i < count; i++) {
-          if (from.length === 0) {
+          if (discard.length === 0) {
             break
           }
 
-          const card = from.pop()!
+          const card = discard.pop()!
 
-          to.push(card)
+          draw.push(card)
+
+          recycled++
         }
 
         await wait()
 
         set({
-          draw: shuffle(to, 2),
-          discard: state.discard.filter((name) => !to.includes(name)),
+          draw: shuffle(draw, 2),
+          discard,
         })
 
-        await state.increments("recycledCards", to.length)
+        await state.increments("recycledCards", recycled)
 
         state.setOperationInProgress("recycle", false)
       })
@@ -1242,12 +1243,7 @@ function generateGameMethods(
 
           // activer l'animation can't play
           set({
-            hand: state.hand.map((c) => {
-              if (c[0] === card.name) {
-                return [c[0], "unauthorized"]
-              }
-              return c
-            }),
+            hand: updateCardState(state.hand, card.name, "unauthorized"),
           })
 
           // on attend la fin de l'animation
@@ -1255,12 +1251,7 @@ function generateGameMethods(
 
           // on remet la carte en idle
           set({
-            hand: state.hand.map((c) => {
-              if (c[0] === card.name) {
-                return [c[0], "idle"]
-              }
-              return c
-            }),
+            hand: updateCardState(state.hand, card.name, "idle"),
           })
         }
 
@@ -1283,12 +1274,7 @@ function generateGameMethods(
           state.setOperationInProgress(`play ${card.name}`, true)
 
           set((state) => ({
-            hand: state.hand.map((c) => {
-              if (c[0] === card.name) {
-                return [c[0], "selected"]
-              }
-              return c
-            }),
+            hand: updateCardState(state.hand, card.name, "selected"),
           }))
 
           if (!free) {
@@ -1314,12 +1300,11 @@ function generateGameMethods(
         const cardManagement = async () => {
           // on active l'animation de retrait de la carte
           set((state) => ({
-            hand: state.hand.map((c) => {
-              if (c[0] === card.name) {
-                return [c[0], removing ? "removing" : "playing"]
-              }
-              return c
-            }),
+            hand: updateCardState(
+              state.hand,
+              card.name,
+              removing ? "removing" : "playing",
+            ),
           }))
 
           // on attend la fin de l'animation
@@ -1329,18 +1314,17 @@ function generateGameMethods(
           set((state) => ({
             discard: removing
               ? state.discard
-              : shuffle([card.name, ...state.discard], 3),
-            hand: state.hand.filter((c) => c[0] !== card.name),
+              : shuffle([cardInfoToIndice(card), ...state.discard], 3),
+            hand: excludeCard(state.hand, card.name),
             globalCardModifiers: state.globalCardModifiers.filter((indice) => {
               const modifier = reviveCardModifier(indice)
 
+              // on le garde si :
               return (
-                // s'il n'est pas unique
+                // il n'est pas unique
                 !modifier.once ||
-                // sinon s'il a été appliqué
-                !appliedModifiers.some(
-                  (m) => m.toString() === indice.toString(),
-                )
+                // il n'a pas été appliqué
+                !appliedModifiers.some((m) => m === indice)
               )
             }),
           }))
@@ -1397,9 +1381,9 @@ function generateGameMethods(
           choiceOptions: state.choiceOptions.map((options) => {
             return options.map((c) => {
               if (c[0] === card.name) {
-                return [c[0], "playing"]
+                return [c[0], "playing", c[2]]
               }
-              return [c[0], "removing"]
+              return [c[0], "removing", c[2]]
             })
           }),
         })
@@ -1414,10 +1398,7 @@ function generateGameMethods(
 
             set((state) => ({
               choiceOptions: state.choiceOptions.map((options) => {
-                return options.map((c) => {
-                  if (c[0] === card.name) return [c[0], "removed"]
-                  else return c
-                })
+                return updateCardState(options, card.name, "removed")
               }),
             }))
           })(),
@@ -1430,9 +1411,7 @@ function generateGameMethods(
 
             set((state) => ({
               choiceOptions: state.choiceOptions.map((options) => {
-                return options.map((c) => {
-                  return [c[0], null]
-                })
+                return updateCardState(options, null)
               }),
             }))
           })(),
@@ -1447,8 +1426,11 @@ function generateGameMethods(
             choiceOptions: state.choiceOptions.slice(1),
             [to]:
               to === "draw"
-                ? shuffle([...state.draw, card.name], 3)
-                : [...state.hand, [card.name, "drawing"]],
+                ? shuffle([...state.draw, cardInfoToIndice(card)], 3)
+                : [
+                    ...state.hand,
+                    cardInfoToIndice(card, "drawing") satisfies GameCardIndice,
+                  ],
           }
         })
 
@@ -1456,7 +1438,7 @@ function generateGameMethods(
 
         // on passe les cartes en idle
         set((state) => ({
-          hand: state.hand.map((c) => [c[0], "idle"]),
+          hand: updateCardState(state.hand, "idle"),
         }))
 
         state.setOperationInProgress(`pick ${card.name}`, false)
@@ -1507,7 +1489,7 @@ export const useCardGame = create<GameState & GlobalGameState>(
     }
 
     state.discoveries = Array.from(
-      new Set([...state.discoveries, ...getDeck(state).map((c) => c[0])]),
+      new Set([...state.discoveries, ...getDeck(state).map(([name]) => name)]),
     )
 
     return state
@@ -1515,6 +1497,10 @@ export const useCardGame = create<GameState & GlobalGameState>(
 )
 
 useCardGame.subscribe(async (state, prevState) => {
+  if (state.error) return
+
+  // throw new Error("test")
+
   // on met à jour le score
   if (
     state.reputation !== prevState.reputation ||

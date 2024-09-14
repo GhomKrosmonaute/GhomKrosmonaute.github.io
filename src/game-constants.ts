@@ -8,6 +8,14 @@ export const GAME_ADVANTAGE = {
   hard: 1,
   veteran: 0,
 }
+
+export const LOCAL_ADVANTAGE = {
+  legendary: 3,
+  epic: 2,
+  rare: 1,
+  common: 0,
+}
+
 export const MAX_ENERGY = 20
 export const MAX_HAND_SIZE = 8
 export const MAX_REPUTATION = 10

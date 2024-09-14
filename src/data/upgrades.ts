@@ -25,10 +25,9 @@ export default function generateUpgrades(advantage: number): RawUpgrade[] {
     {
       name: "Méditation",
       eventName: "onPlay",
-      description: "Pioche @cumul carte@s tant que ta main n'est pas pleine",
+      description: "Pioche @cumul carte@s si tu as moins de 5 cartes en main",
       image: "meditation.png",
-      condition: (state) =>
-        state.draw.length > 0 && state.hand.length < MAX_HAND_SIZE,
+      condition: (state) => state.draw.length > 0 && state.hand.length < 5,
       onTrigger: async (state, upgrade, reason) => {
         await state.drawCard(
           Math.min(upgrade.cumul, MAX_HAND_SIZE - state.hand.length),

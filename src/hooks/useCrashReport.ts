@@ -3,9 +3,10 @@ import type { GlobalGameState, GameState } from "@/hooks/useCardGame.ts"
 
 export const CrashReportContext = React.createContext<{
   resetCrashReport: () => void
-  addCrashReport: (error: Error, state: GameState & GlobalGameState) => Error
+  addCrashReport: (error: Error, state: GameState & GlobalGameState) => void
   crashReport: Error | null
   gameState: (GameState & GlobalGameState) | null
+  gameStringState: string | null
 } | null>(null)
 
 export function useCrashReport() {

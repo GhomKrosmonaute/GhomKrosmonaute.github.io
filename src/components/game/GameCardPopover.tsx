@@ -12,7 +12,7 @@ import { GameMoneyIcon } from "@/components/game/GameMoneyIcon.tsx"
 
 export const GameCardPopover = (
   props: React.PropsWithChildren<{
-    card: GameCardInfo
+    card: GameCardInfo<true>
   }>,
 ) => {
   const [price, colors] = useCardGame((state) => {

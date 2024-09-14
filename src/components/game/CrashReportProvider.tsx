@@ -5,9 +5,9 @@ import ghom from "@/data/ghom.json"
 import { CrashReportContext, useCrashReport } from "@/hooks/useCrashReport.ts"
 import { GlobalGameState, GameState, useCardGame } from "@/hooks/useCardGame.ts"
 
-import { cloneSomething } from "@/game-utils.ts"
+import { stringifyClone } from "@/game-utils.ts"
 
-import { Button, buttonVariants } from "@/components/ui/button.tsx"
+import { Button } from "@/components/ui/button.tsx"
 import { bank } from "@/sound.ts"
 
 export const CrashReportProvider = ({ children }: React.PropsWithChildren) => {
@@ -21,6 +21,9 @@ export const CrashReportProvider = ({ children }: React.PropsWithChildren) => {
   const [gameState, setGameState] = React.useState<
     (GameState & GlobalGameState) | null
   >(null)
+  const [gameStringState, setGameStringState] = React.useState<string | null>(
+    null,
+  )
 
   React.useEffect(() => {
     if (gameError) {
@@ -32,16 +35,23 @@ export const CrashReportProvider = ({ children }: React.PropsWithChildren) => {
   const addCrashReport = React.useCallback(
     (error: Error, state: GameState & GlobalGameState) => {
       bank.error.play()
+
+      const gameStringState = JSON.stringify({
+        ...state,
+        cards: null,
+        rawUpdates: null,
+      })
+
       navigator.clipboard
-        .writeText(JSON.stringify({ ...state, cards: null }))
-        .catch(() =>
-          alert(
-            "Impossible de copier le contenu de la sauvegarde dans votre presse-papier...",
-          ),
-        )
-      setCrashReport(error)
-      setGameState(cloneSomething(state))
-      return error
+        .writeText(gameStringState)
+        .catch(() => {
+          setGameStringState(gameStringState)
+        })
+        .then(() => alert("L'état du jeu a été copié dans le presse-papier"))
+        .finally(() => {
+          setCrashReport(error)
+          setGameState(stringifyClone(state))
+        })
     },
     [],
   )
@@ -52,6 +62,7 @@ export const CrashReportProvider = ({ children }: React.PropsWithChildren) => {
         gameState,
         crashReport,
         addCrashReport,
+        gameStringState,
         resetCrashReport: () => {
           setCrashReport(null)
           setGameState(null)
@@ -65,62 +76,106 @@ export const CrashReportProvider = ({ children }: React.PropsWithChildren) => {
 
 export const CrashReport = () => {
   const reset = useCardGame((state) => state.reset)
-  const { resetCrashReport, crashReport, gameState } = useCrashReport()
+  const { resetCrashReport, crashReport, gameState, gameStringState } =
+    useCrashReport()
+
+  const [gameStringStateModalOpened, setGameStringStateModalOpened] =
+    React.useState(false)
+
+  const [pastedGameString, setPastedGameString] = React.useState(false)
 
   if (!crashReport || !gameState) return null
 
   return (
-    <div className="absolute inset-0 bg-background/50">
-      <div className="absolute inset-0 flex justify-center items-center">
-        <div className="bg-background/90 ring ring-red-600 p-4 rounded-lg space-y-4 max-w-xl">
-          <h1 className="text-3xl text-center">
-            Une erreur à été interceptée !
-          </h1>
-          <p>
-            Si tu le souhaites, tu peux envoyer le rapport d'erreur à Ghom pour
-            qu'il puisse corriger le problème. Tu peux continuer ta partie, mais
-            si tu rencontres des problèmes, il est conseillé de recharger la
-            page. Si le bug persiste, il est possible que ta sauvegarde soit
-            corrompue, dans ce cas tu devrais recommencer une nouvelle partie,
-            désolé pour la gêne occasionnée.
-          </p>
-          <div className="grid grid-cols-2 gap-2 w-fit mx-auto">
-            <Button
-              onClick={() => {
-                resetCrashReport()
-                reset()
-              }}
-              size="cta"
-              className="text-red-600"
-            >
-              Recommencer une partie
+    <div className="absolute inset-0 bg-background/50 flex justify-center items-center">
+      <div className="bg-background/90 ring ring-red-600 p-4 rounded-lg space-y-4 max-w-xl">
+        <h1 className="text-3xl text-center">Une erreur à été interceptée !</h1>
+        <p>
+          Si tu le souhaites, tu peux envoyer le rapport d'erreur à Ghom pour
+          qu'il puisse corriger le problème. Tu peux continuer ta partie, mais
+          si tu rencontres des problèmes, il est conseillé de recharger la page.
+          Si le bug persiste, il est possible que ta sauvegarde soit corrompue,
+          dans ce cas tu devrais recommencer une nouvelle partie, désolé pour la
+          gêne occasionnée.
+        </p>
+        <div className="grid grid-cols-2 gap-2 w-fit mx-auto">
+          <Button
+            onClick={() => {
+              resetCrashReport()
+              reset()
+            }}
+            size="cta"
+            className="text-red-600"
+          >
+            Recommencer une partie
+          </Button>
+          <Button
+            onClick={() => {
+              resetCrashReport()
+              window.location.reload()
+            }}
+            size="cta"
+          >
+            Rafraichir le navigateur
+          </Button>
+          <Button
+            onClick={() => {
+              if (!gameStringState || pastedGameString)
+                window.open(
+                  `mailto:${ghom.email}?subject=${encodeURI(
+                    `Rapport d'erreur: ${crashReport.message}`,
+                  )}&body=${encodeURI(
+                    `\n${crashReport.stack}\n\nGame state:\n< colle ici le contenu de ton presse-papier >`,
+                  )}`,
+                )
+              else setGameStringStateModalOpened(true)
+            }}
+            variant="cta"
+            size="cta"
+          >
+            Envoyer le rapport
+          </Button>
+          <Button onClick={() => resetCrashReport()} variant="cta" size="cta">
+            Continuer la partie
+          </Button>
+        </div>
+      </div>
+      {gameStringStateModalOpened && (
+        <div className="absolute left-1/2 top-1/2 bg-background/90 ring ring-red-600 p-4 rounded-lg max-w-xl space-y-4 -translate-y-1/2 -translate-x-1/2">
+          <h1 className="text-3xl">Avant d'envoyer le rapport</h1>
+          <span>
+            Merci de copier ta sauvegarde dans le presse-papier afin de me la
+            transmettre lors de ton rapport.
+          </span>
+          <h2 className="text-2xl">Sauvegarde:</h2>
+          <code>{gameStringState}</code>
+          <div className="flex gap-2 justify-end">
+            <Button onClick={() => setGameStringStateModalOpened(false)}>
+              Retour
             </Button>
             <Button
               onClick={() => {
-                resetCrashReport()
-                window.location.reload()
+                navigator.clipboard
+                  .writeText(gameStringState!)
+                  .then(() => {
+                    alert("La sauvegarde a été copiée dans le presse-papier")
+                    setGameStringStateModalOpened(false)
+                    setPastedGameString(true)
+                  })
+                  .catch(() => {
+                    alert(
+                      "Impossible de copier la sauvegarde...\nEssaye de la copier à la main, merci d'avance !",
+                    )
+                  })
               }}
+              variant="cta"
               size="cta"
             >
-              Rafraichir le navigateur
-            </Button>
-            <a
-              href={`mailto:${ghom.email}?subject=${encodeURI(`Rapport d'erreur: ${crashReport.message}`)}&body=${encodeURI(
-                `\n${crashReport.stack}\n\nGame state:\n< colle ici le contenu de ton presse-papier >`,
-              )}`}
-              className={buttonVariants({
-                size: "cta",
-                variant: "cta",
-              })}
-            >
-              Envoyer le rapport
-            </a>
-            <Button onClick={() => resetCrashReport()} variant="cta" size="cta">
-              Continuer la partie
+              Copier la sauvegarde
             </Button>
           </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }

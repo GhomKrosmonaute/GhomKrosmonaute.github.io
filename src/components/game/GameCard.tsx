@@ -14,12 +14,7 @@ import type {
 
 import { useCardGame } from "@/hooks/useCardGame.ts"
 
-import {
-  energyCostColor,
-  formatText,
-  isActionCardInfo,
-  parseCost,
-} from "@/game-utils.ts"
+import { energyCostColor, isActionCardInfo, parseCost } from "@/game-utils.ts"
 
 import { GameMoneyIcon } from "@/components/game/GameMoneyIcon.tsx"
 import { Tilt, TiltFoil } from "@/components/game/Tilt.tsx"
@@ -303,7 +298,7 @@ export const GameCard = (
                 transformStyle: quality.perspective ? "preserve-3d" : "flat",
               }}
               dangerouslySetInnerHTML={{
-                __html: formatText(props.card.effect.description),
+                __html: props.card.effect.description,
               }}
             />
 

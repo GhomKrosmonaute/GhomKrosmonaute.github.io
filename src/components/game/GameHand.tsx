@@ -8,7 +8,12 @@ export const GameHand = (props: { show: boolean }) => {
   const quality = useSettings(({ quality: { animations } }) => ({
     animations,
   }))
-  const game = useCardGame(({ hand, cards }) => ({ hand, cards }))
+  const game = useCardGame(({ hand, cards, difficulty, inflation }) => ({
+    hand,
+    cards,
+    difficulty,
+    inflation,
+  }))
 
   return (
     <div

@@ -1,7 +1,7 @@
 import React from "react"
 import { cn } from "@/utils.ts"
 import helpers from "@/data/helpers.json"
-import { formatText } from "@/game-utils.ts"
+import { formatText, reviveCard } from "@/game-utils.ts"
 import {
   ENERGY_TO_MONEY,
   REPUTATION_TO_ENERGY,
@@ -36,6 +36,8 @@ export const GameRules = (props: { show: boolean }) => {
     addWonGame: state.addWonGame,
     addPlayedGame: state.addPlayedGame,
     cards: state.cards,
+    difficulty: state.difficulty,
+    inflation: state.inflation,
   }))
 
   const [value, setValue] = React.useState(0)
@@ -197,7 +199,7 @@ export const GameRules = (props: { show: boolean }) => {
                   {stats.discoveries.length > 0
                     ? stats.discoveries.map((discovery, i) => (
                         <GameCardPopover
-                          card={stats.cards.find((c) => c.name === discovery)!}
+                          card={reviveCard(discovery, stats)}
                           key={i}
                         >
                           <li>{discovery}</li>

@@ -1,4 +1,4 @@
-import type { GlobalGameState, GameState } from "@/hooks/useCardGame"
+import type { GameState, GlobalGameState } from "@/hooks/useCardGame"
 
 import type {
   ActionCardInfo,
@@ -7,6 +7,7 @@ import type {
   ColorClass,
   GameCardIndice,
   GameCardInfo,
+  GameCardState,
   GameOverReason,
   RawUpgrade,
   Upgrade,
@@ -17,6 +18,7 @@ import {
   ENERGY_TO_MONEY,
   GAME_ADVANTAGE,
   INFINITE_DRAW_COST,
+  LOCAL_ADVANTAGE,
   MAX_HAND_SIZE,
   MONEY_TO_REACH,
   UPGRADE_COST_THRESHOLDS,
@@ -36,8 +38,73 @@ export enum GlobalCardModifierIndex {
   Last = 3,
 }
 
-export function log<T>(items: T): T {
-  if (import.meta.env.DEV) console.log(items)
+export function isGameCardIndice(input: object): input is GameCardIndice {
+  return /^\[".+","[a-z]+",\d+]$/.test(JSON.stringify(input))
+}
+
+/**
+ * Return a new list of cards without the given card(s)
+ * @param from initial list of cards
+ * @param cardName card(s) to exclude
+ */
+export function excludeCard(
+  from: GameCardIndice[],
+  cardName: string | string[],
+): GameCardIndice[] {
+  const toExclude: string[] =
+    typeof cardName === "string" ? [cardName] : cardName
+  return from.filter((c) => !toExclude.includes(c[0]))
+}
+
+export function includeCard(
+  from: GameCardIndice[],
+  cardName: string | string[],
+): GameCardIndice[] {
+  const toInclude: string[] =
+    typeof cardName === "string" ? [cardName] : cardName
+  return from.filter((c) => toInclude.includes(c[0]))
+}
+
+/**
+ * Update the state of a card in a list of cards
+ */
+export function updateCardState(
+  from: GameCardIndice[],
+  newState: GameCardState,
+): GameCardIndice[]
+export function updateCardState(
+  from: GameCardIndice[],
+  cardName: string | string[],
+  newState: GameCardState,
+): GameCardIndice[]
+export function updateCardState(
+  from: GameCardIndice[],
+  cardName: string | string[] | GameCardState,
+  newState?: GameCardState,
+): GameCardIndice[] {
+  if (arguments.length === 2) {
+    return from.map((c) => {
+      return [c[0], cardName as GameCardState, c[2]]
+    })
+  } else {
+    const toUpdate: string[] =
+      typeof cardName === "string" ? [cardName] : cardName!
+    return from.map((c) => {
+      if (toUpdate.includes(c[0])) return [c[0], newState!, c[2]]
+      return c
+    })
+  }
+}
+
+export function cardInfoToIndice(
+  card: GameCardInfo<true>,
+  newState?: GameCardState,
+): GameCardIndice {
+  return [card.name, newState ?? card.state, card.localAdvantage]
+}
+
+export function log<T>(label: string, items: T): T {
+  if (import.meta.env.DEV) console.log(label, items)
   return items
 }
 
@@ -53,7 +120,7 @@ export function updateGameAutoSpeed(state: GameState): number {
   const completion = upgradeCompletion * 0.5 + moneyCompletion * 0.5
 
   // 50ms to 500ms - Plus on est avancé dans la partie, plus c'est rapide
-  const speed = Math.floor(50 + 950 * (1 - completion))
+  const speed = Math.floor(50 + 450 * (1 - completion))
 
   document.documentElement.style.setProperty("--game-auto-speed", `${speed}ms`)
 
@@ -62,6 +129,7 @@ export function updateGameAutoSpeed(state: GameState): number {
 
 export function getGameSpeed(): number {
   return log(
+    "getGameSpeed",
     Number(
       getComputedStyle(document.documentElement)
         .getPropertyValue("--game-speed")
@@ -72,33 +140,45 @@ export function getGameSpeed(): number {
 
 export function handleErrors(
   getState: () => {
-    throwError: (error: Error) => void
+    handleError: (error: Error) => void
   },
   cb: () => void,
 ) {
   try {
     cb()
   } catch (error) {
-    getState().throwError(error as Error)
+    getState().handleError(error as Error)
   }
 }
 
 export async function handleErrorsAsync(
   getState: () => {
-    throwError: (error: Error) => void
+    handleError: (error: Error) => void
   },
   cb: () => Promise<void>,
 ) {
   try {
     await cb()
   } catch (error) {
-    getState().throwError(error as Error)
+    getState().handleError(error as Error)
   }
 }
 
 interface ChoiceOptionsGeneratorOptions {
   exclude?: string[]
   filter?: (card: GameCardInfo, state: GameState) => boolean
+}
+
+/**
+ * Generate a random advantage from LOCAL_ADVANTAGE (represents rarities)
+ * Each rarity has a different probability to be selected
+ */
+export function generateRandomAdvantage(): number {
+  const seed = Math.random()
+  if (seed < 0.01) return LOCAL_ADVANTAGE.legendary
+  if (seed < 0.1) return LOCAL_ADVANTAGE.epic
+  if (seed < 0.2) return LOCAL_ADVANTAGE.rare
+  return LOCAL_ADVANTAGE.common
 }
 
 export function generateChoiceOptions(
@@ -114,9 +194,9 @@ export function generateChoiceOptions(
           (o) => o.length === 0 || o.every((i) => i[0] !== card.name),
         )) &&
       (state.draw.length === 0 ||
-        state.draw.every((name) => name !== card.name)) &&
+        state.draw.every(([name]) => name !== card.name)) &&
       (state.discard.length === 0 ||
-        state.discard.every((name) => name !== card.name)) &&
+        state.discard.every(([name]) => name !== card.name)) &&
       (state.hand.length === 0 ||
         state.hand.every(([name]) => name !== card.name)) &&
       (!options?.exclude ||
@@ -134,23 +214,21 @@ export function generateChoiceOptions(
     return []
   }
 
-  // todo: add random rarity to selected cards
-
   const outputOptions: string[] = shuffle(_cards, 3)
     .slice(0, state.choiceOptionCount)
     .map((c) => c.name)
 
-  return outputOptions.map((name) => [name, "drawing"])
+  return outputOptions.map((name) => [
+    name,
+    "drawing",
+    generateRandomAdvantage(),
+  ])
 }
 
-export function getDeck(state: GameState): GameCardIndice[] {
-  return [
-    ...[...state.draw, ...state.discard].map<GameCardIndice>((name) => [
-      name,
-      null,
-    ]),
-    ...state.hand,
-  ]
+export function getDeck(
+  state: Pick<GameState, "draw" | "discard" | "hand">,
+): GameCardIndice[] {
+  return [...state.draw, ...state.discard, ...state.hand]
 }
 
 export function energyCostColor(
@@ -231,7 +309,11 @@ export function updateCost<T extends string | number>(
   ) as T
 }
 
-export function cloneSomething<T>(something: T): T {
+/**
+ * Clone an object and stringify it to remove functions
+ * @param something
+ */
+export function stringifyClone<T>(something: T): T {
   return JSON.parse(
     JSON.stringify(something, (_key, value) =>
       typeof value === "function" ? undefined : value,
@@ -239,12 +321,30 @@ export function cloneSomething<T>(something: T): T {
   )
 }
 
+/**
+ * Clone an object recursively
+ * @param something
+ */
+export function recursiveClone<T>(something: T): T {
+  if (something === null || something === undefined) return something
+  if (typeof something === "function") return something
+  if (typeof something !== "object") return something
+  if (Array.isArray(something)) {
+    return something.map((value) => recursiveClone(value)) as unknown as T
+  }
+  const cloned = Object.create(Object.getPrototypeOf(something))
+  for (const key in something) {
+    cloned[key] = recursiveClone(something[key])
+  }
+  return cloned
+}
+
 export function applyGlobalCardModifiers(
   state: GameState,
   card: GameCardInfo<true>,
   used: string[],
 ): { card: GameCardInfo<true>; appliedModifiers: CardModifierIndice[] } {
-  const clone = cloneSomething(card)
+  const clone = recursiveClone(card)
   const modifiers = state.globalCardModifiers.slice().toSorted((a, b) => {
     return a[2] - b[2]
   })
@@ -460,10 +560,12 @@ export function reviveCard(
 
   if (!card) throw new Error(`Card ${indice} not found`)
 
-  if (typeof indice !== "string") card.state = indice[1]
-
   return {
     ...card,
+    type: card.type,
+    state: typeof indice !== "string" ? indice[1] : null,
+    localAdvantage:
+      typeof indice !== "string" ? indice[2] : LOCAL_ADVANTAGE.common,
     effect: card.effect(GAME_ADVANTAGE[state.difficulty] - state.inflation),
   }
 }

@@ -64,10 +64,11 @@ export interface ActionCardInfo<Resolved = false> {
   name: string
   image: string
   effect: Resolved extends true ? Effect : EffectBuilder
-  state: GameCardState
+  state: Resolved extends true ? GameCardState : never
   description?: string
   detail?: string
   url?: string
+  localAdvantage: Resolved extends true ? number : never
 }
 
 export interface SupportCardInfo<Resolved = false> {
@@ -75,7 +76,8 @@ export interface SupportCardInfo<Resolved = false> {
   name: string
   image: string
   effect: Resolved extends true ? Effect : EffectBuilder
-  state: GameCardState
+  state: Resolved extends true ? GameCardState : never
+  localAdvantage: Resolved extends true ? number : never
 }
 
 export type GameCardState =
@@ -99,7 +101,11 @@ export type CardModifier = {
   once?: boolean
 }
 
-export type GameCardIndice = [name: string, state: GameCardState]
+export type GameCardIndice = [
+  name: string,
+  state: GameCardState,
+  localAdvantage: number,
+]
 
 export type CardModifierIndice = [
   name: string,

@@ -2,19 +2,21 @@ import React from "react"
 import { cn } from "@/utils.ts"
 
 import type { GameLog, Upgrade, GameCardInfo } from "@/game-typings.ts"
-import { reviveCard, reviveUpgrade } from "@/game-utils.ts"
+import { isGameCardIndice, reviveCard, reviveUpgrade } from "@/game-utils.ts"
 import { useCardGame } from "@/hooks/useCardGame.ts"
 
 export const GameMiniature = (props: { item: GameLog["reason"] }) => {
-  const [cards, rawUpgrades] = useCardGame((state) => [
-    state.cards,
-    state.rawUpgrades,
-  ])
+  const game = useCardGame((state) => ({
+    cards: state.cards,
+    inflation: state.inflation,
+    difficulty: state.difficulty,
+    rawUpgrades: state.rawUpgrades,
+  }))
 
   const revived = Array.isArray(props.item)
-    ? props.item.length === 2
-      ? reviveCard(props.item, { cards })
-      : reviveUpgrade(props.item, { rawUpgrades })
+    ? isGameCardIndice(props.item)
+      ? reviveCard(props.item, game)
+      : reviveUpgrade(props.item, game)
     : props.item
 
   return (
@@ -42,7 +44,7 @@ export const MiniatureImage = ({
   item,
   ...props
 }: React.ComponentProps<"img"> & {
-  item: Upgrade | GameCardInfo
+  item: Upgrade | GameCardInfo<true>
 }) => {
   return (
     <img

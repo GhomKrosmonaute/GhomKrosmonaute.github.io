@@ -29,9 +29,9 @@ export const Game = () => {
   useKonamiCode()
   useGameWatching()
 
-  const [debug, throwError] = useCardGame((state) => [
+  const [debug, handleError] = useCardGame((state) => [
     state.debug,
-    state.throwError,
+    state.handleError,
   ])
 
   const [show, showSettings, showRules] = useGlobalState((state) => [
@@ -40,23 +40,23 @@ export const Game = () => {
     state.rulesVisible,
   ])
 
-  const handleError = React.useCallback(
+  const handleErrorEvent = React.useCallback(
     (event: ErrorEvent | PromiseRejectionEvent) => {
-      if ("error" in event) throwError(event.error)
-      else throwError(event.reason)
+      if ("error" in event) handleError(event.error)
+      else handleError(event.reason)
     },
-    [throwError],
+    [handleError],
   )
 
   React.useEffect(() => {
-    window.addEventListener("error", handleError)
-    window.addEventListener("unhandledrejection", handleError)
+    window.addEventListener("error", handleErrorEvent)
+    window.addEventListener("unhandledrejection", handleErrorEvent)
 
     return () => {
-      window.removeEventListener("error", handleError)
-      window.removeEventListener("unhandledrejection", handleError)
+      window.removeEventListener("error", handleErrorEvent)
+      window.removeEventListener("unhandledrejection", handleErrorEvent)
     }
-  }, [handleError])
+  }, [handleErrorEvent])
 
   return (
     <TutorialProvider

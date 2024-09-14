@@ -63,6 +63,7 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
     day: state.day,
     dayFull: state.dayFull,
     difficulty: state.difficulty,
+    inflation: state.inflation,
     cards: state.cards,
   }))
 
