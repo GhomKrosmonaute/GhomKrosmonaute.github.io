@@ -103,6 +103,10 @@ export function cardInfoToIndice(
   return [card.name, newState ?? card.state, card.localAdvantage]
 }
 
+export function upgradeToIndice(upgrade: Upgrade): UpgradeIndice {
+  return [upgrade.name, upgrade.cumul, upgrade.state]
+}
+
 export function log<T>(label: string, items: T): T {
   if (import.meta.env.DEV) console.log(label, items)
   return items

@@ -64,11 +64,11 @@ export interface ActionCardInfo<Resolved = false> {
   name: string
   image: string
   effect: Resolved extends true ? Effect : EffectBuilder
-  state: Resolved extends true ? GameCardState : never
+  state: Resolved extends true ? GameCardState : null
+  localAdvantage: Resolved extends true ? number : null
   description?: string
   detail?: string
   url?: string
-  localAdvantage: Resolved extends true ? number : never
 }
 
 export interface SupportCardInfo<Resolved = false> {
@@ -76,8 +76,8 @@ export interface SupportCardInfo<Resolved = false> {
   name: string
   image: string
   effect: Resolved extends true ? Effect : EffectBuilder
-  state: Resolved extends true ? GameCardState : never
-  localAdvantage: Resolved extends true ? number : never
+  state: Resolved extends true ? GameCardState : null
+  localAdvantage: Resolved extends true ? number : null
 }
 
 export type GameCardState =
@@ -131,7 +131,7 @@ export type GameOverReason =
 export type GameLog = {
   type: "money" | "reputation" | "energy"
   value: number
-  reason: GameCardInfo<true> | Upgrade | GameCardIndice | UpgradeIndice | string
+  reason: GameCardIndice | UpgradeIndice | string
 }
 
 export type GameNotification = {

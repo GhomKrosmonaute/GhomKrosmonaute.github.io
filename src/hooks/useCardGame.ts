@@ -60,6 +60,7 @@ import {
   updateCardState,
   cardInfoToIndice,
   includeCard,
+  upgradeToIndice,
 } from "@/game-utils.ts"
 
 import { metadata } from "@/game-metadata.ts"
@@ -976,7 +977,7 @@ function generateGameMethods(
           await upgrade.onTrigger(
             getState(),
             upgrade,
-            options?.reason ?? upgrade,
+            options?.reason ?? indice,
           )
 
           // remettre l'activité en idle
@@ -1006,7 +1007,7 @@ function generateGameMethods(
 
         for (const upgrade of upgrades) {
           await state.triggerUpgrade(upgrade.name, {
-            reason: upgrade,
+            reason: upgradeToIndice(upgrade),
           })
         }
 
@@ -1497,127 +1498,132 @@ export const useCardGame = create<GameState & GlobalGameState>(
 )
 
 useCardGame.subscribe(async (state, prevState) => {
-  if (state.error) return
+  await handleErrorsAsync(
+    () => state,
+    async () => {
+      if (state.error) return
 
-  // throw new Error("test")
+      // on met à jour le score
+      if (
+        state.reputation !== prevState.reputation ||
+        state.money !== prevState.money ||
+        state.upgrades !== prevState.upgrades ||
+        state.energy !== prevState.energy ||
+        state.day !== prevState.day
+      )
+        state.updateScore()
 
-  // on met à jour le score
-  if (
-    state.reputation !== prevState.reputation ||
-    state.money !== prevState.money ||
-    state.upgrades !== prevState.upgrades ||
-    state.energy !== prevState.energy ||
-    state.day !== prevState.day
-  )
-    state.updateScore()
+      localStorage.setItem(
+        "save",
+        JSON.stringify(
+          {
+            coinFlips: state.coinFlips,
+            recycledCards: state.recycledCards,
+            discardedCards: state.discardedCards,
+            skippedChoices: state.skippedChoices,
+            difficulty: state.difficulty,
+            error: state.error,
+            choiceOptions: state.choiceOptions,
+            choiceOptionCount: state.choiceOptionCount,
+            draw: state.draw,
+            hand: state.hand,
+            discard: state.discard,
+            upgrades: state.upgrades,
+            globalCardModifiers: state.globalCardModifiers,
+            day: state.day,
+            energy: state.energy,
+            energyMax: state.energyMax,
+            reputation: state.reputation,
+            notification: state.notification,
+            dayFull: state.dayFull,
+            sprintFull: state.sprintFull,
+            money: state.money,
+            reason: state.reason,
+            isWon: state.isWon,
+            operationInProgress: state.operationInProgress,
+            isGameOver: state.isGameOver,
+            infinityMode: state.infinityMode,
+            logs: state.logs,
+            score: state.score,
+            inflation: state.inflation,
+          } satisfies Omit<
+            GameState,
+            | keyof ReturnType<typeof generateGameMethods>
+            | "cards"
+            | "rawUpgrades"
+          >,
+          (key, value) => {
+            if (typeof value === "function" && !(key in state)) return undefined
+            return value
+          },
+        ),
+      )
 
-  localStorage.setItem(
-    "save",
-    JSON.stringify(
-      {
-        coinFlips: state.coinFlips,
-        recycledCards: state.recycledCards,
-        discardedCards: state.discardedCards,
-        skippedChoices: state.skippedChoices,
-        difficulty: state.difficulty,
-        error: state.error,
-        choiceOptions: state.choiceOptions,
-        choiceOptionCount: state.choiceOptionCount,
-        draw: state.draw,
-        hand: state.hand,
-        discard: state.discard,
-        upgrades: state.upgrades,
-        globalCardModifiers: state.globalCardModifiers,
-        day: state.day,
-        energy: state.energy,
-        energyMax: state.energyMax,
-        reputation: state.reputation,
-        notification: state.notification,
-        dayFull: state.dayFull,
-        sprintFull: state.sprintFull,
-        money: state.money,
-        reason: state.reason,
-        isWon: state.isWon,
-        operationInProgress: state.operationInProgress,
-        isGameOver: state.isGameOver,
-        infinityMode: state.infinityMode,
-        logs: state.logs,
-        score: state.score,
-        inflation: state.inflation,
-      } satisfies Omit<
-        GameState,
-        keyof ReturnType<typeof generateGameMethods> | "cards" | "rawUpgrades"
-      >,
-      (key, value) => {
-        if (typeof value === "function" && !(key in state)) return undefined
-        return value
-      },
-    ),
-  )
+      // si aucune opération n'est en cours
+      if (
+        state.operationInProgress.join(",") !==
+          prevState.operationInProgress.join("") &&
+        state.operationInProgress.length === 0
+      ) {
+        if (isGameWon(state)) {
+          await state.addAchievement("Première victoire")
+        }
 
-  // si aucune opération n'est en cours
-  if (
-    state.operationInProgress.join(",") !==
-      prevState.operationInProgress.join("") &&
-    state.operationInProgress.length === 0
-  ) {
-    if (isGameWon(state)) {
-      await state.addAchievement("Première victoire")
-    }
+        state.checkDiscoveries()
 
-    state.checkDiscoveries()
+        await state.checkAchievements()
 
-    await state.checkAchievements()
+        updateGameAutoSpeed(state)
 
-    updateGameAutoSpeed(state)
+        // on vérifie si le jeu est fini
+        if (isGameWon(state)) {
+          state.win()
+          state.addWonGame()
+        } else if (!state.isGameOver) {
+          const reason = isGameOver(state)
 
-    // on vérifie si le jeu est fini
-    if (isGameWon(state)) {
-      state.win()
-      state.addWonGame()
-    } else if (!state.isGameOver) {
-      const reason = isGameOver(state)
+          if (reason) {
+            state.defeat(reason)
+            state.addPlayedGame()
+          }
+        }
 
-      if (reason) {
-        state.defeat(reason)
-        state.addPlayedGame()
+        // todo: trouver un moyen de faire fonctionner les templates
+        // const cardWithTemplate = state.hand.filter((card) => card.effect.template);
+        // const changed: [string, string][] = [];
+        //
+        // for (const card of cardWithTemplate) {
+        //   const template = card.effect.template!(
+        //     state,
+        //     card,
+        //     !card.effect.condition || card.effect.condition(state, card),
+        //   );
+        //
+        //   if (!card.effect.description.includes(`<template>${template}</template>`))
+        //     changed.push([card.name, template]);
+        // }
+        //
+        // if (changed.length > 0) {
+        //   state.dangerouslyUpdate({
+        //     hand: state.hand.map((card) => {
+        //       const template = changed.find(([name]) => name === card.name)?.[1];
+        //       if (template) {
+        //         return {
+        //           ...card,
+        //           effect: {
+        //             ...card.effect,
+        //             description: card.effect.description.replace(
+        //               /<template>.+?<\/template>/,
+        //               `<template>${template}</template>`,
+        //             ),
+        //           },
+        //         };
+        //       }
+        //       return card;
+        //     }),
+        //   });
+        // }
       }
-    }
-
-    // todo: trouver un moyen de faire fonctionner les templates
-    // const cardWithTemplate = state.hand.filter((card) => card.effect.template);
-    // const changed: [string, string][] = [];
-    //
-    // for (const card of cardWithTemplate) {
-    //   const template = card.effect.template!(
-    //     state,
-    //     card,
-    //     !card.effect.condition || card.effect.condition(state, card),
-    //   );
-    //
-    //   if (!card.effect.description.includes(`<template>${template}</template>`))
-    //     changed.push([card.name, template]);
-    // }
-    //
-    // if (changed.length > 0) {
-    //   state.dangerouslyUpdate({
-    //     hand: state.hand.map((card) => {
-    //       const template = changed.find(([name]) => name === card.name)?.[1];
-    //       if (template) {
-    //         return {
-    //           ...card,
-    //           effect: {
-    //             ...card.effect,
-    //             description: card.effect.description.replace(
-    //               /<template>.+?<\/template>/,
-    //               `<template>${template}</template>`,
-    //             ),
-    //           },
-    //         };
-    //       }
-    //       return card;
-    //     }),
-    //   });
-    // }
-  }
+    },
+  )
 })

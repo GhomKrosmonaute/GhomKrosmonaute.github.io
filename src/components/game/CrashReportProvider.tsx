@@ -5,7 +5,7 @@ import ghom from "@/data/ghom.json"
 import { CrashReportContext, useCrashReport } from "@/hooks/useCrashReport.ts"
 import { GlobalGameState, GameState, useCardGame } from "@/hooks/useCardGame.ts"
 
-import { stringifyClone } from "@/game-utils.ts"
+import { stringifyClone, wait } from "@/game-utils.ts"
 
 import { Button } from "@/components/ui/button.tsx"
 import { bank } from "@/sound.ts"
@@ -28,7 +28,6 @@ export const CrashReportProvider = ({ children }: React.PropsWithChildren) => {
   React.useEffect(() => {
     if (gameError) {
       addCrashReport(gameError, getState())
-      update({ error: null })
     }
   }, [gameError])
 
@@ -36,22 +35,23 @@ export const CrashReportProvider = ({ children }: React.PropsWithChildren) => {
     (error: Error, state: GameState & GlobalGameState) => {
       bank.error.play()
 
+      setCrashReport(error)
+      setGameState(stringifyClone(state))
+
       const gameStringState = JSON.stringify({
         ...state,
         cards: null,
-        rawUpdates: null,
+        rawUpgrades: null,
       })
 
-      navigator.clipboard
-        .writeText(gameStringState)
-        .catch(() => {
-          setGameStringState(gameStringState)
-        })
-        .then(() => alert("L'état du jeu a été copié dans le presse-papier"))
-        .finally(() => {
-          setCrashReport(error)
-          setGameState(stringifyClone(state))
-        })
+      wait(500).then(() =>
+        navigator.clipboard
+          .writeText(gameStringState)
+          .catch(() => {
+            setGameStringState(gameStringState)
+          })
+          .then(() => alert("L'état du jeu a été copié dans le presse-papier")),
+      )
     },
     [],
   )
@@ -66,6 +66,7 @@ export const CrashReportProvider = ({ children }: React.PropsWithChildren) => {
         resetCrashReport: () => {
           setCrashReport(null)
           setGameState(null)
+          update({ error: null })
         },
       }}
     >
@@ -120,7 +121,7 @@ export const CrashReport = () => {
           </Button>
           <Button
             onClick={() => {
-              if (!gameStringState || pastedGameString)
+              if (!gameStringState || pastedGameString) {
                 window.open(
                   `mailto:${ghom.email}?subject=${encodeURI(
                     `Rapport d'erreur: ${crashReport.message}`,
@@ -128,7 +129,7 @@ export const CrashReport = () => {
                     `\n${crashReport.stack}\n\nGame state:\n< colle ici le contenu de ton presse-papier >`,
                   )}`,
                 )
-              else setGameStringStateModalOpened(true)
+              } else setGameStringStateModalOpened(true)
             }}
             variant="cta"
             size="cta"
@@ -141,14 +142,16 @@ export const CrashReport = () => {
         </div>
       </div>
       {gameStringStateModalOpened && (
-        <div className="absolute left-1/2 top-1/2 bg-background/90 ring ring-red-600 p-4 rounded-lg max-w-xl space-y-4 -translate-y-1/2 -translate-x-1/2">
-          <h1 className="text-3xl">Avant d'envoyer le rapport</h1>
-          <span>
+        <div className="absolute left-1/2 top-1/2 bg-background ring ring-red-600 p-4 rounded-lg max-w-xl space-y-4 -translate-y-1/2 -translate-x-1/2">
+          <h1 className="text-3xl text-center">Avant d'envoyer le rapport</h1>
+          <p className="text-xl leading-5">
             Merci de copier ta sauvegarde dans le presse-papier afin de me la
             transmettre lors de ton rapport.
-          </span>
-          <h2 className="text-2xl">Sauvegarde:</h2>
-          <code>{gameStringState}</code>
+          </p>
+          <h2 className="text-2xl">Sauvegarde</h2>
+          <code className="text-sm whitespace-normal overflow-scroll w-full h-52">
+            {gameStringState}
+          </code>
           <div className="flex gap-2 justify-end">
             <Button onClick={() => setGameStringStateModalOpened(false)}>
               Retour

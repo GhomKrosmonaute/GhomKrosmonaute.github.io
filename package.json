@@ -11,7 +11,8 @@
     "format": "prettier --write src",
     "predeploy": "node metadata && npm run build",
     "deploy": "gh-pages -d dist",
-    "share": "cloudflared tunnel --url http://localhost:5173/portfolio-libless/"
+    "share": "cloudflared tunnel --url http://localhost:5173/portfolio-libless/",
+    "test": "tsc -b"
   },
   "dependencies": {
     "@floating-ui/react-dom": "^2.1.1",

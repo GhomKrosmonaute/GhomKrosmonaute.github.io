@@ -14,7 +14,12 @@ import type {
 
 import { useCardGame } from "@/hooks/useCardGame.ts"
 
-import { energyCostColor, isActionCardInfo, parseCost } from "@/game-utils.ts"
+import {
+  cardInfoToIndice,
+  energyCostColor,
+  isActionCardInfo,
+  parseCost,
+} from "@/game-utils.ts"
 
 import { GameMoneyIcon } from "@/components/game/GameMoneyIcon.tsx"
 import { Tilt, TiltFoil } from "@/components/game/Tilt.tsx"
@@ -97,7 +102,9 @@ export const GameCard = (
             !notAllowed &&
             !game.isGameOver
           ) {
-            await game.play(props.card, { reason: props.card })
+            await game.play(props.card, {
+              reason: cardInfoToIndice(props.card),
+            })
           }
         } else {
           if (game.choiceOptions.length > 0 && !notAllowed) {

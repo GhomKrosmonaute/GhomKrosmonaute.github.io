@@ -32,8 +32,9 @@ export default function generateCards(advantage: number): GameCardInfo[] {
       ...techno,
       type: "support" as const,
       image: `images/techno/${techno.image}`,
-      state: "idle" as const,
       effect,
+      state: null,
+      localAdvantage: null,
     }
   })
 
@@ -45,8 +46,9 @@ export default function generateCards(advantage: number): GameCardInfo[] {
       ...project,
       type: "action" as const,
       image: `images/projects/${project.image}`,
-      state: "idle" as const,
       effect,
+      state: null,
+      localAdvantage: null,
     }
   })
 
@@ -55,7 +57,6 @@ export default function generateCards(advantage: number): GameCardInfo[] {
       type: "action",
       name: upgrade.name,
       image: `images/upgrades/${upgrade.image}`,
-      state: "idle",
       effect: () => ({
         index: -1,
         upgrade: true,
@@ -71,6 +72,8 @@ export default function generateCards(advantage: number): GameCardInfo[] {
         cost: upgrade.cost,
         waitBeforePlay: false,
       }),
+      state: null,
+      localAdvantage: null,
     }
   })
 
