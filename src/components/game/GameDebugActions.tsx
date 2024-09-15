@@ -48,6 +48,8 @@ export const GameDebugActions = () => {
         disabled={runningOps}
         className="text-upgrade"
         onClick={async () => {
+          game.setOperationInProgress("all upgrades", true)
+
           game.upgrades = []
 
           for (const raw of game.rawUpgrades) {
@@ -60,6 +62,8 @@ export const GameDebugActions = () => {
 
             await game.removeCard(raw.name)
           }
+
+          game.setOperationInProgress("all upgrades", false)
         }}
       >
         Toutes les améliorations

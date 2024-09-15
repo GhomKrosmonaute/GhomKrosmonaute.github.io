@@ -1,15 +1,17 @@
 import { useGlobalState } from "@/hooks/useGlobalState.ts"
 import { useSettings } from "@/hooks/useSettings.ts"
 
-import Sound from "@/assets/icons/sound.svg"
-import Muted from "@/assets/icons/muted.svg"
-import Rules from "@/assets/icons/rules.svg"
 import Settings from "@/assets/icons/settings.svg"
 import Question from "@/assets/icons/question.svg"
+import Github from "@/assets/icons/social/github.svg"
+
+import socials from "@/data/socials.json"
 
 import { cn } from "@/utils.ts"
 
-import { Button } from "@/components/ui/button.tsx"
+import { Button, buttonVariants } from "@/components/ui/button.tsx"
+
+const github = socials.find((s) => s.name === "Github")!
 
 export const CornerIcons = (props: { show: boolean }) => {
   const enableTutorial = useGlobalState(
@@ -21,21 +23,14 @@ export const CornerIcons = (props: { show: boolean }) => {
     state.quality.transparency,
   ])
 
-  const { toggleRules, toggleSettings, toggleMuted, muted } = useGlobalState(
-    (state) => ({
-      toggleSettings: state.toggleSettings,
-      toggleMuted: state.toggleMusicMuted,
-      toggleRules: state.toggleRules,
-      muted: state.musicMuted,
-    }),
-  )
+  const toggleSettings = useGlobalState((state) => state.toggleSettings)
 
   return (
     <div
       id="corner-icons"
       className={cn(
         "absolute flex top-4 right-4 z-50 gap-2",
-        "translate-x-full pointer-events-none",
+        "translate-x-1/2 pointer-events-none",
         {
           hidden: !transparency,
           "opacity-0": transparency,
@@ -44,19 +39,19 @@ export const CornerIcons = (props: { show: boolean }) => {
         },
       )}
     >
-      <Button
-        onClick={toggleRules}
-        variant="icon"
-        size="icon"
-        className="pointer-events-auto"
+      <a
+        href={github.url}
+        target="_blank"
+        className={buttonVariants({ variant: "icon" })}
       >
-        <Rules />
-      </Button>
+        <Github className="w-5 mr-2" /> Github
+      </a>
       <Button
         onClick={enableTutorial}
         variant="icon"
         size="icon"
         className="pointer-events-auto"
+        title="Lancer le tutoriel"
       >
         <Question />
       </Button>
@@ -65,16 +60,9 @@ export const CornerIcons = (props: { show: boolean }) => {
         variant="icon"
         size="icon"
         className="pointer-events-auto"
+        title="Ouvrir les paramètres"
       >
         <Settings />
-      </Button>
-      <Button
-        onClick={toggleMuted}
-        variant="icon"
-        size="icon"
-        className="pointer-events-auto"
-      >
-        {muted ? <Muted /> : <Sound />}
       </Button>
       <div className="w-10 h-10 " />
     </div>

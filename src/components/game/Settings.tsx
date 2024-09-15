@@ -33,6 +33,9 @@ import {
 import { GAME_ADVANTAGE } from "@/game-constants.ts"
 
 import Warning from "@/assets/icons/warning.svg"
+import Muted from "@/assets/icons/muted.svg"
+import Sound from "@/assets/icons/sound.svg"
+import Rules from "@/assets/icons/rules.svg"
 
 import themes from "@/data/themes.json"
 
@@ -43,7 +46,16 @@ export const Settings = (props: { show: boolean }) => {
     state.score,
     state.difficulty,
   ])
-  const toggleSettings = useGlobalState((state) => state.toggleSettings)
+
+  const { toggleRules, toggleSettings, toggleMuted, muted } = useGlobalState(
+    (state) => ({
+      toggleRules: state.toggleRules,
+      toggleSettings: state.toggleSettings,
+      toggleMuted: state.toggleMusicMuted,
+      muted: state.musicMuted,
+    }),
+  )
+
   const settingsCache = useSettings()
 
   const [hasChangedDifficulty, needReload] = React.useMemo(() => {
@@ -75,7 +87,7 @@ export const Settings = (props: { show: boolean }) => {
     >
       <div
         onClick={toggleSettings}
-        className={cn("absolute w-full h-full left-0 top-0", {
+        className={cn("absolute inset-0", {
           "pointer-events-auto": props.show,
           "pointer-events-none": !props.show,
         })}
@@ -85,6 +97,24 @@ export const Settings = (props: { show: boolean }) => {
         <div className="flex justify-between items-baseline">
           <h2 className="text-3xl">Settings</h2>
           {props.show && <FPS className="text-2xl font-mono" />}
+          <div className="flex gap-2">
+            <Button
+              onClick={toggleRules}
+              variant="icon"
+              size="icon"
+              className="pointer-events-auto"
+            >
+              <Rules />
+            </Button>
+            <Button
+              onClick={toggleMuted}
+              variant="icon"
+              size="icon"
+              className="pointer-events-auto"
+            >
+              {muted ? <Muted /> : <Sound />}
+            </Button>
+          </div>
         </div>
         <div
           className={cn(

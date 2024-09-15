@@ -963,6 +963,8 @@ function generateGameMethods(
           await state.triggerUpgrade(name, {})
         }
 
+        await state.checkAchievements()
+
         state.setOperationInProgress(`upgrade ${name}`, false)
       })
     },

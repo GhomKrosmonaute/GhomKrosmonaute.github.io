@@ -105,6 +105,7 @@ export default function App() {
 
           <img
             src="images/background.svg"
+            alt="background"
             className="fixed top-0 left-0 w-screen h-screen object-cover pointer-events-none bg-primary opacity-70"
             style={{
               filter: `hue-rotate(${themes.find((t) => t[0] === theme)?.[1] ?? 0}deg)`,
@@ -142,6 +143,7 @@ export default function App() {
         variant="icon"
         size="icon"
         className="fixed m-4 right-0 top-0 z-50"
+        title="Changer de thème (dark/light)"
       >
         <Theme />
       </Button>
