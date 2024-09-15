@@ -71,7 +71,9 @@ export const GameActions = (props: { show: boolean }) => {
               : "text-center",
           )}
         >
-          {game.choiceOptions.length > 0 ? (
+          {game.playZone.length > 0 ? (
+            game.playZone[game.playZone.length - 1][0] // Affiche le titre de la dernière carte ajoutée à la playZone
+          ) : game.choiceOptions.length > 0 ? (
             <>
               Choisis une carte{" "}
               {newSprint && game.choiceOptions.length <= 2 && (
@@ -91,7 +93,14 @@ export const GameActions = (props: { show: boolean }) => {
             "Actions"
           )}
         </h2>
-        {game.choiceOptions.length === 0 ? (
+        {game.playZone.length > 0 ? (
+          <div className="flex justify-center">
+            <GameCard
+              card={reviveCard(game.playZone[game.playZone.length - 1], game)}
+              isPlaying
+            />
+          </div>
+        ) : game.choiceOptions.length === 0 ? (
           <Button
             className={cn("flex justify-start gap-2", {
               grayscale: drawButtonDisabled,

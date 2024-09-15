@@ -53,6 +53,7 @@ const effects: EffectBuilder[] = [
       }),
     type: "action",
     cost: 1,
+    needsPlayZone: true,
   }),
   (advantage: number) => ({
     description: formatText(
@@ -74,6 +75,7 @@ const effects: EffectBuilder[] = [
     condition: () => localStorage.getItem("theme") === "dark",
     type: "action",
     cost: 3,
+    needsPlayZone: true,
   }),
   (advantage: number) => ({
     description: formatText(
@@ -477,7 +479,8 @@ const effects: EffectBuilder[] = [
     condition: (state) => state.discard.length > 0,
     type: "support",
     cost: Math.max(0, 10 - advantage),
-    waitBeforePlay: true,
+    needsPlayZone: true,
+    recycle: true,
   }),
   (advantage: number) => ({
     description: formatText(
@@ -491,7 +494,7 @@ const effects: EffectBuilder[] = [
     condition: (state) => state.discard.length > 0,
     type: "support",
     cost: 1,
-    waitBeforePlay: true,
+    needsPlayZone: true,
   }),
   (advantage: number) => ({
     description: formatText(

@@ -84,6 +84,19 @@
     --inflation: 0 74% 60%;
     --inflation-foreground: 0 0% 100%;
 
+    // Rarity colors
+
+    --common: var(--background);
+    --common-foreground: var(--foreground);
+    --rare: var(--accent);
+    --rare-foreground: var(--accent-foreground);
+    --epic: var(--primary);
+    --epic-foreground: var(--primary-foreground);
+    --legendary: var(--destructive);
+    --legendary-foreground: var(--destructive-foreground);
+
+    // Game Speed
+
     --game-auto-speed: 500ms;
     --game-speed: var(--game-auto-speed);
   }

@@ -54,8 +54,10 @@ export interface Effect {
     card: GameCardInfo<true>,
     reason: GameLog["reason"],
   ) => Promise<unknown>
+  needsPlayZone?: boolean
   waitBeforePlay?: boolean
   ephemeral?: boolean
+  recycle?: boolean
   upgrade?: boolean
 }
 

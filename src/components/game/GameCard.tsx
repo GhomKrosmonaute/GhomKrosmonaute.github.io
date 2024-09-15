@@ -27,12 +27,14 @@ import { GameValueIcon } from "@/components/game/GameValueIcon.tsx"
 import { BorderLight } from "@/components/ui/border-light.tsx"
 import { useSettings } from "@/hooks/useSettings.ts"
 import { cn } from "@/utils.ts"
+import { LOCAL_ADVANTAGE } from "@/game-constants.ts"
 
 export const GameCard = (
   props: React.PropsWithoutRef<{
     card: GameCardInfo<true>
     position?: number
     isChoice?: boolean
+    isPlaying?: boolean
   }>,
 ) => {
   const quality = useSettings((state) => ({
@@ -72,6 +74,15 @@ export const GameCard = (
     ? game.operationInProgress.filter((o) => o !== "choices").length > 0
     : game.operationInProgress.length > 0
 
+  let rarityName: keyof typeof LOCAL_ADVANTAGE = "legendary"
+
+  for (const [key, advantage] of Object.entries(LOCAL_ADVANTAGE)) {
+    if (advantage === props.card.localAdvantage) {
+      rarityName = key as keyof typeof LOCAL_ADVANTAGE
+      break
+    }
+  }
+
   return (
     <div
       key={props.card.name}
@@ -81,7 +92,9 @@ export const GameCard = (
         "-mx-3.5 z-10 hover:z-20 cursor-pointer select-none",
         {
           "cursor-not-allowed":
-            notAllowed || (!props.isChoice && game.choiceOptions.length > 0),
+            notAllowed ||
+            props.isPlaying ||
+            (!props.isChoice && game.choiceOptions.length > 0),
           [cn("transition-transform", props.card.state)]: quality.animation,
           [cn({
             "-translate-y-14": props.card.state === "selected",
@@ -92,10 +105,12 @@ export const GameCard = (
               !game.parsedCost.canBeBuy ||
               !game.canTriggerEffect,
             // "translate-y-8": !canTriggerEffect || !haveEnoughResources,
-          })]: !props.isChoice,
+          })]: !props.isChoice && !props.isPlaying,
         },
       )}
       onClick={async () => {
+        if (props.isPlaying) return
+
         if (!props.isChoice) {
           if (
             game.choiceOptions.length === 0 &&
@@ -171,6 +186,7 @@ export const GameCard = (
             },
           )}
         >
+          {/* Action details popover */}
           {isActionCardInfo(props.card) && props.card.detail && (
             <div
               className={cn(
@@ -194,6 +210,7 @@ export const GameCard = (
             </div>
           )}
 
+          {/* Background */}
           {quality.perspective && quality.tilt && (
             <div
               className={cn("absolute w-full h-full rounded-xl", {
@@ -207,6 +224,7 @@ export const GameCard = (
             />
           )}
 
+          {/* Header */}
           <div
             className={cn(
               "relative flex justify-start items-center h-10 rounded-t-xl",
@@ -277,14 +295,38 @@ export const GameCard = (
             >
               {props.card.name}
             </h2>
+
+            {/* Rarity indicator */}
+            <div
+              className={cn(
+                "absolute bottom-0 left-0 px-2 py-0 translate-y-full rounded-br-lg text-sm font-mono",
+                {
+                  "transition-opacity duration-1000 group-hover/game-card:opacity-0":
+                    quality.transparency && quality.animation,
+                },
+              )}
+              style={{
+                color: `hsl(var(--${rarityName}-foreground))`,
+                backgroundColor: `hsl(var(--${rarityName}))`,
+              }}
+            >
+              {rarityName}
+              {props.card.localAdvantage > LOCAL_ADVANTAGE.legendary
+                ? "+".repeat(
+                    LOCAL_ADVANTAGE.legendary - props.card.localAdvantage,
+                  )
+                : ""}
+            </div>
           </div>
 
+          {/* Image */}
           {isActionCardInfo(props.card) ? (
             <GameCardProject card={props.card} />
           ) : (
             <GameCardTechno card={props.card} />
           )}
 
+          {/* Body / Description */}
           <div
             className={cn(
               "flex-grow rounded-b-xl",
@@ -309,14 +351,14 @@ export const GameCard = (
               }}
             />
 
-            {props.card.effect.ephemeral && (
+            {(props.card.effect.ephemeral || props.card.effect.recycle) && (
               <div
                 className={cn("text-center h-full text-2xl font-bold", {
                   "text-muted-foreground/30": quality.transparency,
                   "text-muted-foreground": !quality.transparency,
                 })}
               >
-                Éphémère
+                {props.card.effect.ephemeral ? "Éphémère" : "Recyclage"}
               </div>
             )}
           </div>

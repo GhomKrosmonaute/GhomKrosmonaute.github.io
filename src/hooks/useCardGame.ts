@@ -106,6 +106,7 @@ export interface GameState {
   isWon: boolean
   isGameOver: boolean
   infinityMode: boolean
+  playZone: GameCardIndice[]
   draw: GameCardIndice[]
   discard: GameCardIndice[]
   hand: GameCardIndice[]
@@ -427,6 +428,7 @@ function generateGameState(): Omit<
     hand: startingDeck
       .slice(0, MAX_HAND_SIZE - 2)
       .map((name) => [name, "idle", LOCAL_ADVANTAGE.common]),
+    playZone: [],
     discard: [],
     upgrades: [],
     globalCardModifiers: [
@@ -523,10 +525,22 @@ function generateGameMethods(
         state.setOperationInProgress("coinFlip", true)
 
         const result = Math.random() > 0.5
+        const resultName = result ? "Face" : "Pile"
+
+        const card = reviveCard(
+          state.playZone[state.playZone.length - 1],
+          state,
+        )
+
+        const message = card.effect.description
+          .split("<br/>")
+          .slice(1)
+          .map((s) => s.trim())
+          .find((line) => line.startsWith(resultName))
 
         await Promise.all([
           await state.addNotification({
-            message: result ? "Face" : "Pile",
+            message: message?.replace(`${resultName}:`, "") ?? resultName,
             className: "bg-background text-foreground",
           }),
           await options[result ? "onHead" : "onTail"](state),
@@ -1293,30 +1307,48 @@ function generateGameMethods(
         bank.play.play()
 
         const removing = willBeRemoved(getState(), card)
+        const recycling = card.effect.recycle
 
         if (removing) {
           wait(getGameSpeed() / 2).then(() => bank.remove.play())
         }
 
-        const cardManagement = async () => {
-          // on active l'animation de retrait de la carte
-          set((state) => ({
-            hand: updateCardState(
-              state.hand,
-              card.name,
-              removing ? "removing" : "playing",
-            ),
-          }))
+        const firstState = removing ? "removing" : "playing"
 
-          // on attend la fin de l'animation
-          await wait()
-
-          // la carte va dans la défausse et on retire la carte de la main
-          set((state) => ({
-            discard: removing
-              ? state.discard
-              : shuffle([cardInfoToIndice(card), ...state.discard], 3),
+        // on active l'animation de la carte en la déplaçant dans la playZone si besoin
+        if (card.effect.needsPlayZone) {
+          set({
+            playZone: [...state.playZone, cardInfoToIndice(card)],
             hand: excludeCard(state.hand, card.name),
+          })
+        } else {
+          set((state) => ({
+            hand: updateCardState(state.hand, card.name, firstState),
+          }))
+        }
+
+        const cleanupAndFinish = async () => {
+          if (recycling) bank.recycle.play()
+
+          if (card.effect.needsPlayZone) {
+            set((state) => ({
+              playZone: updateCardState(state.playZone, card.name, firstState),
+            }))
+
+            await wait()
+          }
+
+          // la carte va dans la défausse et on retire la carte de la main ou de la playZone
+          set((state) => ({
+            discard:
+              removing || recycling
+                ? state.discard
+                : shuffle([cardInfoToIndice(card), ...state.discard], 3),
+            draw: recycling
+              ? shuffle([cardInfoToIndice(card), ...state.draw], 3)
+              : state.draw,
+            hand: excludeCard(state.hand, card.name),
+            playZone: excludeCard(state.playZone, card.name),
             globalCardModifiers: state.globalCardModifiers.filter((indice) => {
               const modifier = reviveCardModifier(indice)
 
@@ -1331,16 +1363,23 @@ function generateGameMethods(
           }))
         }
 
-        const effectManagement = async () => {
+        const triggerCardEffect = async () => {
           // on applique l'effet de la carte (toujours via eval)
           await card.effect.onPlayed(getState(), card, reason)
         }
 
         if (card.effect.waitBeforePlay) {
-          await cardManagement()
-          await effectManagement()
+          await wait()
+          await cleanupAndFinish()
+          await triggerCardEffect()
+        } else if (card.effect.needsPlayZone) {
+          await triggerCardEffect()
+          await cleanupAndFinish()
         } else {
-          await Promise.all([cardManagement(), effectManagement()])
+          await Promise.all([
+            wait().then(() => cleanupAndFinish()),
+            triggerCardEffect(),
+          ])
         }
 
         await state.triggerEvent("onPlay")
@@ -1528,6 +1567,7 @@ useCardGame.subscribe(async (state, prevState) => {
             draw: state.draw,
             hand: state.hand,
             discard: state.discard,
+            playZone: state.playZone,
             upgrades: state.upgrades,
             globalCardModifiers: state.globalCardModifiers,
             day: state.day,

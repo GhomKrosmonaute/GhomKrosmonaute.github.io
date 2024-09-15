@@ -48,11 +48,17 @@ export const EventNotifier = (props: { show: boolean }) => {
       >
         {game.notification[0].header && (
           <>
-            <span className="text-3xl">{game.notification[0].header}</span>
+            <span
+              className="text-3xl"
+              dangerouslySetInnerHTML={{ __html: game.notification[0].header }}
+            />
             <br />
           </>
         )}
-        <span className="text-6xl">{game.notification[0].message}</span>
+        <span
+          className="text-6xl"
+          dangerouslySetInnerHTML={{ __html: game.notification[0].message }}
+        />
       </div>
     </div>
   )
