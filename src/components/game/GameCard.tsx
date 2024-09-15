@@ -51,6 +51,7 @@ export const GameCard = (
     const energyColor = energyCostColor(state, parsedCost.cost)
 
     return {
+      rawUpgrades: state.rawUpgrades,
       handSize: state.hand.length,
       operationInProgress: state.operationInProgress,
       play: state.playCard,
@@ -296,26 +297,45 @@ export const GameCard = (
               {props.card.name}
             </h2>
 
-            {/* Rarity indicator */}
             <div
               className={cn(
-                "absolute bottom-0 left-0 px-2 py-0 translate-y-full rounded-br-lg text-sm font-mono",
+                "absolute bottom-0 left-0 translate-y-full flex",
+                "*:px-2 *:py-0 *:rounded-br-md *:text-sm *:font-mono",
                 {
                   "transition-opacity duration-1000 group-hover/game-card:opacity-0":
                     quality.transparency && quality.animation,
                 },
               )}
-              style={{
-                color: `hsl(var(--${rarityName}-foreground))`,
-                backgroundColor: `hsl(var(--${rarityName}))`,
-              }}
             >
-              {rarityName}
-              {props.card.localAdvantage > LOCAL_ADVANTAGE.legendary
-                ? "+".repeat(
-                    LOCAL_ADVANTAGE.legendary - props.card.localAdvantage,
-                  )
-                : ""}
+              {/* Rarity indicator */}
+              <div
+                className="z-10"
+                style={{
+                  color: `hsl(var(--${rarityName}-foreground))`,
+                  backgroundColor: `hsl(var(--${rarityName}))`,
+                }}
+              >
+                {rarityName}
+                {props.card.localAdvantage > LOCAL_ADVANTAGE.legendary
+                  ? "+".repeat(
+                      LOCAL_ADVANTAGE.legendary - props.card.localAdvantage,
+                    )
+                  : ""}
+              </div>
+
+              {/* Upgrade max indicator */}
+              {props.card.effect.upgrade && (
+                <div className="bg-upgrade -ml-1">
+                  {(() => {
+                    const raw = game.rawUpgrades.find(
+                      (raw) => raw.name === props.card.name,
+                    )!
+                    return raw.max === undefined
+                      ? "cumul infini: ∞"
+                      : `cumul max: ${raw.max}`
+                  })()}
+                </div>
+              )}
             </div>
           </div>
 
