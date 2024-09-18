@@ -72,10 +72,10 @@ const achievements: {
   },
   {
     name: "Trader",
-    description: "Avoir 5 cartes @action en main",
+    description: "Avoir 7 cartes @action en main",
     unlockCondition: (state) =>
       state.hand.filter((card) => reviveCard(card, state).type === "action")
-        .length >= 5,
+        .length >= 7,
   },
   {
     name: "Milliardaire",

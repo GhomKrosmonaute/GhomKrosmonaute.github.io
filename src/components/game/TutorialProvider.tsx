@@ -55,9 +55,10 @@ export const TutorialPrivateContext =
   React.createContext<TutorialPrivateContextType | null>(null)
 
 export const TutorialProvider = ({ steps, children, opaqueStyle }: Props) => {
-  const finishTutorial = useSettings(
-    (state) => () => state.updateTutorial(false),
-  )
+  const [isFinished, finishTutorial] = useSettings((state) => [
+    state.tutorial,
+    () => state.updateTutorial(false),
+  ])
 
   const [index, setIndex] = React.useState<number | null>(null)
   const [position, setPosition] = React.useState<Position | null>(null)
@@ -162,6 +163,16 @@ export const TutorialProvider = ({ steps, children, opaqueStyle }: Props) => {
       y: props.y,
     })
   }
+
+  React.useEffect(() => {
+    if (isFinished) {
+      setIndex(null)
+      setCurrentStep(null)
+      setPosition(null)
+    } else {
+      start()
+    }
+  }, [isFinished])
 
   React.useEffect(() => {
     window.addEventListener("resize", _handleResize)

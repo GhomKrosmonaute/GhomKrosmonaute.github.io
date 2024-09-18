@@ -100,5 +100,12 @@
     "description": "JavaScript fun UI library",
     "detail": "Librairie JavaScript pour créer des fenêtres d'OS dans le navigateur.",
     "url": "https://ghomkrosmonaute.github.io/Windows.js/"
+  },
+  {
+    "name": "Just a Forum",
+    "image": "just-a-forum.png",
+    "description": "A recursive forum",
+    "detail": "Un forum a posts récursifs réalisé avec TypeScript, EJS, Enmap et Express.",
+    "url": "https://github.com/GhomKrosmonaute/just-a-forum.git"
   }
 ]
