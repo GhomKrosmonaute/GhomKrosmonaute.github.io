@@ -1,8 +1,8 @@
 import type { EffectBuilder } from "@/game-typings"
 
 import {
-  ENERGY_TO_MONEY,
   MAX_HAND_SIZE,
+  ENERGY_TO_MONEY,
   REPUTATION_TO_ENERGY,
 } from "@/game-constants.ts"
 
@@ -10,9 +10,9 @@ import {
   formatText,
   reviveCard,
   resolveCost,
-  GlobalCardModifierIndex,
   costToEnergy,
   getSortedHand,
+  GlobalCardModifierIndex,
 } from "@/game-utils.ts"
 
 const effects: EffectBuilder[] = [
@@ -491,7 +491,7 @@ const effects: EffectBuilder[] = [
     onPlayed: async (state, _, reason) => {
       // on ajoute 1 pour que ça compte la carte qui est jouée, car elle
       // est déjà dans la défausse malgrès qu'on lui ai dit d'attendre avant d'être jouée
-      await state.recycleCard(2 + advantage, { reason })
+      await state.recycleCard(1 + advantage, { reason })
     },
     condition: (state) => state.discard.length > 0,
     type: "support",

@@ -57,9 +57,9 @@ export const TutorialPrivateContext =
 
 export const TutorialProvider = ({ steps, children, opaqueStyle }: Props) => {
   const isGameVisible = useGlobalState((state) => state.isCardGameVisible)
-  const [isFinished, finishTutorial] = useSettings((state) => [
+  const [isEnabled, enable] = useSettings((state) => [
     state.tutorial,
-    () => state.updateTutorial(false),
+    state.updateTutorial,
   ])
 
   const [index, setIndex] = React.useState<number | null>(null)
@@ -87,7 +87,7 @@ export const TutorialProvider = ({ steps, children, opaqueStyle }: Props) => {
     setIndex(null)
     setCurrentStep(null)
     setPosition(null)
-    finishTutorial()
+    enable(false)
   }
 
   const next = () => {
@@ -167,14 +167,14 @@ export const TutorialProvider = ({ steps, children, opaqueStyle }: Props) => {
   }
 
   React.useEffect(() => {
-    if (isFinished || !isGameVisible) {
+    if (!isGameVisible || !isEnabled) {
       setIndex(null)
       setCurrentStep(null)
       setPosition(null)
     } else {
       start()
     }
-  }, [isFinished, isGameVisible])
+  }, [isEnabled, isGameVisible])
 
   React.useEffect(() => {
     window.addEventListener("resize", _handleResize)

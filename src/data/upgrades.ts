@@ -56,7 +56,7 @@ export default function generateUpgrades(advantage: number): RawUpgrade[] {
     {
       name: "Recyclage",
       eventName: "onDraw",
-      description: "Recycle @cumul carte@s aléatoire@s",
+      description: "Recycle @cumul carte@s aléatoire@s de la défausse",
       image: "recyclage.png",
       condition: (state) => state.discard.length > 0,
       onTrigger: async (state, upgrade, reason) => {

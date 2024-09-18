@@ -296,11 +296,15 @@ export function resolveCost(resolvable: number | string): Cost {
 }
 
 export function costToEnergy(cost: Cost): number {
-  return cost.type === "money" ? cost.value * ENERGY_TO_MONEY : cost.value
+  return cost.type === "money"
+    ? Math.ceil(cost.value / ENERGY_TO_MONEY)
+    : cost.value
 }
 
 export function costToMoney(cost: Cost): number {
-  return cost.type === "money" ? cost.value : cost.value / ENERGY_TO_MONEY
+  return cost.type === "money"
+    ? cost.value
+    : Math.ceil(cost.value * ENERGY_TO_MONEY)
 }
 
 export function costTo(cost: Cost, type: "money" | "energy"): number {
@@ -481,6 +485,10 @@ export function formatText(text: string) {
     )
 }
 
+export function clamp(min: number, value: number, max: number) {
+  return Math.min(Math.max(value, min), max)
+}
+
 export function formatUpgradeText(text: string, cumul: number) {
   return text
     .replace(
@@ -579,7 +587,9 @@ export function reviveCard(
     state: typeof indice !== "string" ? indice[1] : null,
     localAdvantage:
       typeof indice !== "string" ? indice[2] : LOCAL_ADVANTAGE.common,
-    effect: card.effect(GAME_ADVANTAGE[state.difficulty] - state.inflation),
+    effect: card.effect(
+      Math.max(0, GAME_ADVANTAGE[state.difficulty] - state.inflation),
+    ),
   }
 
   return applyGlobalCardModifiers(state, output, clean)

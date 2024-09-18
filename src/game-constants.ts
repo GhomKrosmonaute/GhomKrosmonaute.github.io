@@ -45,4 +45,4 @@ export const REPUTATION_TO_ENERGY = 10
 /**
  * 1 energy = 0.08 day
  */
-export const ENERGY_TO_DAYS = 0.13
+export const ENERGY_TO_DAYS = 0.07

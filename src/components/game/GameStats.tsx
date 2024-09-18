@@ -15,6 +15,7 @@ import Sprint from "@/assets/icons/game/sprint.svg"
 import Draw from "@/assets/icons/game/draw.svg"
 import Energy from "@/assets/icons/game/energy.svg"
 import Reputation from "@/assets/icons/game/reputation.svg"
+import Inflation from "@/assets/icons/game/inflation.svg"
 
 import { GameGauge } from "@/components/game/GameGauge.tsx"
 import { MAX_REPUTATION, MONEY_TO_REACH } from "@/game-constants.ts"
@@ -218,6 +219,20 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
             </span>
           }
         />
+        {game.inflation > 0 && (
+          <Stat
+            Icon={Inflation}
+            name="Inflation"
+            value={
+              <span className="text-inflation font-changa">
+                {game.inflation.toLocaleString("fr")}{" "}
+                <span
+                  dangerouslySetInnerHTML={{ __html: formatText("@energys") }}
+                />
+              </span>
+            }
+          />
+        )}
         {!props.forHUD && (
           <Stat Icon={Day} name="Jour" value={Math.floor(game.day)} />
         )}
