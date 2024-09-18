@@ -22,8 +22,8 @@ export const MAX_REPUTATION = 10
 export const MONEY_TO_REACH = 10_000 // en M$
 export const INFINITE_DRAW_COST = 5
 export const UPGRADE_COST_THRESHOLDS = {
-  string: ["20", "50", "75", "100", "150"],
-  number: [5, 7, 10, 15],
+  money: [20, 50, 75, 100, 150, 250, 500, 1_000, 2_500, 5_000, 10_000],
+  energy: [5, 7, 10, 15, 20, 28],
 }
 
 /**

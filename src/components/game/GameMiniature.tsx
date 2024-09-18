@@ -6,12 +6,7 @@ import { isGameCardIndice, reviveCard, reviveUpgrade } from "@/game-utils.ts"
 import { useCardGame } from "@/hooks/useCardGame.ts"
 
 export const GameMiniature = (props: { item: GameLog["reason"] }) => {
-  const game = useCardGame((state) => ({
-    cards: state.cards,
-    inflation: state.inflation,
-    difficulty: state.difficulty,
-    rawUpgrades: state.rawUpgrades,
-  }))
+  const game = useCardGame()
 
   const revived = Array.isArray(props.item)
     ? isGameCardIndice(props.item)

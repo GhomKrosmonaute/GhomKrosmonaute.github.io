@@ -1,5 +1,5 @@
 import type { GlobalGameState, GameState } from "@/hooks/useCardGame.ts"
-import { fetchSettings, parseCost, reviveCard } from "@/game-utils.ts"
+import { fetchSettings, reviveCard } from "@/game-utils.ts"
 import { MAX_HAND_SIZE } from "@/game-constants.ts"
 
 const achievements: {
@@ -57,7 +57,7 @@ const achievements: {
     description: `Avoir ${MAX_HAND_SIZE} cartes en main qui coutent zéro`,
     unlockCondition: (state) =>
       state.hand.filter(
-        (card) => parseCost(state, reviveCard(card, state), []).cost === 0,
+        (card) => reviveCard(card, state).effect.cost.value === 0,
       ).length >= 5,
   },
   {

@@ -7,60 +7,60 @@ import generateCards from "@/data/cards.ts"
 import generateUpgrades from "@/data/upgrades.ts"
 
 import type {
-  CardModifierIndice,
-  GameCardIndice,
-  GameCardInfo,
   GameLog,
-  GameMethodOptions,
-  GameOverReason,
-  MethodWhoCheckIfGameOver,
-  MethodWhoLog,
-  TriggerEventName,
-  UpgradeIndice,
-  GameNotification,
   RawUpgrade,
+  GameCardInfo,
+  MethodWhoLog,
+  UpgradeIndice,
+  GameCardIndice,
+  GameOverReason,
+  TriggerEventName,
+  GameNotification,
+  GameMethodOptions,
+  CardModifierIndice,
+  MethodWhoCheckIfGameOver,
 } from "@/game-typings"
 
 import {
   MAX_ENERGY,
   MAX_HAND_SIZE,
+  GAME_ADVANTAGE,
   MAX_REPUTATION,
   MONEY_TO_REACH,
   ENERGY_TO_DAYS,
   ENERGY_TO_MONEY,
+  LOCAL_ADVANTAGE,
   REPUTATION_TO_ENERGY,
   INITIAL_CHOICE_COUNT,
   INITIAL_CHOICE_OPTION_COUNT,
-  GAME_ADVANTAGE,
-  LOCAL_ADVANTAGE,
 } from "@/game-constants.ts"
 
 import {
-  getDeck,
-  generateChoiceOptions,
-  isGameOver,
-  parseCost,
-  parseSave,
-  shuffle,
   wait,
-  willBeRemoved,
-  handleErrors,
-  handleErrorsAsync,
-  reviveCard,
-  reviveUpgrade,
-  reviveCardModifier,
-  fetchSettings,
+  shuffle,
+  getDeck,
+  canBeBuy,
   isGameWon,
-  isNewSprint,
-  updateGameAutoSpeed,
-  getGameSpeed,
-  GlobalCardModifierIndex,
-  generateRandomAdvantage,
+  parseSave,
+  isGameOver,
+  reviveCard,
   excludeCard,
+  isNewSprint,
+  includeCard,
+  costToEnergy,
+  getGameSpeed,
+  handleErrors,
+  reviveUpgrade,
+  fetchSettings,
+  willBeRemoved,
+  upgradeToIndice,
   updateCardState,
   cardInfoToIndice,
-  includeCard,
-  upgradeToIndice,
+  handleErrorsAsync,
+  updateGameAutoSpeed,
+  generateChoiceOptions,
+  generateRandomAdvantage,
+  GlobalCardModifierIndex,
 } from "@/game-utils.ts"
 
 import { metadata } from "@/game-metadata.ts"
@@ -713,9 +713,9 @@ function generateGameMethods(
           const upgrade = reviveUpgrade(indice, state)
 
           upgradesPoints +=
-            (typeof upgrade.cost === "string"
-              ? Number(upgrade.cost) / ENERGY_TO_MONEY
-              : upgrade.cost) * upgrade.cumul
+            (upgrade.cost.type === "money"
+              ? upgrade.cost.value / ENERGY_TO_MONEY
+              : upgrade.cost.value) * upgrade.cumul
         })
 
         // Calcul du multiplicateur en fonction des jours
@@ -1279,15 +1279,7 @@ function generateGameMethods(
           return
         }
 
-        const { needs, cost, appliedModifiers } = parseCost(state, card, [])
-
-        if (
-          free ||
-          Number(card.effect.cost) === 0 ||
-          (needs === "money"
-            ? state.money >= cost
-            : state.reputation + state.energy >= cost)
-        ) {
+        if (free || card.effect.cost.value === 0 || canBeBuy(card, state)) {
           state.setOperationInProgress(`play ${card.name}`, true)
 
           set((state) => ({
@@ -1295,9 +1287,15 @@ function generateGameMethods(
           }))
 
           if (!free) {
-            await (needs === "money"
-              ? state.addMoney(-cost, { skipGameOverPause: true, reason })
-              : state.addEnergy(-cost, { skipGameOverPause: true, reason }))
+            await (card.effect.cost.type === "money"
+              ? state.addMoney(-card.effect.cost.value, {
+                  skipGameOverPause: true,
+                  reason,
+                })
+              : state.addEnergy(-card.effect.cost.value, {
+                  skipGameOverPause: true,
+                  reason,
+                }))
           }
         } else {
           await cantPlay()
@@ -1307,6 +1305,9 @@ function generateGameMethods(
 
         // on joue le son de la banque
         bank.play.play()
+
+        // on retire les modifiers en "once" qui ont été utilisés
+        reviveCard(cardInfoToIndice(card), state, true)
 
         const removing = willBeRemoved(getState(), card)
         const recycling = card.effect.recycle
@@ -1351,17 +1352,6 @@ function generateGameMethods(
               : state.draw,
             hand: excludeCard(state.hand, card.name),
             playZone: excludeCard(state.playZone, card.name),
-            globalCardModifiers: state.globalCardModifiers.filter((indice) => {
-              const modifier = reviveCardModifier(indice)
-
-              // on le garde si :
-              return (
-                // il n'est pas unique
-                !modifier.once ||
-                // il n'a pas été appliqué
-                !appliedModifiers.some((m) => m === indice)
-              )
-            }),
           }))
         }
 
@@ -1396,9 +1386,7 @@ function generateGameMethods(
           await state.drawCard(1, { reason })
         }
 
-        await state.advanceTime(
-          needs === "money" ? cost / ENERGY_TO_MONEY : cost,
-        )
+        await state.advanceTime(costToEnergy(card.effect.cost))
 
         if (!options?.skipGameOverPause && isGameOver(getState())) {
           await wait(2000)

@@ -8,9 +8,11 @@ import {
 
 import {
   formatText,
-  GlobalCardModifierIndex,
-  parseCost,
   reviveCard,
+  resolveCost,
+  GlobalCardModifierIndex,
+  costToEnergy,
+  sortTheHand,
 } from "@/game-utils.ts"
 
 const effects: EffectBuilder[] = [
@@ -22,7 +24,7 @@ const effects: EffectBuilder[] = [
         reason,
       }),
     type: "action",
-    cost: 2,
+    cost: resolveCost(2),
   }),
   (advantage: number) => ({
     description: formatText(`Gagne ${(4 + advantage) * ENERGY_TO_MONEY}M$`),
@@ -32,7 +34,7 @@ const effects: EffectBuilder[] = [
         reason,
       }),
     type: "action",
-    cost: 4,
+    cost: resolveCost(4),
   }),
   (advantage: number) => ({
     description: formatText(
@@ -52,7 +54,7 @@ const effects: EffectBuilder[] = [
           }),
       }),
     type: "action",
-    cost: 1,
+    cost: resolveCost(1),
     needsPlayZone: true,
   }),
   (advantage: number) => ({
@@ -74,7 +76,7 @@ const effects: EffectBuilder[] = [
       }),
     condition: () => localStorage.getItem("theme") === "dark",
     type: "action",
-    cost: 3,
+    cost: resolveCost(3),
     needsPlayZone: true,
   }),
   (advantage: number) => ({
@@ -92,7 +94,7 @@ const effects: EffectBuilder[] = [
       )
     },
     type: "action",
-    cost: 4,
+    cost: resolveCost(4),
   }),
   (advantage: number) => ({
     description: formatText(
@@ -105,7 +107,7 @@ const effects: EffectBuilder[] = [
       }),
     condition: (state) => state.reputation < 5,
     type: "action",
-    cost: 2,
+    cost: resolveCost(2),
   }),
   (advantage: number) => ({
     description: formatText(
@@ -116,14 +118,13 @@ const effects: EffectBuilder[] = [
       }`,
     ),
     onPlayed: async (state, _, reason) => {
-      await state.playCard(
-        reviveCard(state.hand[state.hand.length - 1], state),
-        {
-          free: true,
-          skipGameOverPause: true,
-          reason,
-        },
-      )
+      const hand = sortTheHand(state.hand, state)
+
+      await state.playCard(hand[hand.length - 1], {
+        free: true,
+        skipGameOverPause: true,
+        reason,
+      })
 
       if (advantage > 4) {
         await state.addEnergy(advantage - 4, {
@@ -148,7 +149,7 @@ const effects: EffectBuilder[] = [
       )
     },
     type: "action",
-    cost: Math.max(0, 4 - advantage), // ~ middle cost
+    cost: resolveCost(Math.max(0, 4 - advantage)), // ~ middle cost
     waitBeforePlay: true,
   }),
   (advantage: number) => ({
@@ -160,16 +161,18 @@ const effects: EffectBuilder[] = [
       }`,
     ),
     onPlayed: async (state, _, reason) => {
-      const target = reviveCard(state.hand[state.hand.length - 1], state)
+      const hand = sortTheHand(state.hand, state)
+      const target = hand[hand.length - 1]
 
       await state.discardCard({
         filter: (card) => card.name === target.name,
         reason,
       })
 
-      const cost = parseCost(state, target, []).cost
-
-      await state.addEnergy(cost, { skipGameOverPause: true, reason })
+      await state.addEnergy(costToEnergy(target.effect.cost), {
+        skipGameOverPause: true,
+        reason,
+      })
     },
     condition: (state, card) => {
       const indice = state.hand[state.hand.length - 1]
@@ -177,7 +180,7 @@ const effects: EffectBuilder[] = [
       return (
         state.hand.length > 1 &&
         card.name !== indice[0] &&
-        parseCost(state, reviveCard(indice, state), []).cost > 0
+        reviveCard(indice, state).effect.cost.value > 0
       )
     },
     // template: (state, _, cond) => {
@@ -192,7 +195,7 @@ const effects: EffectBuilder[] = [
     //   return `(${cost} @energy${cost > 1 ? "s" : ""})`;
     // },
     type: "action",
-    cost: 0,
+    cost: resolveCost(0),
   }),
   (advantage: number) => ({
     description: formatText(
@@ -205,7 +208,7 @@ const effects: EffectBuilder[] = [
       }),
     condition: (state) => state.draw.length >= 1,
     type: "support",
-    cost: 1,
+    cost: resolveCost(1),
     waitBeforePlay: true,
   }),
   (advantage: number) => ({
@@ -219,7 +222,7 @@ const effects: EffectBuilder[] = [
       }),
     condition: (state) => state.draw.length >= 1,
     type: "support",
-    cost: Math.max(0, 2 - advantage),
+    cost: resolveCost(Math.max(0, 2 - advantage)),
     waitBeforePlay: true,
   }),
   (advantage: number) => ({
@@ -233,7 +236,7 @@ const effects: EffectBuilder[] = [
       }),
     condition: (state) => state.hand.length < 5 && state.draw.length >= 1,
     type: "support",
-    cost: 1,
+    cost: resolveCost(1),
     waitBeforePlay: true,
   }),
   (advantage: number) => ({
@@ -266,7 +269,7 @@ const effects: EffectBuilder[] = [
         (card) => reviveCard(card, state).effect.type === "action",
       ),
     type: "support",
-    cost: Math.max(0, 2 - advantage),
+    cost: resolveCost(Math.max(0, 2 - advantage)),
     waitBeforePlay: true,
   }),
   (advantage: number) => ({
@@ -299,7 +302,7 @@ const effects: EffectBuilder[] = [
         (card) => reviveCard(card, state).effect.type === "action",
       ),
     type: "support",
-    cost: 1,
+    cost: resolveCost(1),
     waitBeforePlay: true,
   }),
   (advantage: number) => ({
@@ -325,7 +328,7 @@ const effects: EffectBuilder[] = [
     },
     condition: (state) => state.hand.length >= 2 && state.draw.length >= 1,
     type: "support",
-    cost: 1,
+    cost: resolveCost(1),
     waitBeforePlay: true,
   }),
   (advantage: number) => ({
@@ -341,7 +344,7 @@ const effects: EffectBuilder[] = [
     },
     condition: (state) => state.hand.length >= 2,
     type: "support",
-    cost: 0,
+    cost: resolveCost(0),
     waitBeforePlay: true,
   }),
   (advantage: number) => ({
@@ -356,7 +359,7 @@ const effects: EffectBuilder[] = [
       }),
     condition: (state) => state.discard.length >= 1,
     type: "support",
-    cost: 2,
+    cost: resolveCost(2),
     waitBeforePlay: true,
   }),
   (advantage: number) => ({
@@ -372,7 +375,7 @@ const effects: EffectBuilder[] = [
     },
     condition: (state) => state.draw.length >= 1,
     type: "support",
-    cost: 1,
+    cost: resolveCost(1),
     waitBeforePlay: true,
   }),
   (advantage: number) => ({
@@ -389,7 +392,7 @@ const effects: EffectBuilder[] = [
       })
     },
     type: "support",
-    cost: Math.max(0, 5 - advantage),
+    cost: resolveCost(Math.max(0, 5 - advantage)),
     waitBeforePlay: true,
   }),
   (advantage: number) => ({
@@ -413,7 +416,7 @@ const effects: EffectBuilder[] = [
     },
     condition: (state) => state.upgrades.length > 0 && state.draw.length >= 1,
     type: "support",
-    cost: Math.max(0, 3 - advantage),
+    cost: resolveCost(Math.max(0, 3 - advantage)),
     waitBeforePlay: true,
   }),
   (advantage: number) => ({
@@ -445,7 +448,7 @@ const effects: EffectBuilder[] = [
         .map((c) => reviveCard(c, state))
         .filter((card) => card.effect.type === "support").length > 1,
     type: "support",
-    cost: 1,
+    cost: resolveCost(1),
     waitBeforePlay: true,
   }),
   (advantage: number) => ({
@@ -468,7 +471,7 @@ const effects: EffectBuilder[] = [
         (card) => reviveCard(card, state).effect.type === "action",
       ),
     type: "support",
-    cost: 0,
+    cost: resolveCost(0),
     waitBeforePlay: true,
   }),
   (advantage: number) => ({
@@ -478,7 +481,7 @@ const effects: EffectBuilder[] = [
     },
     condition: (state) => state.discard.length > 0,
     type: "support",
-    cost: Math.max(0, 10 - advantage),
+    cost: resolveCost(Math.max(0, 10 - advantage)),
     needsPlayZone: true,
     recycle: true,
   }),
@@ -493,7 +496,7 @@ const effects: EffectBuilder[] = [
     },
     condition: (state) => state.discard.length > 0,
     type: "support",
-    cost: 1,
+    cost: resolveCost(1),
     needsPlayZone: true,
   }),
   (advantage: number) => ({
@@ -506,7 +509,7 @@ const effects: EffectBuilder[] = [
     ),
     onPlayed: async (state, _, reason) => {
       await state.drawCard(2, {
-        filter: (c) => parseCost(state, c, []).needs === "energy",
+        filter: (c) => c.effect.cost.type === "energy",
         skipGameOverPause: true,
         reason,
       })
@@ -520,10 +523,10 @@ const effects: EffectBuilder[] = [
     },
     condition: (state) =>
       state.draw.some(
-        (c) => parseCost(state, reviveCard(c, state), []).needs === "energy",
+        (c) => reviveCard(c, state).effect.cost.type === "energy",
       ),
     type: "support",
-    cost: Math.max(0, 4 - advantage),
+    cost: resolveCost(Math.max(0, 4 - advantage)),
     waitBeforePlay: true,
   }),
   (advantage: number) => ({
@@ -549,7 +552,7 @@ const effects: EffectBuilder[] = [
       }
     },
     type: "support",
-    cost: Math.max(0, 3 - advantage),
+    cost: resolveCost(Math.max(0, 3 - advantage)),
   }),
   (advantage: number) => ({
     description: formatText(
@@ -567,7 +570,7 @@ const effects: EffectBuilder[] = [
       )
     },
     type: "support",
-    cost: 0,
+    cost: resolveCost(0),
   }),
   (advantage: number) => ({
     description: formatText(
@@ -578,9 +581,7 @@ const effects: EffectBuilder[] = [
     onPlayed: async (state, card) => {
       const handCardNames = state.hand
         .map((c) => reviveCard(c, state))
-        .filter(
-          (c) => c.name !== card.name && parseCost(state, card, []).cost > 0,
-        )
+        .filter((c) => c.name !== card.name && card.effect.cost.value > 0)
         .map((c) => c.name)
 
       state.addGlobalCardModifier(
@@ -590,11 +591,9 @@ const effects: EffectBuilder[] = [
       )
     },
     condition: (state) =>
-      state.hand.some(
-        (card) => parseCost(state, reviveCard(card, state), []).cost > 0,
-      ),
+      state.hand.some((card) => reviveCard(card, state).effect.cost.value > 0),
     type: "support",
-    cost: Math.max(0, MAX_HAND_SIZE - advantage),
+    cost: resolveCost(Math.max(0, MAX_HAND_SIZE - advantage)),
     ephemeral: true,
   }),
   (advantage: number) => ({
@@ -615,7 +614,7 @@ const effects: EffectBuilder[] = [
       })
     },
     type: "action",
-    cost: String(Math.max(0, 4 - advantage) * ENERGY_TO_MONEY),
+    cost: resolveCost(String(Math.max(0, 4 - advantage) * ENERGY_TO_MONEY)),
   }),
   (advantage: number) => ({
     description: formatText(`Ajoute ${4 + advantage} @energys`),
@@ -625,7 +624,7 @@ const effects: EffectBuilder[] = [
         reason,
       }),
     type: "action",
-    cost: String(4 * ENERGY_TO_MONEY),
+    cost: resolveCost(String(4 * ENERGY_TO_MONEY)),
   }),
   (advantage: number) => ({
     description: formatText(
@@ -640,15 +639,17 @@ const effects: EffectBuilder[] = [
       }),
     condition: (state) => state.reputation < 5,
     type: "action",
-    cost: String(Math.max(0, 3 - advantage) * ENERGY_TO_MONEY),
+    cost: resolveCost(String(Math.max(0, 3 - advantage) * ENERGY_TO_MONEY)),
   }),
   (advantage: number) => ({
     description: formatText("Remplis la jauge de @reputation"),
     onPlayed: async (state, _, reason) =>
       await state.addReputation(10, { skipGameOverPause: true, reason }),
     type: "action",
-    cost: String(
-      Math.max(0, 5 * REPUTATION_TO_ENERGY - advantage) * ENERGY_TO_MONEY,
+    cost: resolveCost(
+      String(
+        Math.max(0, 5 * REPUTATION_TO_ENERGY - advantage) * ENERGY_TO_MONEY,
+      ),
     ),
     ephemeral: true,
   }),

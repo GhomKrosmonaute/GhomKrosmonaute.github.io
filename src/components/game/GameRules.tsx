@@ -24,21 +24,7 @@ import {
 export const GameRules = (props: { show: boolean }) => {
   const close = useGlobalState((state) => state.toggleRules)
 
-  const stats = useCardGame((state) => ({
-    scoreAverage: state.scoreAverage,
-    totalMoney: state.totalMoney,
-    wonGames: state.wonGames,
-    playedGames: state.playedGames,
-    discoveries: state.discoveries,
-    achievements: state.achievements,
-    addDiscovery: state.addDiscovery,
-    addAchievement: state.addAchievement,
-    addWonGame: state.addWonGame,
-    addPlayedGame: state.addPlayedGame,
-    cards: state.cards,
-    difficulty: state.difficulty,
-    inflation: state.inflation,
-  }))
+  const stats = useCardGame()
 
   const [value, setValue] = React.useState(0)
 

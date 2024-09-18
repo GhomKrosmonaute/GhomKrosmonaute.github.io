@@ -5,6 +5,7 @@ import type {
   CardModifier,
   CardModifierIndice,
   ColorClass,
+  Cost,
   GameCardIndice,
   GameCardInfo,
   GameCardState,
@@ -236,7 +237,7 @@ export function getDeck(
 }
 
 export function energyCostColor(
-  state: GameState,
+  state: Pick<GameState, "energy">,
   cost: number,
 ): ColorClass | [ColorClass, ColorClass] {
   return state.energy >= cost
@@ -254,7 +255,9 @@ export function isGameWon(state: GameState): boolean {
   return !state.infinityMode && !state.isWon && state.money >= MONEY_TO_REACH
 }
 
-export function isGameOver(state: GameState): GameOverReason | false {
+export function isGameOver(
+  state: GameState & GlobalGameState,
+): GameOverReason | false {
   if (state.reputation === 0) return "reputation"
   if (state.draw.length === 0 && state.hand.length === 0) return "mill"
   if (
@@ -266,7 +269,7 @@ export function isGameOver(state: GameState): GameOverReason | false {
         return true
 
       // on vérifie si on a assez de resources
-      return !parseCost(state, card, []).canBeBuy
+      return !canBeBuy(card, state)
     }) &&
     (state.reputation + state.energy < INFINITE_DRAW_COST ||
       state.hand.length >= MAX_HAND_SIZE ||
@@ -285,32 +288,42 @@ export function rankColor(rank: number) {
   }
 }
 
+export function resolveCost(resolvable: number | string): Cost {
+  return {
+    type: typeof resolvable === "number" ? "energy" : "money",
+    value: Number(resolvable),
+  }
+}
+
+export function costToEnergy(cost: Cost): number {
+  return cost.type === "money" ? cost.value * ENERGY_TO_MONEY : cost.value
+}
+
+export function costToMoney(cost: Cost): number {
+  return cost.type === "money" ? cost.value : cost.value / ENERGY_TO_MONEY
+}
+
+export function costTo(cost: Cost, type: "money" | "energy"): number {
+  return cost.type === type
+    ? cost.value
+    : cost.type === "money"
+      ? costToEnergy(cost)
+      : costToMoney(cost)
+}
+
 export function getUpgradeCost(
   state: GameState,
   card: GameCardInfo<true>,
-): number | string {
+): Cost {
   const index = state.upgrades.length
 
   const priceThreshold =
-    UPGRADE_COST_THRESHOLDS[typeof card.effect.cost as "string" | "number"][
-      index
-    ] ?? Infinity
+    UPGRADE_COST_THRESHOLDS[card.effect.cost.type][index] ?? Infinity
 
-  return (typeof card.effect.cost == "string" ? String : Number)(
-    Math.min(Number(priceThreshold), Number(card.effect.cost)),
-  )
-}
-
-export function updateCost<T extends string | number>(
-  cost: T,
-  modifier: (energyCost: number) => number,
-): T {
-  const energyCost =
-    typeof cost === "string" ? Number(cost) / ENERGY_TO_MONEY : (cost as number)
-  const newEnergyCost = modifier(energyCost)
-  return (typeof cost === "string" ? String : Number)(
-    typeof cost === "string" ? newEnergyCost * ENERGY_TO_MONEY : newEnergyCost,
-  ) as T
+  return {
+    value: Math.min(priceThreshold, card.effect.cost.value),
+    type: card.effect.cost.type,
+  }
 }
 
 /**
@@ -346,55 +359,34 @@ export function recursiveClone<T>(something: T): T {
 export function applyGlobalCardModifiers(
   state: GameState,
   card: GameCardInfo<true>,
-  used: string[],
-): { card: GameCardInfo<true>; appliedModifiers: CardModifierIndice[] } {
-  const clone = recursiveClone(card)
-  const modifiers = state.globalCardModifiers.slice().toSorted((a, b) => {
+  clean = false,
+): GameCardInfo<true> {
+  const modifiers = state.globalCardModifiers.toSorted((a, b) => {
     return a[2] - b[2]
   })
 
-  return modifiers.reduce<{
-    card: GameCardInfo<true>
-    appliedModifiers: CardModifierIndice[]
-  }>(
-    (previousValue, indice) => {
-      const stringIndice = JSON.stringify(indice)
+  for (const indice of modifiers) {
+    const modifier = reviveCardModifier(indice)
 
-      if (used.includes(stringIndice)) return previousValue
-      else used.push(stringIndice)
+    if (modifier.condition && !modifier.condition(card, state)) continue
 
-      const modifier = reviveCardModifier(indice)
+    card = modifier.use(card, state)
 
-      return !modifier.condition ||
-        modifier.condition(previousValue.card, state)
-        ? {
-            card: modifier.use(previousValue.card, state),
-            appliedModifiers: [...previousValue.appliedModifiers, indice],
-          }
-        : previousValue
-    },
-    { card: clone, appliedModifiers: [] },
-  )
+    if (clean && modifier.once)
+      state.dangerouslyUpdate({
+        globalCardModifiers: state.globalCardModifiers.filter(
+          (m) => m !== indice,
+        ),
+      })
+  }
+
+  return card
 }
 
-export function parseCost(
-  state: GameState,
-  card: GameCardInfo<true>,
-  used: string[],
-) {
-  const { card: tempCard, appliedModifiers } = applyGlobalCardModifiers(
-    state,
-    card,
-    used,
-  )
-  const needs = typeof tempCard.effect.cost === "number" ? "energy" : "money"
-  const cost = Number(tempCard.effect.cost)
-  const canBeBuy =
-    needs === "money"
-      ? state[needs] >= cost
-      : state[needs] + state.reputation >= cost
-
-  return { needs, cost, canBeBuy, appliedModifiers } as const
+export function canBeBuy(card: GameCardInfo<true>, state: GameState) {
+  return card.effect.cost.type === "money"
+    ? state.money >= card.effect.cost.value
+    : state.energy + state.reputation >= card.effect.cost.value
 }
 
 export function willBeRemoved(state: GameState, card: GameCardInfo<true>) {
@@ -513,6 +505,22 @@ export function shuffle<T>(cards: T[], times = 1): T[] {
   return cards
 }
 
+export function sortTheHand(hand: GameCardIndice[], state: GameState) {
+  return hand
+    .map((i) => reviveCard(i, state))
+    .toSorted((a, b) => {
+      // trier par type de carte (action ou support) puis par type de prix (énergie ou $) puis par prix puis par description de l'effet
+      const typeA = a.effect.type === "action" ? 1 : 0
+      const typeB = b.effect.type === "action" ? 1 : 0
+      const priceA = a.effect.cost.type === "money" ? 1 : 0
+      const priceB = b.effect.cost.type === "money" ? 1 : 0
+      const costA = a.effect.cost.value
+      const costB = b.effect.cost.value
+      const effect = a.effect.description.localeCompare(b.effect.description)
+      return typeA - typeB || priceA - priceB || costA - costB || effect
+    })
+}
+
 /**
  * Re-maps a number from one range to another.
  * @param value - The incoming value to be converted.
@@ -556,7 +564,8 @@ export function reviveCardModifier(indice: CardModifierIndice): CardModifier {
 
 export function reviveCard(
   indice: GameCardIndice | string,
-  state: { cards: GameCardInfo[]; difficulty: Difficulty; inflation: number },
+  state: GameState,
+  clean = false,
 ): GameCardInfo<true> {
   const card = state.cards.find((c) =>
     typeof indice === "string" ? c.name === indice : c.name === indice[0],
@@ -564,7 +573,7 @@ export function reviveCard(
 
   if (!card) throw new Error(`Card ${indice} not found`)
 
-  return {
+  const output: GameCardInfo<true> = {
     ...card,
     type: card.type,
     state: typeof indice !== "string" ? indice[1] : null,
@@ -572,6 +581,8 @@ export function reviveCard(
       typeof indice !== "string" ? indice[2] : LOCAL_ADVANTAGE.common,
     effect: card.effect(GAME_ADVANTAGE[state.difficulty] - state.inflation),
   }
+
+  return applyGlobalCardModifiers(state, output, clean)
 }
 
 export function reviveUpgrade(

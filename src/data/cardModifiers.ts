@@ -1,6 +1,6 @@
 import type { CardModifier } from "@/game-typings"
 import { ENERGY_TO_MONEY, GAME_ADVANTAGE } from "@/game-constants.ts"
-import { updateCost, getUpgradeCost, parseCost } from "@/game-utils"
+import { getUpgradeCost, costTo } from "@/game-utils"
 
 const cardModifiers = {
   "upgrade cost threshold": () => ({
@@ -25,12 +25,21 @@ const cardModifiers = {
       ...card,
       effect: {
         ...card.effect,
-        cost: updateCost(
-          card.effect.cost,
-          (cost) =>
-            cost +
-            Math.max(0, state.inflation - GAME_ADVANTAGE[state.difficulty]),
-        ),
+        cost: {
+          type: card.effect.cost.type,
+          value:
+            card.effect.cost.value +
+            costTo(
+              {
+                value: Math.max(
+                  0,
+                  state.inflation - GAME_ADVANTAGE[state.difficulty],
+                ),
+                type: "energy",
+              },
+              card.effect.cost.type,
+            ),
+        },
       },
     }),
   }),
@@ -44,42 +53,52 @@ const cardModifiers = {
       ...card,
       effect: {
         ...card.effect,
-        cost: updateCost(card.effect.cost, (cost) =>
-          Math.max(0, cost - discount),
-        ),
+        cost: {
+          type: card.effect.cost.type,
+          value: Math.max(
+            0,
+            card.effect.cost.value -
+              costTo(
+                { value: discount, type: "energy" },
+                card.effect.cost.type,
+              ),
+          ),
+        },
       },
     }),
   }),
 
   "next money card cost energy": () => ({
     once: true,
-    condition: (card, state) => {
-      const parsed = parseCost(state, card, [
-        '["next money card cost energy",[]]',
-      ])
-      return parsed.needs === "money" && parsed.cost > 0
+    condition: (card) => {
+      return card.effect.cost.type === "money" && card.effect.cost.value > 0
     },
-    use: (card) => ({
+    use: (card, state) => ({
       ...card,
       effect: {
         ...card.effect,
-        cost: Math.min(
-          20,
-          Math.ceil(Number(card.effect.cost) / ENERGY_TO_MONEY),
-        ),
+        cost: {
+          type: "energy",
+          value: Math.min(
+            state.energyMax,
+            Math.ceil(card.effect.cost.value / ENERGY_TO_MONEY),
+          ),
+        },
       },
     }),
   }),
 
   "next card half cost": () => ({
     once: true,
-    condition: (card, state) =>
-      parseCost(state, card, ['["next card half cost",[]]']).cost > 1,
+    condition: (card) => card.effect.cost.value > 1,
     use: (card) => ({
       ...card,
       effect: {
         ...card.effect,
-        cost: updateCost(card.effect.cost, (cost) => Math.ceil(cost / 2)),
+        cost: {
+          type: card.effect.cost.type,
+          value: Math.floor(card.effect.cost.value / 2),
+        },
       },
     }),
   }),

@@ -3,14 +3,14 @@ import { cn } from "@/utils.ts"
 
 export const GameMoneyIcon = (
   props: React.PropsWithChildren<{
-    value: string
+    value: number
     className?: string
     style?: React.CSSProperties
     miniature?: boolean
     symbol?: boolean
   }>,
 ) => {
-  if (props.value === "0") return <></>
+  if (props.value === 0) return <></>
 
   return (
     <div
@@ -27,7 +27,7 @@ export const GameMoneyIcon = (
         }}
       >
         {props.symbol
-          ? `${Number(props.value) > 0 ? "+" : ""}${props.value}`
+          ? `${props.value > 0 ? "+" : ""}${props.value}`
           : props.value}
         M$
       </div>

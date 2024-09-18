@@ -4,6 +4,7 @@ import {
   MAX_HAND_SIZE,
   MAX_REPUTATION,
 } from "@/game-constants.ts"
+import { resolveCost } from "@/game-utils.ts"
 
 export default function generateUpgrades(advantage: number): RawUpgrade[] {
   return [
@@ -20,7 +21,7 @@ export default function generateUpgrades(advantage: number): RawUpgrade[] {
         })
       },
       max: 3,
-      cost: String(Math.max(0, 20 - advantage) * ENERGY_TO_MONEY),
+      cost: resolveCost(String(Math.max(0, 20 - advantage) * ENERGY_TO_MONEY)),
     },
     {
       name: "Méditation",
@@ -35,7 +36,7 @@ export default function generateUpgrades(advantage: number): RawUpgrade[] {
         )
       },
       max: 3,
-      cost: String(Math.max(0, 20 - advantage) * ENERGY_TO_MONEY),
+      cost: resolveCost(String(Math.max(0, 20 - advantage) * ENERGY_TO_MONEY)),
     },
     {
       name: "Bourse",
@@ -50,7 +51,7 @@ export default function generateUpgrades(advantage: number): RawUpgrade[] {
         })
       },
       max: 5,
-      cost: String(Math.max(0, 10 - advantage) * ENERGY_TO_MONEY),
+      cost: resolveCost(String(Math.max(0, 10 - advantage) * ENERGY_TO_MONEY)),
     },
     {
       name: "Recyclage",
@@ -62,7 +63,7 @@ export default function generateUpgrades(advantage: number): RawUpgrade[] {
         await state.recycleCard(upgrade.cumul, { reason })
       },
       max: 3,
-      cost: String(Math.max(0, 20 - advantage) * ENERGY_TO_MONEY),
+      cost: resolveCost(String(Math.max(0, 20 - advantage) * ENERGY_TO_MONEY)),
     },
     {
       name: "I.A",
@@ -76,7 +77,7 @@ export default function generateUpgrades(advantage: number): RawUpgrade[] {
           reason,
         })
       },
-      cost: String(Math.max(0, 80 - advantage) * ENERGY_TO_MONEY),
+      cost: resolveCost(String(Math.max(0, 80 - advantage) * ENERGY_TO_MONEY)),
     },
     {
       name: "Sport",
@@ -91,7 +92,7 @@ export default function generateUpgrades(advantage: number): RawUpgrade[] {
         })
       },
       max: 5,
-      cost: Math.max(0, 20 - advantage),
+      cost: resolveCost(Math.max(0, 20 - advantage)),
     },
     {
       name: "PC Puissant",
@@ -106,7 +107,7 @@ export default function generateUpgrades(advantage: number): RawUpgrade[] {
         })
       },
       max: 2,
-      cost: String(Math.max(0, 40 - advantage) * ENERGY_TO_MONEY),
+      cost: resolveCost(String(Math.max(0, 40 - advantage) * ENERGY_TO_MONEY)),
     },
     {
       name: "Stagiaire",
@@ -121,7 +122,7 @@ export default function generateUpgrades(advantage: number): RawUpgrade[] {
         })
       },
       max: 5,
-      cost: String(Math.max(0, 20 - advantage) * ENERGY_TO_MONEY),
+      cost: resolveCost(String(Math.max(0, 20 - advantage) * ENERGY_TO_MONEY)),
     },
     {
       name: "DevOps",
@@ -137,7 +138,7 @@ export default function generateUpgrades(advantage: number): RawUpgrade[] {
         )
       },
       max: Math.floor(MAX_HAND_SIZE / 2),
-      cost: String(Math.max(0, 20 - advantage) * ENERGY_TO_MONEY),
+      cost: resolveCost(String(Math.max(0, 20 - advantage) * ENERGY_TO_MONEY)),
     },
     {
       name: "Data Center",
@@ -148,7 +149,7 @@ export default function generateUpgrades(advantage: number): RawUpgrade[] {
         await state.addMaxEnergy(5, { reason })
       },
       max: 4,
-      cost: String(Math.max(0, 50 - advantage) * ENERGY_TO_MONEY),
+      cost: resolveCost(String(Math.max(0, 50 - advantage) * ENERGY_TO_MONEY)),
     },
     {
       name: "Méthode Agile",
@@ -161,7 +162,7 @@ export default function generateUpgrades(advantage: number): RawUpgrade[] {
         })
       },
       max: 3,
-      cost: String(Math.max(0, 50 - advantage) * ENERGY_TO_MONEY),
+      cost: resolveCost(String(Math.max(0, 50 - advantage) * ENERGY_TO_MONEY)),
     },
     {
       name: "Anti-virus",
@@ -176,7 +177,7 @@ export default function generateUpgrades(advantage: number): RawUpgrade[] {
         })
       },
       max: 5,
-      cost: String(Math.max(0, 20 - advantage) * ENERGY_TO_MONEY),
+      cost: resolveCost(String(Math.max(0, 20 - advantage) * ENERGY_TO_MONEY)),
     },
   ]
 }

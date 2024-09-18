@@ -18,7 +18,7 @@ export interface Upgrade {
     upgrade: Upgrade,
     reason: GameLog["reason"],
   ) => Promise<unknown>
-  cost: number | string
+  cost: Cost
   state: UpgradeState
   cumul: number
   max: number
@@ -39,10 +39,15 @@ export type RawUpgrade = Pick<
 
 export type EffectBuilder = (advantage: number) => Effect
 
+export type Cost = {
+  value: number
+  type: "money" | "energy"
+}
+
 export interface Effect {
   description: string
   type: "action" | "support"
-  cost: number | string
+  cost: Cost
   template?: (
     state: GameState,
     card: GameCardInfo,
@@ -98,7 +103,11 @@ export type GameCardInfo<Resolved = false> =
   | SupportCardInfo<Resolved>
 
 export type CardModifier = {
-  condition?: (card: GameCardInfo<true>, state: GameState) => boolean
+  condition?: (
+    this: CardModifier,
+    card: GameCardInfo<true>,
+    state: GameState,
+  ) => boolean
   use: (card: GameCardInfo<true>, state: GameState) => GameCardInfo<true>
   once?: boolean
 }

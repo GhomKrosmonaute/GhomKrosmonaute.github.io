@@ -15,10 +15,10 @@ import type {
 import { useCardGame } from "@/hooks/useCardGame.ts"
 
 import {
+  canBeBuy,
   cardInfoToIndice,
   energyCostColor,
   isActionCardInfo,
-  parseCost,
 } from "@/game-utils.ts"
 
 import { GameMoneyIcon } from "@/components/game/GameMoneyIcon.tsx"
@@ -47,18 +47,15 @@ export const GameCard = (
   }))
 
   const game = useCardGame((state) => {
-    const parsedCost = parseCost(state, props.card, [])
-    const energyColor = energyCostColor(state, parsedCost.cost)
-
     return {
+      canBeBuy: canBeBuy(props.card, state),
       rawUpgrades: state.rawUpgrades,
       handSize: state.hand.length,
       operationInProgress: state.operationInProgress,
       play: state.playCard,
       pick: state.pickCard,
       isGameOver: state.isGameOver,
-      parsedCost,
-      energyColor,
+      energy: state.energy,
       choiceOptions: state.choiceOptions,
       canTriggerEffect:
         !props.card.effect.condition ||
@@ -103,7 +100,7 @@ export const GameCard = (
             grayscale:
               game.choiceOptions.length > 0 ||
               game.isGameOver ||
-              !game.parsedCost.canBeBuy ||
+              !game.canBeBuy ||
               !game.canTriggerEffect,
             // "translate-y-8": !canTriggerEffect || !haveEnoughResources,
           })]: !props.isChoice && !props.isPlaying,
@@ -244,15 +241,15 @@ export const GameCard = (
             <div
               className="font-changa shrink-0 relative"
               style={{
-                transform: `${quality.perspective ? "translateZ(5px)" : ""} translateX(${game.parsedCost.needs === "money" ? "-15px" : "-8px"})`,
+                transform: `${quality.perspective ? "translateZ(5px)" : ""} translateX(${props.card.effect.cost.type === "money" ? "-15px" : "-8px"})`,
                 transformStyle: quality.perspective ? "preserve-3d" : "flat",
               }}
             >
-              {game.parsedCost.needs === "energy" ? (
+              {props.card.effect.cost.type === "energy" ? (
                 <GameValueIcon
                   isCost
-                  value={game.parsedCost.cost}
-                  colors={game.energyColor}
+                  value={props.card.effect.cost.value}
+                  colors={energyCostColor(game, props.card.effect.cost.value)}
                   style={{
                     transform: quality.perspective ? "translateZ(5px)" : "none",
                     transformStyle: quality.perspective
@@ -262,7 +259,7 @@ export const GameCard = (
                 />
               ) : (
                 <GameMoneyIcon
-                  value={String(game.parsedCost.cost)}
+                  value={props.card.effect.cost.value}
                   style={{
                     transform: `${quality.perspective ? "translateZ(10px)" : ""} rotate(-10deg)`,
                     transformStyle: quality.perspective
@@ -278,13 +275,13 @@ export const GameCard = (
                 {
                   [cn({
                     "left-3 text-lg":
-                      game.parsedCost.needs === "money" &&
+                      props.card.effect.cost.type === "money" &&
                       props.card.name.length > 7,
                     "left-7":
-                      game.parsedCost.needs === "money" &&
-                      game.parsedCost.cost > 99,
+                      props.card.effect.cost.type === "money" &&
+                      props.card.effect.cost.value > 99,
                     "text-md": props.card.name.length > 11,
-                  })]: game.parsedCost.cost > 0,
+                  })]: props.card.effect.cost.value > 0,
                   "text-action-foreground": props.card.effect.type === "action",
                   "text-support-foreground":
                     props.card.effect.type === "support",

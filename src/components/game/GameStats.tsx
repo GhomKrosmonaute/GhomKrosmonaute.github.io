@@ -49,23 +49,7 @@ export const Stat = ({
 }
 
 export const Stats = (props: { className?: string; forHUD?: boolean }) => {
-  const game = useCardGame((state) => ({
-    debug: state.debug,
-    money: state.money,
-    score: state.score,
-    energy: state.energy,
-    energyMax: state.energyMax,
-    reputation: state.reputation,
-    draw: state.draw,
-    hand: state.hand,
-    discard: state.discard,
-    infinity: state.infinityMode,
-    day: state.day,
-    dayFull: state.dayFull,
-    difficulty: state.difficulty,
-    inflation: state.inflation,
-    cards: state.cards,
-  }))
+  const game = useCardGame()
 
   const settings = useSettings((state) => ({
     shadows: state.quality.shadows,
@@ -247,7 +231,7 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
             </span>
           }
         />
-        {game.infinity && (
+        {game.infinityMode && (
           <Stat Icon={Infinity} name="Mode infini" value="Activé" />
         )}
       </div>
