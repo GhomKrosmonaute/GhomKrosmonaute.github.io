@@ -498,8 +498,10 @@ function generateGameMethods(
 
         set({
           inflation: newInflation,
-          cards: generateCards(baseGameAdvantage - newInflation),
-          rawUpgrades: generateUpgrades(baseGameAdvantage - newInflation),
+          cards: generateCards(Math.max(0, baseGameAdvantage - newInflation)),
+          rawUpgrades: generateUpgrades(
+            Math.max(0, baseGameAdvantage - newInflation),
+          ),
         })
       } else {
         set({ inflation: newInflation })

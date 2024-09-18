@@ -505,7 +505,7 @@ export function shuffle<T>(cards: T[], times = 1): T[] {
   return cards
 }
 
-export function sortTheHand(hand: GameCardIndice[], state: GameState) {
+export function getSortedHand(hand: GameCardIndice[], state: GameState) {
   return hand
     .map((i) => reviveCard(i, state))
     .toSorted((a, b) => {
@@ -624,8 +624,10 @@ export function parseSave(save: string, difficulty: Difficulty) {
     }),
   }
 
-  state.cards = generateCards(baseAdvantage - state.inflation)
-  state.rawUpgrades = generateUpgrades(baseAdvantage - state.inflation)
+  state.cards = generateCards(Math.max(0, baseAdvantage - state.inflation))
+  state.rawUpgrades = generateUpgrades(
+    Math.max(0, baseAdvantage - state.inflation),
+  )
 
   return state
 }

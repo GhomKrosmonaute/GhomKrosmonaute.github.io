@@ -12,7 +12,7 @@ import {
   resolveCost,
   GlobalCardModifierIndex,
   costToEnergy,
-  sortTheHand,
+  getSortedHand,
 } from "@/game-utils.ts"
 
 const effects: EffectBuilder[] = [
@@ -43,12 +43,12 @@ const effects: EffectBuilder[] = [
     onPlayed: async (state, _, reason) =>
       await state.coinFlip({
         onHead: async () =>
-          await state.addMoney((1 + advantage) * ENERGY_TO_MONEY, {
+          await state.addMoney((2 + advantage) * ENERGY_TO_MONEY, {
             skipGameOverPause: true,
             reason,
           }),
         onTail: async () =>
-          await state.addEnergy(1 + advantage, {
+          await state.addEnergy(2 + advantage, {
             skipGameOverPause: true,
             reason,
           }),
@@ -118,7 +118,7 @@ const effects: EffectBuilder[] = [
       }`,
     ),
     onPlayed: async (state, _, reason) => {
-      const hand = sortTheHand(state.hand, state)
+      const hand = getSortedHand(state.hand, state)
 
       await state.playCard(hand[hand.length - 1], {
         free: true,
@@ -134,18 +134,16 @@ const effects: EffectBuilder[] = [
       }
     },
     condition: (state, card) => {
-      const indice = state.hand[state.hand.length - 1]
+      const hand = getSortedHand(state.hand, state)
+      const target = hand[hand.length - 1]
 
-      if (!indice) return false
-
-      const target = reviveCard(indice, state)
-      const targetEffect = target.effect
+      if (!target) return false
 
       return (
         target.name !== card.name &&
         target.state === "idle" &&
         card.state === "idle" &&
-        (!targetEffect.condition || targetEffect.condition(state, target))
+        (!target.effect.condition || target.effect.condition(state, target))
       )
     },
     type: "action",
@@ -161,7 +159,7 @@ const effects: EffectBuilder[] = [
       }`,
     ),
     onPlayed: async (state, _, reason) => {
-      const hand = sortTheHand(state.hand, state)
+      const hand = getSortedHand(state.hand, state)
       const target = hand[hand.length - 1]
 
       await state.discardCard({
@@ -175,12 +173,13 @@ const effects: EffectBuilder[] = [
       })
     },
     condition: (state, card) => {
-      const indice = state.hand[state.hand.length - 1]
+      const hand = getSortedHand(state.hand, state)
+      const target = hand[hand.length - 1]
 
       return (
         state.hand.length > 1 &&
-        card.name !== indice[0] &&
-        reviveCard(indice, state).effect.cost.value > 0
+        card.name !== target.name &&
+        target.effect.cost.value > 0
       )
     },
     // template: (state, _, cond) => {
@@ -349,10 +348,10 @@ const effects: EffectBuilder[] = [
   }),
   (advantage: number) => ({
     description: formatText(
-      `Pioche ${advantage >= 3 ? 1 + Math.floor(advantage / 2) : "une"} carte${advantage >= 3 ? "s" : ""} dans la défausse`,
+      `Pioche ${advantage >= 2 ? 1 + Math.floor(advantage / 2) : "une"} carte${advantage >= 2 ? "s" : ""} dans la défausse`,
     ),
     onPlayed: async (state, _, reason) =>
-      await state.drawCard(advantage >= 1 ? 1 + advantage : 1, {
+      await state.drawCard(1 + Math.floor(advantage / 2), {
         fromDiscardPile: true,
         skipGameOverPause: true,
         reason,

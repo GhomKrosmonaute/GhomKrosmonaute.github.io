@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button.tsx"
 import Forward from "@/assets/icons/forward.svg"
 import { bank } from "@/sound.ts"
 import { useSettings } from "@/hooks/useSettings.ts"
+import { useGlobalState } from "@/hooks/useGlobalState.ts"
 
 export interface TutorialStep {
   id: string
@@ -55,6 +56,7 @@ export const TutorialPrivateContext =
   React.createContext<TutorialPrivateContextType | null>(null)
 
 export const TutorialProvider = ({ steps, children, opaqueStyle }: Props) => {
+  const isGameVisible = useGlobalState((state) => state.isCardGameVisible)
   const [isFinished, finishTutorial] = useSettings((state) => [
     state.tutorial,
     () => state.updateTutorial(false),
@@ -165,14 +167,14 @@ export const TutorialProvider = ({ steps, children, opaqueStyle }: Props) => {
   }
 
   React.useEffect(() => {
-    if (isFinished) {
+    if (isFinished || !isGameVisible) {
       setIndex(null)
       setCurrentStep(null)
       setPosition(null)
     } else {
       start()
     }
-  }, [isFinished])
+  }, [isFinished, isGameVisible])
 
   React.useEffect(() => {
     window.addEventListener("resize", _handleResize)

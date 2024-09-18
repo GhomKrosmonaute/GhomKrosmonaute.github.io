@@ -2,7 +2,7 @@ import { cn } from "@/utils"
 import { useCardGame } from "@/hooks/useCardGame"
 import { useSettings } from "@/hooks/useSettings.ts"
 import { GameCard } from "@/components/game/GameCard"
-import { sortTheHand } from "@/game-utils.ts"
+import { getSortedHand } from "@/game-utils.ts"
 
 export const GameHand = (props: { show: boolean }) => {
   const quality = useSettings(({ quality: { animations } }) => ({
@@ -21,7 +21,7 @@ export const GameHand = (props: { show: boolean }) => {
         props.show ? "bottom-[-50px]" : "-bottom-full",
       )}
     >
-      {sortTheHand(game.hand, game).map((card, index) => (
+      {getSortedHand(game.hand, game).map((card, index) => (
         <GameCard key={index} card={card} position={index} />
       ))}
     </div>
