@@ -61,6 +61,7 @@ import {
   generateChoiceOptions,
   generateRandomAdvantage,
   GlobalCardModifierIndex,
+  getUsableCost,
 } from "@/game-utils.ts"
 
 import { metadata } from "@/game-metadata.ts"
@@ -173,6 +174,86 @@ export interface GameState {
   defeat: (reason: GameOverReason) => void
   reset: () => void
   enableInfinityMode: () => void
+}
+
+function generateFakeState(): GameState & GlobalGameState {
+  return {
+    inflation: 0,
+    energy: 0,
+    discard: [],
+    infinityMode: false,
+    reason: null,
+    notification: [],
+    energyMax: MAX_ENERGY,
+    wonGames: 0,
+    money: 0,
+    reputation: 0,
+    rawUpgrades: [],
+    hand: [],
+    coinFlips: 0,
+    recycledCards: 0,
+    skippedChoices: 0,
+    discardedCards: 0,
+    day: 0,
+    dayFull: false,
+    sprintFull: false,
+    isGameOver: false,
+    isWon: false,
+    score: 0,
+    logs: [],
+    cards: [],
+    upgrades: [],
+    choiceOptions: [],
+    choiceOptionCount: 0,
+    operationInProgress: [],
+    playZone: [],
+    draw: [],
+    error: null,
+    difficulty: "normal",
+    globalCardModifiers: [],
+    discoveries: [],
+    achievements: [],
+    totalMoney: 0,
+    playedGames: 0,
+    scoreAverage: 0,
+    debug: false,
+    addMaxEnergy: async () => {},
+    addMoney: async () => {},
+    setOperationInProgress: () => {},
+    increments: async () => {},
+    incrementsInflation: () => {},
+    addGlobalCardModifier: () => {},
+    setDebug: () => {},
+    checkAchievements: async () => {},
+    checkDiscoveries: () => {},
+    addDiscovery: () => {},
+    addAchievement: async () => {},
+    addWonGame: () => {},
+    addPlayedGame: () => {},
+    addEnergy: async () => {},
+    upgrade: async () => {},
+    dangerouslyUpdate: () => {},
+    addLog: () => {},
+    addNotification: async () => {},
+    updateScore: () => {},
+    addReputation: async () => {},
+    advanceTime: async () => {},
+    coinFlip: async () => {},
+    defeat: () => {},
+    discardCard: async () => {},
+    drawCard: async () => {},
+    enableInfinityMode: () => {},
+    handleError: (t) => t,
+    pickCard: async () => {},
+    playCard: async () => {},
+    reset: () => {},
+    win: () => {},
+    removeCard: async () => {},
+    skip: async () => {},
+    triggerUpgrade: async () => {},
+    triggerEvent: async () => {},
+    recycleCard: async () => {},
+  }
 }
 
 function generateGlobalGameState(): Omit<
@@ -338,14 +419,16 @@ function generateGameState(): Omit<
   localStorage.setItem("metadata", JSON.stringify(metadata))
 
   const advantage = GAME_ADVANTAGE[difficulty]
-
-  const cards = generateCards(advantage)
+  const fakeState = generateFakeState()
+  const cards = generateCards(advantage, fakeState)
   const rawUpgrades = generateUpgrades(advantage)
 
   const startingDeck: string[] = []
 
   startingDeck.push(
-    cards.find((c) => c.effect(0).description.startsWith("Renvoie tout"))!.name,
+    cards.find((c) =>
+      c.effect(0, fakeState).description.startsWith("Renvoie tout"),
+    )!.name,
   )
 
   startingDeck.push(
@@ -353,7 +436,7 @@ function generateGameState(): Omit<
       .filter(
         (c) =>
           startingDeck.every((name) => name !== c.name) &&
-          c.effect(0).description.startsWith("Pioche"),
+          c.effect(0, fakeState).description.startsWith("Pioche"),
       )
       .slice(0, 2)
       .map((c) => c.name),
@@ -364,7 +447,7 @@ function generateGameState(): Omit<
       .filter(
         (c) =>
           startingDeck.every((name) => name !== c.name) &&
-          c.effect(0).description.startsWith("Recycle"),
+          c.effect(0, fakeState).description.startsWith("Recycle"),
       )
       .map((c) => c.name),
   )
@@ -374,9 +457,9 @@ function generateGameState(): Omit<
       .filter(
         (c) =>
           startingDeck.every((name) => name !== c.name) &&
-          !c.effect(0).upgrade &&
-          c.effect(0).description.toLowerCase().includes("gagne") &&
-          c.effect(0).description.toLowerCase().includes("énergie"),
+          !c.effect(0, fakeState).upgrade &&
+          c.effect(0, fakeState).description.toLowerCase().includes("gagne") &&
+          c.effect(0, fakeState).description.toLowerCase().includes("énergie"),
       )
       .map((c) => c.name),
   )
@@ -394,7 +477,7 @@ function generateGameState(): Omit<
               o.every(([name]) => name !== c.name),
             ) &&
             startingDeck.every((name) => name !== c.name) &&
-            !c.effect(0).upgrade,
+            !c.effect(0, fakeState).upgrade,
         ),
         5,
       )
@@ -498,7 +581,10 @@ function generateGameMethods(
 
         set({
           inflation: newInflation,
-          cards: generateCards(Math.max(0, baseGameAdvantage - newInflation)),
+          cards: generateCards(
+            Math.max(0, baseGameAdvantage - newInflation),
+            state,
+          ),
           rawUpgrades: generateUpgrades(
             Math.max(0, baseGameAdvantage - newInflation),
           ),
@@ -608,7 +694,7 @@ function generateGameMethods(
               : [
                   ...state.choiceOptions,
                   generateChoiceOptions(getState(), {
-                    filter: (c) => !c.effect(0).upgrade,
+                    filter: (c) => !c.effect(0, state).upgrade,
                   }),
                 ],
           }))
@@ -623,10 +709,11 @@ function generateGameMethods(
               choiceOptions: [
                 ...state.choiceOptions,
                 generateChoiceOptions(fullState, {
-                  filter: (c) => !c.effect(0).upgrade && c.type === "action",
+                  filter: (c) =>
+                    !c.effect(0, state).upgrade && c.type === "action",
                 }),
                 generateChoiceOptions(fullState, {
-                  filter: (c) => Boolean(c.effect(0).upgrade),
+                  filter: (c) => Boolean(c.effect(0, state).upgrade),
                 }),
               ],
             }))
@@ -1281,7 +1368,7 @@ function generateGameMethods(
           return
         }
 
-        if (free || card.effect.cost.value === 0 || canBeBuy(card, state)) {
+        if (free || card.effect.cost.value <= 0 || canBeBuy(card, state)) {
           state.setOperationInProgress(`play ${card.name}`, true)
 
           set((state) => ({
@@ -1289,12 +1376,14 @@ function generateGameMethods(
           }))
 
           if (!free) {
+            const usableCost = getUsableCost(card.effect.cost, state)
+
             await (card.effect.cost.type === "money"
-              ? state.addMoney(-card.effect.cost.value, {
+              ? state.addMoney(-usableCost, {
                   skipGameOverPause: true,
                   reason,
                 })
-              : state.addEnergy(-card.effect.cost.value, {
+              : state.addEnergy(-usableCost, {
                   skipGameOverPause: true,
                   reason,
                 }))
@@ -1388,7 +1477,15 @@ function generateGameMethods(
           await state.drawCard(1, { reason })
         }
 
-        await state.advanceTime(costToEnergy(card.effect.cost))
+        await state.advanceTime(
+          getUsableCost(
+            {
+              type: "energy",
+              value: costToEnergy(card.effect.cost),
+            },
+            state,
+          ),
+        )
 
         if (!options?.skipGameOverPause && isGameOver(getState())) {
           await wait(2000)

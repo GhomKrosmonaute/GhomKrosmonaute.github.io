@@ -18,6 +18,7 @@ import {
   canBeBuy,
   cardInfoToIndice,
   energyCostColor,
+  getUsableCost,
   isActionCardInfo,
 } from "@/game-utils.ts"
 
@@ -48,15 +49,9 @@ export const GameCard = (
 
   const game = useCardGame((state) => {
     return {
+      ...state,
       canBeBuy: canBeBuy(props.card, state),
-      rawUpgrades: state.rawUpgrades,
       handSize: state.hand.length,
-      operationInProgress: state.operationInProgress,
-      play: state.playCard,
-      pick: state.pickCard,
-      isGameOver: state.isGameOver,
-      energy: state.energy,
-      choiceOptions: state.choiceOptions,
       canTriggerEffect:
         !props.card.effect.condition ||
         props.card.effect.condition(state, props.card),
@@ -115,13 +110,13 @@ export const GameCard = (
             !notAllowed &&
             !game.isGameOver
           ) {
-            await game.play(props.card, {
+            await game.playCard(props.card, {
               reason: cardInfoToIndice(props.card),
             })
           }
         } else {
           if (game.choiceOptions.length > 0 && !notAllowed) {
-            await game.pick(props.card)
+            await game.pickCard(props.card)
           }
         }
       }}
@@ -248,7 +243,7 @@ export const GameCard = (
               {props.card.effect.cost.type === "energy" ? (
                 <GameValueIcon
                   isCost
-                  value={props.card.effect.cost.value}
+                  value={getUsableCost(props.card.effect.cost, game)}
                   colors={energyCostColor(game, props.card.effect.cost.value)}
                   style={{
                     transform: quality.perspective ? "translateZ(5px)" : "none",

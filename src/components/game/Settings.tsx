@@ -87,10 +87,10 @@ export const Settings = (props: { show: boolean }) => {
     >
       <div
         onClick={toggleSettings}
-        className={cn("absolute inset-0", {
-          "pointer-events-auto": props.show,
-          "pointer-events-none": !props.show,
-        })}
+        className={cn(
+          "absolute inset-0",
+          props.show ? "pointer-events-auto" : "pointer-events-none",
+        )}
       />
 
       <Card className="space-y-4 z-40">
@@ -98,20 +98,10 @@ export const Settings = (props: { show: boolean }) => {
           <h2 className="text-3xl">Settings</h2>
           {props.show && <FPS className="text-2xl font-mono" />}
           <div className="flex gap-2">
-            <Button
-              onClick={toggleRules}
-              variant="icon"
-              size="icon"
-              className="pointer-events-auto"
-            >
+            <Button onClick={toggleRules} variant="icon" size="icon">
               <Rules />
             </Button>
-            <Button
-              onClick={toggleMuted}
-              variant="icon"
-              size="icon"
-              className="pointer-events-auto"
-            >
+            <Button onClick={toggleMuted} variant="icon" size="icon">
               {muted ? <Muted /> : <Sound />}
             </Button>
           </div>

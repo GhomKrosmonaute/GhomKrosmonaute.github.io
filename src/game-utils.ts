@@ -1,27 +1,27 @@
 import type { GameState, GlobalGameState } from "@/hooks/useCardGame"
 
 import type {
-  ActionCardInfo,
-  CardModifier,
-  CardModifierIndice,
-  ColorClass,
   Cost,
-  GameCardIndice,
+  Upgrade,
+  ColorClass,
+  RawUpgrade,
+  CardModifier,
   GameCardInfo,
   GameCardState,
-  GameOverReason,
-  RawUpgrade,
-  Upgrade,
   UpgradeIndice,
+  ActionCardInfo,
+  GameOverReason,
+  GameCardIndice,
+  CardModifierIndice,
 } from "@/game-typings"
 
 import {
-  ENERGY_TO_MONEY,
-  GAME_ADVANTAGE,
-  INFINITE_DRAW_COST,
-  LOCAL_ADVANTAGE,
   MAX_HAND_SIZE,
+  GAME_ADVANTAGE,
   MONEY_TO_REACH,
+  ENERGY_TO_MONEY,
+  LOCAL_ADVANTAGE,
+  INFINITE_DRAW_COST,
   UPGRADE_COST_THRESHOLDS,
 } from "@/game-constants"
 
@@ -207,7 +207,7 @@ export function generateChoiceOptions(
       (!options?.exclude ||
         options?.exclude?.every((name) => name !== card.name)) &&
       (!options?.filter || options?.filter?.(card, state)) &&
-      (!card.effect(0).upgrade ||
+      (!card.effect(0, state).upgrade ||
         state.upgrades.length === 0 ||
         state.upgrades.every((u) => {
           const up = reviveUpgrade(u, state)
@@ -286,6 +286,13 @@ export function rankColor(rank: number) {
     "text-zinc-400": rank === 1,
     "text-orange-600": rank === 2,
   }
+}
+
+export function getUsableCost(cost: Cost, state: GameState): number {
+  return Math.max(
+    0,
+    Math.min(cost.type === "energy" ? state.energyMax : Infinity, cost.value),
+  )
 }
 
 export function resolveCost(resolvable: number | string): Cost {
@@ -388,9 +395,10 @@ export function applyGlobalCardModifiers(
 }
 
 export function canBeBuy(card: GameCardInfo<true>, state: GameState) {
+  const usableCost = getUsableCost(card.effect.cost, state)
   return card.effect.cost.type === "money"
-    ? state.money >= card.effect.cost.value
-    : state.energy + state.reputation >= card.effect.cost.value
+    ? state.money >= usableCost
+    : state.energy + state.reputation >= usableCost
 }
 
 export function willBeRemoved(state: GameState, card: GameCardInfo<true>) {
@@ -419,13 +427,14 @@ export function formatText(text: string) {
   return text
     .replace(
       /(\(.+?\))/g,
-      `<span style="position: relative; transform-style: preserve-3d">
+      `<span style="position: relative; transform-style: preserve-3d; display: inline-block; width: 0; height: 0.8em;">
         <span style="
-          display: inline-block; 
+          display: inline-block;
           position: absolute; 
           font-size: 12px; 
           white-space: nowrap;
-          transform: rotate(5deg) translateX(-50%) translateY(-30%) translateZ(10px);">$1</span>
+          top: 0;
+          transform: rotate(5deg) translateX(-50%) translateY(-30%) translateZ(5px);">$1</span>
       </span>`,
     )
     .replace(/MONEY_TO_REACH/g, String(MONEY_TO_REACH))
@@ -485,8 +494,10 @@ export function formatText(text: string) {
     )
 }
 
-export function clamp(min: number, value: number, max: number) {
-  return Math.min(Math.max(value, min), max)
+export function formatCoinFlipText(options: { heads: string; tails: string }) {
+  return formatText(
+    `Lance une pièce. <br/> Face: ${options.heads} <br/> Pile: ${options.tails}`,
+  )
 }
 
 export function formatUpgradeText(text: string, cumul: number) {
@@ -496,6 +507,32 @@ export function formatUpgradeText(text: string, cumul: number) {
       `<span style="color: #f59e0b; font-weight: bold">${cumul}</span>`,
     )
     .replace(/@s/g, cumul > 1 ? "s" : "")
+}
+
+// /**
+//  * Convert a list of actions to a human-readable text
+//  * @param actions
+//  */
+// export function actionsToText(actions): string {}
+
+export function clamp(min: number, value: number, max: number) {
+  return Math.min(Math.max(value, min), max)
+}
+
+export function smartClamp(
+  value: number,
+  min = 0,
+  max = Infinity,
+): {
+  value: number
+  rest: number
+  s: string
+} {
+  if (value < min)
+    return { value: min, rest: value - min, s: min > 1 ? "s" : "" }
+  if (value > max)
+    return { value: max, rest: value - max, s: max > 1 ? "s" : "" }
+  return { value, rest: 0, s: value > 1 ? "s" : "" }
 }
 
 export async function wait(ms?: number) {
@@ -581,18 +618,31 @@ export function reviveCard(
 
   if (!card) throw new Error(`Card ${indice} not found`)
 
-  const output: GameCardInfo<true> = {
+  const output: Omit<GameCardInfo<true>, "effect"> = {
     ...card,
     type: card.type,
     state: typeof indice !== "string" ? indice[1] : null,
     localAdvantage:
       typeof indice !== "string" ? indice[2] : LOCAL_ADVANTAGE.common,
-    effect: card.effect(
-      Math.max(0, GAME_ADVANTAGE[state.difficulty] - state.inflation),
-    ),
   }
 
-  return applyGlobalCardModifiers(state, output, clean)
+  return applyGlobalCardModifiers(
+    state,
+    {
+      ...output,
+      effect: card.effect(
+        Math.max(
+          0,
+          GAME_ADVANTAGE[state.difficulty] +
+            (typeof indice !== "string" ? indice[2] : LOCAL_ADVANTAGE.common) -
+            state.inflation,
+        ),
+        state,
+        output,
+      ),
+    },
+    clean,
+  )
 }
 
 export function reviveUpgrade(
@@ -634,7 +684,10 @@ export function parseSave(save: string, difficulty: Difficulty) {
     }),
   }
 
-  state.cards = generateCards(Math.max(0, baseAdvantage - state.inflation))
+  state.cards = generateCards(
+    Math.max(0, baseAdvantage - state.inflation),
+    state,
+  )
   state.rawUpgrades = generateUpgrades(
     Math.max(0, baseAdvantage - state.inflation),
   )

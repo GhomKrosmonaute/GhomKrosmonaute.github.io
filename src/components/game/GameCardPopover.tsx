@@ -5,7 +5,7 @@ import {
 } from "@/components/ui/hover-card.tsx"
 import React from "react"
 import type { GameCardInfo } from "@/game-typings.ts"
-import { energyCostColor } from "@/game-utils.ts"
+import { energyCostColor, getUsableCost } from "@/game-utils.ts"
 import { useCardGame } from "@/hooks/useCardGame.ts"
 import { GameValueIcon } from "@/components/game/GameValueIcon.tsx"
 import { GameMoneyIcon } from "@/components/game/GameMoneyIcon.tsx"
@@ -15,7 +15,7 @@ export const GameCardPopover = (
     card: GameCardInfo<true>
   }>,
 ) => {
-  const energy = useCardGame((state) => state.energy)
+  const state = useCardGame()
 
   return (
     <HoverCard openDelay={0} closeDelay={0}>
@@ -24,14 +24,17 @@ export const GameCardPopover = (
         <div className="flex mb-2 gap-2">
           {props.card.effect.cost.type === "energy" ? (
             <GameValueIcon
-              value={props.card.effect.cost.value}
-              colors={energyCostColor({ energy }, props.card.effect.cost.value)}
+              value={getUsableCost(props.card.effect.cost, state)}
+              colors={energyCostColor(state, props.card.effect.cost.value)}
               isCost
               miniature
               className="w-5 h-5"
             />
           ) : (
-            <GameMoneyIcon value={props.card.effect.cost.value} miniature />
+            <GameMoneyIcon
+              value={getUsableCost(props.card.effect.cost, state)}
+              miniature
+            />
           )}
           <h2>{props.card.name}</h2>
         </div>

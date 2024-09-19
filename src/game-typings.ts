@@ -37,7 +37,11 @@ export type RawUpgrade = Pick<
   max?: number
 }
 
-export type EffectBuilder = (advantage: number) => Effect
+export type EffectBuilder = (
+  advantage: number,
+  state: GameState,
+  card?: Omit<GameCardInfo<true>, "effect">,
+) => Effect
 
 export type Cost = {
   value: number

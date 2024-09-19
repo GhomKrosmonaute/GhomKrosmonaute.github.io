@@ -10,7 +10,7 @@ export default function generateUpgrades(advantage: number): RawUpgrade[] {
   return [
     {
       name: "Starbucks",
-      eventName: "onPlay",
+      eventName: "daily",
       description: "Rend @cumul @energy@s",
       image: "starbucks.png",
       condition: (state) => state.energy < state.energyMax,
@@ -55,7 +55,7 @@ export default function generateUpgrades(advantage: number): RawUpgrade[] {
     },
     {
       name: "Recyclage",
-      eventName: "onDraw",
+      eventName: "weekly",
       description: "Recycle @cumul carte@s aléatoire@s de la défausse",
       image: "recyclage.png",
       condition: (state) => state.discard.length > 0,
@@ -67,7 +67,7 @@ export default function generateUpgrades(advantage: number): RawUpgrade[] {
     },
     {
       name: "I.A",
-      eventName: "onDraw",
+      eventName: "weekly",
       description: "Gagne @cumulM$ par carte en défausse",
       image: "ia.png",
       condition: (state) => state.discard.length > 0,
@@ -96,7 +96,7 @@ export default function generateUpgrades(advantage: number): RawUpgrade[] {
     },
     {
       name: "PC Puissant",
-      eventName: "onDraw",
+      eventName: "onPlay",
       description: "Gagne @cumulM$ par @energy",
       image: "pc-puissant.png",
       condition: (state) => state.energy > 0,
@@ -111,7 +111,7 @@ export default function generateUpgrades(advantage: number): RawUpgrade[] {
     },
     {
       name: "Stagiaire",
-      eventName: "onDraw",
+      eventName: "onPlay",
       description: "Gagne @cumulM$ par cartes en main",
       image: "stagiaire.png",
       condition: (state) => state.hand.length > 0,

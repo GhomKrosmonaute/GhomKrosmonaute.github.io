@@ -55,14 +55,9 @@ const cardModifiers = {
         ...card.effect,
         cost: {
           type: card.effect.cost.type,
-          value: Math.max(
-            0,
+          value:
             card.effect.cost.value -
-              costTo(
-                { value: discount, type: "energy" },
-                card.effect.cost.type,
-              ),
-          ),
+            costTo({ value: discount, type: "energy" }, card.effect.cost.type),
         },
       },
     }),

@@ -12,17 +12,39 @@ import { EventText } from "@/components/game/EventText.tsx"
 
 import effects from "@/data/effects.ts"
 import generateUpgrades from "@/data/upgrades.ts"
+import type { GameState, GlobalGameState } from "@/hooks/useCardGame.ts"
 
 /**
  * @param advantage is only transmitted to generateUpgrades
+ * @param fakeState
  */
-export default function generateCards(advantage: number): GameCardInfo[] {
+export default function generateCards(
+  advantage: number,
+  fakeState: GameState & GlobalGameState,
+): GameCardInfo[] {
   const upgrades = generateUpgrades(advantage)
 
   const supportEffects = effects.filter(
-    (effect) => effect(0).type === "support",
+    (effect) => effect(0, fakeState).type === "support",
   )
-  const actionEffects = effects.filter((effect) => effect(0).type === "action")
+  const actionEffects = effects.filter(
+    (effect) => effect(0, fakeState).type === "action",
+  )
+
+  console[supportEffects.length > technos.length ? "error" : "log"](
+    "loaded",
+    supportEffects.length,
+    "supports /",
+    technos.length,
+    "technos",
+  )
+  console[actionEffects.length > projects.length ? "error" : "log"](
+    "loaded",
+    actionEffects.length,
+    "actions /",
+    projects.length,
+    "projects",
+  )
 
   const supports: GameCardInfo[] = technos.map((techno, i) => {
     const mapping = map(i, 0, technos.length, 0, supportEffects.length, true)

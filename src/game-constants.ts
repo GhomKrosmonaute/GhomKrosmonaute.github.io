@@ -10,9 +10,9 @@ export const GAME_ADVANTAGE = {
 }
 
 export const LOCAL_ADVANTAGE = {
-  legendary: 3,
-  epic: 2,
-  rare: 1,
+  legendary: 10,
+  epic: 5,
+  rare: 2,
   common: 0,
 }
 
@@ -23,7 +23,7 @@ export const MONEY_TO_REACH = 10_000 // en M$
 export const INFINITE_DRAW_COST = 5
 export const UPGRADE_COST_THRESHOLDS = {
   money: [20, 50, 75, 100, 150, 250, 500, 1_000, 2_500, 5_000, 10_000],
-  energy: [5, 7, 10, 15, 20, 28],
+  energy: [5, 7, 10, 15],
 }
 
 /**
@@ -46,3 +46,12 @@ export const REPUTATION_TO_ENERGY = 10
  * 1 energy = 0.08 day
  */
 export const ENERGY_TO_DAYS = 0.07
+
+export const ACTIONS_COST = {
+  draw: 1,
+  drawSpecific: 2,
+  gainEnergy: 1,
+  gainReputation: REPUTATION_TO_ENERGY,
+  condition: -1,
+  hardCondition: -2,
+} as const
