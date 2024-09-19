@@ -13,6 +13,7 @@ import type {
 } from "@/game-typings"
 
 import { useCardGame } from "@/hooks/useCardGame.ts"
+import { useSettings } from "@/hooks/useSettings.ts"
 
 import {
   canBeBuy,
@@ -21,14 +22,13 @@ import {
   getUsableCost,
   isActionCardInfo,
 } from "@/game-utils.ts"
+import { cn } from "@/utils.ts"
+import { LOCAL_ADVANTAGE } from "@/game-constants.ts"
 
 import { GameMoneyIcon } from "@/components/game/GameMoneyIcon.tsx"
 import { Tilt, TiltFoil } from "@/components/game/Tilt.tsx"
 import { GameValueIcon } from "@/components/game/GameValueIcon.tsx"
 import { BorderLight } from "@/components/ui/border-light.tsx"
-import { useSettings } from "@/hooks/useSettings.ts"
-import { cn } from "@/utils.ts"
-import { LOCAL_ADVANTAGE } from "@/game-constants.ts"
 
 export const GameCard = (
   props: React.PropsWithoutRef<{
@@ -51,7 +51,6 @@ export const GameCard = (
     return {
       ...state,
       canBeBuy: canBeBuy(props.card, state),
-      handSize: state.hand.length,
       canTriggerEffect:
         !props.card.effect.condition ||
         props.card.effect.condition(state, props.card),
@@ -60,7 +59,7 @@ export const GameCard = (
 
   const positionFromCenter =
     typeof props.position === "number"
-      ? props.position - (game.handSize - 1) / 2
+      ? props.position - (game.hand.length - 1) / 2
       : 0
 
   const notAllowed = props.isChoice
@@ -116,7 +115,7 @@ export const GameCard = (
           }
         } else {
           if (game.choiceOptions.length > 0 && !notAllowed) {
-            await game.pickCard(props.card)
+            await game.pickOption(props.card)
           }
         }
       }}
@@ -176,6 +175,13 @@ export const GameCard = (
               "transition-shadow duration-200 ease-in-out hover:shadow-glow-20 shadow-primary":
                 quality.shadows,
               "shadow-glow-20 shadow-primary": props.card.state === "selected",
+            },
+            "ring-2",
+            {
+              "ring-common/50": rarityName === "common",
+              "ring-rare/50": rarityName === "rare",
+              "ring-epic/50": rarityName === "epic",
+              "ring-legendary/50": rarityName === "legendary",
             },
           )}
         >

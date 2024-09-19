@@ -7,14 +7,14 @@ export const GAME_ADVANTAGE = {
   normal: 2,
   hard: 1,
   veteran: 0,
-}
+} as const
 
 export const LOCAL_ADVANTAGE = {
   legendary: 10,
   epic: 5,
   rare: 2,
   common: 0,
-}
+} as const
 
 export const MAX_ENERGY = 20
 export const MAX_HAND_SIZE = 8
@@ -45,7 +45,7 @@ export const REPUTATION_TO_ENERGY = 10
 /**
  * 1 energy = 0.08 day
  */
-export const ENERGY_TO_DAYS = 0.07
+export const ENERGY_TO_DAYS = 0.12
 
 export const ACTIONS_COST = {
   draw: 1,

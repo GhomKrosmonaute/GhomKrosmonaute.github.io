@@ -13,6 +13,7 @@ import type {
   GameOverReason,
   GameCardIndice,
   CardModifierIndice,
+  GameResource,
 } from "@/game-typings"
 
 import {
@@ -23,6 +24,7 @@ import {
   LOCAL_ADVANTAGE,
   INFINITE_DRAW_COST,
   UPGRADE_COST_THRESHOLDS,
+  MAX_REPUTATION,
 } from "@/game-constants"
 
 import { defaultSettings, Difficulty, Settings } from "@/game-settings.ts"
@@ -37,6 +39,17 @@ export enum GlobalCardModifierIndex {
   AddOrSubtract = 1,
   MultiplyOrDivide = 2,
   Last = 3,
+}
+
+export function omit<T extends object, K extends keyof T>(
+  item: T,
+  ...keys: K[]
+): Omit<T, K> {
+  const clone = { ...item }
+  for (const key of keys) {
+    delete clone[key]
+  }
+  return clone
 }
 
 export function isGameCardIndice(input: object): input is GameCardIndice {
@@ -69,31 +82,36 @@ export function includeCard(
 /**
  * Update the state of a card in a list of cards
  */
-export function updateCardState(
-  from: GameCardIndice[],
+export function updateCardState<T extends (GameCardIndice | GameResource)[]>(
+  from: T,
   newState: GameCardState,
-): GameCardIndice[]
-export function updateCardState(
-  from: GameCardIndice[],
+): T
+export function updateCardState<T extends (GameCardIndice | GameResource)[]>(
+  from: T,
   cardName: string | string[],
   newState: GameCardState,
-): GameCardIndice[]
-export function updateCardState(
-  from: GameCardIndice[],
+): T
+export function updateCardState<T extends (GameCardIndice | GameResource)[]>(
+  from: T,
   cardName: string | string[] | GameCardState,
   newState?: GameCardState,
-): GameCardIndice[] {
+): T {
   if (arguments.length === 2) {
     return from.map((c) => {
-      return [c[0], cardName as GameCardState, c[2]]
-    })
+      return isGameResource(c)
+        ? [c[0], cardName as GameCardState, c[2], c[3]]
+        : [c[0], cardName as GameCardState, c[2]]
+    }) as T
   } else {
     const toUpdate: string[] =
       typeof cardName === "string" ? [cardName] : cardName!
     return from.map((c) => {
-      if (toUpdate.includes(c[0])) return [c[0], newState!, c[2]]
+      if (toUpdate.includes(c[0]))
+        return isGameResource(c)
+          ? [c[0], newState!, c[2], c[3]]
+          : [c[0], newState!, c[2]]
       return c
-    })
+    }) as T
   }
 }
 
@@ -134,7 +152,7 @@ export function updateGameAutoSpeed(state: GameState): number {
 
 export function getGameSpeed(): number {
   return log(
-    "getGameSpeed",
+    "anim",
     Number(
       getComputedStyle(document.documentElement)
         .getPropertyValue("--game-speed")
@@ -186,17 +204,33 @@ export function generateRandomAdvantage(): number {
   return LOCAL_ADVANTAGE.common
 }
 
+export function generateRandomResource(state: GameState): GameResource {
+  const quantity = generateRandomAdvantage()
+  const type = Math.random()
+  const id = Math.random().toFixed(5)
+
+  if (type < 0.48) {
+    return [id, "drawing", 10 * Math.max(1, quantity), "money"]
+  } else if (type < 0.96) {
+    return [id, "drawing", clamp(5, 5 * quantity, state.energyMax), "energy"]
+  } else {
+    return [id, "drawing", clamp(1, quantity, MAX_REPUTATION), "reputation"]
+  }
+}
+
 export function generateChoiceOptions(
   state: GameState & GlobalGameState,
   options?: ChoiceOptionsGeneratorOptions,
-): GameCardIndice[] {
+): (GameCardIndice | GameResource)[] {
   state.setOperationInProgress("choices", true)
 
-  const _cards = state.cards.filter(
+  const _cards: (GameCardInfo | GameResource)[] = state.cards.filter(
     (card) =>
       (state.choiceOptions.length === 0 ||
         state.choiceOptions.every(
-          (o) => o.length === 0 || o.every((i) => i[0] !== card.name),
+          (o) =>
+            o.length === 0 ||
+            o.every((i) => !isGameResource(i) && i[0] !== card.name),
         )) &&
       (state.draw.length === 0 ||
         state.draw.every(([name]) => name !== card.name)) &&
@@ -215,19 +249,24 @@ export function generateChoiceOptions(
         })),
   )
 
-  if (_cards.length === 0) {
-    return []
+  if (_cards.length < state.choiceOptionCount) {
+    while (_cards.length < state.choiceOptionCount) {
+      _cards.push(generateRandomResource(state))
+    }
+  } else {
+    const length = _cards.length
+    for (let i = 0; i < Math.ceil(length / 10); i++) {
+      _cards.push(generateRandomResource(state))
+    }
   }
 
-  const outputOptions: string[] = shuffle(_cards, 3)
+  return shuffle(_cards, 3)
     .slice(0, state.choiceOptionCount)
-    .map((c) => c.name)
-
-  return outputOptions.map((name) => [
-    name,
-    "drawing",
-    generateRandomAdvantage(),
-  ])
+    .map((option) =>
+      isGameResource(option)
+        ? option
+        : [option.name, "drawing", generateRandomAdvantage()],
+    )
 }
 
 export function getDeck(
@@ -245,6 +284,17 @@ export function energyCostColor(
     : state.energy > 0
       ? ["bg-energy", "bg-reputation"]
       : "bg-reputation"
+}
+
+export function isGameResource<T>(option: T): option is T & GameResource {
+  const is =
+    Array.isArray(option) &&
+    option.length === 4 &&
+    typeof option[3] === "string"
+
+  console.trace("isGameResource", is, option)
+
+  return is
 }
 
 export function isNewSprint(day: number) {
@@ -610,7 +660,7 @@ export function reviveCardModifier(indice: CardModifierIndice): CardModifier {
 export function reviveCard(
   indice: GameCardIndice | string,
   state: GameState,
-  clean = false,
+  clean?: boolean,
 ): GameCardInfo<true> {
   const card = state.cards.find((c) =>
     typeof indice === "string" ? c.name === indice : c.name === indice[0],
@@ -691,6 +741,7 @@ export function parseSave(save: string, difficulty: Difficulty) {
   state.rawUpgrades = generateUpgrades(
     Math.max(0, baseAdvantage - state.inflation),
   )
+  state.revivedHand = []
 
   return state
 }

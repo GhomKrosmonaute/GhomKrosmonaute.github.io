@@ -18,6 +18,9 @@
 .game-card.removing {
   animation: disappear var(--game-speed) ease-out forwards;
 }
+.game-card.landing {
+  animation: landing var(--game-speed) ease-in-out forwards;
+}
 
 .inset-shadow:after {
   box-shadow: inset 0 0 15px 0 black;
@@ -121,6 +124,20 @@
   }
   100% {
     left: 0;
+    opacity: 1;
+    scale: 1;
+    top: 0;
+  }
+}
+
+/* move to the center */
+@keyframes landing {
+  0% {
+    opacity: 0;
+    scale: 1.5;
+    top: -50px;
+  }
+  100% {
     opacity: 1;
     scale: 1;
     top: 0;

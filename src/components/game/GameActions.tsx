@@ -8,14 +8,16 @@ import {
   energyCostColor,
   formatText,
   isGameOver,
+  isGameResource,
   isNewSprint,
   reviveCard,
   wait,
 } from "@/game-utils"
 
 import { Button } from "@/components/ui/button.tsx"
-import { GameValueIcon } from "@/components/game/GameValueIcon.tsx"
 import { GameCard } from "@/components/game/GameCard.tsx"
+import { GameValueIcon } from "@/components/game/GameValueIcon.tsx"
+import { GameResourceCard } from "@/components/game/GameResourceCard.tsx"
 
 import { useCardGame } from "@/hooks/useCardGame.ts"
 import { useSettings } from "@/hooks/useSettings.ts"
@@ -172,13 +174,17 @@ export const GameActions = (props: { show: boolean }) => {
                       hidden: game.choiceOptions[0].length !== 1,
                     })}
                   />
-                  {game.choiceOptions[0].map((indice, i) => (
-                    <GameCard
-                      key={i}
-                      card={reviveCard(indice, game)}
-                      isChoice
-                    />
-                  ))}
+                  {game.choiceOptions[0].map((indice, i) =>
+                    isGameResource(indice) ? (
+                      <GameResourceCard key={i} resource={indice} />
+                    ) : (
+                      <GameCard
+                        key={i}
+                        card={reviveCard(indice, game)}
+                        isChoice
+                      />
+                    ),
+                  )}
                 </div>
               )
             })()}

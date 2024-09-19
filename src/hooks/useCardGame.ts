@@ -19,6 +19,7 @@ import type {
   GameMethodOptions,
   CardModifierIndice,
   MethodWhoCheckIfGameOver,
+  GameResource,
 } from "@/game-typings"
 
 import {
@@ -48,11 +49,13 @@ import {
   isNewSprint,
   includeCard,
   costToEnergy,
-  getGameSpeed,
   handleErrors,
+  getUsableCost,
   reviveUpgrade,
+  getSortedHand,
   fetchSettings,
   willBeRemoved,
+  isGameResource,
   upgradeToIndice,
   updateCardState,
   cardInfoToIndice,
@@ -61,7 +64,6 @@ import {
   generateChoiceOptions,
   generateRandomAdvantage,
   GlobalCardModifierIndex,
-  getUsableCost,
 } from "@/game-utils.ts"
 
 import { metadata } from "@/game-metadata.ts"
@@ -98,7 +100,7 @@ export interface GameState {
   error: Error | null
   handleError: <T>(error: T) => T
   choiceOptionCount: number
-  choiceOptions: GameCardIndice[][]
+  choiceOptions: (GameCardIndice | GameResource)[][]
   logs: GameLog[]
   notification: GameNotification[]
   operationInProgress: string[]
@@ -111,6 +113,7 @@ export interface GameState {
   draw: GameCardIndice[]
   discard: GameCardIndice[]
   hand: GameCardIndice[]
+  revivedHand: GameCardInfo<true>[]
   upgrades: UpgradeIndice[]
   globalCardModifiers: CardModifierIndice[]
   score: number
@@ -147,7 +150,7 @@ export interface GameState {
     name: CardModifierName,
     params: Parameters<(typeof cardModifiers)[CardModifierName]>,
     index: number,
-  ) => unknown
+  ) => Promise<void>
   drawCard: (
     count: number,
     options: GameMethodOptions &
@@ -169,7 +172,7 @@ export interface GameState {
     options: GameMethodOptions & { free?: boolean },
   ) => Promise<void>
   skip: (options: MethodWhoLog) => Promise<void>
-  pickCard: (card: GameCardInfo<true>) => Promise<void>
+  pickOption: (card: GameCardInfo<true> | GameResource) => Promise<void>
   win: () => void
   defeat: (reason: GameOverReason) => void
   reset: () => void
@@ -181,6 +184,7 @@ function generateFakeState(): GameState & GlobalGameState {
     inflation: 0,
     energy: 0,
     discard: [],
+    revivedHand: [],
     infinityMode: false,
     reason: null,
     notification: [],
@@ -222,7 +226,7 @@ function generateFakeState(): GameState & GlobalGameState {
     setOperationInProgress: () => {},
     increments: async () => {},
     incrementsInflation: () => {},
-    addGlobalCardModifier: () => {},
+    addGlobalCardModifier: async () => {},
     setDebug: () => {},
     checkAchievements: async () => {},
     checkDiscoveries: () => {},
@@ -244,7 +248,7 @@ function generateFakeState(): GameState & GlobalGameState {
     drawCard: async () => {},
     enableInfinityMode: () => {},
     handleError: (t) => t,
-    pickCard: async () => {},
+    pickOption: async () => {},
     playCard: async () => {},
     reset: () => {},
     win: () => {},
@@ -511,6 +515,7 @@ function generateGameState(): Omit<
     hand: startingDeck
       .slice(0, MAX_HAND_SIZE - 2)
       .map((name) => [name, "idle", LOCAL_ADVANTAGE.common]),
+    revivedHand: [],
     playZone: [],
     discard: [],
     upgrades: [],
@@ -614,6 +619,8 @@ function generateGameMethods(
 
         const result = Math.random() > 0.5
         const resultName = result ? "Face" : "Pile"
+
+        console.log("playZone", state.playZone.toString())
 
         const card = reviveCard(
           state.playZone[state.playZone.length - 1],
@@ -1131,6 +1138,8 @@ function generateGameMethods(
             globalCardModifiers: [...state.globalCardModifiers, indice],
           }
         })
+
+        await wait()
       })
     },
 
@@ -1403,18 +1412,33 @@ function generateGameMethods(
         const removing = willBeRemoved(getState(), card)
         const recycling = card.effect.recycle
 
-        if (removing) {
-          wait(getGameSpeed() / 2).then(() => bank.remove.play())
-        }
-
         const firstState = removing ? "removing" : "playing"
 
         // on active l'animation de la carte en la déplaçant dans la playZone si besoin
         if (card.effect.needsPlayZone) {
-          set({
-            playZone: [...state.playZone, cardInfoToIndice(card)],
+          // animation de la carte vers la playZone
+          set((state) => ({
+            hand: updateCardState(state.hand, card.name, "playing"),
+          }))
+
+          await wait()
+
+          // on change l'animation de la carte et on la place dans la playZone
+          set((state) => ({
+            playZone: updateCardState(
+              [...state.playZone, cardInfoToIndice(card)],
+              card.name,
+              "landing",
+            ),
             hand: excludeCard(state.hand, card.name),
-          })
+          }))
+
+          await wait()
+
+          // on retire l'animation
+          set((state) => ({
+            playZone: updateCardState(state.playZone, card.name, "idle"),
+          }))
         } else {
           set((state) => ({
             hand: updateCardState(state.hand, card.name, firstState),
@@ -1423,6 +1447,7 @@ function generateGameMethods(
 
         const cleanupAndFinish = async () => {
           if (recycling) bank.recycle.play()
+          if (removing) bank.remove.play()
 
           if (card.effect.needsPlayZone) {
             set((state) => ({
@@ -1495,11 +1520,14 @@ function generateGameMethods(
       })
     },
 
-    pickCard: async (card) => {
+    pickOption: async (option) => {
       await handleErrorsAsync(getState, async () => {
         const state = getState()
 
-        state.setOperationInProgress(`pick ${card.name}`, true)
+        state.setOperationInProgress(
+          `pick ${isGameResource(option) ? option[0] : option.name}`,
+          true,
+        )
 
         // on joue le son de la banque
         bank.gain.play()
@@ -1509,68 +1537,114 @@ function generateGameMethods(
         set({
           choiceOptions: state.choiceOptions.map((options) => {
             return options.map((c) => {
-              if (c[0] === card.name) {
-                return [c[0], "playing", c[2]]
-              }
-              return [c[0], "removing", c[2]]
+              return isGameResource(option)
+                ? ([
+                    c[0],
+                    c[0] === option[0] ? "playing" : "removing",
+                    c[2],
+                    c[3],
+                  ] as GameResource)
+                : ([
+                    c[0],
+                    c[0] === option.name ? "playing" : "removing",
+                    c[2],
+                  ] as GameCardIndice)
             })
           }),
         })
 
-        await Promise.all([
-          (async () => {
-            // on attend la fin de l'animation "played"
-
-            await wait()
-
-            // on retire l'animation de "played" et on ajoute la carte à la pioche
-
-            set((state) => ({
-              choiceOptions: state.choiceOptions.map((options) => {
-                return updateCardState(options, card.name, "removed")
-              }),
-            }))
-          })(),
-          (async () => {
-            // on attend la fin de l'animation "removed"
-
-            await wait()
-
-            // on retire l'animation de "removed"
-
-            set((state) => ({
-              choiceOptions: state.choiceOptions.map((options) => {
-                return updateCardState(options, null)
-              }),
-            }))
-          })(),
-        ])
-
-        // on retire un groupe de choix et on ajoute la carte à la pioche
-
-        set((state) => {
-          const to = state.hand.length < MAX_HAND_SIZE ? "hand" : "draw"
-
-          return {
-            choiceOptions: state.choiceOptions.slice(1),
-            [to]:
-              to === "draw"
-                ? shuffle([...state.draw, cardInfoToIndice(card)], 3)
-                : [
-                    ...state.hand,
-                    cardInfoToIndice(card, "drawing") satisfies GameCardIndice,
-                  ],
+        if (isGameResource(option)) {
+          switch (option[3]) {
+            case "money":
+              await state.addMoney(option[2], {
+                reason: "Ressource",
+                skipGameOverPause: true,
+              })
+              break
+            case "reputation":
+              await state.addReputation(option[2], {
+                reason: "Ressource",
+                skipGameOverPause: true,
+              })
+              break
+            case "energy":
+              await state.addEnergy(option[2], {
+                reason: "Ressource",
+                skipGameOverPause: true,
+              })
+              break
           }
-        })
 
-        await wait()
+          // on attend la fin de l'animation "played"
 
-        // on passe les cartes en idle
-        set((state) => ({
-          hand: updateCardState(state.hand, "idle"),
-        }))
+          await wait()
 
-        state.setOperationInProgress(`pick ${card.name}`, false)
+          set((state) => ({
+            choiceOptions: state.choiceOptions.map((options) => {
+              return updateCardState(options, option[0], "removed")
+            }),
+          }))
+
+          set((state) => ({
+            choiceOptions: state.choiceOptions.map((options) => {
+              return updateCardState(options, null)
+            }),
+          }))
+
+          // on retire un groupe de choix et on ajoute la carte à la pioche
+
+          set((state) => ({
+            choiceOptions: state.choiceOptions.slice(1),
+          }))
+        } else {
+          // on attend la fin de l'animation "played"
+
+          await wait()
+
+          set((state) => ({
+            choiceOptions: state.choiceOptions.map((options) => {
+              return updateCardState(options, option.name, "removed")
+            }),
+          }))
+
+          set((state) => ({
+            choiceOptions: state.choiceOptions.map((options) => {
+              return updateCardState(options, null)
+            }),
+          }))
+
+          // on retire un groupe de choix et on ajoute la carte à la pioche
+
+          set((state) => {
+            const to = state.hand.length < MAX_HAND_SIZE ? "hand" : "draw"
+
+            return {
+              choiceOptions: state.choiceOptions.slice(1),
+              [to]:
+                to === "draw"
+                  ? shuffle([...state.draw, cardInfoToIndice(option)], 3)
+                  : [
+                      ...state.hand,
+                      cardInfoToIndice(
+                        option,
+                        "drawing",
+                      ) satisfies GameCardIndice,
+                    ],
+            }
+          })
+
+          await wait()
+
+          // on passe les cartes en idle
+          set((state) => ({
+            hand: updateCardState(state.hand, "idle"),
+          }))
+
+          state.setOperationInProgress(
+            `pick ${isGameResource(option) ? option[0] : option.name}`,
+            false,
+          )
+        }
       })
     },
 
@@ -1620,6 +1694,8 @@ export const useCardGame = create<GameState & GlobalGameState>(
     state.discoveries = Array.from(
       new Set([...state.discoveries, ...getDeck(state).map(([name]) => name)]),
     )
+
+    state.revivedHand = getSortedHand(state.hand, state)
 
     return state
   },
@@ -1680,6 +1756,7 @@ useCardGame.subscribe(async (state, prevState) => {
             | keyof ReturnType<typeof generateGameMethods>
             | "cards"
             | "rawUpgrades"
+            | "revivedHand"
           >,
           (key, value) => {
             if (typeof value === "function" && !(key in state)) return undefined
@@ -1687,6 +1764,16 @@ useCardGame.subscribe(async (state, prevState) => {
           },
         ),
       )
+
+      // si la main change, on met a jour les revived cards
+      if (
+        state.hand.join(",") !== prevState.hand.join("") ||
+        state.inflation !== prevState.inflation ||
+        state.globalCardModifiers.join(",") !==
+          prevState.globalCardModifiers.join(",")
+      ) {
+        state.revivedHand = getSortedHand(state.hand, state)
+      }
 
       // si aucune opération n'est en cours
       if (

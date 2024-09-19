@@ -69,7 +69,7 @@ export default function App() {
   }, [])
 
   React.useEffect(() => {
-    if (!largeScreen && process.env.NODE_ENV !== "development") {
+    if (!largeScreen && import.meta.env.PROD) {
       setCardGameVisibility(false)
     }
   }, [largeScreen])
@@ -150,7 +150,7 @@ export default function App() {
 
       <RouterProvider router={router} />
 
-      {(process.env.NODE_ENV === "development" || largeScreen) && (
+      {(import.meta.env.DEV || largeScreen) && (
         <React.Suspense>
           <Game />
         </React.Suspense>

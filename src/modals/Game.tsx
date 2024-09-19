@@ -81,7 +81,7 @@ export const Game = () => {
         <GameTutorial show={show} />
         <EventNotifier show={show} />
 
-        {(process.env.NODE_ENV === "development" || debug) && <GameDebug />}
+        {(import.meta.env.DEV || debug) && <GameDebug />}
       </CrashReportProvider>
     </TutorialProvider>
   )

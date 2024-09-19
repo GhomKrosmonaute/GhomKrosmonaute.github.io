@@ -92,6 +92,7 @@ export interface SupportCardInfo<Resolved = false> {
 }
 
 export type GameCardState =
+  | "landing"
   | "selected"
   | "playing"
   | "discarding"
@@ -105,6 +106,13 @@ export type GameCardState =
 export type GameCardInfo<Resolved = false> =
   | ActionCardInfo<Resolved>
   | SupportCardInfo<Resolved>
+
+export type GameResource = [
+  id: string,
+  state: GameCardState,
+  value: number,
+  type: "money" | "reputation" | "energy",
+]
 
 export type CardModifier = {
   condition?: (

@@ -15,7 +15,6 @@ import {
   resolveCost,
   costToEnergy,
   getUsableCost,
-  getSortedHand,
   formatCoinFlipText,
   GlobalCardModifierIndex,
 } from "@/game-utils.ts"
@@ -153,10 +152,7 @@ const effects: EffectBuilder[] = [
     let target: GameCardInfo<true> | null = null
 
     if (card) {
-      const hand = getSortedHand(
-        state.hand.filter(([name]) => name !== card.name),
-        state,
-      )
+      const hand = state.revivedHand.filter((c) => c.name !== card.name)
 
       target = hand[hand.length - 1]
     }
@@ -172,10 +168,7 @@ const effects: EffectBuilder[] = [
         }`,
       ),
       onPlayed: async (state, card, reason) => {
-        const hand = getSortedHand(
-          state.hand.filter(([name]) => name !== card.name),
-          state,
-        )
+        const hand = state.revivedHand.filter((c) => c.name !== card.name)
 
         await state.playCard(hand[hand.length - 1], {
           free: true,
@@ -198,10 +191,7 @@ const effects: EffectBuilder[] = [
         }
       },
       condition: (state, card) => {
-        const hand = getSortedHand(
-          state.hand.filter(([name]) => name !== card.name),
-          state,
-        )
+        const hand = state.revivedHand.filter((c) => c.name !== card.name)
         const target = hand[hand.length - 1]
 
         if (!target) return false
@@ -219,10 +209,7 @@ const effects: EffectBuilder[] = [
     let target: GameCardInfo<true> | null = null
 
     if (card) {
-      const hand = getSortedHand(
-        state.hand.filter(([name]) => name !== card.name),
-        state,
-      )
+      const hand = state.revivedHand.filter((c) => c.name !== card.name)
 
       target = hand[hand.length - 1]
     }
@@ -242,10 +229,7 @@ const effects: EffectBuilder[] = [
         }${advantage > 0 ? ` et gagne ${advantage * ENERGY_TO_MONEY}M$` : ""}`,
       ),
       onPlayed: async (state, card, reason) => {
-        const hand = getSortedHand(
-          state.hand.filter(([name]) => name !== card.name),
-          state,
-        )
+        const hand = state.revivedHand.filter((c) => c.name !== card.name)
         const target = hand[hand.length - 1]
 
         await state.discardCard({
@@ -266,10 +250,7 @@ const effects: EffectBuilder[] = [
         }
       },
       condition: (state, card) => {
-        const hand = getSortedHand(
-          state.hand.filter(([name]) => name !== card.name),
-          state,
-        )
+        const hand = state.revivedHand.filter((c) => c.name !== card.name)
         const target = hand[hand.length - 1]
 
         return target && target.effect.cost.value > 0
@@ -644,7 +625,7 @@ const effects: EffectBuilder[] = [
       },
       type: "support",
       cost: resolveCost(price.value),
-      waitBeforePlay: true,
+      needsPlayZone: true,
     }
   },
   (advantage: number) => {
@@ -849,7 +830,7 @@ const effects: EffectBuilder[] = [
         }`,
       ),
       onPlayed: async (state, _, reason) => {
-        state.addGlobalCardModifier(
+        await state.addGlobalCardModifier(
           "next card half cost",
           [],
           GlobalCardModifierIndex.MultiplyOrDivide,
@@ -888,7 +869,7 @@ const effects: EffectBuilder[] = [
         }`,
       ),
       onPlayed: async (state, _, reason) => {
-        state.addGlobalCardModifier(
+        await state.addGlobalCardModifier(
           "next money card cost energy",
           [],
           GlobalCardModifierIndex.Last,
@@ -931,7 +912,7 @@ const effects: EffectBuilder[] = [
           .filter((c) => c.name !== card.name && card.effect.cost.value > 0)
           .map((c) => c.name)
 
-        state.addGlobalCardModifier(
+        await state.addGlobalCardModifier(
           "lowers price of hand cards",
           [handCardNames, effect.value],
           GlobalCardModifierIndex.AddOrSubtract,
@@ -952,6 +933,7 @@ const effects: EffectBuilder[] = [
       type: "support",
       cost: resolveCost(price.value),
       ephemeral: true,
+      needsPlayZone: true,
     }
   },
   (advantage, state) => {

@@ -104,6 +104,22 @@ module.exports = {
           DEFAULT: "hsl(var(--inflation))",
           foreground: "hsl(var(--inflation-foreground))",
         },
+        common: {
+          DEFAULT: "hsl(var(--common))",
+          foreground: "hsl(var(--common-foreground))",
+        },
+        rare: {
+          DEFAULT: "hsl(var(--rare))",
+          foreground: "hsl(var(--rare-foreground))",
+        },
+        epic: {
+          DEFAULT: "hsl(var(--epic))",
+          foreground: "hsl(var(--epic-foreground))",
+        },
+        legendary: {
+          DEFAULT: "hsl(var(--legendary))",
+          foreground: "hsl(var(--legendary-foreground))",
+        },
       },
       boxShadow: {
         "glow-20": "0 0 20px var(--tw-shadow-color)",

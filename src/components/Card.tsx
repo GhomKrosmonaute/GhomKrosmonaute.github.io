@@ -2,6 +2,7 @@ import React from "react"
 import { cn } from "@/utils.ts"
 import { BorderLight } from "@/components/ui/border-light.tsx"
 import { useSettings } from "@/hooks/useSettings.ts"
+import { omit } from "@/game-utils.ts"
 
 export const Card = React.forwardRef<
   HTMLDivElement,
@@ -9,7 +10,7 @@ export const Card = React.forwardRef<
     React.PropsWithChildren<{
       borderLightAppearOnHover?: boolean
     }>
->(({ borderLightAppearOnHover, ...props }, ref) => {
+>((props, ref) => {
   const quality = useSettings((state) => ({
     transparency: state.quality.transparency,
     cardBlur: state.quality.blur,
@@ -17,7 +18,7 @@ export const Card = React.forwardRef<
 
   return (
     <div
-      {...props}
+      {...omit(props, "borderLightAppearOnHover")}
       ref={ref}
       className={cn(
         {
@@ -34,12 +35,12 @@ export const Card = React.forwardRef<
       <BorderLight
         className="hidden md:mdh:block"
         groupName="card"
-        appearOnHover={borderLightAppearOnHover}
+        appearOnHover={props.borderLightAppearOnHover}
       />
       <BorderLight
         className="hidden md:mdh:block"
         groupName="card"
-        appearOnHover={borderLightAppearOnHover}
+        appearOnHover={props.borderLightAppearOnHover}
         opposed
       />
     </div>

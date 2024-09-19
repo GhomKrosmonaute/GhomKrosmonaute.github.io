@@ -38,10 +38,13 @@ export const CrashReportProvider = ({ children }: React.PropsWithChildren) => {
       setCrashReport(error)
       setGameState(stringifyClone(state))
 
+      console.error(error)
+
       const gameStringState = JSON.stringify({
         ...state,
         cards: null,
         rawUpgrades: null,
+        revivedHand: null,
       })
 
       wait(500).then(() =>

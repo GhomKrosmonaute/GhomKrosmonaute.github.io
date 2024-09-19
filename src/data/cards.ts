@@ -31,20 +31,19 @@ export default function generateCards(
     (effect) => effect(0, fakeState).type === "action",
   )
 
-  console[supportEffects.length > technos.length ? "error" : "log"](
-    "loaded",
-    supportEffects.length,
-    "supports /",
-    technos.length,
-    "technos",
-  )
-  console[actionEffects.length > projects.length ? "error" : "log"](
-    "loaded",
-    actionEffects.length,
-    "actions /",
-    projects.length,
-    "projects",
-  )
+  if (import.meta.env.DEV) {
+    console[supportEffects.length > technos.length ? "error" : "log"](
+      "supports",
+      Math.floor((supportEffects.length / technos.length) * 100),
+      "%",
+    )
+
+    console[actionEffects.length > projects.length ? "error" : "log"](
+      "actions",
+      Math.floor((actionEffects.length / projects.length) * 100),
+      "%",
+    )
+  }
 
   const supports: GameCardInfo[] = technos.map((techno, i) => {
     const mapping = map(i, 0, technos.length, 0, supportEffects.length, true)
