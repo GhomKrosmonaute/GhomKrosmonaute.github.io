@@ -63,6 +63,21 @@ const cardModifiers = {
     }),
   }),
 
+  "next energy card cost money": () => ({
+    once: true,
+    condition: (card) => card.effect.cost.type === "energy",
+    use: (card) => ({
+      ...card,
+      effect: {
+        ...card.effect,
+        cost: {
+          type: "money",
+          value: Math.ceil(card.effect.cost.value * ENERGY_TO_MONEY),
+        },
+      },
+    }),
+  }),
+
   "next money card cost energy": () => ({
     once: true,
     condition: (card) => {

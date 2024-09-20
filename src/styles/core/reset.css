@@ -43,6 +43,10 @@ h2 {
   @apply font-changa;
 }
 
+hr {
+  @apply py-1;
+}
+
 code {
   display: inline-block;
   white-space: nowrap;

@@ -74,7 +74,11 @@ export const GameActions = (props: { show: boolean }) => {
           )}
         >
           {game.playZone.length > 0 ? (
-            game.playZone[game.playZone.length - 1][0] // Affiche le titre de la dernière carte ajoutée à la playZone
+            game.operationInProgress.includes("selectCard") ? (
+              "Clique sur une carte de la main"
+            ) : (
+              game.playZone[game.playZone.length - 1][0]
+            ) // Affiche le titre de la dernière carte ajoutée à la playZone
           ) : game.choiceOptions.length > 0 ? (
             <>
               Choisis une carte{" "}

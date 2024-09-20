@@ -20,16 +20,6 @@ import {
 
 const effects: EffectBuilder<any[]>[] = [
   (advantage: number) => ({
-    description: formatText(`Gagne ${(2 + advantage) * ENERGY_TO_MONEY}M$`),
-    onPlayed: async (state, _, reason) =>
-      await state.addMoney((2 + advantage) * ENERGY_TO_MONEY, {
-        skipGameOverPause: true,
-        reason,
-      }),
-    type: "action",
-    cost: resolveCost(2),
-  }),
-  (advantage: number) => ({
     description: formatText(`Gagne ${(4 + advantage) * ENERGY_TO_MONEY}M$`),
     onPlayed: async (state, _, reason) =>
       await state.addMoney((4 + advantage) * ENERGY_TO_MONEY, {
@@ -39,43 +29,6 @@ const effects: EffectBuilder<any[]>[] = [
     type: "action",
     cost: resolveCost(4),
   }),
-  (advantage, state) => {
-    const energyGain = smartClamp(2 + advantage, 2, state.energyMax)
-    const moneyGain = energyGain.rest * ENERGY_TO_MONEY
-
-    return {
-      description: formatCoinFlipText({
-        heads: `gagne ${(2 + advantage) * ENERGY_TO_MONEY}M$`,
-        tails: `gagne ${energyGain.value} @energy${energyGain.s}${
-          moneyGain > 0 ? ` et ${moneyGain}M$` : ""
-        }`,
-      }),
-      onPlayed: async (state, _, reason) =>
-        await state.coinFlip({
-          onHead: async () =>
-            await state.addMoney((2 + advantage) * ENERGY_TO_MONEY, {
-              skipGameOverPause: true,
-              reason,
-            }),
-          onTail: async () => {
-            await state.addEnergy(energyGain.value, {
-              skipGameOverPause: true,
-              reason,
-            })
-
-            if (moneyGain > 0) {
-              await state.addMoney(moneyGain, {
-                skipGameOverPause: true,
-                reason,
-              })
-            }
-          },
-        }),
-      type: "action",
-      cost: resolveCost(1),
-      needsPlayZone: true,
-    }
-  },
   (advantage: number) => {
     const energyGain = smartClamp(4 + advantage, 4, MAX_HAND_SIZE)
     const moneyGain = energyGain.rest * ENERGY_TO_MONEY
@@ -130,19 +83,6 @@ const effects: EffectBuilder<any[]>[] = [
     type: "action",
     cost: resolveCost(4),
   }),
-  (advantage: number) => ({
-    description: formatText(
-      `Si la @reputation est inférieur à 5, gagne ${(4 + advantage) * ENERGY_TO_MONEY}M$`,
-    ),
-    onPlayed: async (state, _, reason) =>
-      await state.addMoney((4 + advantage) * ENERGY_TO_MONEY, {
-        skipGameOverPause: true,
-        reason,
-      }),
-    condition: (state) => state.reputation < 5,
-    type: "action",
-    cost: resolveCost(2),
-  }),
   (advantage, state): Effect<[selected: GameCardInfo<true>]> => {
     const price = smartClamp(2 - advantage)
     const energyGain = smartClamp(Math.abs(price.rest), 0, state.energyMax)
@@ -152,7 +92,7 @@ const effects: EffectBuilder<any[]>[] = [
       description: formatText(
         `Joue gratuitement une carte sélectionnée de ta main${
           energyGain.value > 0
-            ? `${moneyGain > 0 ? "," : " et"} gagne ${energyGain.value} @energy${energyGain.s}${
+            ? `<hr> Gagne ${energyGain.value} @energy${energyGain.s}${
                 moneyGain > 0 ? ` et ${moneyGain}M$` : ""
               }`
             : ""
@@ -202,8 +142,8 @@ const effects: EffectBuilder<any[]>[] = [
   (advantage): Effect<[selected: GameCardInfo<true>]> => {
     return {
       description: formatText(
-        `Détruit une carte sélectionnée de ta main, gagne son coût en @reputation${
-          advantage > 0 ? ` et gagne ${advantage * ENERGY_TO_MONEY}M$` : ""
+        `Détruit une carte sélectionnée de ta main et gagne son coût en @reputation${
+          advantage > 0 ? `<hr> Gagne ${advantage * ENERGY_TO_MONEY}M$` : ""
         }`,
       ),
       prePlay: async (state, card) => {
@@ -242,8 +182,8 @@ const effects: EffectBuilder<any[]>[] = [
   (advantage): Effect<[selected: GameCardInfo<true>]> => {
     return {
       description: formatText(
-        `Défausse une carte sélectionnée de ta main, gagne son coût en @energy${
-          advantage > 0 ? ` et gagne ${advantage * ENERGY_TO_MONEY}M$` : ""
+        `Défausse une carte sélectionnée de ta main et gagne son coût en @energy${
+          advantage > 0 ? `<hr> Gagne ${advantage * ENERGY_TO_MONEY}M$` : ""
         }`,
       ),
       prePlay: async (state, card) => {
@@ -279,47 +219,6 @@ const effects: EffectBuilder<any[]>[] = [
       },
       type: "action",
       cost: resolveCost(0),
-    }
-  },
-  (advantage, state) => {
-    const drawCount = smartClamp(1 + advantage, 1, MAX_HAND_SIZE)
-    const energyCount = smartClamp(drawCount.rest, 0, state.energyMax)
-    const moneyCount = energyCount.rest * ENERGY_TO_MONEY
-
-    return {
-      description: formatText(
-        `Pioche ${drawCount.value} carte${advantage > 0 ? "s" : ""}${
-          energyCount.value > 0
-            ? `${moneyCount > 0 ? "," : " et"} gagne ${energyCount.value} @energy${
-                energyCount.value > 1 ? "s" : ""
-              }${moneyCount > 0 ? ` et ${moneyCount}M$` : ""}`
-            : ""
-        }`,
-      ),
-      onPlayed: async (state, _, reason) => {
-        await state.drawCard(drawCount.value, {
-          skipGameOverPause: true,
-          reason,
-        })
-
-        if (energyCount.value > 0) {
-          await state.addEnergy(energyCount.value, {
-            skipGameOverPause: true,
-            reason,
-          })
-
-          if (moneyCount > 0) {
-            await state.addMoney(moneyCount, {
-              skipGameOverPause: true,
-              reason,
-            })
-          }
-        }
-      },
-      condition: (state) => state.draw.length >= 1,
-      type: "support",
-      cost: resolveCost(1),
-      waitBeforePlay: true,
     }
   },
   (advantage, state) => {
@@ -514,9 +413,9 @@ const effects: EffectBuilder<any[]>[] = [
 
     return {
       description: formatText(
-        `Renvoie une carte aléatoire dans la pioche, pioche ${drawCount.value} carte${drawCount.s}${
+        `Renvoie une carte aléatoire dans la pioche(min 1) puis pioche ${drawCount.value} carte${drawCount.s}${
           energyGain.value > 0
-            ? `${moneyGain > 0 ? "," : " et"} gagne ${energyGain.value} @energy${energyGain.s}${
+            ? `<hr> Gagne ${energyGain.value} @energy${energyGain.s}${
                 moneyGain > 0 ? ` et ${moneyGain}M$` : ""
               }`
             : ""
@@ -583,9 +482,9 @@ const effects: EffectBuilder<any[]>[] = [
 
     return {
       description: formatText(
-        `Défausse les cartes en main, pioche ${drawCount.value} cartes${
+        `Défausse toutes les cartes en main et pioche ${drawCount.value} cartes${
           energyGain.value > 0
-            ? `${moneyGain > 0 ? "," : " et"} gagne ${energyGain.value} @energy${energyGain.s}${
+            ? `<hr> Gagne ${energyGain.value} @energy${energyGain.s}${
                 moneyGain > 0 ? ` et ${moneyGain}M$` : ""
               }`
             : ""
@@ -626,8 +525,8 @@ const effects: EffectBuilder<any[]>[] = [
 
     return {
       description: formatText(
-        `Renvoie toutes les cartes en main dans la pioche, pioche ${drawCount.value} cartes${
-          moneyGain > 0 ? ` et gagne ${moneyGain}M$` : ""
+        `Renvoie toutes les cartes en main dans la pioche puis pioche ${drawCount.value} cartes${
+          moneyGain > 0 ? `<hr> Gagne ${moneyGain}M$` : ""
         }`,
       ),
       onPlayed: async (state, _, reason) => {
@@ -657,7 +556,7 @@ const effects: EffectBuilder<any[]>[] = [
     return {
       description: formatText(
         `Pioche autant de carte que d'@upgrades découvertes${
-          moneyGain > 0 ? ` et gagne ${moneyGain}M$` : ""
+          moneyGain > 0 ? `<hr> Gagne ${moneyGain}M$` : ""
         }`,
       ),
       onPlayed: async (state, _, reason) => {
@@ -681,8 +580,8 @@ const effects: EffectBuilder<any[]>[] = [
   },
   (advantage: number) => ({
     description: formatText(
-      `Défausse les cartes @support en main(min 1), pioche 2 cartes @action${
-        advantage > 0 ? ` et gagne ${advantage * ENERGY_TO_MONEY}M$` : ""
+      `Défausse les cartes @support en main(min 1) et pioche 2 cartes @action${
+        advantage > 0 ? `<hr> Gagne ${advantage * ENERGY_TO_MONEY}M$` : ""
       }`,
     ),
     onPlayed: async (state, _, reason) => {
@@ -718,8 +617,8 @@ const effects: EffectBuilder<any[]>[] = [
 
     return {
       description: formatText(
-        `Défausse les cartes @action en main(min 1), pioche ${drawCount.value} cartes${
-          moneyCount > 0 ? ` et gagne ${moneyCount}M$` : ""
+        `Défausse les cartes @action en main(min 1) et pioche ${drawCount.value} cartes${
+          moneyCount > 0 ? `<hr> Gagne ${moneyCount}M$` : ""
         }`,
       ),
       onPlayed: async (state, _, reason) => {
@@ -757,7 +656,7 @@ const effects: EffectBuilder<any[]>[] = [
     return {
       description: formatText(
         `Recycle toutes les cartes de la défausse${
-          moneyCount > 0 ? ` et gagne ${moneyCount}M$` : ""
+          moneyCount > 0 ? `<hr> Gagne ${moneyCount}M$` : ""
         }`,
       ),
       onPlayed: async (state, _, reason) => {
@@ -777,7 +676,7 @@ const effects: EffectBuilder<any[]>[] = [
     return {
       description: formatText(
         `Recycle ${recycleCount.value} carte${recycleCount.s} aléatoire${recycleCount.s} de la défausse${
-          moneyCount > 0 ? ` et gagne ${moneyCount}M$` : ""
+          moneyCount > 0 ? `<hr> Gagne ${moneyCount}M$` : ""
         }`,
       ),
       onPlayed: async (state, _, reason) => {
@@ -799,7 +698,7 @@ const effects: EffectBuilder<any[]>[] = [
       description: formatText(
         `Pioche 2 cartes qui coûtent de l'@energy${
           energyGain.value > 0
-            ? `${moneyGain > 0 ? "," : " et"} gagne ${energyGain.value} @energy${energyGain.s}${
+            ? `<hr> Gagne ${energyGain.value} @energy${energyGain.s}${
                 moneyGain > 0 ? ` et ${moneyGain}M$` : ""
               }`
             : ""
@@ -845,7 +744,7 @@ const effects: EffectBuilder<any[]>[] = [
       description: formatText(
         `La prochaine carte jouée coûte la moitié de son prix${
           energyGain.value > 0
-            ? `${moneyGain > 0 ? "," : " et"} gagne ${energyGain.value} @energy${energyGain.s}${
+            ? `<hr> Gagne ${energyGain.value} @energy${energyGain.s}${
                 moneyGain > 0 ? ` et ${moneyGain}M$` : ""
               }`
             : ""
@@ -882,9 +781,9 @@ const effects: EffectBuilder<any[]>[] = [
 
     return {
       description: formatText(
-        `La prochaine carte qui coûte de l'argent coûte maintenant de l'@energy${
+        `La prochaine carte qui coûte de l'@energy coûte maintenant de l'argent${
           energyGain.value > 0
-            ? `, gagne ${energyGain.value} @energy${energyGain.s}${
+            ? `<hr> Gagne ${energyGain.value} @energy${energyGain.s}${
                 moneyGain > 0 ? ` et ${moneyGain}M$` : ""
               }`
             : ""
@@ -892,7 +791,7 @@ const effects: EffectBuilder<any[]>[] = [
       ),
       onPlayed: async (state, _, reason) => {
         await state.addGlobalCardModifier(
-          "next money card cost energy",
+          "next energy card cost money",
           [],
           GlobalCardModifierIndex.Last,
         )
@@ -925,7 +824,7 @@ const effects: EffectBuilder<any[]>[] = [
         `Baisse le prix de toutes les cartes en main de ${
           effect.value
         } @energy${effect.s} ou de ${effect.value * ENERGY_TO_MONEY}M$${
-          moneyGain > 0 ? ` puis gagne ${moneyGain}M$` : ""
+          moneyGain > 0 ? `<hr> Gagne ${moneyGain}M$` : ""
         }`,
       ),
       onPlayed: async (state, card, reason) => {
@@ -965,8 +864,8 @@ const effects: EffectBuilder<any[]>[] = [
 
     return {
       description: formatText(
-        `${energyGain.value > 0 ? `Ajoute ${energyGain.value} @energy${energyGain.s} puis d` : "D"}ouble l'@energy${
-          moneyGain > 0 ? `, gagne ${moneyGain}M$` : ""
+        `${energyGain.value > 0 ? `Gagne ${energyGain.value} @energy${energyGain.s} puis d` : "D"}ouble l'@energy en réserve${
+          moneyGain > 0 ? `<hr> Gagne ${moneyGain}M$` : ""
         }`,
       ),
       onPlayed: async (state, _, reason) => {
@@ -999,8 +898,8 @@ const effects: EffectBuilder<any[]>[] = [
 
     return {
       description: formatText(
-        `Ajoute ${energyGain.value} @energys${
-          moneyGain > 0 ? ` et gagne ${moneyGain}M$` : ""
+        `Gagne ${energyGain.value} @energys${
+          moneyGain > 0 ? ` et ${moneyGain}M$` : ""
         }`,
       ),
       onPlayed: async (state, _, reason) => {
@@ -1033,8 +932,8 @@ const effects: EffectBuilder<any[]>[] = [
 
     return {
       description: formatText(
-        `Si la @reputation est inférieur à 5, ajoute ${energyGain.value} @energys${
-          moneyGain > 0 ? ` et gagne ${moneyGain}M$` : ""
+        `Si la @reputation est inférieur à 5, gagne ${energyGain.value} @energys${
+          moneyGain > 0 ? ` et ${moneyGain}M$` : ""
         }`,
       ),
       onPlayed: async (state, _, reason) => {
@@ -1065,7 +964,7 @@ const effects: EffectBuilder<any[]>[] = [
       description: formatText(
         `Remplis la jauge de @reputation${
           energyGain.value > 0
-            ? `${moneyGain > 0 ? "," : " et"} gagne ${energyGain.value} @energy${energyGain.s}${
+            ? `<hr> Gagne ${energyGain.value} @energy${energyGain.s}${
                 moneyGain > 0 ? ` et ${moneyGain}M$` : ""
               }`
             : ""
