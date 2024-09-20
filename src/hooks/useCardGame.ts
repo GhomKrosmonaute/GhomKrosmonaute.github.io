@@ -25,7 +25,6 @@ import type {
 import {
   MAX_ENERGY,
   MAX_HAND_SIZE,
-  GAME_ADVANTAGE,
   MAX_REPUTATION,
   MONEY_TO_REACH,
   ENERGY_TO_DAYS,
@@ -94,6 +93,7 @@ export interface GameState {
   skippedChoices: number
   increments: (key: keyof GameState, count?: number) => Promise<void>
   incrementsInflation: () => void
+  selectedCard: string | null
   rawUpgrades: RawUpgrade[]
   cards: GameCardInfo[]
   difficulty: Difficulty
@@ -109,6 +109,7 @@ export interface GameState {
   isWon: boolean
   isGameOver: boolean
   infinityMode: boolean
+  requestedCancel: boolean
   playZone: GameCardIndice[]
   draw: GameCardIndice[]
   discard: GameCardIndice[]
@@ -171,6 +172,11 @@ export interface GameState {
     card: GameCardInfo<true>,
     options: GameMethodOptions & { free?: boolean },
   ) => Promise<void>
+  selectCard: (name: string) => void
+  waitCardSelection: <T extends GameCardIndice | GameCardInfo<true>>(options: {
+    from: T[]
+    timeout?: number
+  }) => Promise<GameCardInfo<true> | null>
   skip: (options: MethodWhoLog) => Promise<void>
   pickOption: (card: GameCardInfo<true> | GameResource) => Promise<void>
   win: () => void
@@ -181,6 +187,8 @@ export interface GameState {
 
 function generateFakeState(): GameState & GlobalGameState {
   return {
+    selectedCard: null,
+    requestedCancel: false,
     inflation: 0,
     energy: 0,
     discard: [],
@@ -221,6 +229,8 @@ function generateFakeState(): GameState & GlobalGameState {
     playedGames: 0,
     scoreAverage: 0,
     debug: false,
+    selectCard: () => {},
+    waitCardSelection: async () => null,
     addMaxEnergy: async () => {},
     addMoney: async () => {},
     setOperationInProgress: () => {},
@@ -417,15 +427,14 @@ function generateGameState(): Omit<
   const save = localStorage.getItem("save")
 
   if (save && JSON.stringify(metadata) === saveMetadata) {
-    return parseSave(save, difficulty)
+    return parseSave(save)
   }
 
   localStorage.setItem("metadata", JSON.stringify(metadata))
 
-  const advantage = GAME_ADVANTAGE[difficulty]
   const fakeState = generateFakeState()
-  const cards = generateCards(advantage, fakeState)
-  const rawUpgrades = generateUpgrades(advantage)
+  const cards = generateCards(fakeState)
+  const rawUpgrades = generateUpgrades()
 
   const startingDeck: string[] = []
 
@@ -491,6 +500,7 @@ function generateGameState(): Omit<
   }
 
   return {
+    selectedCard: null,
     coinFlips: 0,
     recycledCards: 0,
     discardedCards: 0,
@@ -509,6 +519,7 @@ function generateGameState(): Omit<
     isWon: false,
     isGameOver: false,
     infinityMode: false,
+    requestedCancel: false,
     draw: startingDeck
       .slice(MAX_HAND_SIZE - 2)
       .map((name) => [name, "idle", LOCAL_ADVANTAGE.common]),
@@ -581,22 +592,7 @@ function generateGameMethods(
       const state = getState()
       const newInflation = state.inflation + 1
 
-      if (state.inflation < GAME_ADVANTAGE[state.difficulty]) {
-        const baseGameAdvantage = GAME_ADVANTAGE[state.difficulty]
-
-        set({
-          inflation: newInflation,
-          cards: generateCards(
-            Math.max(0, baseGameAdvantage - newInflation),
-            state,
-          ),
-          rawUpgrades: generateUpgrades(
-            Math.max(0, baseGameAdvantage - newInflation),
-          ),
-        })
-      } else {
-        set({ inflation: newInflation })
-      }
+      set({ inflation: newInflation })
     },
 
     handleError: (error) => {
@@ -716,10 +712,12 @@ function generateGameMethods(
               choiceOptions: [
                 ...state.choiceOptions,
                 generateChoiceOptions(fullState, {
+                  noResource: true,
                   filter: (c) =>
                     !c.effect(0, state).upgrade && c.type === "action",
                 }),
                 generateChoiceOptions(fullState, {
+                  noResource: true,
                   filter: (c) => Boolean(c.effect(0, state).upgrade),
                 }),
               ],
@@ -1344,6 +1342,79 @@ function generateGameMethods(
       })
     },
 
+    selectCard: (cardName) => {
+      set({ selectedCard: cardName })
+    },
+
+    waitCardSelection: async (options) => {
+      const fromNames = options.from.map((t) =>
+        Array.isArray(t) ? t[0] : t.name,
+      )
+
+      set((state) => ({
+        requestedCancel: false,
+        selectedCard: null,
+        hand: updateCardState(state.hand, fromNames, "selected"),
+      }))
+
+      const state = getState()
+
+      state.setOperationInProgress("selectCard", true)
+
+      let interval: NodeJS.Timeout
+
+      const card = await new Promise<GameCardInfo<true> | null>((resolve) => {
+        const finish = () => {
+          set((state) => ({
+            hand: updateCardState(state.hand, fromNames, "idle"),
+          }))
+        }
+
+        const done = (cardName: string) => {
+          resolve(reviveCard(cardName, state))
+          clearInterval(interval)
+          set({ selectedCard: null })
+          finish()
+        }
+
+        const cancel = () => {
+          resolve(null)
+          clearInterval(interval)
+          set({ requestedCancel: false })
+          finish()
+        }
+
+        interval = setInterval(() => {
+          const state = getState()
+
+          if (state.requestedCancel) return cancel()
+
+          if (state.selectedCard) {
+            if (
+              options.from.some(
+                (t) =>
+                  (Array.isArray(t) ? t[0] : t.name) === state.selectedCard,
+              )
+            ) {
+              done(state.selectedCard)
+            } else {
+              cancel()
+            }
+          }
+        }, 100)
+
+        setTimeout(() => {
+          cancel()
+        }, options.timeout ?? 10_000)
+      })
+
+      await wait()
+
+      state.setOperationInProgress("selectCard", false)
+
+      return card
+    },
+
     playCard: async (card, options) => {
       await handleErrorsAsync(getState, async () => {
         const free = !!options?.free
@@ -1379,43 +1450,17 @@ function generateGameMethods(
 
         if (free || card.effect.cost.value <= 0 || canBeBuy(card, state)) {
           state.setOperationInProgress(`play ${card.name}`, true)
-
-          set((state) => ({
-            hand: updateCardState(state.hand, card.name, "selected"),
-          }))
-
-          if (!free) {
-            const usableCost = getUsableCost(card.effect.cost, state)
-
-            await (card.effect.cost.type === "money"
-              ? state.addMoney(-usableCost, {
-                  skipGameOverPause: true,
-                  reason,
-                })
-              : state.addEnergy(-usableCost, {
-                  skipGameOverPause: true,
-                  reason,
-                }))
-          }
         } else {
           await cantPlay()
 
           return
         }
 
-        // on joue le son de la banque
-        bank.play.play()
+        // si il y a un prePlay, on vérifie si le joueur cancel ou pas son action et on récupère la data.
+        let prePlayData: any[] = []
 
-        // on retire les modifiers en "once" qui ont été utilisés
-        reviveCard(cardInfoToIndice(card), state, true)
-
-        const removing = willBeRemoved(getState(), card)
-        const recycling = card.effect.recycle
-
-        const firstState = removing ? "removing" : "playing"
-
-        // on active l'animation de la carte en la déplaçant dans la playZone si besoin
-        if (card.effect.needsPlayZone) {
+        if (card.effect.prePlay || card.effect.needsPlayZone) {
+          // on active l'animation de la carte en la déplaçant dans la playZone si besoin
           // animation de la carte vers la playZone
           set((state) => ({
             hand: updateCardState(state.hand, card.name, "playing"),
@@ -1439,7 +1484,58 @@ function generateGameMethods(
           set((state) => ({
             playZone: updateCardState(state.playZone, card.name, "idle"),
           }))
-        } else {
+
+          if (card.effect.prePlay) {
+            const result = await card.effect.prePlay(state, card)
+
+            if (result === "cancel") {
+              set((state) => ({
+                playZone: excludeCard(state.playZone, card.name),
+                hand: updateCardState(
+                  [...state.hand, cardInfoToIndice(card)],
+                  card.name,
+                  "landing",
+                ),
+              }))
+
+              await wait()
+
+              state.setOperationInProgress(`play ${card.name}`, false)
+
+              return
+            } else {
+              prePlayData = result
+            }
+          }
+        }
+
+        // on paye le coût de la carte
+        if (!free) {
+          const usableCost = getUsableCost(card.effect.cost, state)
+
+          await (card.effect.cost.type === "money"
+            ? state.addMoney(-usableCost, {
+                skipGameOverPause: true,
+                reason,
+              })
+            : state.addEnergy(-usableCost, {
+                skipGameOverPause: true,
+                reason,
+              }))
+        }
+
+        // on joue le son de la banque
+        bank.play.play()
+
+        // on retire les modifiers en "once" qui ont été utilisés
+        reviveCard(cardInfoToIndice(card), state, true)
+
+        const removing = willBeRemoved(getState(), card)
+        const recycling = card.effect.recycle
+
+        const firstState = removing ? "removing" : "playing"
+
+        if (!card.effect.needsPlayZone && !card.effect.prePlay) {
           set((state) => ({
             hand: updateCardState(state.hand, card.name, firstState),
           }))
@@ -1473,7 +1569,7 @@ function generateGameMethods(
 
         const triggerCardEffect = async () => {
           // on applique l'effet de la carte (toujours via eval)
-          await card.effect.onPlayed(getState(), card, reason)
+          await card.effect.onPlayed(getState(), card, reason, ...prePlayData)
         }
 
         if (card.effect.waitBeforePlay) {
@@ -1537,16 +1633,20 @@ function generateGameMethods(
         set({
           choiceOptions: state.choiceOptions.map((options) => {
             return options.map((c) => {
-              return isGameResource(option)
+              return isGameResource(c)
                 ? ([
                     c[0],
-                    c[0] === option[0] ? "playing" : "removing",
+                    c[0] === (isGameResource(option) ? option[0] : option.name)
+                      ? "playing"
+                      : "removing",
                     c[2],
                     c[3],
                   ] as GameResource)
                 : ([
                     c[0],
-                    c[0] === option.name ? "playing" : "removing",
+                    c[0] === (isGameResource(option) ? option[0] : option.name)
+                      ? "playing"
+                      : "removing",
                     c[2],
                   ] as GameCardIndice)
             })
@@ -1639,12 +1739,12 @@ function generateGameMethods(
           set((state) => ({
             hand: updateCardState(state.hand, "idle"),
           }))
-
-          state.setOperationInProgress(
-            `pick ${isGameResource(option) ? option[0] : option.name}`,
-            false,
-          )
         }
+
+        state.setOperationInProgress(
+          `pick ${isGameResource(option) ? option[0] : option.name}`,
+          false,
+        )
       })
     },
 
@@ -1751,6 +1851,8 @@ useCardGame.subscribe(async (state, prevState) => {
             logs: state.logs,
             score: state.score,
             inflation: state.inflation,
+            requestedCancel: state.requestedCancel,
+            selectedCard: state.selectedCard,
           } satisfies Omit<
             GameState,
             | keyof ReturnType<typeof generateGameMethods>

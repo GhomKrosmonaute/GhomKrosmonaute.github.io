@@ -1,4 +1,4 @@
-import type { EffectBuilder, GameCardInfo } from "@/game-typings"
+import type { Effect, EffectBuilder, GameCardInfo } from "@/game-typings"
 
 import {
   ACTIONS_COST,
@@ -14,12 +14,11 @@ import {
   reviveCard,
   resolveCost,
   costToEnergy,
-  getUsableCost,
   formatCoinFlipText,
   GlobalCardModifierIndex,
 } from "@/game-utils.ts"
 
-const effects: EffectBuilder[] = [
+const effects: EffectBuilder<any[]>[] = [
   (advantage: number) => ({
     description: formatText(`Gagne ${(2 + advantage) * ENERGY_TO_MONEY}M$`),
     onPlayed: async (state, _, reason) =>
@@ -144,22 +143,14 @@ const effects: EffectBuilder[] = [
     type: "action",
     cost: resolveCost(2),
   }),
-  (advantage, state, card) => {
+  (advantage, state): Effect<[selected: GameCardInfo<true>]> => {
     const price = smartClamp(2 - advantage)
     const energyGain = smartClamp(Math.abs(price.rest), 0, state.energyMax)
     const moneyGain = energyGain.rest * ENERGY_TO_MONEY
 
-    let target: GameCardInfo<true> | null = null
-
-    if (card) {
-      const hand = state.revivedHand.filter((c) => c.name !== card.name)
-
-      target = hand[hand.length - 1]
-    }
-
     return {
       description: formatText(
-        `Joue gratuitement la carte la plus à droite de ta main sauf ${card?.name} <br/> [${target?.name}] <br/> ${
+        `Joue gratuitement une carte sélectionnée de ta main${
           energyGain.value > 0
             ? `${moneyGain > 0 ? "," : " et"} gagne ${energyGain.value} @energy${energyGain.s}${
                 moneyGain > 0 ? ` et ${moneyGain}M$` : ""
@@ -167,10 +158,23 @@ const effects: EffectBuilder[] = [
             : ""
         }`,
       ),
-      onPlayed: async (state, card, reason) => {
-        const hand = state.revivedHand.filter((c) => c.name !== card.name)
+      prePlay: async (state, card) => {
+        const selected = await state.waitCardSelection({
+          from: state.revivedHand.filter(
+            (c) =>
+              c.name !== card.name &&
+              (!c.effect.condition || c.effect.condition(state, c)),
+          ),
+        })
 
-        await state.playCard(hand[hand.length - 1], {
+        if (!selected) {
+          return "cancel"
+        } else {
+          return [selected]
+        }
+      },
+      onPlayed: async (state, _, reason, selected) => {
+        await state.playCard(selected, {
           free: true,
           skipGameOverPause: true,
           reason,
@@ -190,54 +194,35 @@ const effects: EffectBuilder[] = [
           }
         }
       },
-      condition: (state, card) => {
-        const hand = state.revivedHand.filter((c) => c.name !== card.name)
-        const target = hand[hand.length - 1]
-
-        if (!target) return false
-
-        return (
-          !target.effect.condition || target.effect.condition(state, target)
-        )
-      },
       type: "action",
       cost: resolveCost(price.value), // ~ middle cost
       waitBeforePlay: true,
     }
   },
-  (advantage, state, card) => {
-    let target: GameCardInfo<true> | null = null
-
-    if (card) {
-      const hand = state.revivedHand.filter((c) => c.name !== card.name)
-
-      target = hand[hand.length - 1]
-    }
-
+  (advantage): Effect<[selected: GameCardInfo<true>]> => {
     return {
       description: formatText(
-        `Défausse la carte la plus à droite de ta main sauf ${card?.name}, gagne son coût en @energy${
-          card && target
-            ? ` [${getUsableCost(
-                {
-                  type: "energy",
-                  value: costToEnergy(target.effect.cost),
-                },
-                state,
-              )}]`
-            : ""
-        }${advantage > 0 ? ` et gagne ${advantage * ENERGY_TO_MONEY}M$` : ""}`,
+        `Détruit une carte sélectionnée de ta main, gagne son coût en @reputation${
+          advantage > 0 ? ` et gagne ${advantage * ENERGY_TO_MONEY}M$` : ""
+        }`,
       ),
-      onPlayed: async (state, card, reason) => {
-        const hand = state.revivedHand.filter((c) => c.name !== card.name)
-        const target = hand[hand.length - 1]
-
-        await state.discardCard({
-          filter: (card) => card.name === target.name,
-          reason,
+      prePlay: async (state, card) => {
+        const selected = await state.waitCardSelection({
+          from: state.revivedHand.filter(
+            (c) => c.name !== card.name && c && c.effect.cost.value > 0,
+          ),
         })
 
-        await state.addEnergy(costToEnergy(target.effect.cost), {
+        if (!selected) {
+          return "cancel"
+        } else {
+          return [selected]
+        }
+      },
+      onPlayed: async (state, _, reason, selected) => {
+        await state.removeCard(selected.name)
+
+        await state.addReputation(selected.effect.cost.value, {
           skipGameOverPause: true,
           reason,
         })
@@ -249,11 +234,48 @@ const effects: EffectBuilder[] = [
           })
         }
       },
-      condition: (state, card) => {
-        const hand = state.revivedHand.filter((c) => c.name !== card.name)
-        const target = hand[hand.length - 1]
+      type: "action",
+      ephemeral: true,
+      cost: resolveCost(0),
+    }
+  },
+  (advantage): Effect<[selected: GameCardInfo<true>]> => {
+    return {
+      description: formatText(
+        `Défausse une carte sélectionnée de ta main, gagne son coût en @energy${
+          advantage > 0 ? ` et gagne ${advantage * ENERGY_TO_MONEY}M$` : ""
+        }`,
+      ),
+      prePlay: async (state, card) => {
+        const selected = await state.waitCardSelection({
+          from: state.revivedHand.filter(
+            (c) => c.name !== card.name && c && c.effect.cost.value > 0,
+          ),
+        })
 
-        return target && target.effect.cost.value > 0
+        if (!selected) {
+          return "cancel"
+        } else {
+          return [selected]
+        }
+      },
+      onPlayed: async (state, _, reason, selected) => {
+        await state.discardCard({
+          filter: (card) => card.name === selected.name,
+          reason,
+        })
+
+        await state.addEnergy(costToEnergy(selected.effect.cost), {
+          skipGameOverPause: true,
+          reason,
+        })
+
+        if (advantage > 0) {
+          await state.addMoney(advantage * ENERGY_TO_MONEY, {
+            skipGameOverPause: true,
+            reason,
+          })
+        }
       },
       type: "action",
       cost: resolveCost(0),
@@ -862,7 +884,7 @@ const effects: EffectBuilder[] = [
       description: formatText(
         `La prochaine carte qui coûte de l'argent coûte maintenant de l'@energy${
           energyGain.value > 0
-            ? `${moneyGain > 0 ? "," : " et"} gagne ${energyGain.value} @energy${energyGain.s}${
+            ? `, gagne ${energyGain.value} @energy${energyGain.s}${
                 moneyGain > 0 ? ` et ${moneyGain}M$` : ""
               }`
             : ""

@@ -27,7 +27,7 @@ import {
   MAX_REPUTATION,
 } from "@/game-constants"
 
-import { defaultSettings, Difficulty, Settings } from "@/game-settings.ts"
+import { defaultSettings, Settings } from "@/game-settings.ts"
 
 import cardModifiers from "@/data/cardModifiers.ts"
 
@@ -190,6 +190,7 @@ export async function handleErrorsAsync(
 interface ChoiceOptionsGeneratorOptions {
   exclude?: string[]
   filter?: (card: GameCardInfo, state: GameState) => boolean
+  noResource?: boolean
 }
 
 /**
@@ -205,16 +206,28 @@ export function generateRandomAdvantage(): number {
 }
 
 export function generateRandomResource(state: GameState): GameResource {
-  const quantity = generateRandomAdvantage()
   const type = Math.random()
-  const id = Math.random().toFixed(5)
+  const id = Math.random().toFixed(6)
 
   if (type < 0.48) {
-    return [id, "drawing", 10 * Math.max(1, quantity), "money"]
+    const quantity = generateRandomAdvantage()
+    return [id, "drawing", 50 * Math.max(1, quantity), "money"]
   } else if (type < 0.96) {
-    return [id, "drawing", clamp(5, 5 * quantity, state.energyMax), "energy"]
+    const rdm = Math.random()
+    return [
+      id,
+      "drawing",
+      rdm < 0.6 ? Math.floor(state.energyMax / 2) : state.energyMax,
+      "energy",
+    ]
   } else {
-    return [id, "drawing", clamp(1, quantity, MAX_REPUTATION), "reputation"]
+    const rdm = Math.random()
+    return [
+      id,
+      "drawing",
+      rdm < 0.6 ? Math.floor(MAX_REPUTATION / 2) : MAX_REPUTATION,
+      "reputation",
+    ]
   }
 }
 
@@ -253,7 +266,7 @@ export function generateChoiceOptions(
     while (_cards.length < state.choiceOptionCount) {
       _cards.push(generateRandomResource(state))
     }
-  } else {
+  } else if (!options?.noResource) {
     const length = _cards.length
     for (let i = 0; i < Math.ceil(length / 10); i++) {
       _cards.push(generateRandomResource(state))
@@ -287,14 +300,11 @@ export function energyCostColor(
 }
 
 export function isGameResource<T>(option: T): option is T & GameResource {
-  const is =
+  return (
     Array.isArray(option) &&
     option.length === 4 &&
     typeof option[3] === "string"
-
-  console.trace("isGameResource", is, option)
-
-  return is
+  )
 }
 
 export function isNewSprint(day: number) {
@@ -714,9 +724,7 @@ export function reviveUpgrade(
   }
 }
 
-export function parseSave(save: string, difficulty: Difficulty) {
-  const baseAdvantage = GAME_ADVANTAGE[difficulty]
-
+export function parseSave(save: string) {
   const state: GameState & GlobalGameState = {
     ...JSON.parse(save, (key, value) => {
       if (typeof value === "object") {
@@ -734,13 +742,8 @@ export function parseSave(save: string, difficulty: Difficulty) {
     }),
   }
 
-  state.cards = generateCards(
-    Math.max(0, baseAdvantage - state.inflation),
-    state,
-  )
-  state.rawUpgrades = generateUpgrades(
-    Math.max(0, baseAdvantage - state.inflation),
-  )
+  state.cards = generateCards(state)
+  state.rawUpgrades = generateUpgrades()
   state.revivedHand = []
 
   return state

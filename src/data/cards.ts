@@ -15,20 +15,18 @@ import generateUpgrades from "@/data/upgrades.ts"
 import type { GameState, GlobalGameState } from "@/hooks/useCardGame.ts"
 
 /**
- * @param advantage is only transmitted to generateUpgrades
  * @param fakeState
  */
 export default function generateCards(
-  advantage: number,
   fakeState: GameState & GlobalGameState,
 ): GameCardInfo[] {
-  const upgrades = generateUpgrades(advantage)
+  const upgrades = generateUpgrades()
 
   const supportEffects = effects.filter(
-    (effect) => effect(0, fakeState).type === "support",
+    (effect) => effect(0, fakeState, undefined).type === "support",
   )
   const actionEffects = effects.filter(
-    (effect) => effect(0, fakeState).type === "action",
+    (effect) => effect(0, fakeState, undefined).type === "action",
   )
 
   if (import.meta.env.DEV) {

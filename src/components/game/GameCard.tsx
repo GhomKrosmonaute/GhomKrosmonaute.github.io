@@ -54,6 +54,9 @@ export const GameCard = (
       canTriggerEffect:
         !props.card.effect.condition ||
         props.card.effect.condition(state, props.card),
+      selectionInProgress: state.operationInProgress.some((op) =>
+        op.startsWith("selectCard"),
+      ),
     }
   })
 
@@ -84,18 +87,22 @@ export const GameCard = (
         "-mx-3.5 z-10 hover:z-20 cursor-pointer select-none",
         {
           "cursor-not-allowed":
-            notAllowed ||
-            props.isPlaying ||
-            (!props.isChoice && game.choiceOptions.length > 0),
+            (game.selectionInProgress && props.card.state !== "selected") ||
+            (!game.selectionInProgress &&
+              (notAllowed ||
+                props.isPlaying ||
+                (!props.isChoice && game.choiceOptions.length > 0))),
           [cn("transition-transform", props.card.state)]: quality.animation,
           [cn({
             "-translate-y-14": props.card.state === "selected",
             "hover:-translate-y-14": props.card.state !== "removing",
             grayscale:
-              game.choiceOptions.length > 0 ||
-              game.isGameOver ||
-              !game.canBeBuy ||
-              !game.canTriggerEffect,
+              (game.selectionInProgress && props.card.state !== "selected") ||
+              (!game.selectionInProgress &&
+                (game.choiceOptions.length > 0 ||
+                  game.isGameOver ||
+                  !game.canBeBuy ||
+                  !game.canTriggerEffect)),
             // "translate-y-8": !canTriggerEffect || !haveEnoughResources,
           })]: !props.isChoice && !props.isPlaying,
         },
@@ -104,7 +111,9 @@ export const GameCard = (
         if (props.isPlaying) return
 
         if (!props.isChoice) {
-          if (
+          if (game.selectionInProgress) {
+            game.selectCard(props.card.name)
+          } else if (
             game.choiceOptions.length === 0 &&
             !notAllowed &&
             !game.isGameOver

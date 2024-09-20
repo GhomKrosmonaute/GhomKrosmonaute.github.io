@@ -37,18 +37,18 @@ export type RawUpgrade = Pick<
   max?: number
 }
 
-export type EffectBuilder = (
+export type EffectBuilder<Data extends any[]> = (
   advantage: number,
   state: GameState,
   card?: Omit<GameCardInfo<true>, "effect">,
-) => Effect
+) => Effect<Data>
 
 export type Cost = {
   value: number
   type: "money" | "energy"
 }
 
-export interface Effect {
+export interface Effect<Data extends any[]> {
   description: string
   type: "action" | "support"
   cost: Cost
@@ -58,10 +58,15 @@ export interface Effect {
     condition: boolean,
   ) => string
   condition?: (state: GameState, card: GameCardInfo<true>) => boolean
+  prePlay?: (
+    state: GameState,
+    card: GameCardInfo<true>,
+  ) => Promise<Data | "cancel">
   onPlayed: (
     state: GameState,
     card: GameCardInfo<true>,
     reason: GameLog["reason"],
+    ...data: Data
   ) => Promise<unknown>
   needsPlayZone?: boolean
   waitBeforePlay?: boolean
@@ -74,7 +79,7 @@ export interface ActionCardInfo<Resolved = false> {
   type: "action"
   name: string
   image: string
-  effect: Resolved extends true ? Effect : EffectBuilder
+  effect: Resolved extends true ? Effect<any[]> : EffectBuilder<any[]>
   state: Resolved extends true ? GameCardState : null
   localAdvantage: Resolved extends true ? number : null
   description?: string
@@ -86,7 +91,7 @@ export interface SupportCardInfo<Resolved = false> {
   type: "support"
   name: string
   image: string
-  effect: Resolved extends true ? Effect : EffectBuilder
+  effect: Resolved extends true ? Effect<any[]> : EffectBuilder<any[]>
   state: Resolved extends true ? GameCardState : null
   localAdvantage: Resolved extends true ? number : null
 }

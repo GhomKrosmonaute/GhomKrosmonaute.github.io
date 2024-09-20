@@ -1,12 +1,8 @@
 import type { RawUpgrade } from "@/game-typings"
-import {
-  ENERGY_TO_MONEY,
-  MAX_HAND_SIZE,
-  MAX_REPUTATION,
-} from "@/game-constants.ts"
+import { MAX_HAND_SIZE, MAX_REPUTATION } from "@/game-constants.ts"
 import { resolveCost } from "@/game-utils.ts"
 
-export default function generateUpgrades(advantage: number): RawUpgrade[] {
+export default function generateUpgrades(): RawUpgrade[] {
   return [
     {
       name: "Starbucks",
@@ -20,64 +16,8 @@ export default function generateUpgrades(advantage: number): RawUpgrade[] {
           reason,
         })
       },
-      max: 3,
-      cost: resolveCost(String(Math.max(0, 20 - advantage) * ENERGY_TO_MONEY)),
-    },
-    {
-      name: "Méditation",
-      eventName: "onPlay",
-      description: "Pioche @cumul carte@s si tu as moins de 5 cartes en main",
-      image: "meditation.png",
-      condition: (state) => state.draw.length > 0 && state.hand.length < 5,
-      onTrigger: async (state, upgrade, reason) => {
-        await state.drawCard(
-          Math.min(upgrade.cumul, MAX_HAND_SIZE - state.hand.length),
-          { skipGameOverPause: true, reason },
-        )
-      },
-      max: 3,
-      cost: resolveCost(String(Math.max(0, 20 - advantage) * ENERGY_TO_MONEY)),
-    },
-    {
-      name: "Bourse",
-      eventName: "weekly",
-      description: "Gagne @cumul% de ton capital",
-      image: "bourse.png",
-      condition: (state) => state.money > 0,
-      onTrigger: async (state, upgrade, reason) => {
-        await state.addMoney(Math.ceil(upgrade.cumul * (state.money / 100)), {
-          skipGameOverPause: true,
-          reason,
-        })
-      },
-      max: 5,
-      cost: resolveCost(String(Math.max(0, 10 - advantage) * ENERGY_TO_MONEY)),
-    },
-    {
-      name: "Recyclage",
-      eventName: "weekly",
-      description: "Recycle @cumul carte@s aléatoire@s de la défausse",
-      image: "recyclage.png",
-      condition: (state) => state.discard.length > 0,
-      onTrigger: async (state, upgrade, reason) => {
-        await state.recycleCard(upgrade.cumul, { reason })
-      },
-      max: 3,
-      cost: resolveCost(String(Math.max(0, 20 - advantage) * ENERGY_TO_MONEY)),
-    },
-    {
-      name: "I.A",
-      eventName: "weekly",
-      description: "Gagne @cumulM$ par carte en défausse",
-      image: "ia.png",
-      condition: (state) => state.discard.length > 0,
-      onTrigger: async (state, upgrade, reason) => {
-        await state.addMoney(upgrade.cumul * state.discard.length, {
-          skipGameOverPause: true,
-          reason,
-        })
-      },
-      cost: resolveCost(String(Math.max(0, 80 - advantage) * ENERGY_TO_MONEY)),
+      max: 10,
+      cost: resolveCost(String(100)),
     },
     {
       name: "Sport",
@@ -92,12 +32,69 @@ export default function generateUpgrades(advantage: number): RawUpgrade[] {
         })
       },
       max: 5,
-      cost: resolveCost(Math.max(0, 20 - advantage)),
+      cost: resolveCost(20),
+    },
+    {
+      name: "Méditation",
+      eventName: "onPlay",
+      description: "Pioche @cumul carte@s si tu as moins de 5 cartes en main",
+      image: "meditation.png",
+      condition: (state) => state.draw.length > 0 && state.hand.length < 5,
+      onTrigger: async (state, upgrade, reason) => {
+        await state.drawCard(
+          Math.min(upgrade.cumul, MAX_HAND_SIZE - state.hand.length),
+          { skipGameOverPause: true, reason },
+        )
+      },
+      max: 3,
+      cost: resolveCost(String(100)),
+    },
+    {
+      name: "Bourse",
+      eventName: "weekly",
+      description: "Gagne @cumul% de ton capital",
+      image: "bourse.png",
+      condition: (state) => state.money > 0,
+      onTrigger: async (state, upgrade, reason) => {
+        await state.addMoney(Math.ceil(upgrade.cumul * (state.money / 100)), {
+          skipGameOverPause: true,
+          reason,
+        })
+      },
+      max: 5,
+      cost: resolveCost(String(100)),
+    },
+    {
+      name: "Recyclage",
+      eventName: "weekly",
+      description: "Recycle @cumul carte@s aléatoire@s de la défausse",
+      image: "recyclage.png",
+      condition: (state) => state.discard.length > 0,
+      onTrigger: async (state, upgrade, reason) => {
+        await state.recycleCard(upgrade.cumul, { reason })
+      },
+      max: 3,
+      cost: resolveCost(String(50)),
+    },
+    {
+      name: "I.A",
+      eventName: "weekly",
+      description: "Gagne @cumulM$ par carte en défausse",
+      image: "ia.png",
+      condition: (state) => state.discard.length > 0,
+      onTrigger: async (state, upgrade, reason) => {
+        await state.addMoney(upgrade.cumul * state.discard.length, {
+          skipGameOverPause: true,
+          reason,
+        })
+      },
+      max: 10,
+      cost: resolveCost(String(100)),
     },
     {
       name: "PC Puissant",
-      eventName: "onPlay",
-      description: "Gagne @cumulM$ par @energy",
+      eventName: "daily",
+      description: "Gagne @cumulM$ par @energy en réserve",
       image: "pc-puissant.png",
       condition: (state) => state.energy > 0,
       onTrigger: async (state, upgrade, reason) => {
@@ -106,8 +103,8 @@ export default function generateUpgrades(advantage: number): RawUpgrade[] {
           reason,
         })
       },
-      max: 2,
-      cost: resolveCost(String(Math.max(0, 40 - advantage) * ENERGY_TO_MONEY)),
+      max: 10,
+      cost: resolveCost(String(100)),
     },
     {
       name: "Stagiaire",
@@ -122,7 +119,7 @@ export default function generateUpgrades(advantage: number): RawUpgrade[] {
         })
       },
       max: 5,
-      cost: resolveCost(String(Math.max(0, 20 - advantage) * ENERGY_TO_MONEY)),
+      cost: resolveCost(String(50)),
     },
     {
       name: "DevOps",
@@ -138,7 +135,7 @@ export default function generateUpgrades(advantage: number): RawUpgrade[] {
         )
       },
       max: Math.floor(MAX_HAND_SIZE / 2),
-      cost: resolveCost(String(Math.max(0, 20 - advantage) * ENERGY_TO_MONEY)),
+      cost: resolveCost(String(25)),
     },
     {
       name: "Data Center",
@@ -149,7 +146,7 @@ export default function generateUpgrades(advantage: number): RawUpgrade[] {
         await state.addMaxEnergy(5, { reason })
       },
       max: 4,
-      cost: resolveCost(String(Math.max(0, 50 - advantage) * ENERGY_TO_MONEY)),
+      cost: resolveCost(String(50)),
     },
     {
       name: "Méthode Agile",
@@ -162,7 +159,7 @@ export default function generateUpgrades(advantage: number): RawUpgrade[] {
         })
       },
       max: 3,
-      cost: resolveCost(String(Math.max(0, 50 - advantage) * ENERGY_TO_MONEY)),
+      cost: resolveCost(String(100)),
     },
     {
       name: "Anti-virus",
@@ -177,7 +174,7 @@ export default function generateUpgrades(advantage: number): RawUpgrade[] {
         })
       },
       max: 5,
-      cost: resolveCost(String(Math.max(0, 20 - advantage) * ENERGY_TO_MONEY)),
+      cost: resolveCost(String(100)),
     },
   ]
 }

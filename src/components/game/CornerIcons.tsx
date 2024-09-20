@@ -35,7 +35,7 @@ export const CornerIcons = (props: { show: boolean }) => {
           hidden: !transparency,
           "opacity-0": transparency,
           "transition-all duration-500 ease-in-out": animation,
-          "translate-x-0 opacity-100": props.show,
+          "translate-x-0 opacity-100 flex": props.show,
         },
       )}
     >

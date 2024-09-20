@@ -1,7 +1,15 @@
 [
   {
+    "name": "EJS",
+    "image": "ejs.png"
+  },
+  {
     "name": "TypeScript",
     "image": "ts.png"
+  },
+  {
+    "name": "JavaScript",
+    "image": "js.png"
   },
   {
     "name": "React",
@@ -52,6 +60,18 @@
     "image": "git.png"
   },
   {
+    "name": "Jest",
+    "image": "jest.png"
+  },
+  {
+    "name": "ESLint",
+    "image": "eslint.png"
+  },
+  {
+    "name": "Prettier",
+    "image": "prettier.png"
+  },
+  {
     "name": "Processing",
     "image": "processing.webp"
   },
@@ -82,5 +102,9 @@
   {
     "name": "Ruby",
     "image": "ruby.png"
+  },
+  {
+    "name": "ESBuild",
+    "image": "esbuild.png"
   }
 ]
