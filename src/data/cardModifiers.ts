@@ -112,6 +112,14 @@ const cardModifiers = {
       },
     }),
   }),
+
+  "level up cards": (handCardNames: string[], advantage: number) => ({
+    condition: (card) => handCardNames.includes(card.name),
+    use: (card) => ({
+      ...card,
+      localAdvantage: card.localAdvantage + advantage,
+    }),
+  }),
 } satisfies Record<string, (...params: never[]) => CardModifier>
 
 export default cardModifiers

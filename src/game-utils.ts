@@ -554,6 +554,22 @@ export function formatText(text: string) {
     )
 }
 
+export function generateDescriptionRest(options: {
+  energy?: { value: number; rest: number; s: string }
+  money?: number
+}) {
+  if (!options.energy && !options.money) return ""
+  if (!options.energy) return `<hr> Gagne ${options.money}M$`
+  if (!options.money)
+    return `<hr> Gagne ${options.energy.value} @energy${options.energy.s}`
+
+  return options.energy.value > 0
+    ? `<hr> Gagne ${options.energy.value} @energy${options.energy.s}${
+        options.money > 0 ? ` et ${options.money}M$` : ""
+      }`
+    : ""
+}
+
 export function formatCoinFlipText(options: { heads: string; tails: string }) {
   return formatText(
     `Lance une pièce. <br/> Face: ${options.heads} <br/> Pile: ${options.tails}`,

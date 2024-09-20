@@ -1,8 +1,8 @@
 import React from "react"
 import ReactDOMServer from "react-dom/server"
 
-import projects from "@/data/projects.json"
-import technos from "@/data/techno.json"
+import projects from "@/data/actions.ts"
+import technos from "@/data/techno.ts"
 
 import { map, formatText, formatUpgradeText } from "@/game-utils.ts"
 

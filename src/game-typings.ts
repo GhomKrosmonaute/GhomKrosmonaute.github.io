@@ -50,13 +50,7 @@ export type Cost = {
 
 export interface Effect<Data extends any[]> {
   description: string
-  type: "action" | "support"
   cost: Cost
-  template?: (
-    state: GameState,
-    card: GameCardInfo,
-    condition: boolean,
-  ) => string
   condition?: (state: GameState, card: GameCardInfo<true>) => boolean
   prePlay?: (
     state: GameState,
@@ -79,6 +73,7 @@ export interface ActionCardInfo<Resolved = false> {
   type: "action"
   name: string
   image: string
+  families: ActionCardFamily[]
   effect: Resolved extends true ? Effect<any[]> : EffectBuilder<any[]>
   state: Resolved extends true ? GameCardState : null
   localAdvantage: Resolved extends true ? number : null
@@ -107,6 +102,16 @@ export type GameCardState =
   | "removed"
   | "idle"
   | null
+
+export type ActionCardFamily =
+  | "Bot Discord"
+  | "Jeu vidéo"
+  | "Site web"
+  | "Outil"
+  | "TypeScript"
+  | "React"
+  | "PlayCurious"
+  | "Open Source"
 
 export type GameCardInfo<Resolved = false> =
   | ActionCardInfo<Resolved>
