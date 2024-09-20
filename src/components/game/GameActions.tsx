@@ -101,10 +101,9 @@ export const GameActions = (props: { show: boolean }) => {
         </h2>
         {game.playZone.length > 0 ? (
           <div className="flex justify-center">
-            <GameCard
-              card={reviveCard(game.playZone[game.playZone.length - 1], game)}
-              isPlaying
-            />
+            {game.playZone.map((indice, i) => (
+              <GameCard key={i} card={reviveCard(indice, game)} isPlaying />
+            ))}
           </div>
         ) : game.choiceOptions.length === 0 ? (
           <Button

@@ -103,6 +103,7 @@ const effects: EffectBuilder<any[]>[] = [
           from: state.revivedHand.filter(
             (c) =>
               c.name !== card.name &&
+              c.effect.cost.value > 0 &&
               (!c.effect.condition || c.effect.condition(state, c)),
           ),
         })
@@ -136,7 +137,7 @@ const effects: EffectBuilder<any[]>[] = [
       },
       type: "action",
       cost: resolveCost(price.value), // ~ middle cost
-      waitBeforePlay: true,
+      needsPlayZone: true,
     }
   },
   (advantage): Effect<[selected: GameCardInfo<true>]> => {
