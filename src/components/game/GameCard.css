@@ -1,3 +1,6 @@
+.game-card {
+  @apply text-lg leading-4;
+}
 .game-card.idle {
   opacity: 1;
   scale: 1;

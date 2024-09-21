@@ -4,8 +4,8 @@ import { Tutorial } from "@/components/game/Tutorial.tsx"
 import { TutorialStep } from "@/components/game/TutorialProvider.tsx"
 import { Button } from "@/components/ui/button.tsx"
 import { MONEY_TO_REACH } from "@/game-constants.ts"
-import { formatText } from "@/game-utils.ts"
 import { bank } from "@/sound.ts"
+import { formatText } from "@/game-safe-utils.ts"
 
 const cardStyle: React.CSSProperties = {
   backgroundColor: "hsl(var(--card))",

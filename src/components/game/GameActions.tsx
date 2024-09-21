@@ -4,15 +4,7 @@ import { INFINITE_DRAW_COST, MAX_HAND_SIZE } from "@/game-constants.ts"
 
 import { cn } from "@/utils.ts"
 import { bank } from "@/sound.ts"
-import {
-  energyCostColor,
-  formatText,
-  isGameOver,
-  isGameResource,
-  isNewSprint,
-  reviveCard,
-  wait,
-} from "@/game-utils"
+import { isGameOver, reviveCard } from "@/game-utils"
 
 import { Button } from "@/components/ui/button.tsx"
 import { GameCard } from "@/components/game/GameCard.tsx"
@@ -21,6 +13,14 @@ import { GameResourceCard } from "@/components/game/GameResourceCard.tsx"
 
 import { useCardGame } from "@/hooks/useCardGame.ts"
 import { useSettings } from "@/hooks/useSettings.ts"
+
+import {
+  energyCostColor,
+  formatText,
+  isGameResource,
+  isNewSprint,
+  wait,
+} from "@/game-safe-utils.ts"
 
 export const GameActions = (props: { show: boolean }) => {
   const game = useCardGame()

@@ -15,13 +15,6 @@ import type {
 import { useCardGame } from "@/hooks/useCardGame.ts"
 import { useSettings } from "@/hooks/useSettings.ts"
 
-import {
-  canBeBuy,
-  cardInfoToIndice,
-  energyCostColor,
-  getUsableCost,
-  isActionCardInfo,
-} from "@/game-utils.ts"
 import { cn } from "@/utils.ts"
 import { LOCAL_ADVANTAGE } from "@/game-constants.ts"
 
@@ -29,6 +22,14 @@ import { GameMoneyIcon } from "@/components/game/GameMoneyIcon.tsx"
 import { Tilt, TiltFoil } from "@/components/game/Tilt.tsx"
 import { GameValueIcon } from "@/components/game/GameValueIcon.tsx"
 import { BorderLight } from "@/components/ui/border-light.tsx"
+import upgrades from "@/data/upgrades.ts"
+import {
+  canBeBuy,
+  cardInfoToIndice,
+  energyCostColor,
+  getUsableCost,
+  isActionCardInfo,
+} from "@/game-safe-utils.ts"
 
 export const GameCard = (
   props: React.PropsWithoutRef<{
@@ -69,14 +70,11 @@ export const GameCard = (
     ? game.operationInProgress.filter((o) => o !== "choices").length > 0
     : game.operationInProgress.length > 0
 
-  let rarityName: keyof typeof LOCAL_ADVANTAGE = "legendary"
-
-  for (const [key, advantage] of Object.entries(LOCAL_ADVANTAGE)) {
-    if (advantage === props.card.localAdvantage) {
-      rarityName = key as keyof typeof LOCAL_ADVANTAGE
-      break
-    }
-  }
+  const rarityName = Object.entries(LOCAL_ADVANTAGE)
+    .sort((a, b) => b[1] - a[1])
+    .find(
+      ([, advantage]) => props.card.localAdvantage >= advantage,
+    )![0] as keyof typeof LOCAL_ADVANTAGE
 
   return (
     <div
@@ -179,7 +177,7 @@ export const GameCard = (
               [cn({
                 "bg-card/60": quality.transparency,
                 "bg-card": !quality.transparency,
-              })]: props.card.effect.type === "support",
+              })]: props.card.type === "support",
               // "shadow-action": props.card.effect.type === "action",
               "transition-shadow duration-200 ease-in-out hover:shadow-glow-20 shadow-primary":
                 quality.shadows,
@@ -191,6 +189,7 @@ export const GameCard = (
               "ring-rare/50": rarityName === "rare",
               "ring-epic/50": rarityName === "epic",
               "ring-legendary/50": rarityName === "legendary",
+              "ring-cosmic/50": rarityName === "cosmic",
             },
           )}
         >
@@ -237,11 +236,11 @@ export const GameCard = (
             className={cn(
               "relative flex justify-start items-center h-10 rounded-t-xl",
               {
-                "bg-action": props.card.effect.type === "action",
+                "bg-action": props.card.type === "action",
                 [cn({
                   "bg-support/50": quality.transparency,
                   "bg-support": !quality.transparency,
-                })]: props.card.effect.type === "support",
+                })]: props.card.type === "support",
               },
             )}
             style={{
@@ -292,9 +291,8 @@ export const GameCard = (
                       props.card.effect.cost.value > 99,
                     "text-md": props.card.name.length > 11,
                   })]: props.card.effect.cost.value > 0,
-                  "text-action-foreground": props.card.effect.type === "action",
-                  "text-support-foreground":
-                    props.card.effect.type === "support",
+                  "text-action-foreground": props.card.type === "action",
+                  "text-support-foreground": props.card.type === "support",
                 },
               )}
               style={{
@@ -314,27 +312,31 @@ export const GameCard = (
                 },
               )}
             >
-              {/* Rarity indicator */}
-              <div
-                className="z-10"
-                style={{
-                  color: `hsl(var(--${rarityName}-foreground))`,
-                  backgroundColor: `hsl(var(--${rarityName}))`,
-                }}
-              >
-                {rarityName}
-                {props.card.localAdvantage > LOCAL_ADVANTAGE.legendary
-                  ? "+".repeat(
-                      LOCAL_ADVANTAGE.legendary - props.card.localAdvantage,
-                    )
-                  : ""}
-              </div>
-
-              {/* Upgrade max indicator */}
-              {props.card.effect.upgrade && (
+              {!props.card.effect.upgrade ? (
+                /* Rarity indicator */
+                <div
+                  className="z-10"
+                  style={{
+                    color: `hsl(var(--${rarityName}-foreground))`,
+                    backgroundColor: `hsl(var(--${rarityName}))`,
+                  }}
+                >
+                  {rarityName}
+                  {props.card.localAdvantage > LOCAL_ADVANTAGE[rarityName]
+                    ? "+".repeat(
+                        Math.max(
+                          0,
+                          props.card.localAdvantage -
+                            LOCAL_ADVANTAGE[rarityName],
+                        ),
+                      )
+                    : ""}
+                </div>
+              ) : (
+                /* Upgrade max indicator */
                 <div className="bg-upgrade -ml-1">
                   {(() => {
-                    const raw = game.rawUpgrades.find(
+                    const raw = upgrades.find(
                       (raw) => raw.name === props.card.name,
                     )!
                     return raw.max === undefined
@@ -357,7 +359,7 @@ export const GameCard = (
           <div
             className={cn(
               "flex-grow rounded-b-xl",
-              props.card.effect.type === "action" && {
+              props.card.type === "action" && {
                 // "backdrop-blur-sm": blur && transparency,
                 "bg-card/60": quality.transparency,
                 "bg-card": !quality.transparency,
@@ -368,7 +370,7 @@ export const GameCard = (
             }}
           >
             <div
-              className="py-[10px] px-[15px] text-center"
+              className="py-[12px] px-[10px] text-center"
               style={{
                 transform: quality.perspective ? "translateZ(10px)" : "none",
                 transformStyle: quality.perspective ? "preserve-3d" : "flat",

@@ -10,7 +10,7 @@ export const GameMoneyIcon = (
     symbol?: boolean
   }>,
 ) => {
-  if (props.value === 0) return <></>
+  if (props.value <= 0) return <></>
 
   return (
     <div

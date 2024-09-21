@@ -2,6 +2,7 @@ import React from "react"
 
 import { cn } from "@/utils.ts"
 import { Card } from "@/components/Card.tsx"
+import { FPS } from "@/components/game/FPS.tsx"
 import { Button } from "@/components/ui/button.tsx"
 import { Label } from "@/components/ui/label.tsx"
 import { Checkbox } from "@/components/ui/checkbox.tsx"
@@ -22,15 +23,10 @@ import { useCardGame } from "@/hooks/useCardGame.ts"
 import { useGlobalState } from "@/hooks/useGlobalState.ts"
 import { useSettings } from "@/hooks/useSettings.ts"
 
-import {
-  Speed,
-  Difficulty,
-  QualityOptions,
-  settings,
-  translations,
-} from "@/game-settings.ts"
-
+import type { Difficulty, QualityOptions } from "@/game-typings.ts"
+import { settings, translations } from "@/game-settings.ts"
 import { GAME_ADVANTAGE } from "@/game-constants.ts"
+import { Speed } from "@/game-enums.ts"
 
 import Warning from "@/assets/icons/warning.svg"
 import Muted from "@/assets/icons/muted.svg"
@@ -38,8 +34,6 @@ import Sound from "@/assets/icons/sound.svg"
 import Rules from "@/assets/icons/rules.svg"
 
 import themes from "@/data/themes.json"
-
-import { FPS } from "@/components/game/FPS.tsx"
 
 export const Settings = (props: { show: boolean }) => {
   const [score, difficulty] = useCardGame((state) => [

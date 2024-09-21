@@ -1,5 +1,5 @@
 import { TriggerEventName } from "@/game-typings.ts"
-import { formatText } from "@/game-utils.ts"
+import { formatText } from "@/game-safe-utils.ts"
 import events from "@/data/events.ts"
 import { cn } from "@/utils.ts"
 

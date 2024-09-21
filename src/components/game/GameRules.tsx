@@ -1,7 +1,7 @@
 import React from "react"
 import { cn } from "@/utils.ts"
 import helpers from "@/data/helpers.json"
-import { formatText, reviveCard } from "@/game-utils.ts"
+import { reviveCard } from "@/game-utils.ts"
 import {
   ENERGY_TO_MONEY,
   REPUTATION_TO_ENERGY,
@@ -20,6 +20,8 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card.tsx"
+import cards from "@/data/cards.ts"
+import { formatText } from "@/game-safe-utils.ts"
 
 export const GameRules = (props: { show: boolean }) => {
   const close = useGlobalState((state) => state.toggleRules)
@@ -166,7 +168,7 @@ export const GameRules = (props: { show: boolean }) => {
                     <tr>
                       <td>Cartes découvertes</td>
                       <td>
-                        {stats.discoveries.length} / {stats.cards.length}
+                        {stats.discoveries.length} / {cards.length}
                       </td>
                     </tr>
                     <tr>

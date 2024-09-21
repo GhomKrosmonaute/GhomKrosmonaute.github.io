@@ -5,7 +5,7 @@ import { useSettings } from "@/hooks/useSettings.ts"
 import { useGlobalState } from "@/hooks/useGlobalState.ts"
 
 import { settings } from "@/game-settings.ts"
-import { formatText, rankColor } from "@/game-utils.ts"
+import { formatText, rankColor } from "@/game-safe-utils.ts"
 
 import scores from "@/data/scores.json"
 import helpers from "@/data/helpers.json"

@@ -33,7 +33,7 @@ export const GameValueIcon = ({
     shadows: state.quality.shadows,
   }))
 
-  if (isCost && value === 0) return null
+  if (isCost && (typeof value === "number" ? value : 1) <= 0) return null
 
   return (
     <div

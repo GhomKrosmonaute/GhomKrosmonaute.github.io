@@ -88,12 +88,14 @@
 
     --common: var(--background);
     --common-foreground: var(--foreground);
-    --rare: var(--accent);
-    --rare-foreground: var(--accent-foreground);
+    --rare: 221 83% 53%;
+    --rare-foreground: 0 0% 94%;
     --epic: var(--primary);
     --epic-foreground: var(--primary-foreground);
-    --legendary: var(--destructive);
-    --legendary-foreground: var(--destructive-foreground);
+    --legendary: var(--upgrade);
+    --legendary-foreground: var(--upgrade-foreground);
+    --cosmic: var(--destructive);
+    --cosmic-foreground: var(--destructive-foreground);
 
     // Game Speed
 

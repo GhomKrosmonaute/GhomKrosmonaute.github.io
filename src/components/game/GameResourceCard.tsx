@@ -8,8 +8,7 @@ import type { GameResource } from "@/game-typings"
 
 import { useCardGame } from "@/hooks/useCardGame.ts"
 import { useSettings } from "@/hooks/useSettings.ts"
-
-import { formatText } from "@/game-utils.ts"
+import { formatText } from "@/game-safe-utils.ts"
 import { cn } from "@/utils.ts"
 
 import { Tilt, TiltFoil } from "@/components/game/Tilt.tsx"

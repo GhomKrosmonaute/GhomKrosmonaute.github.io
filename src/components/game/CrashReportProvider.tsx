@@ -5,10 +5,9 @@ import ghom from "@/data/ghom.json"
 import { CrashReportContext, useCrashReport } from "@/hooks/useCrashReport.ts"
 import { GlobalGameState, GameState, useCardGame } from "@/hooks/useCardGame.ts"
 
-import { stringifyClone, wait } from "@/game-utils.ts"
-
 import { Button } from "@/components/ui/button.tsx"
 import { bank } from "@/sound.ts"
+import { omit, stringifyClone, wait } from "@/game-safe-utils.ts"
 
 export const CrashReportProvider = ({ children }: React.PropsWithChildren) => {
   const [gameError, update, getState] = useCardGame((state) => [
@@ -40,12 +39,9 @@ export const CrashReportProvider = ({ children }: React.PropsWithChildren) => {
 
       console.error(error)
 
-      const gameStringState = JSON.stringify({
-        ...state,
-        cards: null,
-        rawUpgrades: null,
-        revivedHand: null,
-      })
+      const gameStringState = JSON.stringify(
+        omit(state, "revivedHand", "revivedDraw", "revivedDiscard"),
+      )
 
       wait(500).then(() =>
         navigator.clipboard

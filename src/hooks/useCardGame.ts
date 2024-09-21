@@ -1,14 +1,14 @@
 import { bank } from "@/sound.ts"
 import { create } from "zustand"
 
+import cards from "@/data/cards.ts"
+import upgrades from "@/data/upgrades.ts"
 import achievements from "@/data/achievements.ts"
-import cardModifiers from "@/data/cardModifiers"
-import generateCards from "@/data/cards.ts"
-import generateUpgrades from "@/data/upgrades.ts"
+import cardModifiers from "@/data/cardModifiers.ts"
 
 import type {
   GameLog,
-  RawUpgrade,
+  GameResource,
   GameCardInfo,
   MethodWhoLog,
   UpgradeIndice,
@@ -19,7 +19,6 @@ import type {
   GameMethodOptions,
   CardModifierIndice,
   MethodWhoCheckIfGameOver,
-  GameResource,
 } from "@/game-typings"
 
 import {
@@ -36,37 +35,41 @@ import {
 } from "@/game-constants.ts"
 
 import {
-  wait,
-  shuffle,
-  getDeck,
-  canBeBuy,
-  isGameWon,
-  parseSave,
   isGameOver,
   reviveCard,
-  excludeCard,
-  isNewSprint,
-  includeCard,
-  costToEnergy,
-  handleErrors,
-  getUsableCost,
   reviveUpgrade,
   getSortedHand,
-  fetchSettings,
   willBeRemoved,
-  isGameResource,
-  upgradeToIndice,
-  updateCardState,
-  cardInfoToIndice,
-  handleErrorsAsync,
-  updateGameAutoSpeed,
   generateChoiceOptions,
-  generateRandomAdvantage,
-  GlobalCardModifierIndex,
 } from "@/game-utils.ts"
 
 import { metadata } from "@/game-metadata.ts"
-import { Difficulty, difficultyIndex, settings } from "@/game-settings.ts"
+import { Difficulty } from "@/game-typings.ts"
+import { difficultyIndex, settings } from "@/game-settings.ts"
+import {
+  generateRandomAdvantage,
+  updateGameAutoSpeed,
+  handleErrorsAsync,
+  fetchSettings,
+  handleErrors,
+  isNewSprint,
+  isGameWon,
+  parseSave,
+  getDeck,
+  shuffle,
+  wait,
+  upgradeToIndice,
+  excludeCard,
+  updateCardState,
+  includeCard,
+  canBeBuy,
+  cardInfoToIndice,
+  getUsableCost,
+  costToEnergy,
+  isGameResource,
+  save,
+} from "@/game-safe-utils.ts"
+import { GlobalCardModifierIndex } from "@/game-enums.ts"
 
 export interface GlobalGameState {
   debug: boolean
@@ -94,8 +97,6 @@ export interface GameState {
   increments: (key: keyof GameState, count?: number) => Promise<void>
   incrementsInflation: () => void
   selectedCard: string | null
-  rawUpgrades: RawUpgrade[]
-  cards: GameCardInfo[]
   difficulty: Difficulty
   error: Error | null
   handleError: <T>(error: T) => T
@@ -112,9 +113,11 @@ export interface GameState {
   requestedCancel: boolean
   playZone: GameCardIndice[]
   draw: GameCardIndice[]
-  discard: GameCardIndice[]
   hand: GameCardIndice[]
+  discard: GameCardIndice[]
+  revivedDraw: GameCardInfo<true>[]
   revivedHand: GameCardInfo<true>[]
+  revivedDiscard: GameCardInfo<true>[]
   upgrades: UpgradeIndice[]
   globalCardModifiers: CardModifierIndice[]
   score: number
@@ -167,7 +170,12 @@ export interface GameState {
     filter?: (card: GameCardInfo<true>) => boolean
   }) => Promise<void>
   removeCard: (name: string) => Promise<void>
-  recycleCard: (count: number, options: GameMethodOptions) => Promise<void>
+  recycleCard: (
+    count: number,
+    options: GameMethodOptions & {
+      filter?: (card: GameCardInfo<true>) => boolean
+    },
+  ) => Promise<void>
   playCard: (
     card: GameCardInfo<true>,
     options: GameMethodOptions & { free?: boolean },
@@ -183,91 +191,6 @@ export interface GameState {
   defeat: (reason: GameOverReason) => void
   reset: () => void
   enableInfinityMode: () => void
-}
-
-function generateFakeState(): GameState & GlobalGameState {
-  return {
-    selectedCard: null,
-    requestedCancel: false,
-    inflation: 0,
-    energy: 0,
-    discard: [],
-    revivedHand: [],
-    infinityMode: false,
-    reason: null,
-    notification: [],
-    energyMax: MAX_ENERGY,
-    wonGames: 0,
-    money: 0,
-    reputation: 0,
-    rawUpgrades: [],
-    hand: [],
-    coinFlips: 0,
-    recycledCards: 0,
-    skippedChoices: 0,
-    discardedCards: 0,
-    day: 0,
-    dayFull: false,
-    sprintFull: false,
-    isGameOver: false,
-    isWon: false,
-    score: 0,
-    logs: [],
-    cards: [],
-    upgrades: [],
-    choiceOptions: [],
-    choiceOptionCount: 0,
-    operationInProgress: [],
-    playZone: [],
-    draw: [],
-    error: null,
-    difficulty: "normal",
-    globalCardModifiers: [],
-    discoveries: [],
-    achievements: [],
-    totalMoney: 0,
-    playedGames: 0,
-    scoreAverage: 0,
-    debug: false,
-    selectCard: () => {},
-    waitCardSelection: async () => null,
-    addMaxEnergy: async () => {},
-    addMoney: async () => {},
-    setOperationInProgress: () => {},
-    increments: async () => {},
-    incrementsInflation: () => {},
-    addGlobalCardModifier: async () => {},
-    setDebug: () => {},
-    checkAchievements: async () => {},
-    checkDiscoveries: () => {},
-    addDiscovery: () => {},
-    addAchievement: async () => {},
-    addWonGame: () => {},
-    addPlayedGame: () => {},
-    addEnergy: async () => {},
-    upgrade: async () => {},
-    dangerouslyUpdate: () => {},
-    addLog: () => {},
-    addNotification: async () => {},
-    updateScore: () => {},
-    addReputation: async () => {},
-    advanceTime: async () => {},
-    coinFlip: async () => {},
-    defeat: () => {},
-    discardCard: async () => {},
-    drawCard: async () => {},
-    enableInfinityMode: () => {},
-    handleError: (t) => t,
-    pickOption: async () => {},
-    playCard: async () => {},
-    reset: () => {},
-    win: () => {},
-    removeCard: async () => {},
-    skip: async () => {},
-    triggerUpgrade: async () => {},
-    triggerEvent: async () => {},
-    recycleCard: async () => {},
-  }
 }
 
 function generateGlobalGameState(): Omit<
@@ -432,50 +355,7 @@ function generateGameState(): Omit<
 
   localStorage.setItem("metadata", JSON.stringify(metadata))
 
-  const fakeState = generateFakeState()
-  const cards = generateCards(fakeState)
-  const rawUpgrades = generateUpgrades()
-
-  const startingDeck: string[] = []
-
-  startingDeck.push(
-    cards.find((c) =>
-      c.effect(0, fakeState).description.startsWith("Renvoie tout"),
-    )!.name,
-  )
-
-  startingDeck.push(
-    ...cards
-      .filter(
-        (c) =>
-          startingDeck.every((name) => name !== c.name) &&
-          c.effect(0, fakeState).description.startsWith("Pioche"),
-      )
-      .slice(0, 2)
-      .map((c) => c.name),
-  )
-
-  startingDeck.push(
-    ...cards
-      .filter(
-        (c) =>
-          startingDeck.every((name) => name !== c.name) &&
-          c.effect(0, fakeState).description.startsWith("Recycle"),
-      )
-      .map((c) => c.name),
-  )
-
-  startingDeck.push(
-    ...cards
-      .filter(
-        (c) =>
-          startingDeck.every((name) => name !== c.name) &&
-          !c.effect(0, fakeState).upgrade &&
-          c.effect(0, fakeState).description.toLowerCase().includes("gagne") &&
-          c.effect(0, fakeState).description.toLowerCase().includes("énergie"),
-      )
-      .map((c) => c.name),
-  )
+  const startingDeck: string[] = ["Prettier", "Knex", "Jest", "Processing"]
 
   // startingDeck = shuffle(startingDeck, 3)
 
@@ -490,7 +370,7 @@ function generateGameState(): Omit<
               o.every(([name]) => name !== c.name),
             ) &&
             startingDeck.every((name) => name !== c.name) &&
-            !c.effect(0, fakeState).upgrade,
+            !c.effect().upgrade,
         ),
         5,
       )
@@ -505,8 +385,6 @@ function generateGameState(): Omit<
     recycledCards: 0,
     discardedCards: 0,
     skippedChoices: 0,
-    rawUpgrades,
-    cards,
     difficulty,
     error: null,
     choiceOptions: startingChoices,
@@ -527,12 +405,14 @@ function generateGameState(): Omit<
       .slice(0, MAX_HAND_SIZE - 2)
       .map((name) => [name, "idle", LOCAL_ADVANTAGE.common]),
     revivedHand: [],
+    revivedDraw: [],
+    revivedDiscard: [],
     playZone: [],
     discard: [],
     upgrades: [],
     globalCardModifiers: [
       ["upgrade cost threshold", [], GlobalCardModifierIndex.First],
-      ["all card inflation", [], GlobalCardModifierIndex.Last],
+      // ["all card inflation", [], GlobalCardModifierIndex.Last],
     ],
     day: 0,
     dayFull: false,
@@ -697,7 +577,7 @@ function generateGameMethods(
               : [
                   ...state.choiceOptions,
                   generateChoiceOptions(getState(), {
-                    filter: (c) => !c.effect(0, state).upgrade,
+                    filter: (c) => !c.effect().upgrade,
                   }),
                 ],
           }))
@@ -713,12 +593,11 @@ function generateGameMethods(
                 ...state.choiceOptions,
                 generateChoiceOptions(fullState, {
                   noResource: true,
-                  filter: (c) =>
-                    !c.effect(0, state).upgrade && c.type === "action",
+                  filter: (c) => !c.effect().upgrade && c.type === "action",
                 }),
                 generateChoiceOptions(fullState, {
                   noResource: true,
-                  filter: (c) => Boolean(c.effect(0, state).upgrade),
+                  filter: (c) => Boolean(c.effect().upgrade),
                 }),
               ],
             }))
@@ -804,7 +683,7 @@ function generateGameMethods(
         // Calcul des points pour les améliorations
         let upgradesPoints = 0
         state.upgrades.forEach((indice) => {
-          const upgrade = reviveUpgrade(indice, state)
+          const upgrade = reviveUpgrade(indice)
 
           upgradesPoints +=
             (upgrade.cost.type === "money"
@@ -1014,7 +893,7 @@ function generateGameMethods(
 
         state.setOperationInProgress(`upgrade ${name}`, true)
 
-        const rawUpgrade = state.rawUpgrades.find((a) => a.name === name)!
+        const rawUpgrade = upgrades.find((a) => a.name === name)!
 
         // on joue le son de la banque
         bank.upgrade.play()
@@ -1067,7 +946,7 @@ function generateGameMethods(
       await handleErrorsAsync(getState, async () => {
         const state = getState()
         const indice = state.upgrades.find((a) => a[0] === name)!
-        const upgrade = reviveUpgrade(indice, state)
+        const upgrade = reviveUpgrade(indice)
 
         if (!upgrade.condition || upgrade.condition(getState(), upgrade)) {
           state.setOperationInProgress(`triggerUpgrade ${name}`, true)
@@ -1112,7 +991,7 @@ function generateGameMethods(
         state.setOperationInProgress(`triggerUpgradeEvent ${event}`, true)
 
         const upgrades = state.upgrades
-          .map((indice) => reviveUpgrade(indice, state))
+          .map((indice) => reviveUpgrade(indice))
           .filter((upgrade) => upgrade.eventName === event)
 
         for (const upgrade of upgrades) {
@@ -1782,6 +1661,8 @@ function generateGameMethods(
   } satisfies Partial<GameState>
 }
 
+export type GameMethods = ReturnType<typeof generateGameMethods>
+
 export const useCardGame = create<GameState & GlobalGameState>(
   (set, getState) => {
     const state = {
@@ -1796,6 +1677,8 @@ export const useCardGame = create<GameState & GlobalGameState>(
     )
 
     state.revivedHand = getSortedHand(state.hand, state)
+    state.revivedDraw = state.draw.map((i) => reviveCard(i, state))
+    state.revivedDiscard = state.discard.map((i) => reviveCard(i, state))
 
     return state
   },
@@ -1817,55 +1700,7 @@ useCardGame.subscribe(async (state, prevState) => {
       )
         state.updateScore()
 
-      localStorage.setItem(
-        "save",
-        JSON.stringify(
-          {
-            coinFlips: state.coinFlips,
-            recycledCards: state.recycledCards,
-            discardedCards: state.discardedCards,
-            skippedChoices: state.skippedChoices,
-            difficulty: state.difficulty,
-            error: state.error,
-            choiceOptions: state.choiceOptions,
-            choiceOptionCount: state.choiceOptionCount,
-            draw: state.draw,
-            hand: state.hand,
-            discard: state.discard,
-            playZone: state.playZone,
-            upgrades: state.upgrades,
-            globalCardModifiers: state.globalCardModifiers,
-            day: state.day,
-            energy: state.energy,
-            energyMax: state.energyMax,
-            reputation: state.reputation,
-            notification: state.notification,
-            dayFull: state.dayFull,
-            sprintFull: state.sprintFull,
-            money: state.money,
-            reason: state.reason,
-            isWon: state.isWon,
-            operationInProgress: state.operationInProgress,
-            isGameOver: state.isGameOver,
-            infinityMode: state.infinityMode,
-            logs: state.logs,
-            score: state.score,
-            inflation: state.inflation,
-            requestedCancel: state.requestedCancel,
-            selectedCard: state.selectedCard,
-          } satisfies Omit<
-            GameState,
-            | keyof ReturnType<typeof generateGameMethods>
-            | "cards"
-            | "rawUpgrades"
-            | "revivedHand"
-          >,
-          (key, value) => {
-            if (typeof value === "function" && !(key in state)) return undefined
-            return value
-          },
-        ),
-      )
+      save(state)
 
       // si la main change, on met a jour les revived cards
       if (
@@ -1875,6 +1710,8 @@ useCardGame.subscribe(async (state, prevState) => {
           prevState.globalCardModifiers.join(",")
       ) {
         state.revivedHand = getSortedHand(state.hand, state)
+        state.revivedDraw = state.draw.map((i) => reviveCard(i, state))
+        state.revivedDiscard = state.discard.map((i) => reviveCard(i, state))
       }
 
       // si aucune opération n'est en cours
@@ -1891,7 +1728,7 @@ useCardGame.subscribe(async (state, prevState) => {
 
         await state.checkAchievements()
 
-        updateGameAutoSpeed(state)
+        updateGameAutoSpeed(state, upgrades)
 
         // on vérifie si le jeu est fini
         if (isGameWon(state)) {

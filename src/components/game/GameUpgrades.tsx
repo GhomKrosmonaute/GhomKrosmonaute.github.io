@@ -3,13 +3,14 @@ import { useSettings } from "@/hooks/useSettings.ts"
 
 import events from "@/data/events.ts"
 
-import { formatText, formatUpgradeText, reviveUpgrade } from "@/game-utils.ts"
+import { reviveUpgrade } from "@/game-utils.ts"
 import { cn } from "@/utils.ts"
 
 import { Card } from "@/components/Card.tsx"
 import { Progress } from "@/components/ui/progress.tsx"
 import { GameValueIcon } from "@/components/game/GameValueIcon.tsx"
 import { EventText } from "@/components/game/EventText.tsx"
+import { formatText, formatUpgradeText } from "@/game-safe-utils.ts"
 
 export const GameUpgrades = (props: { show: boolean }) => {
   const quality = useSettings((state) => ({
@@ -18,10 +19,7 @@ export const GameUpgrades = (props: { show: boolean }) => {
     transparency: state,
   }))
 
-  const [upgrades, rawUpgrades] = useCardGame((state) => [
-    state.upgrades,
-    state.rawUpgrades,
-  ])
+  const upgrades = useCardGame((state) => state.upgrades)
 
   return (
     <>
@@ -57,7 +55,7 @@ export const GameUpgrades = (props: { show: boolean }) => {
             )}
           >
             {upgrades.map((indice, index) => {
-              const upgrade = reviveUpgrade(indice, { rawUpgrades })
+              const upgrade = reviveUpgrade(indice)
 
               const event = events[upgrade.eventName]
 

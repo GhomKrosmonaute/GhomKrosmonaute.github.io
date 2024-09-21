@@ -1,8 +1,13 @@
 import React from "react"
 
-import { formatText, reviveCard } from "@/game-utils.ts"
-import { useCardGame } from "@/hooks/useCardGame.ts"
 import { cn } from "@/utils.ts"
+import { reviveCard } from "@/game-utils.ts"
+import { formatText } from "@/game-safe-utils.ts"
+import { translations } from "@/game-settings.ts"
+import { MAX_REPUTATION, MONEY_TO_REACH } from "@/game-constants.ts"
+
+import { useCardGame } from "@/hooks/useCardGame.ts"
+import { useSettings } from "@/hooks/useSettings.ts"
 
 import Day from "@/assets/icons/game/day.svg"
 import Deck from "@/assets/icons/game/deck.svg"
@@ -17,12 +22,9 @@ import Energy from "@/assets/icons/game/energy.svg"
 import Reputation from "@/assets/icons/game/reputation.svg"
 import Inflation from "@/assets/icons/game/inflation.svg"
 
-import { GameGauge } from "@/components/game/GameGauge.tsx"
-import { MAX_REPUTATION, MONEY_TO_REACH } from "@/game-constants.ts"
-import { translations } from "@/game-settings.ts"
-import { MiniatureImage } from "@/components/game/GameMiniature.tsx"
 import { Separator } from "@/components/ui/separator.tsx"
-import { useSettings } from "@/hooks/useSettings.ts"
+import { GameGauge } from "@/components/game/GameGauge.tsx"
+import { MiniatureImage } from "@/components/game/GameMiniature.tsx"
 import { GameCardPopover } from "@/components/game/GameCardPopover.tsx"
 
 export const Stat = ({

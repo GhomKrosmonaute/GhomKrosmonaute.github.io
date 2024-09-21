@@ -3,7 +3,7 @@ import { useCardGame } from "@/hooks/useCardGame.ts"
 import { MAX_HAND_SIZE } from "@/game-constants.ts"
 import { useSettings } from "@/hooks/useSettings.ts"
 import Warning from "@/assets/icons/Warning.svg"
-import { formatText } from "@/game-utils.ts"
+import { formatText } from "@/game-safe-utils.ts"
 
 export const GameAlert = (props: { show?: boolean }) => {
   const quality = useSettings((state) => ({

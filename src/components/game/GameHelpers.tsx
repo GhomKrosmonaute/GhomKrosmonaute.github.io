@@ -7,8 +7,8 @@ import { useSettings } from "@/hooks/useSettings.ts"
 import Question from "@/assets/icons/question.svg"
 
 import { useHover } from "usehooks-ts"
-import { formatText } from "@/game-utils"
 import { cn } from "@/utils.ts"
+import { formatText } from "@/game-safe-utils.ts"
 
 export const GameHelpers = (props: { show: boolean }) => {
   const ref = React.useRef<HTMLDivElement>(null)

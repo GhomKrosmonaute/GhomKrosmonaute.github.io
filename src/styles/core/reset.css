@@ -44,7 +44,9 @@ h2 {
 }
 
 hr {
-  @apply py-1;
+  @apply border-none;
+  margin-top: 5px !important;
+  margin-bottom: 5px !important;
 }
 
 code {

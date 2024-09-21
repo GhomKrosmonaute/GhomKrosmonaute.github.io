@@ -2,7 +2,9 @@ import React from "react"
 import { cn } from "@/utils.ts"
 
 import type { GameLog, Upgrade, GameCardInfo } from "@/game-typings.ts"
-import { isGameCardIndice, reviveCard, reviveUpgrade } from "@/game-utils.ts"
+import { reviveCard, reviveUpgrade } from "@/game-utils.ts"
+import { isGameCardIndice } from "@/game-safe-utils.ts"
+
 import { useCardGame } from "@/hooks/useCardGame.ts"
 
 export const GameMiniature = (props: { item: GameLog["reason"] }) => {
@@ -11,7 +13,7 @@ export const GameMiniature = (props: { item: GameLog["reason"] }) => {
   const revived = Array.isArray(props.item)
     ? isGameCardIndice(props.item)
       ? reviveCard(props.item, game)
-      : reviveUpgrade(props.item, game)
+      : reviveUpgrade(props.item)
     : props.item
 
   return (

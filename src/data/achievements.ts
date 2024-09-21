@@ -1,6 +1,9 @@
 import type { GlobalGameState, GameState } from "@/hooks/useCardGame.ts"
-import { fetchSettings, reviveCard } from "@/game-utils.ts"
+import { reviveCard } from "@/game-utils.ts"
 import { MAX_HAND_SIZE } from "@/game-constants.ts"
+import cards from "@/data/cards.ts"
+import upgrades from "@/data/upgrades.ts"
+import { fetchSettings } from "@/game-safe-utils.ts"
 
 const achievements: {
   name: string
@@ -31,7 +34,7 @@ const achievements: {
     name: "Enutrof",
     description: "Utiliser toutes les améliorations économiques en une partie",
     unlockCondition: (state) =>
-      state.rawUpgrades
+      upgrades
         .filter((raw) => raw.description.includes("M$"))
         .every((raw) =>
           state.upgrades.some((upgrade) => upgrade[0] === raw.name),
@@ -41,7 +44,7 @@ const achievements: {
     name: "Eliatrop",
     description: "Utiliser toutes les améliorations énergétiques en une partie",
     unlockCondition: (state) =>
-      state.rawUpgrades
+      upgrades
         .filter((raw) => raw.description.includes("@energy"))
         .every((raw) =>
           state.upgrades.some((upgrade) => upgrade[0] === raw.name),
@@ -91,12 +94,12 @@ const achievements: {
     name: "Perfectionniste",
     description: "Découvrir toutes les cartes @upgrade",
     unlockCondition: (state) =>
-      state.rawUpgrades.every((raw) => state.discoveries.includes(raw.name)),
+      upgrades.every((raw) => state.discoveries.includes(raw.name)),
   },
   {
     name: "Complétionniste",
     description: "Découvrir toutes les cartes",
-    unlockCondition: (state) => state.discoveries.length === state.cards.length,
+    unlockCondition: (state) => state.discoveries.length === cards.length,
   },
   {
     name: "Retro gamer",

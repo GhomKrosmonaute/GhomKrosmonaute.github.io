@@ -5,10 +5,10 @@ import {
 } from "@/components/ui/hover-card.tsx"
 import React from "react"
 import type { GameCardInfo } from "@/game-typings.ts"
-import { energyCostColor, getUsableCost } from "@/game-utils.ts"
 import { useCardGame } from "@/hooks/useCardGame.ts"
 import { GameValueIcon } from "@/components/game/GameValueIcon.tsx"
 import { GameMoneyIcon } from "@/components/game/GameMoneyIcon.tsx"
+import { energyCostColor, getUsableCost } from "@/game-safe-utils.ts"
 
 export const GameCardPopover = (
   props: React.PropsWithChildren<{

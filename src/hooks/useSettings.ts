@@ -1,13 +1,8 @@
 import { create } from "zustand"
 
-import {
-  settings,
-  updateGameSpeed,
-  QualityOptions,
-  Difficulty,
-  Settings,
-  Speed,
-} from "@/game-settings.ts"
+import { Speed } from "@/game-enums.ts"
+import { settings, updateGameSpeed } from "@/game-settings.ts"
+import type { Difficulty, QualityOptions, Settings } from "@/game-typings.ts"
 
 export const useSettings = create<
   Settings & {

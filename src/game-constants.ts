@@ -10,6 +10,7 @@ export const GAME_ADVANTAGE = {
 } as const
 
 export const LOCAL_ADVANTAGE = {
+  cosmic: 15,
   legendary: 10,
   epic: 5,
   rare: 2,
@@ -50,8 +51,15 @@ export const ENERGY_TO_DAYS = 0.15
 export const ACTIONS_COST = {
   draw: 1,
   drawSpecific: 2,
+  chose: 3,
+  choseSpecific: 5,
   gainEnergy: 1,
   gainReputation: REPUTATION_TO_ENERGY,
   condition: -1,
   hardCondition: -2,
+  recycle: 1,
+  recycleSpecific: 2,
+  discard: -1,
+  discardRandom: -2,
+  discardAll: -4,
 } as const

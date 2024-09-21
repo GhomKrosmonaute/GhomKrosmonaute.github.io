@@ -1,26 +1,6 @@
 import { GAME_ADVANTAGE } from "@/game-constants.ts"
-
-export type Difficulty = keyof typeof GAME_ADVANTAGE
-
-export interface QualityOptions {
-  shadows: boolean // ajoute les ombres
-  transparency: boolean // backgrounds transparents
-  borderLights: boolean // ajoute les lumières sur les bords
-  godRays: boolean // ajoute les god rays
-  blur: boolean // background blur sur toutes les cartes du site
-  tilt: boolean // utilise Tilt ou non (agis sur cardFoil et cardPerspective)
-  foil: boolean // montre le reflet et la texture des cartes ou non
-  animations: boolean // utilise les keyframes ou non
-  perspective: boolean // transformStyle: "preserve-3d" | "flat"
-}
-
-export enum Speed {
-  Auto = "auto",
-  Slow = "slow",
-  Normal = "normal",
-  Fast = "fast",
-  Extreme = "extreme",
-}
+import { Speed } from "@/game-enums.ts"
+import type { Difficulty, QualityOptions, Settings } from "@/game-typings.ts"
 
 export const difficultyIndex = Object.entries(GAME_ADVANTAGE).reduce(
   (acc, entry, index) => ({ ...acc, [entry[0]]: index + 1 }),
@@ -43,14 +23,6 @@ export const defaultSettings: Settings = {
     animations: true,
     perspective: true,
   },
-}
-
-export interface Settings {
-  theme: string
-  tutorial: boolean
-  speed: Speed
-  difficulty: Difficulty
-  quality: QualityOptions
 }
 
 export function updateGameSpeed(speed: Speed) {

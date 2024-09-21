@@ -1,10 +1,10 @@
 import Trophy from "@/assets/icons/game/trophy.svg"
 import { Card } from "@/components/Card.tsx"
 import scores from "@/data/scores.json"
-import { rankColor } from "@/game-utils.ts"
 import { useSettings } from "@/hooks/useSettings.ts"
 import { cn } from "@/utils.ts"
 import { translations } from "@/game-settings.ts"
+import { rankColor } from "@/game-safe-utils.ts"
 
 export const Scoreboard = (props: { show: boolean }) => {
   const { shadows, animation, transparency } = useSettings((state) => ({

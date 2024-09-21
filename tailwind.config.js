@@ -120,6 +120,10 @@ module.exports = {
           DEFAULT: "hsl(var(--legendary))",
           foreground: "hsl(var(--legendary-foreground))",
         },
+        cosmic: {
+          DEFAULT: "hsl(var(--cosmic))",
+          foreground: "hsl(var(--cosmic-foreground))",
+        },
       },
       boxShadow: {
         "glow-20": "0 0 20px var(--tw-shadow-color)",

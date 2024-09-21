@@ -1,6 +1,33 @@
-import type { GameState } from "@/hooks/useCardGame"
-import events from "@/data/events.ts"
 import React from "react"
+
+import type { GameState, GlobalGameState } from "@/hooks/useCardGame"
+
+import { GAME_ADVANTAGE } from "@/game-constants.ts"
+
+import events from "@/data/events.ts"
+import { Speed } from "@/game-enums.ts"
+
+export interface QualityOptions {
+  shadows: boolean // ajoute les ombres
+  transparency: boolean // backgrounds transparents
+  borderLights: boolean // ajoute les lumières sur les bords
+  godRays: boolean // ajoute les god rays
+  blur: boolean // background blur sur toutes les cartes du site
+  tilt: boolean // utilise Tilt ou non (agis sur cardFoil et cardPerspective)
+  foil: boolean // montre le reflet et la texture des cartes ou non
+  animations: boolean // utilise les keyframes ou non
+  perspective: boolean // transformStyle: "preserve-3d" | "flat"
+}
+
+export interface Settings {
+  theme: string
+  tutorial: boolean
+  speed: Speed
+  difficulty: Difficulty
+  quality: QualityOptions
+}
+
+export type Difficulty = keyof typeof GAME_ADVANTAGE
 
 export type UpgradeState = "appear" | "idle" | "triggered"
 
@@ -38,8 +65,8 @@ export type RawUpgrade = Pick<
 }
 
 export type EffectBuilder<Data extends any[]> = (
-  advantage: number,
-  state: GameState,
+  advantage?: number,
+  state?: GameState & GlobalGameState,
   card?: Omit<GameCardInfo<true>, "effect">,
 ) => Effect<Data>
 
@@ -50,14 +77,18 @@ export type Cost = {
 
 export interface Effect<Data extends any[]> {
   description: string
+  hint?: string
   cost: Cost
-  condition?: (state: GameState, card: GameCardInfo<true>) => boolean
+  condition?: (
+    state: GameState & GlobalGameState,
+    card: GameCardInfo<true>,
+  ) => boolean
   prePlay?: (
-    state: GameState,
+    state: GameState & GlobalGameState,
     card: GameCardInfo<true>,
   ) => Promise<Data | "cancel">
   onPlayed: (
-    state: GameState,
+    state: GameState & GlobalGameState,
     card: GameCardInfo<true>,
     reason: GameLog["reason"],
     ...data: Data
@@ -105,6 +136,7 @@ export type GameCardState =
 
 export type ActionCardFamily =
   | "Bot Discord"
+  | "Serveur Discord"
   | "Jeu vidéo"
   | "Site web"
   | "Outil"
@@ -184,3 +216,19 @@ export type MethodWhoLog = {
 export type GameMethodOptions = MethodWhoCheckIfGameOver & MethodWhoLog
 
 export type ColorClass = `bg-${string}` & string
+
+export type StateDependentValue<T> =
+  | T
+  | ((state: GameState & GlobalGameState) => T)
+
+export interface DynamicEffectValue {
+  cost: StateDependentValue<number>
+  min?: StateDependentValue<number>
+  max: StateDependentValue<number>
+}
+
+export interface ChoiceOptionsGeneratorOptions {
+  exclude?: string[]
+  filter?: (card: GameCardInfo, state: GameState) => boolean
+  noResource?: boolean
+}

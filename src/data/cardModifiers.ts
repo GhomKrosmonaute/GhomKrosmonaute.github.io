@@ -1,6 +1,6 @@
 import type { CardModifier } from "@/game-typings"
-import { ENERGY_TO_MONEY, GAME_ADVANTAGE } from "@/game-constants.ts"
-import { getUpgradeCost, costTo } from "@/game-utils"
+import { ENERGY_TO_MONEY } from "@/game-constants.ts"
+import { getUpgradeCost, costTo } from "@/game-safe-utils.ts"
 
 const cardModifiers = {
   "upgrade cost threshold": () => ({
@@ -19,30 +19,30 @@ const cardModifiers = {
     },
   }),
 
-  "all card inflation": () => ({
-    condition: () => true,
-    use: (card, state) => ({
-      ...card,
-      effect: {
-        ...card.effect,
-        cost: {
-          type: card.effect.cost.type,
-          value:
-            card.effect.cost.value +
-            costTo(
-              {
-                value: Math.max(
-                  0,
-                  state.inflation - GAME_ADVANTAGE[state.difficulty],
-                ),
-                type: "energy",
-              },
-              card.effect.cost.type,
-            ),
-        },
-      },
-    }),
-  }),
+  // "all card inflation": () => ({
+  //   condition: () => true,
+  //   use: (card, state) => ({
+  //     ...card,
+  //     effect: {
+  //       ...card.effect,
+  //       cost: {
+  //         type: card.effect.cost.type,
+  //         value:
+  //           card.effect.cost.value +
+  //           costTo(
+  //             {
+  //               value: Math.max(
+  //                 0,
+  //                 state.inflation - GAME_ADVANTAGE[state.difficulty],
+  //               ),
+  //               type: "energy",
+  //             },
+  //             card.effect.cost.type,
+  //           ),
+  //       },
+  //     },
+  //   }),
+  // }),
 
   "lowers price of hand cards": (
     handCardNames: string[],
