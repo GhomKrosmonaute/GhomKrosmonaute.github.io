@@ -8,9 +8,10 @@ export const GameMoneyIcon = (
     style?: React.CSSProperties
     miniature?: boolean
     symbol?: boolean
+    isCost?: boolean
   }>,
 ) => {
-  if (props.value <= 0) return <></>
+  if (props.value <= 0 && props.isCost) return <></>
 
   return (
     <div

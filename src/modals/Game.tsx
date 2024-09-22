@@ -25,6 +25,9 @@ import { GameOver } from "@/components/game/GameOver.tsx"
 import { Settings } from "@/components/game/Settings.tsx"
 import { GameHand } from "@/components/game/GameHand.tsx"
 
+import "@/game-automatisms.ts"
+import { GameCardDetail } from "@/components/game/GameCardDetail.tsx"
+
 export const Game = () => {
   useKonamiCode()
   useGameWatching()
@@ -78,6 +81,7 @@ export const Game = () => {
         <Settings show={show && showSettings} />
         <GameRules show={show && showRules} />
         <GameHand show={show} />
+        <GameCardDetail show={show} />
         <GameTutorial show={show} />
         <EventNotifier show={show} />
 

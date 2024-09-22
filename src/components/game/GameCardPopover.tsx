@@ -33,6 +33,7 @@ export const GameCardPopover = (
           ) : (
             <GameMoneyIcon
               value={getUsableCost(props.card.effect.cost, state)}
+              isCost
               miniature
             />
           )}

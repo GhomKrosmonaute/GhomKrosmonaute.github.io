@@ -3,8 +3,6 @@ import React from "react"
 import "./GameCard.css"
 
 import BrokenCard from "@/assets/icons/game/broken-card.svg"
-import QuoteLeft from "@/assets/icons/quote-left.svg"
-import QuoteRight from "@/assets/icons/quote-right.svg"
 
 import type {
   ActionCardInfo,
@@ -16,20 +14,18 @@ import { useCardGame } from "@/hooks/useCardGame.ts"
 import { useSettings } from "@/hooks/useSettings.ts"
 
 import { cn } from "@/utils.ts"
-import { LOCAL_ADVANTAGE } from "@/game-constants.ts"
 
-import { GameMoneyIcon } from "@/components/game/GameMoneyIcon.tsx"
 import { Tilt, TiltFoil } from "@/components/game/Tilt.tsx"
-import { GameValueIcon } from "@/components/game/GameValueIcon.tsx"
 import { BorderLight } from "@/components/ui/border-light.tsx"
 import upgrades from "@/data/upgrades.ts"
 import {
   canBeBuy,
   cardInfoToIndice,
-  energyCostColor,
-  getUsableCost,
+  getRarityName,
   isActionCardInfo,
 } from "@/game-safe-utils.ts"
+import { GameCost } from "@/components/game/GameCost.tsx"
+import { GameAdvantageBadge } from "@/components/game/GameAdvantageBadge.tsx"
 
 export const GameCard = (
   props: React.PropsWithoutRef<{
@@ -37,6 +33,7 @@ export const GameCard = (
     position?: number
     isChoice?: boolean
     isPlaying?: boolean
+    withoutDetail?: boolean
   }>,
 ) => {
   const quality = useSettings((state) => ({
@@ -70,11 +67,7 @@ export const GameCard = (
     ? game.operationInProgress.filter((o) => o !== "choices").length > 0
     : game.operationInProgress.length > 0
 
-  const rarityName = Object.entries(LOCAL_ADVANTAGE)
-    .sort((a, b) => b[1] - a[1])
-    .find(
-      ([, advantage]) => props.card.localAdvantage >= advantage,
-    )![0] as keyof typeof LOCAL_ADVANTAGE
+  const rarityName = getRarityName(props.card.localAdvantage)
 
   return (
     <div
@@ -102,10 +95,11 @@ export const GameCard = (
                   !game.canBeBuy ||
                   !game.canTriggerEffect)),
             // "translate-y-8": !canTriggerEffect || !haveEnoughResources,
-          })]: !props.isChoice && !props.isPlaying,
+          })]: !props.isChoice && !props.isPlaying && !props.withoutDetail,
         },
       )}
       onClick={async () => {
+        if (props.withoutDetail) return
         if (props.isPlaying) return
 
         if (!props.isChoice) {
@@ -127,11 +121,11 @@ export const GameCard = (
         }
       }}
       onContextMenu={(e) => {
-        if (isActionCardInfo(props.card) && props.card.url) {
-          e.preventDefault()
-          // open new tab with project url
-          window.open(props.card.url, "_blank")
-        }
+        e.preventDefault()
+
+        if (props.withoutDetail) return
+
+        game.setCardDetail(cardInfoToIndice(props.card))
       }}
       style={{
         marginBottom: `${20 - Math.abs(positionFromCenter) * 5}px`, // temporaire, peut causer des problèmes
@@ -185,38 +179,16 @@ export const GameCard = (
             },
             "ring-2",
             {
-              "ring-common/50": rarityName === "common",
-              "ring-rare/50": rarityName === "rare",
-              "ring-epic/50": rarityName === "epic",
-              "ring-legendary/50": rarityName === "legendary",
-              "ring-cosmic/50": rarityName === "cosmic",
+              "ring-common shadow-common": rarityName === "common",
+              "ring-rare shadow-rare": rarityName === "rare",
+              "ring-epic shadow-epic": rarityName === "epic",
+              "ring-legendary shadow-legendary": rarityName === "legendary",
+              "ring-cosmic shadow-cosmic": rarityName === "cosmic",
+              "ring-singularity shadow-singularity":
+                rarityName === "singularity",
             },
           )}
         >
-          {/* Action details popover */}
-          {isActionCardInfo(props.card) && props.card.detail && (
-            <div
-              className={cn(
-                "absolute pointer-events-none left-1/2 -top-[10px] -translate-x-1/2 -translate-y-full rounded-2xl bg-card",
-                "p-2 w-max max-w-full gap-1",
-                {
-                  "shadow shadow-action": quality.shadows,
-                  "transition-opacity duration-200 ease-in-out delay-1000":
-                    quality.animation,
-                  "opacity-0 group-hover/game-card:opacity-100 flex":
-                    quality.transparency,
-                  "hidden group-hover/game-card:flex": !quality.transparency,
-                },
-              )}
-            >
-              <QuoteLeft className="w-10" />
-              <div className="flex-grow text-sm text-left">
-                {props.card.detail}
-              </div>
-              <QuoteRight className="w-10 self-end" />
-            </div>
-          )}
-
           {/* Background */}
           {quality.perspective && quality.tilt && (
             <div
@@ -254,29 +226,7 @@ export const GameCard = (
                 transformStyle: quality.perspective ? "preserve-3d" : "flat",
               }}
             >
-              {props.card.effect.cost.type === "energy" ? (
-                <GameValueIcon
-                  isCost
-                  value={getUsableCost(props.card.effect.cost, game)}
-                  colors={energyCostColor(game, props.card.effect.cost.value)}
-                  style={{
-                    transform: quality.perspective ? "translateZ(5px)" : "none",
-                    transformStyle: quality.perspective
-                      ? "preserve-3d"
-                      : "flat",
-                  }}
-                />
-              ) : (
-                <GameMoneyIcon
-                  value={props.card.effect.cost.value}
-                  style={{
-                    transform: `${quality.perspective ? "translateZ(10px)" : ""} rotate(-10deg)`,
-                    transformStyle: quality.perspective
-                      ? "preserve-3d"
-                      : "flat",
-                  }}
-                />
-              )}
+              <GameCost cost={props.card.effect.cost} />
             </div>
             <h2
               className={cn(
@@ -314,27 +264,10 @@ export const GameCard = (
             >
               {!props.card.effect.upgrade ? (
                 /* Rarity indicator */
-                <div
-                  className="z-10"
-                  style={{
-                    color: `hsl(var(--${rarityName}-foreground))`,
-                    backgroundColor: `hsl(var(--${rarityName}))`,
-                  }}
-                >
-                  {rarityName}
-                  {props.card.localAdvantage > LOCAL_ADVANTAGE[rarityName]
-                    ? "+".repeat(
-                        Math.max(
-                          0,
-                          props.card.localAdvantage -
-                            LOCAL_ADVANTAGE[rarityName],
-                        ),
-                      )
-                    : ""}
-                </div>
+                <GameAdvantageBadge advantage={props.card.localAdvantage} />
               ) : (
                 /* Upgrade max indicator */
-                <div className="bg-upgrade -ml-1">
+                <div className="bg-upgrade">
                   {(() => {
                     const raw = upgrades.find(
                       (raw) => raw.name === props.card.name,
@@ -478,7 +411,7 @@ const GameCardTechno = (
   return (
     <>
       <div
-        className="flex justify-center items-center mt-4"
+        className="flex justify-center items-center mt-7 mb-3"
         style={{
           transform: perspective ? "translateZ(15px)" : "none",
         }}

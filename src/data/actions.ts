@@ -10,6 +10,7 @@ import {
   MAX_REPUTATION,
   ENERGY_TO_MONEY,
   REPUTATION_TO_ENERGY,
+  ADVANTAGE_THRESHOLD,
 } from "@/game-constants.ts"
 
 import {
@@ -20,27 +21,26 @@ import {
   createEffect,
   costToEnergy,
   formatCoinFlipText,
+  cardInfoToIndice,
 } from "@/game-safe-utils.ts"
 
 import { bank } from "@/sound.ts"
-import { GlobalCardModifierIndex } from "@/game-enums.ts"
 
 const reusable = {
   levelUpAllLabel: (label: string, filter: (card: GameCardInfo) => boolean) =>
     createEffect({
-      basePrice: Math.floor(MAX_HAND_SIZE / 2),
-      dynamicEffect: { cost: 1, max: 5 },
-      description: `Augmente de @n @level@s toutes les cartes ${label}`,
+      basePrice: ACTIONS_COST.levelUpFamily,
+      description: `Augmente d'un @level toutes les cartes ${label}`,
       hint: "Agis aussi sur les cartes non-obtenues",
-      async onPlayed(state) {
+      async onPlayed(state, card) {
         const cards = await import("@/data/cards.ts").then(
           (module) => module.default,
         )
 
         await state.addGlobalCardModifier(
           "level up cards",
-          [cards.filter(filter).map((card) => card.name), this.value!],
-          GlobalCardModifierIndex.First,
+          [cards.filter(filter).map((card) => card.name), ADVANTAGE_THRESHOLD],
+          cardInfoToIndice(card),
         )
       },
       ephemeral: true,
@@ -138,21 +138,29 @@ const actions: ActionCardInfo[] = (
       detail:
         "Mon portfolio réalisé avec TypeScript, React, Vite, Tailwind CSS, Zustand et beaucoup de passion",
       families: ["Site web", "TypeScript", "React", "Open Source"],
-      effect: (advantage = 0) => ({
-        description: formatText(
-          `Gagne ${(2 + advantage) * ENERGY_TO_MONEY}M$ par carte @action en main en comptant celle-ci`,
-        ),
-        onPlayed: async (state, _, reason) => {
-          await state.addMoney(
-            (2 + advantage) *
-              ENERGY_TO_MONEY *
-              state.revivedHand.filter((card) => card.type === "action").length,
-            { skipGameOverPause: true, reason },
-          )
-        },
-        type: "action",
-        cost: resolveCost(4),
-      }),
+      effect: (advantage = 0) => {
+        const basePrice = 4
+        const baseMoneyGain = 5
+
+        const price = smartClamp(basePrice - advantage)
+        const moneyGain = baseMoneyGain + Math.abs(price.rest) * ENERGY_TO_MONEY
+
+        return {
+          description: formatText(
+            `Gagne ${moneyGain}M$ par carte @action en main en comptant celle-ci`,
+          ),
+          onPlayed: async (state, _, reason) => {
+            await state.addMoney(
+              moneyGain *
+                state.revivedHand.filter((card) => card.type === "action")
+                  .length,
+              { skipGameOverPause: true, reason },
+            )
+          },
+          type: "action",
+          cost: resolveCost(price.value),
+        }
+      },
     },
     {
       name: "Les Labs JS",
@@ -206,7 +214,7 @@ const actions: ActionCardInfo[] = (
         basePrice: MAX_HAND_SIZE,
         dynamicEffect: { cost: 1, max: 5 },
         description:
-          "Baisse le prix des cartes en main de @n @energy@s ou de @$",
+          "Baisse le prix des cartes en main de $n @energy$s ou de @$",
         condition: (state, card) =>
           state.revivedHand.some(
             (c) => c.name !== card.name && c.effect.cost.value > 0,
@@ -219,7 +227,7 @@ const actions: ActionCardInfo[] = (
           await state.addGlobalCardModifier(
             "lowers price of hand cards",
             [handCardNames, this.value!],
-            GlobalCardModifierIndex.AddOrSubtract,
+            cardInfoToIndice(card),
           )
         },
         ephemeral: true,
@@ -235,8 +243,17 @@ const actions: ActionCardInfo[] = (
       url: "https://github.com/NanoWorkspace",
       families: ["TypeScript", "Outil", "Open Source"],
       effect: createEffect({
-        basePrice: 4,
+        basePrice: ACTIONS_COST.levelUp * MAX_HAND_SIZE,
         costType: "money",
+        description: "Augmente d'un @level les cartes en main",
+        async onPlayed(state, card) {
+          await state.addGlobalCardModifier(
+            "level up cards",
+            [state.revivedHand.map((card) => card.name), ADVANTAGE_THRESHOLD],
+            cardInfoToIndice(card),
+          )
+        },
+        ephemeral: true,
       }),
     },
     {
@@ -286,6 +303,10 @@ const actions: ActionCardInfo[] = (
         basePrice: 2,
         description: "Joue une carte gratuitement",
         hint: "Tu dois avoir une carte avec un coût dans la main",
+        condition: (state, card) =>
+          state.revivedHand.some(
+            (c) => c.name !== card.name && c.effect.cost.value > 0,
+          ),
         select: (state, card, testedCard) =>
           card.name !== testedCard.name &&
           testedCard.effect.cost.value > 0 &&
@@ -312,11 +333,11 @@ const actions: ActionCardInfo[] = (
         basePrice: 2,
         description: "La prochaine carte jouée coûte la moitié de son prix",
         hint: "N'agit pas sur les cartes gratuites",
-        onPlayed: async (state) => {
+        onPlayed: async (state, card) => {
           await state.addGlobalCardModifier(
             "next card half cost",
             [],
-            GlobalCardModifierIndex.MultiplyOrDivide,
+            cardInfoToIndice(card),
           )
         },
       }),
@@ -353,6 +374,7 @@ const actions: ActionCardInfo[] = (
       url: "https://discord.gg/7N5pJEY",
       families: ["Bot Discord", "Jeu vidéo"],
       effect: createEffect({
+        skipEnergyGain: true,
         description: "Défausse une carte et gagne son coût en @energy",
         select: (_, card, testedCard) =>
           testedCard.name !== card.name && testedCard.effect.cost.value > 0,
@@ -379,13 +401,14 @@ const actions: ActionCardInfo[] = (
       families: ["Outil", "Open Source"],
       effect: createEffect({
         basePrice: 5,
+        skipEnergyGain: true,
         dynamicEffect: {
           cost: 1,
           min: 5,
-          max: (state) => state.energyMax,
+          max: (state) => Math.floor(state.energyMax / 2),
         },
         costType: "money",
-        description: "Gagne @n @energy@s",
+        description: "Gagne $n @energy$s",
       }),
     },
     {
@@ -403,7 +426,7 @@ const actions: ActionCardInfo[] = (
           cost: 1,
           max: (state) => Math.floor(state.energyMax / 2),
         },
-        description: `Si la @reputation est inférieur à ${Math.floor(MAX_REPUTATION / 2)}, gagne @n @energy@s`,
+        description: `Si la @reputation est inférieur à ${Math.floor(MAX_REPUTATION / 2)}, gagne $n @energy$s`,
         condition: (state) => state.reputation < Math.floor(MAX_REPUTATION / 2),
         async onPlayed(state, _, reason) {
           await state.addEnergy(this.value!, {

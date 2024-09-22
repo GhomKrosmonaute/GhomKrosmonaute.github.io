@@ -10,11 +10,11 @@ import type {
   GameCardIndice,
   CardModifierIndice,
   ChoiceOptionsGeneratorOptions,
+  GameModifierLog,
 } from "@/game-typings"
 
 import {
   MAX_HAND_SIZE,
-  GAME_ADVANTAGE,
   LOCAL_ADVANTAGE,
   INFINITE_DRAW_COST,
 } from "@/game-constants"
@@ -29,6 +29,7 @@ import {
   isGameResource,
   canBeBuy,
   shuffle,
+  calculateAdvantage,
 } from "@/game-safe-utils.ts"
 
 export function generateChoiceOptions(
@@ -78,7 +79,7 @@ export function generateChoiceOptions(
     .map((option) =>
       isGameResource(option)
         ? option
-        : [option.name, "drawing", generateRandomAdvantage()],
+        : [option.name, "landing", generateRandomAdvantage()],
     )
 }
 
@@ -107,21 +108,65 @@ export function isGameOver(
   return false
 }
 
+export function getGlobalCardModifierLogs(
+  state: GameState & GlobalGameState,
+  indice: GameCardIndice,
+): GameModifierLog[] {
+  let card = reviveCard(indice, state, { withoutModifiers: true })
+
+  const modifiers = state.globalCardModifiers
+    .map((i) => [i, reviveCardModifier(i)] as const)
+    .toSorted(([, a], [, b]) => {
+      return a.index - b.index
+    })
+
+  const logs: GameModifierLog[] = []
+
+  for (const [indice, modifier] of modifiers) {
+    if (modifier.condition && !modifier.condition(card, state)) continue
+
+    const before = card
+
+    card = modifier.use(card, state, resolveCard(card.name))
+
+    const levelChange = card.localAdvantage !== before.localAdvantage
+    const costChange = card.effect.cost.value !== before.effect.cost.value
+    const costTypeChange = card.effect.cost.type !== before.effect.cost.type
+
+    if (levelChange)
+      logs.push({
+        reason: indice[2],
+        type: "level",
+        before: before.localAdvantage,
+        after: card.localAdvantage,
+      })
+    else if (costChange || costTypeChange)
+      logs.push({
+        reason: indice[2],
+        type: "cost",
+        before: before.effect.cost,
+        after: card.effect.cost,
+      })
+  }
+
+  return logs
+}
+
 export function applyGlobalCardModifiers(
-  state: GameState,
+  state: GameState & GlobalGameState,
   card: GameCardInfo<true>,
   clean = false,
 ): GameCardInfo<true> {
-  const modifiers = state.globalCardModifiers.toSorted((a, b) => {
-    return a[2] - b[2]
-  })
+  const modifiers = state.globalCardModifiers
+    .map((i) => [i, reviveCardModifier(i)] as const)
+    .toSorted(([, a], [, b]) => {
+      return a.index - b.index
+    })
 
-  for (const indice of modifiers) {
-    const modifier = reviveCardModifier(indice)
-
+  for (const [indice, modifier] of modifiers) {
     if (modifier.condition && !modifier.condition(card, state)) continue
 
-    card = modifier.use(card, state)
+    card = modifier.use(card, state, resolveCard(card.name))
 
     if (clean && modifier.once)
       state.dangerouslyUpdate({
@@ -215,13 +260,12 @@ export function reviveUpgrade(indice: UpgradeIndice | string): Upgrade {
 export function reviveCard(
   indice: GameCardIndice | string,
   state: GameState & GlobalGameState,
-  clean?: boolean,
+  options?: {
+    clean?: boolean
+    withoutModifiers?: boolean
+  },
 ): GameCardInfo<true> {
-  const card = cards.find((c) =>
-    typeof indice === "string" ? c.name === indice : c.name === indice[0],
-  )
-
-  if (!card) throw new Error(`Card ${indice} not found`)
+  const card = resolveCard(indice)
 
   const localAdvantage =
     typeof indice !== "string" ? indice[2] : LOCAL_ADVANTAGE.common
@@ -233,16 +277,16 @@ export function reviveCard(
     localAdvantage,
   }
 
-  return applyGlobalCardModifiers(
-    state,
-    {
-      ...output,
-      effect: card.effect(
-        GAME_ADVANTAGE[state.difficulty] + localAdvantage - state.inflation,
-        state,
-        output,
-      ),
-    } as GameCardInfo<true>,
-    clean,
-  )
+  const final = {
+    ...output,
+    effect: card.effect(
+      calculateAdvantage(localAdvantage, state),
+      state,
+      output,
+    ),
+  } as GameCardInfo<true>
+
+  return options?.withoutModifiers
+    ? final
+    : applyGlobalCardModifiers(state, final, options?.clean)
 }

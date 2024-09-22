@@ -5,7 +5,7 @@ const upgrades: RawUpgrade[] = [
   {
     name: "Starbucks",
     eventName: "daily",
-    description: "Rend @cumul @energy@s",
+    description: "Rend @cumul @energy$s",
     image: "starbucks.png",
     condition: (state) => state.energy < state.energyMax,
     onTrigger: async (state, upgrade, reason) => {
@@ -20,7 +20,7 @@ const upgrades: RawUpgrade[] = [
   {
     name: "Sport",
     eventName: "daily",
-    description: "Gagne @cumul @reputation@s",
+    description: "Gagne @cumul @reputation$s",
     image: "sport.png",
     condition: (state) => state.reputation < MAX_REPUTATION,
     onTrigger: async (state, upgrade, reason) => {
@@ -38,7 +38,7 @@ const upgrades: RawUpgrade[] = [
   {
     name: "Méditation",
     eventName: "onPlay",
-    description: "Pioche @cumul carte@s si tu as moins de 5 cartes en main",
+    description: "Pioche @cumul carte$s si tu as moins de 5 cartes en main",
     image: "meditation.png",
     condition: (state) => state.draw.length > 0 && state.hand.length < 5,
     onTrigger: async (state, upgrade, reason) => {
@@ -67,14 +67,14 @@ const upgrades: RawUpgrade[] = [
   },
   {
     name: "Recyclage",
-    eventName: "weekly",
-    description: "Recycle @cumul carte@s aléatoire@s de la défausse",
+    eventName: "onDraw",
+    description: "@recycle @cumul carte$s aléatoire$s de la défausse",
     image: "recyclage.png",
     condition: (state) => state.discard.length > 0,
     onTrigger: async (state, upgrade, reason) => {
       await state.recycleCard(upgrade.cumul, { reason })
     },
-    max: 3,
+    max: 5,
     cost: { type: "money", value: 50 },
   },
   {
@@ -125,7 +125,7 @@ const upgrades: RawUpgrade[] = [
   {
     name: "DevOps",
     eventName: "onEmptyHand",
-    description: "Pioche @cumul carte@s",
+    description: "Pioche @cumul carte$s",
     image: "devops.png",
     condition: (state) =>
       state.draw.length > 0 && state.hand.length < MAX_HAND_SIZE,
@@ -165,7 +165,7 @@ const upgrades: RawUpgrade[] = [
   {
     name: "Anti-virus",
     eventName: "onReputationDeclines",
-    description: "Gagne @cumul @energy@s",
+    description: "Gagne @cumul @energy$s",
     image: "anti-virus.png",
     condition: (state) => state.energy < state.energyMax,
     onTrigger: async (state, upgrade, reason) => {

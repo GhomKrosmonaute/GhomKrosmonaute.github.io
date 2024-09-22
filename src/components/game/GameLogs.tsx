@@ -43,7 +43,7 @@ export const GameLogs = (props: { show: boolean }) => {
                     )}
                   >
                     {log.type === "money" ? (
-                      <GameMoneyIcon miniature value={log.value} />
+                      <GameMoneyIcon miniature value={log.value} symbol />
                     ) : (
                       <GameValueIcon
                         miniature

@@ -1,9 +1,11 @@
 import type { CardModifier } from "@/game-typings"
-import { ENERGY_TO_MONEY } from "@/game-constants.ts"
-import { getUpgradeCost, costTo } from "@/game-safe-utils.ts"
+import { ENERGY_TO_MONEY, GAME_ADVANTAGE } from "@/game-constants.ts"
+import { costTo, getUpgradeCost } from "@/game-safe-utils.ts"
+import { GlobalCardModifierIndex } from "@/game-enums.ts"
 
 const cardModifiers = {
   "upgrade cost threshold": () => ({
+    index: GlobalCardModifierIndex.Last,
     condition: (card) => Boolean(card.effect.upgrade),
     use: (card, state) => {
       if (card.effect.upgrade) {
@@ -48,6 +50,7 @@ const cardModifiers = {
     handCardNames: string[],
     discount: number,
   ) => ({
+    index: GlobalCardModifierIndex.AddOrSubtract,
     condition: (card) => handCardNames.includes(card.name),
     use: (card) => ({
       ...card,
@@ -64,6 +67,7 @@ const cardModifiers = {
   }),
 
   "next energy card cost money": () => ({
+    index: GlobalCardModifierIndex.Last,
     once: true,
     condition: (card) => card.effect.cost.type === "energy",
     use: (card) => ({
@@ -79,6 +83,7 @@ const cardModifiers = {
   }),
 
   "next money card cost energy": () => ({
+    index: GlobalCardModifierIndex.Last,
     once: true,
     condition: (card) => {
       return card.effect.cost.type === "money" && card.effect.cost.value > 0
@@ -99,6 +104,7 @@ const cardModifiers = {
   }),
 
   "next card half cost": () => ({
+    index: GlobalCardModifierIndex.MultiplyOrDivide,
     once: true,
     condition: (card) => card.effect.cost.value > 1,
     use: (card) => ({
@@ -114,10 +120,19 @@ const cardModifiers = {
   }),
 
   "level up cards": (handCardNames: string[], advantage: number) => ({
+    index: GlobalCardModifierIndex.First,
     condition: (card) => handCardNames.includes(card.name),
-    use: (card) => ({
+    use: (card, state, raw) => ({
       ...card,
       localAdvantage: card.localAdvantage + advantage,
+      effect: raw.effect(
+        card.localAdvantage +
+          advantage +
+          GAME_ADVANTAGE[state.difficulty] -
+          state.inflation,
+        state,
+        card,
+      ),
     }),
   }),
 } satisfies Record<string, (...params: never[]) => CardModifier>

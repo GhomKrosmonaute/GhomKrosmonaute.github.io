@@ -3,19 +3,22 @@ export const INITIAL_CHOICE_COUNT = 5
 
 export const GAME_ADVANTAGE = {
   noob: 4,
-  easy: 3,
-  normal: 2,
-  hard: 1,
-  veteran: 0,
+  easy: 2,
+  normal: 0,
+  hard: -2,
+  veteran: -4,
 } as const
 
 export const LOCAL_ADVANTAGE = {
-  cosmic: 15,
-  legendary: 10,
-  epic: 5,
-  rare: 2,
   common: 0,
+  rare: 2,
+  epic: 4,
+  legendary: 8,
+  cosmic: 16,
+  singularity: 32,
 } as const
+
+export const ADVANTAGE_THRESHOLD = 2
 
 export const MAX_ENERGY = 20
 export const MAX_HAND_SIZE = 8
@@ -62,4 +65,7 @@ export const ACTIONS_COST = {
   discard: -1,
   discardRandom: -2,
   discardAll: -4,
+  levelUp: 1,
+  levelDown: -1,
+  levelUpFamily: 5,
 } as const

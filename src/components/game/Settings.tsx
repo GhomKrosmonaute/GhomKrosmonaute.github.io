@@ -68,7 +68,7 @@ export const Settings = (props: { show: boolean }) => {
   return (
     <div
       className={cn(
-        "absolute top-0 left-0 w-full h-full z-30",
+        "absolute inset-0 z-30",
         "flex items-center justify-center pointer-events-none",
         {
           "transition-opacity duration-500 ease-in-out":

@@ -5,7 +5,7 @@ import type { GameState, GlobalGameState } from "@/hooks/useCardGame"
 import { GAME_ADVANTAGE } from "@/game-constants.ts"
 
 import events from "@/data/events.ts"
-import { Speed } from "@/game-enums.ts"
+import { GlobalCardModifierIndex, Speed } from "@/game-enums.ts"
 
 export interface QualityOptions {
   shadows: boolean // ajoute les ombres
@@ -64,6 +64,10 @@ export type RawUpgrade = Pick<
   max?: number
 }
 
+/**
+ * @param advantage Represent the result of the calcul of the card advantage: <br>
+ * `localAdvantage + difficulty - inflation`
+ */
 export type EffectBuilder<Data extends any[]> = (
   advantage?: number,
   state?: GameState & GlobalGameState,
@@ -157,12 +161,17 @@ export type GameResource = [
 ]
 
 export type CardModifier = {
+  index: GlobalCardModifierIndex
   condition?: (
     this: CardModifier,
     card: GameCardInfo<true>,
-    state: GameState,
+    state: GameState & GlobalGameState,
   ) => boolean
-  use: (card: GameCardInfo<true>, state: GameState) => GameCardInfo<true>
+  use: (
+    card: GameCardInfo<true>,
+    state: GameState & GlobalGameState,
+    raw: GameCardInfo,
+  ) => GameCardInfo<true>
   once?: boolean
 }
 
@@ -175,7 +184,7 @@ export type GameCardIndice = [
 export type CardModifierIndice = [
   name: string,
   params: unknown[],
-  index: number,
+  reason: GameModifierLog["reason"],
 ]
 
 export type TriggerEventName = keyof typeof events
@@ -194,10 +203,23 @@ export type GameOverReason =
   | null
 
 export type GameLog = {
-  type: "money" | "reputation" | "energy"
+  type: "money" | "reputation" | "energy" | "level"
   value: number
   reason: GameCardIndice | UpgradeIndice | string
 }
+
+export type GameModifierLog = { reason: GameCardIndice | string } & (
+  | {
+      type: "level"
+      before: number
+      after: number
+    }
+  | {
+      type: "cost"
+      before: Cost
+      after: Cost
+    }
+)
 
 export type GameNotification = {
   header?: string
@@ -224,7 +246,7 @@ export type StateDependentValue<T> =
 export interface DynamicEffectValue {
   cost: StateDependentValue<number>
   min?: StateDependentValue<number>
-  max: StateDependentValue<number>
+  max?: StateDependentValue<number>
 }
 
 export interface ChoiceOptionsGeneratorOptions {

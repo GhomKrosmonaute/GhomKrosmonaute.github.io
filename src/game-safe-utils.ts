@@ -1,5 +1,7 @@
 import {
+  ADVANTAGE_THRESHOLD,
   ENERGY_TO_MONEY,
+  GAME_ADVANTAGE,
   LOCAL_ADVANTAGE,
   MAX_ENERGY,
   MAX_HAND_SIZE,
@@ -51,7 +53,7 @@ export const families: ActionCardFamily[] = [
 
 export function formatText(text: string) {
   const x = (keyword: `@${string}`) =>
-    new RegExp(`${keyword}([^\\s.:,)<>]*)`, "g")
+    new RegExp(`${keyword}([^\\s.:,)<>"]*)`, "g")
 
   const sharedStyles = [
     "display: inline-block",
@@ -83,7 +85,7 @@ export function formatText(text: string) {
     })
     .replace(
       new RegExp(`#(${families.join("|")})`, "g"),
-      `<span style="${sharedStyles.join(";")}; color: hsl(var(--action)); white-space: nowrap;" title="Famille $1"># $1</span>`,
+      `<span style="${sharedStyles.join(";")}; color: hsl(var(--action)); white-space: nowrap;" title="Famille $1">#$1</span>`,
     )
     .replace(
       x("@action"),
@@ -123,7 +125,11 @@ export function formatText(text: string) {
     )
     .replace(
       x("@recycle"),
-      `<span style="${sharedStyles.join(";")};" title="Déplace la carte de la défausse vers la pioche">Recycle$1</span>`,
+      `<span style="${sharedStyles.join(";")};" title="Déplace le sujet de la défausse vers la pioche">Recycle$1</span>`,
+    )
+    .replace(
+      x("@giveBack"),
+      `<span style="${sharedStyles.join(";")};" title="Renvoie le sujet dans la pioche">Rend$1</span>`,
     )
     .replace(
       /((?:[\de+.]+|<span[^>]*>[\de+.]+<\/span>)[MB]\$)/g,
@@ -141,6 +147,10 @@ export function formatText(text: string) {
           $1
         </span>`,
     )
+    .replace(
+      /<muted>(.+)<\/muted>/g,
+      `<span style="filter: grayscale(100%) opacity(50%)">$1</span>`,
+    )
 }
 
 export function formatCoinFlipText(options: { heads: string; tails: string }) {
@@ -155,7 +165,7 @@ export function formatUpgradeText(text: string, cumul: number) {
       /@cumul/g,
       `<span style="color: #f59e0b; font-weight: bold">${cumul}</span>`,
     )
-    .replace(/@s/g, cumul > 1 ? "s" : "")
+    .replace(/$s/g, cumul > 1 ? "s" : "")
 }
 
 export function omit<T extends object, K extends keyof T>(
@@ -178,6 +188,13 @@ export function pick<T extends object, K extends keyof T>(
     clone[key] = item[key]
   }
   return clone
+}
+
+export function calculateAdvantage(
+  localAdvantage: number,
+  state: GameState & GlobalGameState,
+) {
+  return localAdvantage + GAME_ADVANTAGE[state.difficulty] - state.inflation
 }
 
 export function isGameCardIndice(input: object): input is GameCardIndice {
@@ -530,9 +547,6 @@ export function createEffect<Data extends any[]>(
   },
 ): EffectBuilder<Data> {
   return (advantage = 0, state = fakeMegaState) => {
-    if (options.description?.startsWith("La prochaine"))
-      console.log(advantage, options.description)
-
     const computed = computeEffect({
       basePrice: options.basePrice,
       skipEnergyGain: options.skipEnergyGain,
@@ -545,12 +559,29 @@ export function createEffect<Data extends any[]>(
     return {
       description: formatText(
         options.description
-          ? computed.effect
-            ? options.description
-                .replace(/@n/g, String(computed.effect.value))
-                .replace(/@\$/g, `${computed.effect.value * ENERGY_TO_MONEY}M$`)
-                .replace(/@s/g, computed.effect.value > 1 ? "s" : "")
-            : options.description + computed.description
+          ? (options.dynamicEffect
+              ? computed.effect
+                ? options.description
+                    .replace(/@n/g, String(computed.effect.value))
+                    .replace(
+                      /@\$/g,
+                      `${computed.effect.value * ENERGY_TO_MONEY}M$`,
+                    )
+                    .replace(/$s/g, computed.effect.value > 1 ? "s" : "")
+                : `<muted>${options.description
+                    .replace(
+                      /@n/g,
+                      String(_val(options.dynamicEffect.min, state) ?? 1),
+                    )
+                    .replace(
+                      /@\$/g,
+                      String(
+                        (_val(options.dynamicEffect.min, state) ?? 1) *
+                          ENERGY_TO_MONEY,
+                      ),
+                    )
+                    .replace(/$s/g, "")}</muted>`
+              : options.description) + computed.description
           : computed.description,
       ),
       condition: options.select
@@ -628,24 +659,32 @@ export function computeEffect(options: {
   const dynamic = options.dynamicEffect
     ? {
         min: _val(options.dynamicEffect.min, options.state) ?? 1,
-        max: _val(options.dynamicEffect.max, options.state),
+        max: _val(options.dynamicEffect.max, options.state) ?? Infinity,
         cost: _val(options.dynamicEffect.cost, options.state),
       }
     : undefined
 
   const price = smartClamp(basePrice - options.advantage)
-  const effect = dynamic
-    ? smartClamp(
-        dynamic.min + Math.floor(Math.abs(price.rest) / dynamic.cost),
-        dynamic.min,
-        dynamic.max,
-      )
-    : price
+
+  const isEffectPossible = dynamic ? dynamic.max > dynamic.min : false
+
+  const effect =
+    dynamic && isEffectPossible
+      ? smartClamp(
+          dynamic.min + Math.floor(Math.abs(price.rest) / dynamic.cost),
+          dynamic.min,
+          dynamic.max,
+        )
+      : price
+
+  if (dynamic) effect.rest = effect.rest * dynamic.cost
+
   const energyGain = smartClamp(
-    Math.abs(effect.value),
+    dynamic && isEffectPossible ? effect.rest : Math.abs(effect.rest),
     0,
-    options.skipEnergyGain ? 0 : options.state.energyMax,
+    options.skipEnergyGain ? 0 : Math.floor(options.state.energyMax / 2),
   )
+
   const moneyGain = energyGain.rest * ENERGY_TO_MONEY
 
   return {
@@ -662,7 +701,7 @@ export function computeEffect(options: {
         reason,
       }),
     price,
-    effect: options.dynamicEffect ? effect : undefined,
+    effect: dynamic && isEffectPossible ? effect : undefined,
   }
 }
 
@@ -672,9 +711,14 @@ export function computeEffectDescription(options: {
   money?: number
 }) {
   const before = options.nothingBefore ? "" : "<hr>"
-  if (!options.energy && !options.money) return ""
-  if (!options.energy) return `${before}Gagne ${options.money}M$`
-  if (!options.money)
+  if (
+    (!options.energy || options.energy.value <= 0) &&
+    (!options.money || options.money <= 0)
+  )
+    return ""
+  if (!options.energy || options.energy.value <= 0)
+    return `${before}Gagne ${options.money}M$`
+  if (!options.money || options.money <= 0)
     return `${before}Gagne ${options.energy.value} @energy${options.energy.s}`
 
   return options.energy.value > 0
@@ -727,6 +771,8 @@ export function canBeBuy(card: GameCardInfo<true>, state: GameState) {
 }
 
 export const fakeState: GameState = {
+  cardDetail: null,
+  setCardDetail: () => {},
   addEnergy: async () => {},
   addGlobalCardModifier: async () => {},
   addLog: () => {},
@@ -895,4 +941,30 @@ export function recursiveClone<T>(something: T): T {
     cloned[key] = recursiveClone(something[key])
   }
   return cloned
+}
+
+export function getRarityName(localAdvantage: number, full: true): string
+export function getRarityName(
+  localAdvantage: number,
+  full?: false,
+): keyof typeof LOCAL_ADVANTAGE
+export function getRarityName(localAdvantage: number, full = false) {
+  let rarityName = Object.entries(LOCAL_ADVANTAGE)
+    .sort((a, b) => b[1] - a[1])
+    .find(
+      ([, advantage]) => localAdvantage >= advantage,
+    )![0] as keyof typeof LOCAL_ADVANTAGE
+
+  if (full)
+    rarityName +=
+      localAdvantage > LOCAL_ADVANTAGE[rarityName]
+        ? "+".repeat(
+            Math.floor(
+              Math.max(0, localAdvantage - LOCAL_ADVANTAGE[rarityName]) /
+                ADVANTAGE_THRESHOLD,
+            ),
+          )
+        : ""
+
+  return rarityName
 }

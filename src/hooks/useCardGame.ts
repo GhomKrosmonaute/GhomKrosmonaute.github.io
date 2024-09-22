@@ -19,6 +19,7 @@ import type {
   GameMethodOptions,
   CardModifierIndice,
   MethodWhoCheckIfGameOver,
+  GameModifierLog,
 } from "@/game-typings"
 
 import {
@@ -32,6 +33,7 @@ import {
   REPUTATION_TO_ENERGY,
   INITIAL_CHOICE_COUNT,
   INITIAL_CHOICE_OPTION_COUNT,
+  ADVANTAGE_THRESHOLD,
 } from "@/game-constants.ts"
 
 import {
@@ -69,7 +71,6 @@ import {
   isGameResource,
   save,
 } from "@/game-safe-utils.ts"
-import { GlobalCardModifierIndex } from "@/game-enums.ts"
 
 export interface GlobalGameState {
   debug: boolean
@@ -89,6 +90,8 @@ export interface GlobalGameState {
 }
 
 export interface GameState {
+  cardDetail: GameCardIndice | null
+  setCardDetail: (card: GameCardIndice | null) => void
   inflation: number
   coinFlips: number
   recycledCards: number
@@ -153,7 +156,7 @@ export interface GameState {
   addGlobalCardModifier: <CardModifierName extends keyof typeof cardModifiers>(
     name: CardModifierName,
     params: Parameters<(typeof cardModifiers)[CardModifierName]>,
-    index: number,
+    reason: GameModifierLog["reason"],
   ) => Promise<void>
   drawCard: (
     count: number,
@@ -375,11 +378,12 @@ function generateGameState(): Omit<
         5,
       )
         .slice(0, INITIAL_CHOICE_OPTION_COUNT)
-        .map((c) => [c.name, "drawing", generateRandomAdvantage()]),
+        .map((c) => [c.name, "landing", generateRandomAdvantage()]),
     )
   }
 
   return {
+    cardDetail: null,
     selectedCard: null,
     coinFlips: 0,
     recycledCards: 0,
@@ -411,8 +415,8 @@ function generateGameState(): Omit<
     discard: [],
     upgrades: [],
     globalCardModifiers: [
-      ["upgrade cost threshold", [], GlobalCardModifierIndex.First],
-      // ["all card inflation", [], GlobalCardModifierIndex.Last],
+      ["upgrade cost threshold", [], "Start of game"],
+      // ["all card inflation", []],
     ],
     day: 0,
     dayFull: false,
@@ -436,6 +440,10 @@ function generateGameMethods(
   getState: () => GameState & GlobalGameState,
 ) {
   return {
+    setCardDetail: (card) => {
+      set({ cardDetail: card })
+    },
+
     skip: async (options) => {
       await handleErrorsAsync(getState, async () => {
         bank.play.play()
@@ -470,7 +478,7 @@ function generateGameMethods(
 
     incrementsInflation: () => {
       const state = getState()
-      const newInflation = state.inflation + 1
+      const newInflation = state.inflation + ADVANTAGE_THRESHOLD
 
       set({ inflation: newInflation })
     },
@@ -495,8 +503,6 @@ function generateGameMethods(
 
         const result = Math.random() > 0.5
         const resultName = result ? "Face" : "Pile"
-
-        console.log("playZone", state.playZone.toString())
 
         const card = reviveCard(
           state.playZone[state.playZone.length - 1],
@@ -1004,11 +1010,11 @@ function generateGameMethods(
       })
     },
 
-    addGlobalCardModifier: async (name, params, index) => {
+    addGlobalCardModifier: async (name, params, reason) => {
       await handleErrorsAsync(getState, async () => {
         bank.powerUp.play()
 
-        const indice = [name, params, index] as unknown as CardModifierIndice
+        const indice = [name, params, reason] as CardModifierIndice
 
         set((state) => {
           return {
@@ -1407,7 +1413,7 @@ function generateGameMethods(
         bank.play.play()
 
         // on retire les modifiers en "once" qui ont été utilisés
-        reviveCard(cardInfoToIndice(card), state, true)
+        reviveCard(cardInfoToIndice(card), state, { clean: true })
 
         const removing = willBeRemoved(getState(), card)
         const recycling = card.effect.recycle
@@ -1606,7 +1612,7 @@ function generateGameMethods(
                       ...state.hand,
                       cardInfoToIndice(
                         option,
-                        "drawing",
+                        "landing",
                       ) satisfies GameCardIndice,
                     ],
             }
@@ -1704,7 +1710,12 @@ useCardGame.subscribe(async (state, prevState) => {
 
       // si la main change, on met a jour les revived cards
       if (
-        state.hand.join(",") !== prevState.hand.join("") ||
+        state.hand.map((c) => c[0]).join(",") !==
+          prevState.hand.map((c) => c[0]).join(",") ||
+        state.draw.map((c) => c[0]).join(",") !==
+          prevState.draw.map((c) => c[0]).join(",") ||
+        state.discard.map((c) => c[0]).join(",") !==
+          prevState.discard.map((c) => c[0]).join(",") ||
         state.inflation !== prevState.inflation ||
         state.globalCardModifiers.join(",") !==
           prevState.globalCardModifiers.join(",")

@@ -1,4 +1,4 @@
-import { ENERGY_TO_DAYS } from "@/game-constants.ts"
+import { ADVANTAGE_THRESHOLD, ENERGY_TO_DAYS } from "@/game-constants.ts"
 
 import { useCardGame } from "@/hooks/useCardGame.ts"
 
@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button.tsx"
 import upgrades from "@/data/upgrades.ts"
 import { wait } from "@/game-safe-utils.ts"
 import cards from "@/data/cards.ts"
-import { GlobalCardModifierIndex } from "@/game-enums.ts"
 
 export const GameDebugActions = () => {
   const game = useCardGame()
@@ -85,8 +84,8 @@ export const GameDebugActions = () => {
         onClick={() =>
           game.addGlobalCardModifier(
             "level up cards",
-            [cards.map((c) => c.name), 1],
-            GlobalCardModifierIndex.First,
+            [cards.map((c) => c.name), ADVANTAGE_THRESHOLD],
+            "Level up button",
           )
         }
       >

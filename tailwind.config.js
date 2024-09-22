@@ -124,6 +124,10 @@ module.exports = {
           DEFAULT: "hsl(var(--cosmic))",
           foreground: "hsl(var(--cosmic-foreground))",
         },
+        singularity: {
+          DEFAULT: "hsl(var(--singularity))",
+          foreground: "hsl(var(--singularity-foreground))",
+        },
       },
       boxShadow: {
         "glow-20": "0 0 20px var(--tw-shadow-color)",

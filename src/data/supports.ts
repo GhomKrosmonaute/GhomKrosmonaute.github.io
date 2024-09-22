@@ -28,26 +28,53 @@ const reusable = {
     ephemeral?: boolean
   }) => {
     return (advantage = 0, state = fakeMegaState) => {
-      const drawSpecific = smartClamp(
-        1 + Math.floor(advantage / ACTIONS_COST.drawSpecific),
-        1,
-        Math.min(
-          Math.floor(MAX_HAND_SIZE / 2),
-          state.revivedDraw.filter(options.filter).length,
-        ),
+      const basePrice = ACTIONS_COST.drawSpecific
+      const baseEffect = 1
+      const price = smartClamp(basePrice - advantage)
+
+      const possibleDraw = Math.min(
+        Math.floor(MAX_HAND_SIZE / 2),
+        state.revivedDraw.filter(options.filter).length,
       )
-      const energy = smartClamp(drawSpecific.rest, 0, state.energyMax)
+
+      const drawSpecific =
+        possibleDraw > 0
+          ? smartClamp(
+              baseEffect +
+                Math.floor(Math.abs(price.rest) / ACTIONS_COST.drawSpecific),
+              baseEffect,
+              possibleDraw,
+            )
+          : {
+              value: 0,
+              rest: Math.abs(price.rest),
+              s: "",
+            }
+
+      const energy = smartClamp(
+        (possibleDraw > 0 ? 0 : 1) + drawSpecific.rest,
+        possibleDraw > 0 ? 0 : 1,
+        Math.floor(state.energyMax / 2),
+      )
+
       const money = energy.rest * ENERGY_TO_MONEY
 
       return {
+        hint: formatText(
+          `La pioche doit contenir au moins une carte ${options.label} pour déclencher l'effet de pioche.`,
+        ),
         description: formatText(
-          `${drawSpecific.value > 0 ? `Pioche ${drawSpecific.value} carte${drawSpecific.s} ${options.label}` : ""}${computeEffectDescription(
-            {
-              nothingBefore: drawSpecific.value <= 0,
-              energy,
-              money,
-            },
-          )}`,
+          `${
+            drawSpecific.value > 0 ? "" : "<muted>"
+          }Pioche ${drawSpecific.value > 0 ? drawSpecific.value : baseEffect} carte${drawSpecific.s} ${options.label.replace(
+            /$s/g,
+            drawSpecific.value > 1 ? "s" : "",
+          )}${
+            drawSpecific.value > 0 ? "" : "</muted>"
+          }${computeEffectDescription({
+            energy,
+            money,
+          })}`,
         ),
         onPlayed: async (state, _, reason) => {
           await state.drawCard(drawSpecific.value, {
@@ -64,7 +91,7 @@ const reusable = {
           })
         },
         condition: (state) => state.revivedDraw.some(options.filter),
-        cost: resolveCost(ACTIONS_COST.drawSpecific),
+        cost: resolveCost(price.value),
       }
     }
   },
@@ -74,28 +101,52 @@ const reusable = {
   }) => {
     return (advantage = 0, state = fakeMegaState) => {
       const basePrice = ACTIONS_COST.drawSpecific
+      const baseEffect = 1
       const price = smartClamp(basePrice - advantage)
-      const recycleSpecific = smartClamp(
-        1 + Math.floor(Math.abs(price.rest) / ACTIONS_COST.recycleSpecific),
-        1,
-        Math.min(
-          state.revivedDiscard.length,
-          state.revivedDiscard.filter(options.filter).length,
-        ),
+
+      const possibleRecycle = Math.min(
+        state.revivedDiscard.length,
+        state.revivedDiscard.filter(options.filter).length,
       )
-      console.log(recycleSpecific.rest)
-      const energy = smartClamp(recycleSpecific.rest, 0, state.energyMax)
+
+      const recycleSpecific =
+        possibleRecycle > 0
+          ? smartClamp(
+              baseEffect +
+                Math.floor(Math.abs(price.rest) / ACTIONS_COST.recycleSpecific),
+              baseEffect,
+              possibleRecycle,
+            )
+          : {
+              value: 0,
+              rest: Math.abs(price.rest),
+              s: "",
+            }
+
+      const energy = smartClamp(
+        (possibleRecycle > 0 ? 0 : baseEffect) + recycleSpecific.rest,
+        possibleRecycle > 0 ? 0 : baseEffect,
+        Math.floor(state.energyMax / 2),
+      )
+
       const money = energy.rest * ENERGY_TO_MONEY
 
       return {
+        hint: formatText(
+          `La défausse doit contenir au moins une carte ${options.label} pour déclencher l'effet "@recycle"`,
+        ),
         description: formatText(
-          `${recycleSpecific.value > 0 ? `Recycle ${recycleSpecific.value} carte${recycleSpecific.s} ${options.label}` : ""}${computeEffectDescription(
-            {
-              nothingBefore: recycleSpecific.value <= 0,
-              energy,
-              money,
-            },
-          )}`,
+          `${
+            recycleSpecific.value > 0 ? "" : "<muted>"
+          }@recycle ${recycleSpecific.value > 0 ? recycleSpecific.value : baseEffect} carte${recycleSpecific.s} ${options.label.replace(
+            /$s/g,
+            recycleSpecific.value > 1 ? "s" : "",
+          )}${
+            recycleSpecific.value > 0 ? "" : "</muted>"
+          }${computeEffectDescription({
+            energy,
+            money,
+          })}`,
         ),
         onPlayed: async (state, _, reason) => {
           if (recycleSpecific.value > 0)
@@ -165,7 +216,7 @@ const supports: SupportCardInfo[] = (
           min: 3,
           max: Math.floor(MAX_HAND_SIZE / 2),
         },
-        description: `Défausse les cartes @action en main(min 1) et pioche @n carte@s`,
+        description: `Défausse les cartes @action en main(min 1) et pioche $n carte$s`,
         condition: (state) =>
           state.revivedHand.some((card) => card.type === "action"),
         async onPlayed(state, _, reason) {
@@ -203,7 +254,7 @@ const supports: SupportCardInfo[] = (
         },
         hint: formatText("La pioche doit contenir au moins une carte @action"),
         description:
-          "Pioche @n carte@s @action si tu n'as pas de carte @action en main",
+          "Pioche $n carte$s @action si tu n'as pas de carte @action en main",
         condition: (state) =>
           !state.revivedHand.some((card) => card.type === "action") &&
           state.revivedDraw.some((card) => card.type === "action"),
@@ -238,7 +289,7 @@ const supports: SupportCardInfo[] = (
       name: "Docker",
       image: "docker.webp",
       effect: reusable.drawSpecific({
-        label: "gratuite",
+        label: "gratuite$s",
         filter: (card) => card.effect.cost.value <= 0,
       }),
     },
@@ -280,7 +331,7 @@ const supports: SupportCardInfo[] = (
           min: 1,
           max: Math.floor(MAX_HAND_SIZE / 2),
         },
-        description: "Pioche @n carte@s dans la défausse",
+        description: "Pioche $n carte$s dans la défausse",
         condition: (state) => state.discard.length >= 1,
         async onPlayed(state, _, reason) {
           await state.drawCard(this.value!, {
@@ -289,7 +340,7 @@ const supports: SupportCardInfo[] = (
             reason,
           })
         },
-        waitBeforePlay: true,
+        needsPlayZone: true,
         recycle: true,
       }),
     },
@@ -324,15 +375,14 @@ const supports: SupportCardInfo[] = (
       name: "ESLint",
       image: "eslint.png",
       effect: createEffect({
-        basePrice: 1,
         skipEnergyGain: true,
         dynamicEffect: {
           cost: ACTIONS_COST.draw,
-          min: 1,
-          max: Math.floor(MAX_HAND_SIZE / 2),
+          min: Math.floor(MAX_HAND_SIZE / 2),
+          max: MAX_HAND_SIZE,
         },
         hint: "La pioche doit contenir au moins 1 carte",
-        description: "Défausse toutes les cartes en main et pioche @n carte@s",
+        description: "Défausse toutes les cartes en main et pioche $n carte$s",
         condition: (state) => state.draw.length >= 1,
         async onPlayed(state, _, reason) {
           await state.discardCard({ reason })
@@ -353,10 +403,10 @@ const supports: SupportCardInfo[] = (
         skipEnergyGain: true,
         dynamicEffect: {
           cost: ACTIONS_COST.draw,
-          min: 1,
-          max: Math.floor(MAX_HAND_SIZE / 2),
+          min: 5,
+          max: MAX_HAND_SIZE,
         },
-        description: "Mélange la main dans la pioche puis pioche @n carte@s",
+        description: "@giveBack ta main puis pioche $n carte$s",
         async onPlayed(state, _, reason) {
           await state.discardCard({ toDraw: true, reason })
 
@@ -387,7 +437,7 @@ const supports: SupportCardInfo[] = (
       image: "p5.png",
       effect: createEffect({
         basePrice: 2,
-        description: "Recycle une carte aléatoire",
+        description: "@recycle une carte aléatoire",
         condition: (state) => state.draw.length >= 1,
         async onPlayed(state, _, reason) {
           await state.drawCard(1, { reason })
@@ -408,7 +458,7 @@ const supports: SupportCardInfo[] = (
           min: 2,
           max: Math.floor(MAX_HAND_SIZE / 2),
         },
-        description: "Pioche @n carte@s si tu as moins de 5 cartes en main",
+        description: "Pioche $n carte$s si tu as moins de 5 cartes en main",
         condition: (state) => state.hand.length < 5 && state.draw.length >= 1,
         async onPlayed(state, _, reason) {
           await state.drawCard(this.value!, {
@@ -439,7 +489,7 @@ const supports: SupportCardInfo[] = (
       name: "MacOS",
       image: "macos.png",
       effect: reusable.recycleSpecific({
-        label: "gratuite",
+        label: "gratuite$s",
         filter: (card) => card.effect.cost.value <= 0,
       }),
     },
@@ -478,7 +528,9 @@ const supports: SupportCardInfo[] = (
         basePrice: 10,
         hint: "La pioche doit contenir au moins une carte @upgrade",
         description: `Si la @reputation est inférieur à ${Math.floor(MAX_REPUTATION / 2)}, pioche une carte @upgrade`,
-        condition: (state) => state.revivedDraw.some((c) => c.effect.upgrade),
+        condition: (state) =>
+          state.reputation < Math.floor(MAX_REPUTATION / 2) &&
+          state.revivedDraw.some((c) => c.effect.upgrade),
         async onPlayed(state, _, reason) {
           await state.drawCard(1, {
             filter: (card) => Boolean(card.effect.upgrade),
