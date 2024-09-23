@@ -15,7 +15,7 @@ import type {
   GameCardIndice,
   GameOverReason,
   TriggerEventName,
-  GameNotification,
+  ScreenMessageOptions,
   GameMethodOptions,
   CardModifierIndice,
   MethodWhoCheckIfGameOver,
@@ -40,9 +40,9 @@ import {
   isGameOver,
   reviveCard,
   reviveUpgrade,
-  getSortedHand,
   willBeRemoved,
   generateChoiceOptions,
+  revivedState,
 } from "@/game-utils.ts"
 
 import { metadata } from "@/game-metadata.ts"
@@ -106,7 +106,7 @@ export interface GameState {
   choiceOptionCount: number
   choiceOptions: (GameCardIndice | GameResource)[][]
   logs: GameLog[]
-  notification: GameNotification[]
+  screenMessages: ScreenMessageOptions[]
   operationInProgress: string[]
   setOperationInProgress: (operation: string, value: boolean) => void
   reason: GameOverReason
@@ -140,7 +140,7 @@ export interface GameState {
   }) => Promise<void>
   advanceTime: (energy: number) => Promise<void>
   addLog: (log: GameLog) => void
-  addNotification: (options: GameNotification) => Promise<void>
+  addNotification: (options: ScreenMessageOptions) => Promise<void>
   dangerouslyUpdate: (partial: Partial<GameState>) => void
   updateScore: () => void
   addEnergy: (count: number, options: GameMethodOptions) => Promise<void>
@@ -378,7 +378,7 @@ function generateGameState(): Omit<
         5,
       )
         .slice(0, INITIAL_CHOICE_OPTION_COUNT)
-        .map((c) => [c.name, "landing", generateRandomAdvantage()]),
+        .map((c) => [c.name, "idle", generateRandomAdvantage()]),
     )
   }
 
@@ -394,7 +394,7 @@ function generateGameState(): Omit<
     choiceOptions: startingChoices,
     choiceOptionCount: INITIAL_CHOICE_OPTION_COUNT,
     logs: [],
-    notification: [],
+    screenMessages: [],
     operationInProgress: ["choices"],
     score: 0,
     reason: null,
@@ -402,12 +402,22 @@ function generateGameState(): Omit<
     isGameOver: false,
     infinityMode: false,
     requestedCancel: false,
-    draw: startingDeck
-      .slice(MAX_HAND_SIZE - 2)
-      .map((name) => [name, "idle", LOCAL_ADVANTAGE.common]),
-    hand: startingDeck
-      .slice(0, MAX_HAND_SIZE - 2)
-      .map((name) => [name, "idle", LOCAL_ADVANTAGE.common]),
+    draw: startingDeck.slice(MAX_HAND_SIZE - 2).map((name) => [
+      name,
+      "idle",
+      {
+        initial: LOCAL_ADVANTAGE.common,
+        current: LOCAL_ADVANTAGE.common,
+      },
+    ]),
+    hand: startingDeck.slice(0, MAX_HAND_SIZE - 2).map((name) => [
+      name,
+      "idle",
+      {
+        initial: LOCAL_ADVANTAGE.common,
+        current: LOCAL_ADVANTAGE.common,
+      },
+    ]),
     revivedHand: [],
     revivedDraw: [],
     revivedDiscard: [],
@@ -640,7 +650,7 @@ function generateGameMethods(
       await handleErrorsAsync(getState, async () => {
         const state = getState()
 
-        if (state.notification.length > 0) {
+        if (state.screenMessages.length > 0) {
           throw state.handleError(
             new Error(
               `Trying to add a notification while one is already displayed: ${JSON.stringify(notification)}`,
@@ -649,13 +659,13 @@ function generateGameMethods(
         }
 
         set((state) => ({
-          notification: [notification, ...state.notification],
+          screenMessages: [notification, ...state.screenMessages],
         }))
 
         await wait(2000)
 
         set((state) => ({
-          notification: state.notification.slice(1),
+          screenMessages: state.screenMessages.slice(1),
         }))
       })
     },
@@ -1655,6 +1665,10 @@ function generateGameMethods(
         ...generateGameState(),
         ...generateGlobalGameState(),
       })
+
+      const state = getState()
+
+      set(revivedState(state))
     },
 
     enableInfinityMode: () => {
@@ -1682,11 +1696,7 @@ export const useCardGame = create<GameState & GlobalGameState>(
       new Set([...state.discoveries, ...getDeck(state).map(([name]) => name)]),
     )
 
-    state.revivedHand = getSortedHand(state.hand, state)
-    state.revivedDraw = state.draw.map((i) => reviveCard(i, state))
-    state.revivedDiscard = state.discard.map((i) => reviveCard(i, state))
-
-    return state
+    return { ...state, ...revivedState(state) }
   },
 )
 
@@ -1720,9 +1730,7 @@ useCardGame.subscribe(async (state, prevState) => {
         state.globalCardModifiers.join(",") !==
           prevState.globalCardModifiers.join(",")
       ) {
-        state.revivedHand = getSortedHand(state.hand, state)
-        state.revivedDraw = state.draw.map((i) => reviveCard(i, state))
-        state.revivedDiscard = state.discard.map((i) => reviveCard(i, state))
+        state.dangerouslyUpdate(revivedState(state))
       }
 
       // si aucune opération n'est en cours

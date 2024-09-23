@@ -58,27 +58,24 @@ export const GameResourceCard = (
     >
       {resource.state === "removing" && quality.animation ? (
         <div className="relative">
-          {Math.random() < 0.5 ? (
-            <BrokenCard
-              className={cn("absolute scale-x-[-1]", {
+          <BrokenCard
+            className={cn(
+              "absolute",
+              Math.random() < 0.5 ? "scale-x-[-1]" : "",
+              {
                 "text-card/60": quality.transparency,
                 "text-card": !quality.transparency,
-              })}
-              style={{
-                maskClip: "fill-box",
-              }}
-            />
-          ) : (
-            <BrokenCard
-              className={cn("absolute", {
-                "text-card/60": quality.transparency,
-                "text-card": !quality.transparency,
-              })}
-              style={{
-                maskClip: "fill-box",
-              }}
-            />
-          )}
+              },
+              {
+                "stroke-energy": resource.type === "energy",
+                "stroke-money": resource.type === "money",
+                "stroke-reputation": resource.type === "reputation",
+              },
+            )}
+            style={{
+              maskClip: "fill-box",
+            }}
+          />
         </div>
       ) : resource.state === "removed" ? (
         <></>

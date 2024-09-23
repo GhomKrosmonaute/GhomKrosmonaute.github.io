@@ -1,6 +1,10 @@
-import type { CardModifier } from "@/game-typings"
-import { ENERGY_TO_MONEY, GAME_ADVANTAGE } from "@/game-constants.ts"
-import { costTo, getUpgradeCost } from "@/game-safe-utils.ts"
+import type { CardModifier, LocalAdvantage } from "@/game-typings"
+import { ENERGY_TO_MONEY } from "@/game-constants.ts"
+import {
+  calculateLocalAdvantage,
+  getUpgradeCost,
+  costTo,
+} from "@/game-safe-utils.ts"
 import { GlobalCardModifierIndex } from "@/game-enums.ts"
 
 const cardModifiers = {
@@ -122,18 +126,22 @@ const cardModifiers = {
   "level up cards": (handCardNames: string[], advantage: number) => ({
     index: GlobalCardModifierIndex.First,
     condition: (card) => handCardNames.includes(card.name),
-    use: (card, state, raw) => ({
-      ...card,
-      localAdvantage: card.localAdvantage + advantage,
-      effect: raw.effect(
-        card.localAdvantage +
-          advantage +
-          GAME_ADVANTAGE[state.difficulty] -
-          state.inflation,
-        state,
-        card,
-      ),
-    }),
+    use: (card, state, raw) => {
+      const localAdvantage: LocalAdvantage = {
+        initial: card.localAdvantage.initial,
+        current: card.localAdvantage.current + advantage,
+      }
+
+      return {
+        ...card,
+        localAdvantage,
+        effect: raw.effect(
+          calculateLocalAdvantage(localAdvantage, state),
+          state,
+          card,
+        ),
+      }
+    },
   }),
 } satisfies Record<string, (...params: never[]) => CardModifier>
 

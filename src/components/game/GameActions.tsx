@@ -4,7 +4,7 @@ import { INFINITE_DRAW_COST, MAX_HAND_SIZE } from "@/game-constants.ts"
 
 import { cn } from "@/utils.ts"
 import { bank } from "@/sound.ts"
-import { isGameOver, reviveCard } from "@/game-utils"
+import { isGameOver, reviveCard, toSortedCards } from "@/game-utils"
 
 import { Button } from "@/components/ui/button.tsx"
 import { GameCard } from "@/components/game/GameCard.tsx"
@@ -30,6 +30,10 @@ export const GameActions = (props: { show: boolean }) => {
     game.operationInProgress.filter((o) => o !== "choices").length > 0
 
   const newSprint = React.useMemo(() => isNewSprint(game.day), [game.day])
+  const sortedOptions = React.useMemo(
+    () => toSortedCards(game.choiceOptions[0] ?? [], game),
+    [game],
+  )
 
   const drawButtonDisabled =
     game.energy + game.reputation < INFINITE_DRAW_COST ||
@@ -169,23 +173,19 @@ export const GameActions = (props: { show: boolean }) => {
               return (
                 <div
                   className={cn("flex justify-center", {
-                    "grid grid-cols-3": game.choiceOptions[0].length < 3,
+                    "grid grid-cols-3": sortedOptions.length < 3,
                   })}
                 >
                   <div
                     className={cn({
-                      hidden: game.choiceOptions[0].length !== 1,
+                      hidden: sortedOptions.length !== 1,
                     })}
                   />
-                  {game.choiceOptions[0].map((indice, i) =>
-                    isGameResource(indice) ? (
-                      <GameResourceCard key={i} resource={indice} />
+                  {sortedOptions.map((option, i) =>
+                    isGameResource(option) ? (
+                      <GameResourceCard key={i} resource={option} />
                     ) : (
-                      <GameCard
-                        key={i}
-                        card={reviveCard(indice, game)}
-                        isChoice
-                      />
+                      <GameCard key={i} card={option} isChoice />
                     ),
                   )}
                 </div>

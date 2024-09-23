@@ -3,7 +3,7 @@ import { useCardGame } from "@/hooks/useCardGame.ts"
 import { MAX_HAND_SIZE } from "@/game-constants.ts"
 import { useSettings } from "@/hooks/useSettings.ts"
 import Warning from "@/assets/icons/Warning.svg"
-import { formatText } from "@/game-safe-utils.ts"
+import { formatText, getDeck } from "@/game-safe-utils.ts"
 
 export const GameAlert = (props: { show?: boolean }) => {
   const quality = useSettings((state) => ({
@@ -13,7 +13,10 @@ export const GameAlert = (props: { show?: boolean }) => {
 
   const game = useCardGame((state) => ({
     handOverflow: state.hand.length >= MAX_HAND_SIZE,
-    almostEmptyDraw: state.draw.length < 4 && state.draw.length > 0,
+    almostEmptyDraw:
+      state.draw.length < 4 &&
+      state.draw.length > 0 &&
+      getDeck(state).length > MAX_HAND_SIZE,
     emptyDraw: state.draw.length === 0,
     almostEmptyReputation: state.reputation <= 5,
   }))

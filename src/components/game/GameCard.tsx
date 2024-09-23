@@ -26,6 +26,7 @@ import {
 } from "@/game-safe-utils.ts"
 import { GameCost } from "@/components/game/GameCost.tsx"
 import { GameAdvantageBadge } from "@/components/game/GameAdvantageBadge.tsx"
+// import { GameCardPopover } from "@/components/game/GameCardPopover.tsx"
 
 export const GameCard = (
   props: React.PropsWithoutRef<{
@@ -67,11 +68,13 @@ export const GameCard = (
     ? game.operationInProgress.filter((o) => o !== "choices").length > 0
     : game.operationInProgress.length > 0
 
-  const rarityName = getRarityName(props.card.localAdvantage)
+  const rarityName = getRarityName(props.card.localAdvantage.current)
 
   return (
     <div
-      key={props.card.name}
+      key={
+        props.card.name + props.card.localAdvantage.current + props.card.state
+      }
       className={cn(
         "game-card",
         "relative w-[210px] h-[293px]",
@@ -136,27 +139,27 @@ export const GameCard = (
     >
       {props.card.state === "removing" && quality.animation ? (
         <div className="relative">
-          {Math.random() < 0.5 ? (
-            <BrokenCard
-              className={cn("absolute scale-x-[-1]", {
+          <BrokenCard
+            className={cn(
+              "absolute",
+              Math.random() < 0.5 ? "scale-x-[-1]" : "",
+              {
                 "text-card/60": quality.transparency,
                 "text-card": !quality.transparency,
-              })}
-              style={{
-                maskClip: "fill-box",
-              }}
-            />
-          ) : (
-            <BrokenCard
-              className={cn("absolute", {
-                "text-card/60": quality.transparency,
-                "text-card": !quality.transparency,
-              })}
-              style={{
-                maskClip: "fill-box",
-              }}
-            />
-          )}
+              },
+              {
+                "stroke-common": rarityName === "common",
+                "stroke-rare": rarityName === "rare",
+                "stroke-epic": rarityName === "epic",
+                "stroke-legendary": rarityName === "legendary",
+                "stroke-cosmic": rarityName === "cosmic",
+                "stroke-singularity": rarityName === "singularity",
+              },
+            )}
+            style={{
+              maskClip: "fill-box",
+            }}
+          />
         </div>
       ) : props.card.state === "removed" ? (
         <></>
@@ -189,151 +192,159 @@ export const GameCard = (
             },
           )}
         >
-          {/* Background */}
-          {quality.perspective && quality.tilt && (
-            <div
-              className={cn("absolute w-full h-full rounded-xl", {
-                "bg-card/60": quality.transparency,
-                "bg-card": !quality.transparency,
-                // "backdrop-blur-sm": blur && transparency,
-              })}
-              style={{
-                transform: "translateZ(-20px)",
-              }}
-            />
-          )}
-
-          {/* Header */}
-          <div
-            className={cn(
-              "relative flex justify-start items-center h-10 rounded-t-xl",
-              {
-                "bg-action": props.card.type === "action",
-                [cn({
-                  "bg-support/50": quality.transparency,
-                  "bg-support": !quality.transparency,
-                })]: props.card.type === "support",
-              },
+          {/*<GameCardPopover card={props.card} justFamily>*/}
+          <>
+            {/* Background */}
+            {quality.perspective && quality.tilt && (
+              <div
+                className={cn("absolute w-full h-full rounded-xl", {
+                  "bg-card/60": quality.transparency,
+                  "bg-card": !quality.transparency,
+                  // "backdrop-blur-sm": blur && transparency,
+                })}
+                style={{
+                  transform: "translateZ(-20px)",
+                }}
+              />
             )}
-            style={{
-              transformStyle: quality.perspective ? "preserve-3d" : "flat",
-            }}
-          >
+
+            {/* Header */}
             <div
-              className="font-changa shrink-0 relative"
+              className={cn(
+                "relative flex justify-start items-center h-10 rounded-t-xl",
+                {
+                  "bg-action": props.card.type === "action",
+                  [cn({
+                    "bg-support/50": quality.transparency,
+                    "bg-support": !quality.transparency,
+                  })]: props.card.type === "support",
+                },
+              )}
               style={{
-                transform: `${quality.perspective ? "translateZ(5px)" : ""} translateX(${props.card.effect.cost.type === "money" ? "-15px" : "-8px"})`,
                 transformStyle: quality.perspective ? "preserve-3d" : "flat",
               }}
             >
-              <GameCost cost={props.card.effect.cost} />
+              <div
+                className="font-changa shrink-0 relative"
+                style={{
+                  transform: `${quality.perspective ? "translateZ(5px)" : ""} translateX(${props.card.effect.cost.type === "money" ? "-15px" : "-8px"})`,
+                  transformStyle: quality.perspective ? "preserve-3d" : "flat",
+                }}
+              >
+                <GameCost cost={props.card.effect.cost} />
+              </div>
+              <h2
+                className={cn(
+                  "absolute left-0 w-full text-center whitespace-nowrap overflow-hidden text-ellipsis shrink-0 flex-grow text-xl font-changa",
+                  {
+                    [cn({
+                      "left-3 text-lg":
+                        props.card.effect.cost.type === "money" &&
+                        props.card.name.length > 7,
+                      "left-7":
+                        props.card.effect.cost.type === "money" &&
+                        props.card.effect.cost.value > 99,
+                      "text-md": props.card.name.length > 11,
+                    })]: props.card.effect.cost.value > 0,
+                    "text-action-foreground": props.card.type === "action",
+                    "text-support-foreground": props.card.type === "support",
+                  },
+                )}
+                style={{
+                  transform: quality.perspective ? "translateZ(5px)" : "none",
+                }}
+              >
+                {props.card.name}
+              </h2>
+
+              <div
+                className={cn(
+                  "absolute bottom-0 left-0 translate-y-full flex",
+                  "*:px-2 *:py-0 *:rounded-br-md *:text-sm *:font-mono",
+                  {
+                    "transition-opacity duration-1000 group-hover/game-card:opacity-0":
+                      quality.transparency && quality.animation,
+                  },
+                )}
+              >
+                {!props.card.effect.upgrade ? (
+                  /* Rarity indicator */
+                  <GameAdvantageBadge advantage={props.card.localAdvantage} />
+                ) : (
+                  /* Upgrade max indicator */
+                  <div className="bg-upgrade">
+                    {(() => {
+                      const raw = upgrades.find(
+                        (raw) => raw.name === props.card.name,
+                      )!
+                      return raw.max === undefined
+                        ? "cumul infini: ∞"
+                        : `cumul max: ${raw.max}`
+                    })()}
+                  </div>
+                )}
+              </div>
             </div>
-            <h2
+
+            {/* Image */}
+            {isActionCardInfo(props.card) ? (
+              <GameCardProject card={props.card} />
+            ) : (
+              <GameCardTechno card={props.card} />
+            )}
+
+            {/* Body / Description */}
+            <div
               className={cn(
-                "absolute left-0 w-full text-center whitespace-nowrap overflow-hidden text-ellipsis shrink-0 flex-grow text-xl font-changa",
-                {
-                  [cn({
-                    "left-3 text-lg":
-                      props.card.effect.cost.type === "money" &&
-                      props.card.name.length > 7,
-                    "left-7":
-                      props.card.effect.cost.type === "money" &&
-                      props.card.effect.cost.value > 99,
-                    "text-md": props.card.name.length > 11,
-                  })]: props.card.effect.cost.value > 0,
-                  "text-action-foreground": props.card.type === "action",
-                  "text-support-foreground": props.card.type === "support",
+                "flex-grow rounded-b-xl",
+                props.card.type === "action" && {
+                  // "backdrop-blur-sm": blur && transparency,
+                  "bg-card/60": quality.transparency,
+                  "bg-card": !quality.transparency,
                 },
               )}
               style={{
-                transform: quality.perspective ? "translateZ(5px)" : "none",
+                transformStyle: quality.perspective ? "preserve-3d" : "flat",
               }}
             >
-              {props.card.name}
-            </h2>
+              <div
+                className="py-[12px] px-[10px] text-center"
+                style={{
+                  transform: quality.perspective ? "translateZ(10px)" : "none",
+                  transformStyle: quality.perspective ? "preserve-3d" : "flat",
+                }}
+                dangerouslySetInnerHTML={{
+                  __html: props.card.effect.description,
+                }}
+              />
 
-            <div
-              className={cn(
-                "absolute bottom-0 left-0 translate-y-full flex",
-                "*:px-2 *:py-0 *:rounded-br-md *:text-sm *:font-mono",
-                {
-                  "transition-opacity duration-1000 group-hover/game-card:opacity-0":
-                    quality.transparency && quality.animation,
-                },
-              )}
-            >
-              {!props.card.effect.upgrade ? (
-                /* Rarity indicator */
-                <GameAdvantageBadge advantage={props.card.localAdvantage} />
-              ) : (
-                /* Upgrade max indicator */
-                <div className="bg-upgrade">
-                  {(() => {
-                    const raw = upgrades.find(
-                      (raw) => raw.name === props.card.name,
-                    )!
-                    return raw.max === undefined
-                      ? "cumul infini: ∞"
-                      : `cumul max: ${raw.max}`
-                  })()}
+              {(props.card.effect.ephemeral || props.card.effect.recycle) && (
+                <div
+                  className={cn("text-center h-full text-2xl font-bold", {
+                    "text-muted-foreground/30": quality.transparency,
+                    "text-muted-foreground": !quality.transparency,
+                  })}
+                >
+                  {props.card.effect.ephemeral ? "Éphémère" : "Recyclage"}
                 </div>
               )}
             </div>
-          </div>
 
-          {/* Image */}
-          {isActionCardInfo(props.card) ? (
-            <GameCardProject card={props.card} />
-          ) : (
-            <GameCardTechno card={props.card} />
-          )}
-
-          {/* Body / Description */}
-          <div
-            className={cn(
-              "flex-grow rounded-b-xl",
-              props.card.type === "action" && {
-                // "backdrop-blur-sm": blur && transparency,
-                "bg-card/60": quality.transparency,
-                "bg-card": !quality.transparency,
-              },
-            )}
-            style={{
-              transformStyle: quality.perspective ? "preserve-3d" : "flat",
-            }}
-          >
-            <div
-              className="py-[12px] px-[10px] text-center"
-              style={{
-                transform: quality.perspective ? "translateZ(10px)" : "none",
-                transformStyle: quality.perspective ? "preserve-3d" : "flat",
-              }}
-              dangerouslySetInnerHTML={{
-                __html: props.card.effect.description,
-              }}
+            <BorderLight
+              groupName="game-card"
+              appearOnHover
+              disappearOnCorners
+            />
+            <BorderLight
+              groupName="game-card"
+              appearOnHover
+              disappearOnCorners
+              opposed
             />
 
-            {(props.card.effect.ephemeral || props.card.effect.recycle) && (
-              <div
-                className={cn("text-center h-full text-2xl font-bold", {
-                  "text-muted-foreground/30": quality.transparency,
-                  "text-muted-foreground": !quality.transparency,
-                })}
-              >
-                {props.card.effect.ephemeral ? "Éphémère" : "Recyclage"}
-              </div>
-            )}
-          </div>
-
-          <BorderLight groupName="game-card" appearOnHover disappearOnCorners />
-          <BorderLight
-            groupName="game-card"
-            appearOnHover
-            disappearOnCorners
-            opposed
-          />
-
-          <TiltFoil />
+            <TiltFoil />
+          </>
+          {/*</GameCardPopover>*/}
         </Tilt>
       )}
     </div>

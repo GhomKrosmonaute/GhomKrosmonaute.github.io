@@ -23,6 +23,8 @@ import type {
   GameCardState,
   GameLog,
   GameResource,
+  LocalAdvantage,
+  GameResolvable,
   RawUpgrade,
   StateDependentValue,
   Upgrade,
@@ -190,15 +192,35 @@ export function pick<T extends object, K extends keyof T>(
   return clone
 }
 
-export function calculateAdvantage(
-  localAdvantage: number,
+export function calculateLocalAdvantage(
+  localAdvantage: LocalAdvantage,
   state: GameState & GlobalGameState,
 ) {
-  return localAdvantage + GAME_ADVANTAGE[state.difficulty] - state.inflation
+  return (
+    localAdvantage.initial + GAME_ADVANTAGE[state.difficulty] - state.inflation
+  )
 }
 
-export function isGameCardIndice(input: object): input is GameCardIndice {
-  return /^\[".+","[a-z]+",\d+]$/.test(JSON.stringify(input))
+export function isGameResource(option: GameResolvable): option is GameResource {
+  return (
+    Array.isArray(option) &&
+    option.length === 4 &&
+    typeof option[3] === "string"
+  )
+}
+
+export function isGameCardIndice(
+  option: GameResolvable,
+): option is GameCardIndice {
+  return /^\[".+","[a-z]+",\{"initial":\d+,"current":\d+}]$/.test(
+    JSON.stringify(option),
+  )
+}
+
+export function isGameCardInfo(
+  option: GameResolvable,
+): option is GameCardInfo<true> {
+  return typeof option === "object" && "effect" in option
 }
 
 /**
@@ -298,14 +320,6 @@ export function updateGameAutoSpeed(
   return speed
 }
 
-export function isGameResource<T>(option: T): option is T & GameResource {
-  return (
-    Array.isArray(option) &&
-    option.length === 4 &&
-    typeof option[3] === "string"
-  )
-}
-
 export function isNewSprint(day: number) {
   return Math.floor(day) !== 0 && Math.floor(day) % 7 === 0
 }
@@ -355,13 +369,20 @@ export async function handleErrorsAsync(
  * Generate a random advantage from LOCAL_ADVANTAGE (represents rarities)
  * Each rarity has a different probability to be selected
  */
-export function generateRandomAdvantage(): number {
+export function generateRandomAdvantage(): LocalAdvantage {
+  let advantage: number = LOCAL_ADVANTAGE.common
+
   const seed = Math.random()
-  if (seed < 0.015) return LOCAL_ADVANTAGE.cosmic
-  if (seed < 0.04) return LOCAL_ADVANTAGE.legendary
-  if (seed < 0.12) return LOCAL_ADVANTAGE.epic
-  if (seed < 0.3) return LOCAL_ADVANTAGE.rare
-  return LOCAL_ADVANTAGE.common
+
+  if (seed < 0.015) advantage = LOCAL_ADVANTAGE.cosmic
+  else if (seed < 0.04) advantage = LOCAL_ADVANTAGE.legendary
+  else if (seed < 0.12) advantage = LOCAL_ADVANTAGE.epic
+  else if (seed < 0.3) advantage = LOCAL_ADVANTAGE.rare
+
+  return {
+    initial: advantage,
+    current: advantage,
+  }
 }
 
 export function generateRandomResource(state: GameState): GameResource {
@@ -369,8 +390,8 @@ export function generateRandomResource(state: GameState): GameResource {
   const id = Math.random().toFixed(6)
 
   if (type < 0.48) {
-    const quantity = generateRandomAdvantage()
-    return [id, "drawing", 50 * Math.max(1, quantity), "money"]
+    const { current } = generateRandomAdvantage()
+    return [id, "drawing", 50 * Math.max(1, current), "money"]
   } else if (type < 0.96) {
     const rdm = Math.random()
     return [
@@ -394,6 +415,12 @@ export function getDeck(
   state: Pick<GameState, "draw" | "discard" | "hand">,
 ): GameCardIndice[] {
   return [...state.draw, ...state.discard, ...state.hand]
+}
+
+export function getRevivedDeck(
+  state: Pick<GameState, "revivedDraw" | "revivedDiscard" | "revivedHand">,
+): GameCardInfo<true>[] {
+  return [...state.revivedDraw, ...state.revivedDiscard, ...state.revivedHand]
 }
 
 export function energyCostColor(
@@ -524,9 +551,9 @@ export function createEffect<Data extends any[]>(
     basePrice?: number
     /**
      * Description of the effect <br>
-     * Use @n to replace with the value of the effect <br>
-     * Use @$ to replace with the value of the effect in money <br>
-     * Use @s to add an "s" if the value is greater than 1
+     * Use $n to replace with the value of the effect <br>
+     * Use $$ to replace with the value of the effect in money <br>
+     * Use $s to add an "s" if the value is greater than 1
      */
     description?: string
     select?: (
@@ -562,25 +589,25 @@ export function createEffect<Data extends any[]>(
           ? (options.dynamicEffect
               ? computed.effect
                 ? options.description
-                    .replace(/@n/g, String(computed.effect.value))
+                    .replace(/\$n/g, String(computed.effect.value))
                     .replace(
-                      /@\$/g,
+                      /\$\$/g,
                       `${computed.effect.value * ENERGY_TO_MONEY}M$`,
                     )
-                    .replace(/$s/g, computed.effect.value > 1 ? "s" : "")
+                    .replace(/\$s/g, computed.effect.value > 1 ? "s" : "")
                 : `<muted>${options.description
                     .replace(
-                      /@n/g,
+                      /\$n/g,
                       String(_val(options.dynamicEffect.min, state) ?? 1),
                     )
                     .replace(
-                      /@\$/g,
+                      /\$\$/g,
                       String(
                         (_val(options.dynamicEffect.min, state) ?? 1) *
                           ENERGY_TO_MONEY,
                       ),
                     )
-                    .replace(/$s/g, "")}</muted>`
+                    .replace(/\$s/g, "")}</muted>`
               : options.description) + computed.description
           : computed.description,
       ),
@@ -810,7 +837,7 @@ export const fakeState: GameState = {
   isWon: false,
   logs: [],
   money: 0,
-  notification: [],
+  screenMessages: [],
   operationInProgress: [],
   pickOption: async () => {},
   playCard: async () => {},

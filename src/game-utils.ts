@@ -11,6 +11,8 @@ import type {
   CardModifierIndice,
   ChoiceOptionsGeneratorOptions,
   GameModifierLog,
+  LocalAdvantage,
+  GameResolvable,
 } from "@/game-typings"
 
 import {
@@ -29,7 +31,8 @@ import {
   isGameResource,
   canBeBuy,
   shuffle,
-  calculateAdvantage,
+  calculateLocalAdvantage,
+  isGameCardInfo,
 } from "@/game-safe-utils.ts"
 
 export function generateChoiceOptions(
@@ -76,11 +79,15 @@ export function generateChoiceOptions(
 
   return shuffle(_cards, 3)
     .slice(0, state.choiceOptionCount)
-    .map((option) =>
-      isGameResource(option)
-        ? option
-        : [option.name, "landing", generateRandomAdvantage()],
-    )
+    .map((option) => {
+      if (isGameResource(option)) return option
+
+      return [
+        option.name,
+        "landing",
+        generateRandomAdvantage(),
+      ] as GameCardIndice
+    })
 }
 
 export function isGameOver(
@@ -129,14 +136,15 @@ export function getGlobalCardModifierLogs(
 
     card = modifier.use(card, state, resolveCard(card.name))
 
-    const levelChange = card.localAdvantage !== before.localAdvantage
+    const levelChange =
+      card.localAdvantage.current !== before.localAdvantage.current
     const costChange = card.effect.cost.value !== before.effect.cost.value
     const costTypeChange = card.effect.cost.type !== before.effect.cost.type
 
     if (levelChange)
       logs.push({
         reason: indice[2],
-        type: "level",
+        type: "localAdvantage",
         before: before.localAdvantage,
         after: card.localAdvantage,
       })
@@ -201,23 +209,59 @@ export function willBeRemoved(state: GameState, card: GameCardInfo<true>) {
   return false
 }
 
-export function getSortedHand(
-  hand: GameCardIndice[],
+export function toSortedCards<T extends GameCardIndice>(
+  cards: T[],
   state: GameState & GlobalGameState,
-) {
-  return hand
-    .map((i) => reviveCard(i, state))
+): GameCardInfo<true>[]
+export function toSortedCards<T extends GameResolvable>(
+  cards: T[],
+  state: GameState & GlobalGameState,
+): (GameCardInfo<true> | GameResource)[]
+export function toSortedCards<T extends GameResolvable>(
+  cards: T[],
+  state: GameState & GlobalGameState,
+): (GameCardInfo<true> | GameResource)[] {
+  return cards
+    .map((i) =>
+      isGameResource(i) ? i : reviveCard(i as GameCardIndice, state),
+    )
     .toSorted((a, b) => {
       // trier par type de carte (action ou support) puis par type de prix (énergie ou $) puis par prix puis par description de l'effet
-      const typeA = a.type === "action" ? 1 : 0
-      const typeB = b.type === "action" ? 1 : 0
-      const priceA = a.effect.cost.type === "money" ? 1 : 0
-      const priceB = b.effect.cost.type === "money" ? 1 : 0
-      const costA = a.effect.cost.value
-      const costB = b.effect.cost.value
-      const effect = a.effect.description.localeCompare(b.effect.description)
-      return typeA - typeB || priceA - priceB || costA - costB || effect
+      if (isGameResource(a) && isGameResource(b)) {
+        const indexes = ["energy", "money", "reputation"] as GameResource["3"][]
+        const typeA = indexes.indexOf(a[3])
+        const typeB = indexes.indexOf(b[3])
+        const valueA = a[2]
+        const valueB = b[2]
+        return typeA - typeB || valueA - valueB
+      }
+
+      if (!isGameResource(a) && isGameResource(b)) return -1
+      if (isGameResource(a) && !isGameResource(b)) return 1
+
+      if (isGameCardInfo(a) && isGameCardInfo(b)) {
+        const typeA = a.type === "action" ? 1 : 0
+        const typeB = b.type === "action" ? 1 : 0
+        const priceA = a.effect.cost.type === "money" ? 1 : 0
+        const priceB = b.effect.cost.type === "money" ? 1 : 0
+        const costA = a.effect.cost.value
+        const costB = b.effect.cost.value
+        const effect = a.effect.description.localeCompare(b.effect.description)
+        return typeA - typeB || priceA - priceB || costA - costB || effect
+      }
+
+      return 0
     })
+}
+
+export function revivedState(
+  state: GameState & GlobalGameState,
+): Pick<GameState, "revivedHand" | "revivedDraw" | "revivedDiscard"> {
+  return {
+    revivedHand: toSortedCards(state.hand, state),
+    revivedDraw: state.draw.map((i) => reviveCard(i, state)),
+    revivedDiscard: state.discard.map((i) => reviveCard(i, state)),
+  }
 }
 
 // /**
@@ -267,8 +311,13 @@ export function reviveCard(
 ): GameCardInfo<true> {
   const card = resolveCard(indice)
 
-  const localAdvantage =
-    typeof indice !== "string" ? indice[2] : LOCAL_ADVANTAGE.common
+  const initialAdvantage =
+    typeof indice !== "string" ? indice[2].initial : LOCAL_ADVANTAGE.common
+
+  const localAdvantage: LocalAdvantage = {
+    initial: initialAdvantage,
+    current: initialAdvantage,
+  }
 
   const output: Omit<GameCardInfo<true>, "effect"> = {
     ...card,
@@ -280,7 +329,7 @@ export function reviveCard(
   const final = {
     ...output,
     effect: card.effect(
-      calculateAdvantage(localAdvantage, state),
+      calculateLocalAdvantage(localAdvantage, state),
       state,
       output,
     ),

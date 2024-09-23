@@ -1,24 +1,12 @@
 import { cn } from "@/utils.ts"
 import { useCardGame } from "@/hooks/useCardGame.ts"
-import { useSettings } from "@/hooks/useSettings.ts"
 
-export const EventNotifier = (props: { show: boolean }) => {
+export const ScreenMessages = (props: { show: boolean }) => {
   const game = useCardGame((state) => ({
-    notification: state.notification,
+    notification: state.screenMessages,
   }))
 
-  const quality = useSettings((state) => ({
-    animations: state.quality.animations,
-    transparency: state.quality.transparency,
-  }))
-
-  if (
-    !props.show ||
-    !quality.transparency ||
-    !quality.animations ||
-    game.notification.length === 0
-  )
-    return null
+  if (!props.show || game.notification.length === 0) return null
 
   //new code avec l'animation décrite plus haut:
   return (

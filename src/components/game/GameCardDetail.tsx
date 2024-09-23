@@ -17,7 +17,10 @@ import { GameCard } from "@/components/game/GameCard.tsx"
 import { getGlobalCardModifierLogs, reviveCard } from "@/game-utils.ts"
 import { GameCost } from "@/components/game/GameCost.tsx"
 import { GameAdvantageBadge } from "@/components/game/GameAdvantageBadge.tsx"
-import { Link } from "lucide-react"
+import { ArrowRight, Link } from "lucide-react"
+import { GameMiniature } from "@/components/game/GameMiniature.tsx"
+import { GameFamilyBadge } from "@/components/game/GameFamilyBadge.tsx"
+import { calculateLocalAdvantage } from "@/game-safe-utils.ts"
 
 export const GameCardDetail = (props: { show: boolean }) => {
   const state = useCardGame()
@@ -65,6 +68,14 @@ export const GameCardDetail = (props: { show: boolean }) => {
             {Object.entries(LOCAL_ADVANTAGE)
               .sort(([, a], [, b]) => a - b)
               .map(([rarity, level]) => {
+                const advantage = calculateLocalAdvantage(
+                  {
+                    initial: level,
+                    current: level,
+                  },
+                  state,
+                )
+
                 return (
                   <div
                     key={rarity}
@@ -76,57 +87,88 @@ export const GameCardDetail = (props: { show: boolean }) => {
                   >
                     <GameCard
                       withoutDetail
-                      card={reviveCard([card.name, "idle", level], state, {
-                        withoutModifiers: true,
-                      })}
+                      card={reviveCard(
+                        [
+                          card.name,
+                          "idle",
+                          {
+                            initial: advantage,
+                            current: advantage,
+                          },
+                        ],
+                        state,
+                        {
+                          withoutModifiers: true,
+                        },
+                      )}
                     />
                   </div>
                 )
               })}
           </div>
-          <div className="flex">
+          <div className="flex gap-5 *:p-5 *:space-y-4 *:border *:rounded-lg">
             {modifiers.length > 0 && (
-              <div>
-                <h2 className="text-2xl">Modificateurs</h2>
-                <table>
-                  <tbody>
-                    {modifiers.map((modifier, index) => (
-                      <tr key={index}>
-                        <th>{modifier.reason}</th>
-                        {modifier.type === "level" ? (
-                          <>
-                            <td>
-                              <GameAdvantageBadge
-                                advantage={modifier.before}
-                                orphan
-                              />
-                            </td>
-                            <td>
-                              <GameAdvantageBadge
-                                advantage={modifier.after}
-                                orphan
-                              />
-                            </td>
-                          </>
-                        ) : (
-                          <>
-                            <td>
-                              <GameCost cost={modifier.before} miniature />
-                            </td>
-                            <td>
-                              <GameCost cost={modifier.after} miniature />
-                            </td>
-                          </>
-                        )}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="shrink-0 flex flex-col">
+                <h2 className="text-2xl text-center">Modificateurs actifs</h2>
+                <div className="max-h-[300px] overflow-y-scroll flex-grow">
+                  <table>
+                    <tbody>
+                      {modifiers.map((modifier, index) => (
+                        <tr key={index}>
+                          <th className="whitespace-nowrap">
+                            {typeof modifier.reason === "string" ? (
+                              modifier.reason
+                            ) : (
+                              <GameMiniature item={modifier.reason} />
+                            )}
+                          </th>
+                          {modifier.type === "localAdvantage" ? (
+                            <>
+                              <td className="text-right">
+                                <GameAdvantageBadge
+                                  advantage={modifier.before}
+                                  orphan
+                                />
+                              </td>
+                              <td>
+                                <ArrowRight className="w-4" />
+                              </td>
+                              <td>
+                                <GameAdvantageBadge
+                                  advantage={modifier.after}
+                                  orphan
+                                />
+                              </td>
+                            </>
+                          ) : (
+                            <>
+                              <td>
+                                <GameCost cost={modifier.before} miniature />
+                              </td>
+                              <td>
+                                <ArrowRight className="w-4" />
+                              </td>
+                              <td>
+                                <GameCost cost={modifier.after} miniature />
+                              </td>
+                            </>
+                          )}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
             {card.type === "action" && (
-              <ActionCardDetail card={card as ActionCardInfo<true>} />
+              <div>
+                <ActionCardDetail card={card as ActionCardInfo<true>} />
+              </div>
             )}
+            <div className="shrink-0">
+              <h2 className="text-center text-2xl">Ta carte</h2>
+              <GameCard card={card} withoutDetail />
+            </div>
           </div>
         </Card>
       )}
@@ -146,17 +188,52 @@ export const SupportCardDetail = (props: { card: SupportCardInfo<true> }) => {
 }
 
 export const ActionCardDetail = (props: { card: ActionCardInfo<true> }) => {
-  return props.card.detail ? (
-    <div className="p-2 gap-1 flex h-fit">
-      <QuoteLeft className="w-6 self-start" />
-      <div className="flex-grow text-xl text-left px-2">
-        <a className="flex gap-3" href={props.card.url} target="_blank">
-          <Link className="inline" />
-          <h2 className="inline">Projet {props.card.name}</h2>
-        </a>
-        {props.card.detail}
-      </div>
-      <QuoteRight className="w-6 self-end" />
-    </div>
-  ) : null
+  return (
+    <>
+      {props.card.detail ? (
+        <div className="p-2 gap-1 flex h-fit">
+          <QuoteLeft className="w-6 self-start" />
+          <div className="flex-grow text-xl text-left px-2">
+            <a
+              className="flex gap-3 items-baseline flex-wrap"
+              href={props.card.url}
+              target="_blank"
+            >
+              <h2 className="inline text-2xl whitespace-nowrap">
+                Projet "{props.card.name}"
+              </h2>
+              <Link className="inline self-center" />
+              {props.card.description && (
+                <span className="text-lg italic text-muted-foreground whitespace-nowrap">
+                  ({props.card.description})
+                </span>
+              )}
+            </a>
+            {props.card.detail}
+          </div>
+          <QuoteRight className="w-6 self-end" />
+        </div>
+      ) : (
+        <>
+          {props.card.url && (
+            <a className="flex gap-3" href={props.card.url} target="_blank">
+              <Link className="inline" />
+              <h2 className="inline">Projet {props.card.name}</h2>
+            </a>
+          )}
+        </>
+      )}
+
+      {props.card.families.length > 0 && (
+        <>
+          <h2 className="text-2xl">Familles</h2>
+          <div className="flex flex-wrap gap-2">
+            {props.card.families.map((family) => (
+              <GameFamilyBadge family={family} key={family} />
+            ))}
+          </div>
+        </>
+      )}
+    </>
+  )
 }

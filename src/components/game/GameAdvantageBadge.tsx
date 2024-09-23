@@ -9,20 +9,23 @@ export const GameAdvantageBadge = (props: {
 }) => {
   const [name, full] = React.useMemo(() => {
     return [
-      getRarityName(props.advantage),
-      getRarityName(props.advantage, true),
+      getRarityName(props.advantage.current),
+      getRarityName(props.advantage.current, true),
     ]
   }, [props.advantage])
 
   return (
-    <div
-      className={cn("z-10", props.orphan && "rounded-lg px-1")}
+    <span
+      className={cn(
+        "inline-block z-10 w-fit",
+        props.orphan && "rounded-lg px-1",
+      )}
       style={{
         color: `hsl(var(--${name}-foreground))`,
         backgroundColor: `hsl(var(--${name}))`,
       }}
     >
       {full}
-    </div>
+    </span>
   )
 }

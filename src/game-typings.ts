@@ -111,7 +111,7 @@ export interface ActionCardInfo<Resolved = false> {
   families: ActionCardFamily[]
   effect: Resolved extends true ? Effect<any[]> : EffectBuilder<any[]>
   state: Resolved extends true ? GameCardState : null
-  localAdvantage: Resolved extends true ? number : null
+  localAdvantage: Resolved extends true ? LocalAdvantage : null
   description?: string
   detail?: string
   url?: string
@@ -123,7 +123,12 @@ export interface SupportCardInfo<Resolved = false> {
   image: string
   effect: Resolved extends true ? Effect<any[]> : EffectBuilder<any[]>
   state: Resolved extends true ? GameCardState : null
-  localAdvantage: Resolved extends true ? number : null
+  localAdvantage: Resolved extends true ? LocalAdvantage : null
+}
+
+export type LocalAdvantage = {
+  initial: number
+  current: number
 }
 
 export type GameCardState =
@@ -178,7 +183,7 @@ export type CardModifier = {
 export type GameCardIndice = [
   name: string,
   state: GameCardState,
-  localAdvantage: number,
+  localAdvantage: LocalAdvantage,
 ]
 
 export type CardModifierIndice = [
@@ -186,6 +191,13 @@ export type CardModifierIndice = [
   params: unknown[],
   reason: GameModifierLog["reason"],
 ]
+
+export type GameResolvable =
+  | GameCardIndice
+  | GameResource
+  | GameCardInfo
+  | GameCardInfo<true>
+  | UpgradeIndice
 
 export type TriggerEventName = keyof typeof events
 
@@ -210,9 +222,9 @@ export type GameLog = {
 
 export type GameModifierLog = { reason: GameCardIndice | string } & (
   | {
-      type: "level"
-      before: number
-      after: number
+      type: "localAdvantage"
+      before: LocalAdvantage
+      after: LocalAdvantage
     }
   | {
       type: "cost"
@@ -221,7 +233,7 @@ export type GameModifierLog = { reason: GameCardIndice | string } & (
     }
 )
 
-export type GameNotification = {
+export type ScreenMessageOptions = {
   header?: string
   message: string
   className: ColorClass

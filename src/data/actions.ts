@@ -214,7 +214,7 @@ const actions: ActionCardInfo[] = (
         basePrice: MAX_HAND_SIZE,
         dynamicEffect: { cost: 1, max: 5 },
         description:
-          "Baisse le prix des cartes en main de $n @energy$s ou de @$",
+          "Baisse le prix des cartes en main de $n @energy$s ou de $$",
         condition: (state, card) =>
           state.revivedHand.some(
             (c) => c.name !== card.name && c.effect.cost.value > 0,

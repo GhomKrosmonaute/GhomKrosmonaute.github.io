@@ -11,6 +11,7 @@ import scores from "@/data/scores.json"
 import helpers from "@/data/helpers.json"
 
 import { Button } from "@/components/ui/button.tsx"
+import { BuyMeACoffee } from "@/components/ui/buy-me-a-coffe.tsx"
 import { Stats } from "@/components/game/GameStats.tsx"
 import { Tilt } from "@/components/game/Tilt.tsx"
 import { cn } from "@/utils.ts"
@@ -239,29 +240,7 @@ export const GameOver = (props: { show: boolean }) => {
               )}
             </div>
 
-            {game.isWon && (
-              <div
-                className={cn({
-                  "animate-bounce w-full hover:duration-500": quality.animation,
-                })}
-              >
-                <a
-                  href="https://buymeacoffee.com/ghom"
-                  target="_blank"
-                  className={cn(
-                    "text-xl block mx-auto w-[300px] text-center border-2 border-upgrade rounded-xl py-3",
-                    {
-                      "transition-colors duration-500 ease-in-out":
-                        quality.animation,
-                      "bg-card/50 hover:bg-card": quality.transparency,
-                      "bg-card": !quality.transparency,
-                    },
-                  )}
-                >
-                  Buy me a coffee ☕️
-                </a>
-              </div>
-            )}
+            {game.isWon && <BuyMeACoffee animated />}
           </div>
         </div>
       )}

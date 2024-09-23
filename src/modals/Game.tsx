@@ -9,7 +9,7 @@ import steps from "@/data/tutorial.tsx"
 
 import { CrashReportProvider } from "@/components/game/CrashReportProvider.tsx"
 import { TutorialProvider } from "@/components/game/TutorialProvider.tsx"
-import { EventNotifier } from "@/components/game/EventNotifier.tsx"
+import { ScreenMessages } from "@/components/game/ScreenMessages.tsx"
 import { GameTutorial } from "@/components/game/GameTutorial.tsx"
 import { GameUpgrades } from "@/components/game/GameUpgrades.tsx"
 import { CornerIcons } from "@/components/game/CornerIcons.tsx"
@@ -83,7 +83,7 @@ export const Game = () => {
         <GameHand show={show} />
         <GameCardDetail show={show} />
         <GameTutorial show={show} />
-        <EventNotifier show={show} />
+        <ScreenMessages show={show} />
 
         {(import.meta.env.DEV || debug) && <GameDebug />}
       </CrashReportProvider>

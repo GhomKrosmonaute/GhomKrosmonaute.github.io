@@ -10,6 +10,7 @@ import socials from "@/data/socials.json"
 import { cn } from "@/utils.ts"
 
 import { Button, buttonVariants } from "@/components/ui/button.tsx"
+import { BuyMeACoffee } from "@/components/ui/buy-me-a-coffe.tsx"
 
 const github = socials.find((s) => s.name === "Github")!
 
@@ -39,6 +40,7 @@ export const CornerIcons = (props: { show: boolean }) => {
         },
       )}
     >
+      <BuyMeACoffee />
       <a
         href={github.url}
         target="_blank"
