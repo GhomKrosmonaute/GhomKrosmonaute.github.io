@@ -56,14 +56,16 @@ export const GameRules = (props: { show: boolean }) => {
         <div className="grid grid-cols-2 gap-4">
           <div className="bg-card p-5 rounded-xl space-y-2">
             <h2 className="text-3xl">Règles du jeu</h2>
-            {helpers.map((helper, i) => (
-              <div
-                key={i}
-                dangerouslySetInnerHTML={{
-                  __html: formatText(helper),
-                }}
-              />
-            ))}
+            <div className="max-h-[60vh] overflow-y-scroll space-y-2">
+              {helpers.map((helper, i) => (
+                <div
+                  key={i}
+                  dangerouslySetInnerHTML={{
+                    __html: formatText(helper),
+                  }}
+                />
+              ))}
+            </div>
           </div>
           <div className="grid grid-rows-3 gap-4 *:bg-card *:p-5 *:rounded-xl *:space-y-2">
             <div>
