@@ -6,20 +6,23 @@ import upgrades from "@/data/upgrades.ts"
 import achievements from "@/data/achievements.ts"
 import cardModifiers from "@/data/cardModifiers.ts"
 
-import type {
+import {
   GameLog,
   GameResource,
   GameCardInfo,
   MethodWhoLog,
-  UpgradeIndice,
-  GameCardIndice,
+  UpgradeCompact,
+  GameCardCompact,
   GameOverReason,
   TriggerEventName,
   ScreenMessageOptions,
   GameMethodOptions,
-  CardModifierIndice,
+  CardModifierCompact,
   MethodWhoCheckIfGameOver,
   GameModifierLog,
+  compactUpgrade,
+  compactGameCardInfo,
+  isGameResource,
 } from "@/game-typings"
 
 import {
@@ -60,16 +63,14 @@ import {
   getDeck,
   shuffle,
   wait,
-  upgradeToIndice,
   excludeCard,
   updateCardState,
   includeCard,
   canBeBuy,
-  cardInfoToIndice,
   getUsableCost,
   costToEnergy,
-  isGameResource,
   save,
+  updateUpgradeState,
 } from "@/game-safe-utils.ts"
 
 export interface GlobalGameState {
@@ -90,8 +91,8 @@ export interface GlobalGameState {
 }
 
 export interface GameState {
-  cardDetail: GameCardIndice | null
-  setCardDetail: (card: GameCardIndice | null) => void
+  cardDetail: GameCardCompact | null
+  setCardDetail: (card: GameCardCompact | null) => void
   inflation: number
   coinFlips: number
   recycledCards: number
@@ -104,7 +105,7 @@ export interface GameState {
   error: Error | null
   handleError: <T>(error: T) => T
   choiceOptionCount: number
-  choiceOptions: (GameCardIndice | GameResource)[][]
+  choiceOptions: (GameCardCompact | GameResource)[][]
   logs: GameLog[]
   screenMessages: ScreenMessageOptions[]
   operationInProgress: string[]
@@ -114,15 +115,15 @@ export interface GameState {
   isGameOver: boolean
   infinityMode: boolean
   requestedCancel: boolean
-  playZone: GameCardIndice[]
-  draw: GameCardIndice[]
-  hand: GameCardIndice[]
-  discard: GameCardIndice[]
+  playZone: GameCardCompact[]
+  draw: GameCardCompact[]
+  hand: GameCardCompact[]
+  discard: GameCardCompact[]
   revivedDraw: GameCardInfo<true>[]
   revivedHand: GameCardInfo<true>[]
   revivedDiscard: GameCardInfo<true>[]
-  upgrades: UpgradeIndice[]
-  globalCardModifiers: CardModifierIndice[]
+  upgrades: UpgradeCompact[]
+  globalCardModifiers: CardModifierCompact<any>[]
   score: number
   day: number
   dayFull: boolean | null
@@ -184,7 +185,7 @@ export interface GameState {
     options: GameMethodOptions & { free?: boolean },
   ) => Promise<void>
   selectCard: (name: string) => void
-  waitCardSelection: <T extends GameCardIndice | GameCardInfo<true>>(options: {
+  waitCardSelection: <T extends GameCardCompact | GameCardInfo<true>>(options: {
     from: T[]
     timeout?: number
   }) => Promise<GameCardInfo<true> | null>
@@ -276,7 +277,7 @@ function generateGlobalGameMethods(
       handleErrors(getState, () => {
         const state = getState()
 
-        state.addDiscovery(...getDeck(state).map(([name]) => name))
+        state.addDiscovery(...getDeck(state).map((c) => c.name))
       })
     },
 
@@ -362,15 +363,15 @@ function generateGameState(): Omit<
 
   // startingDeck = shuffle(startingDeck, 3)
 
-  const startingChoices: GameCardIndice[][] = []
+  const startingChoices: GameCardCompact[][] = []
 
   for (let i = 0; i < INITIAL_CHOICE_COUNT; i++) {
     startingChoices.push(
       shuffle(
         cards.filter(
           (c) =>
-            startingChoices.every((o) =>
-              o.every(([name]) => name !== c.name),
+            startingChoices.every((options) =>
+              options.every((o) => o.name !== c.name),
             ) &&
             startingDeck.every((name) => name !== c.name) &&
             !c.effect().upgrade,
@@ -378,7 +379,11 @@ function generateGameState(): Omit<
         5,
       )
         .slice(0, INITIAL_CHOICE_OPTION_COUNT)
-        .map((c) => [c.name, "idle", generateRandomAdvantage()]),
+        .map((c) => ({
+          name: c.name,
+          state: "idle",
+          initialRarity: generateRandomAdvantage(),
+        })),
     )
   }
 
@@ -402,22 +407,16 @@ function generateGameState(): Omit<
     isGameOver: false,
     infinityMode: false,
     requestedCancel: false,
-    draw: startingDeck.slice(MAX_HAND_SIZE - 2).map((name) => [
+    draw: startingDeck.slice(MAX_HAND_SIZE - 2).map((name) => ({
       name,
-      "idle",
-      {
-        initial: LOCAL_ADVANTAGE.common,
-        current: LOCAL_ADVANTAGE.common,
-      },
-    ]),
-    hand: startingDeck.slice(0, MAX_HAND_SIZE - 2).map((name) => [
+      state: "idle",
+      initialRarity: LOCAL_ADVANTAGE.common,
+    })),
+    hand: startingDeck.slice(0, MAX_HAND_SIZE - 2).map((name) => ({
       name,
-      "idle",
-      {
-        initial: LOCAL_ADVANTAGE.common,
-        current: LOCAL_ADVANTAGE.common,
-      },
-    ]),
+      state: "idle",
+      initialRarity: LOCAL_ADVANTAGE.common,
+    })),
     revivedHand: [],
     revivedDraw: [],
     revivedDiscard: [],
@@ -425,8 +424,12 @@ function generateGameState(): Omit<
     discard: [],
     upgrades: [],
     globalCardModifiers: [
-      ["upgrade cost threshold", [], "Start of game"],
-      // ["all card inflation", []],
+      {
+        name: "upgrade cost threshold",
+        params: [],
+        reason: "Promotion temporaire",
+      },
+      { name: "all card inflation", params: [], reason: "@inflation" },
     ],
     day: 0,
     dayFull: false,
@@ -914,37 +917,39 @@ function generateGameMethods(
         // on joue le son de la banque
         bank.upgrade.play()
 
-        // si l'activité est déjà découverte, on augmente son cumul
-        if (state.upgrades.find((a) => a[0] === name)) {
+        // si l'upgrade est déjà découverte, on augmente son cumul
+        if (state.upgrades.find((u) => u.name === name)) {
           set((state) => {
             return {
-              upgrades: state.upgrades.map((a) => {
-                if (a[0] === name) {
-                  return [a[0], a[1] + 1, a[2]]
+              upgrades: state.upgrades.map((u) => {
+                if (u.name === name) {
+                  return {
+                    ...u,
+                    cumul: u.cumul + 1,
+                  }
                 }
-                return a
+                return u
               }),
             }
           })
         } else {
+          // sinon, on l'ajoute à la liste des upgrades
           set((state) => {
             return {
-              upgrades: [...state.upgrades, [rawUpgrade.name, 1, "appear"]],
+              upgrades: [
+                ...state.upgrades,
+                { name: rawUpgrade.name, cumul: 1, state: "appear" },
+              ],
             }
           })
         }
 
         await wait()
 
-        // remet l'activité en idle
+        // on remet l'upgrade en idle
         set((state) => {
           return {
-            upgrades: state.upgrades.map((a) => {
-              if (a[0] === name) {
-                return [a[0], a[1], "idle"]
-              }
-              return a
-            }),
+            upgrades: updateUpgradeState(state.upgrades, name, "idle"),
           }
         })
 
@@ -961,20 +966,15 @@ function generateGameMethods(
     triggerUpgrade: async (name, options) => {
       await handleErrorsAsync(getState, async () => {
         const state = getState()
-        const indice = state.upgrades.find((a) => a[0] === name)!
-        const upgrade = reviveUpgrade(indice)
+        const compact = state.upgrades.find((u) => u.name === name)!
+        const upgrade = reviveUpgrade(compact)
 
         if (!upgrade.condition || upgrade.condition(getState(), upgrade)) {
           state.setOperationInProgress(`triggerUpgrade ${name}`, true)
 
           // mettre l'activité en triggered
           set({
-            upgrades: state.upgrades.map((a) => {
-              if (a[0] === upgrade.name) {
-                return [a[0], a[1], "triggered"]
-              }
-              return a
-            }),
+            upgrades: updateUpgradeState(state.upgrades, name, "triggered"),
           })
 
           await wait()
@@ -982,17 +982,12 @@ function generateGameMethods(
           await upgrade.onTrigger(
             getState(),
             upgrade,
-            options?.reason ?? indice,
+            options?.reason ?? compact,
           )
 
-          // remettre l'activité en idle
+          // on remote l'upgrade en idle
           set((state) => ({
-            upgrades: state.upgrades.map((a) => {
-              if (a[0] === upgrade.name) {
-                return [a[0], a[1], "idle"]
-              }
-              return a
-            }),
+            upgrades: updateUpgradeState(state.upgrades, name, "idle"),
           }))
 
           state.setOperationInProgress(`triggerUpgrade ${name}`, false)
@@ -1012,7 +1007,7 @@ function generateGameMethods(
 
         for (const upgrade of upgrades) {
           await state.triggerUpgrade(upgrade.name, {
-            reason: upgradeToIndice(upgrade),
+            reason: compactUpgrade(upgrade),
           })
         }
 
@@ -1024,7 +1019,7 @@ function generateGameMethods(
       await handleErrorsAsync(getState, async () => {
         bank.powerUp.play()
 
-        const indice = [name, params, reason] as CardModifierIndice
+        const indice: CardModifierCompact<any> = { name, params, reason }
 
         set((state) => {
           return {
@@ -1052,7 +1047,7 @@ function generateGameMethods(
           return true
         })
 
-        const drawn: GameCardIndice[] = []
+        const drawn: GameCardCompact[] = []
 
         let handAdded = false
 
@@ -1063,7 +1058,7 @@ function generateGameMethods(
 
           const cardIndice = from.pop()!
 
-          cardIndice[1] = "drawing"
+          cardIndice.state = "drawing"
 
           drawn.push(cardIndice)
 
@@ -1083,7 +1078,7 @@ function generateGameMethods(
           [fromKey]: shuffle(
             excludeCard(
               state[fromKey],
-              drawn.map(([name]) => name),
+              drawn.map((c) => c.name),
             ),
             2,
           ),
@@ -1123,7 +1118,7 @@ function generateGameMethods(
           .slice()
           .filter(
             (c) =>
-              c[1] !== "playing" &&
+              c.state !== "playing" &&
               (!options?.filter || options.filter(reviveCard(c, state))),
           )
 
@@ -1131,7 +1126,7 @@ function generateGameMethods(
           options?.random
             ? [hand[Math.floor(Math.random() * state.hand.length)]]
             : hand
-        ).map(([name]) => name)
+        ).map((c) => c.name)
 
         // on active l'animation de retrait des cartes
         set({
@@ -1162,7 +1157,7 @@ function generateGameMethods(
 
         state.setOperationInProgress(`removeCard ${name}`, true)
 
-        if (state.hand.some((c) => c[0] === name)) {
+        if (state.hand.some((c) => c.name === name)) {
           // on active l'animation de suppression de la carte
           set({
             hand: updateCardState(state.hand, name, "removing"),
@@ -1182,7 +1177,7 @@ function generateGameMethods(
           ...from.reduce((acc, key) => {
             return {
               ...acc,
-              [key]: state[key].filter((c) => c[0] !== name),
+              [key]: state[key].filter((c) => c.name !== name),
             }
           }, {} as Partial<GameState>),
         }))
@@ -1366,7 +1361,7 @@ function generateGameMethods(
           // on change l'animation de la carte et on la place dans la playZone
           set((state) => ({
             playZone: updateCardState(
-              [...state.playZone, cardInfoToIndice(card)],
+              [...state.playZone, compactGameCardInfo(card)],
               card.name,
               "landing",
             ),
@@ -1387,7 +1382,7 @@ function generateGameMethods(
               set((state) => ({
                 playZone: excludeCard(state.playZone, card.name),
                 hand: updateCardState(
-                  [...state.hand, cardInfoToIndice(card)],
+                  [...state.hand, compactGameCardInfo(card)],
                   card.name,
                   "landing",
                 ),
@@ -1423,7 +1418,7 @@ function generateGameMethods(
         bank.play.play()
 
         // on retire les modifiers en "once" qui ont été utilisés
-        reviveCard(cardInfoToIndice(card), state, { clean: true })
+        reviveCard(compactGameCardInfo(card), state, { clean: true })
 
         const removing = willBeRemoved(getState(), card)
         const recycling = card.effect.recycle
@@ -1453,9 +1448,9 @@ function generateGameMethods(
             discard:
               removing || recycling
                 ? state.discard
-                : shuffle([cardInfoToIndice(card), ...state.discard], 3),
+                : shuffle([compactGameCardInfo(card), ...state.discard], 3),
             draw: recycling
-              ? shuffle([cardInfoToIndice(card), ...state.draw], 3)
+              ? shuffle([compactGameCardInfo(card), ...state.draw], 3)
               : state.draw,
             hand: excludeCard(state.hand, card.name),
             playZone: excludeCard(state.playZone, card.name),
@@ -1516,7 +1511,7 @@ function generateGameMethods(
         const state = getState()
 
         state.setOperationInProgress(
-          `pick ${isGameResource(option) ? option[0] : option.name}`,
+          `pick ${isGameResource(option) ? option.id : option.name}`,
           true,
         )
 
@@ -1528,42 +1523,30 @@ function generateGameMethods(
         set({
           choiceOptions: state.choiceOptions.map((options) => {
             return options.map((c) => {
-              return isGameResource(c)
-                ? ([
-                    c[0],
-                    c[0] === (isGameResource(option) ? option[0] : option.name)
-                      ? "playing"
-                      : "removing",
-                    c[2],
-                    c[3],
-                  ] as GameResource)
-                : ([
-                    c[0],
-                    c[0] === (isGameResource(option) ? option[0] : option.name)
-                      ? "playing"
-                      : "removing",
-                    c[2],
-                  ] as GameCardIndice)
+              return (isGameResource(c) ? c.id : c.name) ===
+                (isGameResource(option) ? option.id : option.name)
+                ? { ...c, state: "playing" }
+                : { ...c, state: "removing" }
             })
           }),
         })
 
         if (isGameResource(option)) {
-          switch (option[3]) {
+          switch (option.type) {
             case "money":
-              await state.addMoney(option[2], {
+              await state.addMoney(option.value, {
                 reason: "Ressource",
                 skipGameOverPause: true,
               })
               break
             case "reputation":
-              await state.addReputation(option[2], {
+              await state.addReputation(option.value, {
                 reason: "Ressource",
                 skipGameOverPause: true,
               })
               break
             case "energy":
-              await state.addEnergy(option[2], {
+              await state.addEnergy(option.value, {
                 reason: "Ressource",
                 skipGameOverPause: true,
               })
@@ -1576,7 +1559,7 @@ function generateGameMethods(
 
           set((state) => ({
             choiceOptions: state.choiceOptions.map((options) => {
-              return updateCardState(options, option[0], "removed")
+              return updateCardState(options, option.id, "removed")
             }),
           }))
 
@@ -1617,13 +1600,13 @@ function generateGameMethods(
               choiceOptions: state.choiceOptions.slice(1),
               [to]:
                 to === "draw"
-                  ? shuffle([...state.draw, cardInfoToIndice(option)], 3)
+                  ? shuffle([...state.draw, compactGameCardInfo(option)], 3)
                   : [
                       ...state.hand,
-                      cardInfoToIndice(
+                      compactGameCardInfo(
                         option,
                         "landing",
-                      ) satisfies GameCardIndice,
+                      ) satisfies GameCardCompact,
                     ],
             }
           })
@@ -1637,7 +1620,7 @@ function generateGameMethods(
         }
 
         state.setOperationInProgress(
-          `pick ${isGameResource(option) ? option[0] : option.name}`,
+          `pick ${isGameResource(option) ? option.id : option.name}`,
           false,
         )
       })
@@ -1693,7 +1676,7 @@ export const useCardGame = create<GameState & GlobalGameState>(
     }
 
     state.discoveries = Array.from(
-      new Set([...state.discoveries, ...getDeck(state).map(([name]) => name)]),
+      new Set([...state.discoveries, ...getDeck(state).map((c) => c.name)]),
     )
 
     return { ...state, ...revivedState(state) }
@@ -1720,15 +1703,15 @@ useCardGame.subscribe(async (state, prevState) => {
 
       // si la main change, on met a jour les revived cards
       if (
-        state.hand.map((c) => c[0]).join(",") !==
-          prevState.hand.map((c) => c[0]).join(",") ||
-        state.draw.map((c) => c[0]).join(",") !==
-          prevState.draw.map((c) => c[0]).join(",") ||
-        state.discard.map((c) => c[0]).join(",") !==
-          prevState.discard.map((c) => c[0]).join(",") ||
+        state.hand.map((c) => c.name + c.state).join(",") !==
+          prevState.hand.map((c) => c.name + c.state).join(",") ||
+        state.draw.map((c) => c.name + c.state).join(",") !==
+          prevState.draw.map((c) => c.name + c.state).join(",") ||
+        state.discard.map((c) => c.name + c.state).join(",") !==
+          prevState.discard.map((c) => c.name + c.state).join(",") ||
         state.inflation !== prevState.inflation ||
-        state.globalCardModifiers.join(",") !==
-          prevState.globalCardModifiers.join(",")
+        state.globalCardModifiers.map((m) => m.name).join(",") !==
+          prevState.globalCardModifiers.map((m) => m.name).join(",")
       ) {
         state.dangerouslyUpdate(revivedState(state))
       }

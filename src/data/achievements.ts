@@ -37,7 +37,7 @@ const achievements: {
       upgrades
         .filter((raw) => raw.description.includes("M$"))
         .every((raw) =>
-          state.upgrades.some((upgrade) => upgrade[0] === raw.name),
+          state.upgrades.some((upgrade) => upgrade.name === raw.name),
         ),
   },
   {
@@ -47,7 +47,7 @@ const achievements: {
       upgrades
         .filter((raw) => raw.description.includes("@energy"))
         .every((raw) =>
-          state.upgrades.some((upgrade) => upgrade[0] === raw.name),
+          state.upgrades.some((upgrade) => upgrade.name === raw.name),
         ),
   },
   {

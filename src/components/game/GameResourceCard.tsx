@@ -32,21 +32,16 @@ export const GameResourceCard = (
     pickOption: state.pickOption,
   }))
 
-  const resource = {
-    id: props.resource[0],
-    state: props.resource[1],
-    value: props.resource[2],
-    type: props.resource[3],
-  }
-
   return (
     <div
-      key={resource.id}
+      key={props.resource.id}
       className={cn(
         "game-card",
         "relative w-[210px] h-[293px]",
         "-mx-3.5 z-10 hover:z-20 cursor-pointer select-none",
-        { [cn("transition-transform", resource.state)]: quality.animation },
+        {
+          [cn("transition-transform", props.resource.state)]: quality.animation,
+        },
       )}
       onClick={async () => {
         await game.pickOption(props.resource)
@@ -56,7 +51,7 @@ export const GameResourceCard = (
         transitionTimingFunction: quality.animation ? "ease-in-out" : "linear",
       }}
     >
-      {resource.state === "removing" && quality.animation ? (
+      {props.resource.state === "removing" && quality.animation ? (
         <div className="relative">
           <BrokenCard
             className={cn(
@@ -67,9 +62,9 @@ export const GameResourceCard = (
                 "text-card": !quality.transparency,
               },
               {
-                "stroke-energy": resource.type === "energy",
-                "stroke-money": resource.type === "money",
-                "stroke-reputation": resource.type === "reputation",
+                "stroke-energy": props.resource.type === "energy",
+                "stroke-money": props.resource.type === "money",
+                "stroke-reputation": props.resource.type === "reputation",
               },
             )}
             style={{
@@ -77,7 +72,7 @@ export const GameResourceCard = (
             }}
           />
         </div>
-      ) : resource.state === "removed" ? (
+      ) : props.resource.state === "removed" ? (
         <></>
       ) : (
         <Tilt
@@ -91,13 +86,14 @@ export const GameResourceCard = (
               "bg-card": !quality.transparency,
               "transition-shadow duration-200 ease-in-out hover:shadow-glow-20 shadow-primary":
                 quality.shadows,
-              "shadow-glow-20 shadow-primary": resource.state === "selected",
+              "shadow-glow-20 shadow-primary":
+                props.resource.state === "selected",
             },
             "ring-2",
             {
-              "ring-money/50": resource.type === "money",
-              "ring-energy/50": resource.type === "energy",
-              "ring-reputation/50": resource.type === "reputation",
+              "ring-money/50": props.resource.type === "money",
+              "ring-energy/50": props.resource.type === "energy",
+              "ring-reputation/50": props.resource.type === "reputation",
             },
           )}
         >
@@ -129,9 +125,9 @@ export const GameResourceCard = (
               }}
               dangerouslySetInnerHTML={{
                 __html: formatText(
-                  resource.type === "money"
-                    ? `${resource.value}M$`
-                    : `${resource.value} @${resource.type}`,
+                  props.resource.type === "money"
+                    ? `${props.resource.value}M$`
+                    : `${props.resource.value} @${props.resource.type}`,
                 ),
               }}
             />

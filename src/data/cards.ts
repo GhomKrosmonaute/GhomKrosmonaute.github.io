@@ -30,8 +30,6 @@ const upgradeCards = upgrades.map<GameCardInfo>((upgrade) => {
       waitBeforePlay: false,
       upgrade: true,
     }),
-    state: null,
-    localAdvantage: null,
   }
 })
 

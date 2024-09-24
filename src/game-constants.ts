@@ -10,12 +10,12 @@ export const GAME_ADVANTAGE = {
 } as const
 
 export const LOCAL_ADVANTAGE = {
-  common: 0,
-  rare: 2,
-  epic: 4,
-  legendary: 8,
-  cosmic: 16,
-  singularity: 32,
+  common: 0, // +2
+  rare: 2, // +4
+  epic: 6, // +6
+  legendary: 12, // +8
+  cosmic: 20, // +10
+  singularity: 30,
 } as const
 
 export const ADVANTAGE_THRESHOLD = 2

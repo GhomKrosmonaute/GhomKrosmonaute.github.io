@@ -17,10 +17,10 @@ import { useSettings } from "@/hooks/useSettings.ts"
 import {
   energyCostColor,
   formatText,
-  isGameResource,
   isNewSprint,
   wait,
 } from "@/game-safe-utils.ts"
+import { isGameResource } from "@/game-typings.ts"
 
 export const GameActions = (props: { show: boolean }) => {
   const game = useCardGame()
@@ -81,7 +81,7 @@ export const GameActions = (props: { show: boolean }) => {
             game.operationInProgress.includes("selectCard") ? (
               "Clique sur une carte de la main"
             ) : (
-              game.playZone[game.playZone.length - 1][0]
+              game.playZone[game.playZone.length - 1].name
             ) // Affiche le titre de la dernière carte ajoutée à la playZone
           ) : game.choiceOptions.length > 0 ? (
             <>

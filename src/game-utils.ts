@@ -1,18 +1,19 @@
 import type { GameState, GlobalGameState } from "@/hooks/useCardGame"
 
-import type {
+import {
   Upgrade,
   GameResource,
   CardModifier,
   GameCardInfo,
-  UpgradeIndice,
+  UpgradeCompact,
   GameOverReason,
-  GameCardIndice,
-  CardModifierIndice,
+  GameCardCompact,
+  CardModifierCompact,
   ChoiceOptionsGeneratorOptions,
   GameModifierLog,
-  LocalAdvantage,
   GameResolvable,
+  isGameResource,
+  isGameCardInfo,
 } from "@/game-typings"
 
 import {
@@ -28,17 +29,15 @@ import cardModifiers from "@/data/cardModifiers.ts"
 import {
   generateRandomAdvantage,
   generateRandomResource,
-  isGameResource,
   canBeBuy,
   shuffle,
-  calculateLocalAdvantage,
-  isGameCardInfo,
+  calculateRarityAdvantage,
 } from "@/game-safe-utils.ts"
 
 export function generateChoiceOptions(
   state: GameState & GlobalGameState,
   options?: ChoiceOptionsGeneratorOptions,
-): (GameCardIndice | GameResource)[] {
+): (GameCardCompact | GameResource)[] {
   state.setOperationInProgress("choices", true)
 
   const _cards: (GameCardInfo | GameResource)[] = cards.filter(
@@ -47,14 +46,14 @@ export function generateChoiceOptions(
         state.choiceOptions.every(
           (o) =>
             o.length === 0 ||
-            o.every((i) => !isGameResource(i) && i[0] !== card.name),
+            o.every((i) => !isGameResource(i) && i.name !== card.name),
         )) &&
       (state.draw.length === 0 ||
-        state.draw.every(([name]) => name !== card.name)) &&
+        state.draw.every((c) => c.name !== card.name)) &&
       (state.discard.length === 0 ||
-        state.discard.every(([name]) => name !== card.name)) &&
+        state.discard.every((c) => c.name !== card.name)) &&
       (state.hand.length === 0 ||
-        state.hand.every(([name]) => name !== card.name)) &&
+        state.hand.every((c) => c.name !== card.name)) &&
       (!options?.exclude ||
         options?.exclude?.every((name) => name !== card.name)) &&
       (!options?.filter || options?.filter?.(card, state)) &&
@@ -82,11 +81,11 @@ export function generateChoiceOptions(
     .map((option) => {
       if (isGameResource(option)) return option
 
-      return [
-        option.name,
-        "landing",
-        generateRandomAdvantage(),
-      ] as GameCardIndice
+      return {
+        name: option.name,
+        state: "landing",
+        initialRarity: generateRandomAdvantage(),
+      } as GameCardCompact
     })
 }
 
@@ -117,7 +116,7 @@ export function isGameOver(
 
 export function getGlobalCardModifierLogs(
   state: GameState & GlobalGameState,
-  indice: GameCardIndice,
+  indice: GameCardCompact,
 ): GameModifierLog[] {
   let card = reviveCard(indice, state, { withoutModifiers: true })
 
@@ -136,21 +135,21 @@ export function getGlobalCardModifierLogs(
 
     card = modifier.use(card, state, resolveCard(card.name))
 
-    const levelChange =
-      card.localAdvantage.current !== before.localAdvantage.current
+    const levelChange = card.rarity !== before.rarity
     const costChange = card.effect.cost.value !== before.effect.cost.value
     const costTypeChange = card.effect.cost.type !== before.effect.cost.type
 
     if (levelChange)
       logs.push({
-        reason: indice[2],
+        reason: indice.reason,
         type: "localAdvantage",
-        before: before.localAdvantage,
-        after: card.localAdvantage,
+        before: before.rarity,
+        after: card.rarity,
       })
-    else if (costChange || costTypeChange)
+
+    if (costChange || costTypeChange)
       logs.push({
-        reason: indice[2],
+        reason: indice.reason,
         type: "cost",
         before: before.effect.cost,
         after: card.effect.cost,
@@ -196,7 +195,7 @@ export function willBeRemoved(state: GameState, card: GameCardInfo<true>) {
     if (rawUpgrade.max) {
       if (rawUpgrade.max === 1) return true
 
-      const indice = state.upgrades.find((u) => u[0] === card.name)
+      const indice = state.upgrades.find((u) => u.name === card.name)
 
       if (!indice) return false
 
@@ -209,7 +208,7 @@ export function willBeRemoved(state: GameState, card: GameCardInfo<true>) {
   return false
 }
 
-export function toSortedCards<T extends GameCardIndice>(
+export function toSortedCards<T extends GameCardCompact>(
   cards: T[],
   state: GameState & GlobalGameState,
 ): GameCardInfo<true>[]
@@ -223,16 +222,20 @@ export function toSortedCards<T extends GameResolvable>(
 ): (GameCardInfo<true> | GameResource)[] {
   return cards
     .map((i) =>
-      isGameResource(i) ? i : reviveCard(i as GameCardIndice, state),
+      isGameResource(i) ? i : reviveCard(i as GameCardCompact, state),
     )
     .toSorted((a, b) => {
       // trier par type de carte (action ou support) puis par type de prix (énergie ou $) puis par prix puis par description de l'effet
       if (isGameResource(a) && isGameResource(b)) {
-        const indexes = ["energy", "money", "reputation"] as GameResource["3"][]
-        const typeA = indexes.indexOf(a[3])
-        const typeB = indexes.indexOf(b[3])
-        const valueA = a[2]
-        const valueB = b[2]
+        const indexes = [
+          "energy",
+          "money",
+          "reputation",
+        ] as GameResource["type"][]
+        const typeA = indexes.indexOf(a.type)
+        const typeB = indexes.indexOf(b.type)
+        const valueA = a.value
+        const valueB = b.value
         return typeA - typeB || valueA - valueB
       }
 
@@ -270,14 +273,16 @@ export function revivedState(
 //  */
 // export function actionsToText(actions): string {}
 
-export function reviveCardModifier(indice: CardModifierIndice): CardModifier {
-  // @ts-expect-error C'est normal
-  return cardModifiers[indice[0]](...indice[1])
+export function reviveCardModifier<Name extends keyof typeof cardModifiers>(
+  indice: CardModifierCompact<Name>,
+): CardModifier {
+  // @ts-expect-error no need to spread
+  return cardModifiers[indice.name](...indice.params)
 }
 
-export function resolveCard(indice: GameCardIndice | string): GameCardInfo {
-  const card = cards.find((c) =>
-    typeof indice === "string" ? c.name === indice : c.name === indice[0],
+export function resolveCard(indice: GameCardCompact | string): GameCardInfo {
+  const card = cards.find(
+    (c) => c.name === (typeof indice === "string" ? indice : indice.name),
   )
 
   if (!card) throw new Error(`Card ${indice} not found`)
@@ -285,9 +290,9 @@ export function resolveCard(indice: GameCardIndice | string): GameCardInfo {
   return card
 }
 
-export function reviveUpgrade(indice: UpgradeIndice | string): Upgrade {
-  const raw = upgrades.find((u) =>
-    typeof indice === "string" ? u.name === indice : u.name === indice[0],
+export function reviveUpgrade(indice: UpgradeCompact | string): Upgrade {
+  const raw = upgrades.find(
+    (u) => u.name === (typeof indice === "string" ? indice : indice.name),
   )
 
   if (!raw) throw new Error(`Upgrade ${indice} not found`)
@@ -295,41 +300,37 @@ export function reviveUpgrade(indice: UpgradeIndice | string): Upgrade {
   return {
     ...raw,
     type: "upgrade",
-    state: typeof indice !== "string" ? indice[2] : "appear",
-    cumul: typeof indice !== "string" ? indice[1] : 1,
+    state: typeof indice !== "string" ? indice.state : "appear",
+    cumul: typeof indice !== "string" ? indice.cumul : 1,
     max: raw.max ?? Infinity,
   }
 }
 
 export function reviveCard(
-  indice: GameCardIndice | string,
+  compact: GameCardCompact | string,
   state: GameState & GlobalGameState,
   options?: {
     clean?: boolean
     withoutModifiers?: boolean
   },
 ): GameCardInfo<true> {
-  const card = resolveCard(indice)
+  const card = resolveCard(compact)
 
-  const initialAdvantage =
-    typeof indice !== "string" ? indice[2].initial : LOCAL_ADVANTAGE.common
-
-  const localAdvantage: LocalAdvantage = {
-    initial: initialAdvantage,
-    current: initialAdvantage,
-  }
+  const initialRarity =
+    typeof compact !== "string" ? compact.initialRarity : LOCAL_ADVANTAGE.common
 
   const output: Omit<GameCardInfo<true>, "effect"> = {
     ...card,
     type: card.type,
-    state: typeof indice !== "string" ? indice[1] : null,
-    localAdvantage,
+    state: typeof compact !== "string" ? compact.state : null,
+    initialRarity,
+    rarity: initialRarity,
   }
 
   const final = {
     ...output,
     effect: card.effect(
-      calculateLocalAdvantage(localAdvantage, state),
+      calculateRarityAdvantage(initialRarity, state),
       state,
       output,
     ),

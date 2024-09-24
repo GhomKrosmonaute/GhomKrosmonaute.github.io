@@ -4,8 +4,9 @@ import "./GameCard.css"
 
 import BrokenCard from "@/assets/icons/game/broken-card.svg"
 
-import type {
+import {
   ActionCardInfo,
+  compactGameCardInfo,
   GameCardInfo,
   SupportCardInfo,
 } from "@/game-typings"
@@ -18,12 +19,7 @@ import { cn } from "@/utils.ts"
 import { Tilt, TiltFoil } from "@/components/game/Tilt.tsx"
 import { BorderLight } from "@/components/ui/border-light.tsx"
 import upgrades from "@/data/upgrades.ts"
-import {
-  canBeBuy,
-  cardInfoToIndice,
-  getRarityName,
-  isActionCardInfo,
-} from "@/game-safe-utils.ts"
+import { canBeBuy, getRarityName, isActionCardInfo } from "@/game-safe-utils.ts"
 import { GameCost } from "@/components/game/GameCost.tsx"
 import { GameAdvantageBadge } from "@/components/game/GameAdvantageBadge.tsx"
 // import { GameCardPopover } from "@/components/game/GameCardPopover.tsx"
@@ -68,18 +64,17 @@ export const GameCard = (
     ? game.operationInProgress.filter((o) => o !== "choices").length > 0
     : game.operationInProgress.length > 0
 
-  const rarityName = getRarityName(props.card.localAdvantage.current)
+  const rarityName = getRarityName(props.card.rarity)
 
   return (
     <div
-      key={
-        props.card.name + props.card.localAdvantage.current + props.card.state
-      }
+      key={props.card.name + props.card.rarity + props.card.state}
       className={cn(
         "game-card",
         "relative w-[210px] h-[293px]",
-        "-mx-3.5 z-10 hover:z-20 cursor-pointer select-none",
+        "-mx-3.5 z-10 hover:z-30 cursor-pointer select-none",
         {
+          // "z-20": props.card.state === "highlighted",
           "cursor-not-allowed":
             (game.selectionInProgress && props.card.state !== "selected") ||
             (!game.selectionInProgress &&
@@ -114,7 +109,7 @@ export const GameCard = (
             !game.isGameOver
           ) {
             await game.playCard(props.card, {
-              reason: cardInfoToIndice(props.card),
+              reason: compactGameCardInfo(props.card),
             })
           }
         } else {
@@ -128,13 +123,14 @@ export const GameCard = (
 
         if (props.withoutDetail) return
 
-        game.setCardDetail(cardInfoToIndice(props.card))
+        game.setCardDetail(compactGameCardInfo(props.card))
       }}
       style={{
         marginBottom: `${20 - Math.abs(positionFromCenter) * 5}px`, // temporaire, peut causer des problèmes
         rotate: `${positionFromCenter * 2}deg`,
         transitionDuration: quality.animation ? "0.3s" : "0",
         transitionTimingFunction: quality.animation ? "ease-in-out" : "linear",
+        scale: props.card.state === "highlighted" ? "1.1" : "1",
       }}
     >
       {props.card.state === "removing" && quality.animation ? (
@@ -178,7 +174,6 @@ export const GameCard = (
               // "shadow-action": props.card.effect.type === "action",
               "transition-shadow duration-200 ease-in-out hover:shadow-glow-20 shadow-primary":
                 quality.shadows,
-              "shadow-glow-20 shadow-primary": props.card.state === "selected",
             },
             "ring-2",
             {
@@ -269,7 +264,7 @@ export const GameCard = (
               >
                 {!props.card.effect.upgrade ? (
                   /* Rarity indicator */
-                  <GameAdvantageBadge advantage={props.card.localAdvantage} />
+                  <GameAdvantageBadge advantage={props.card.rarity} />
                 ) : (
                   /* Upgrade max indicator */
                   <div className="bg-upgrade">
@@ -320,7 +315,7 @@ export const GameCard = (
 
               {(props.card.effect.ephemeral || props.card.effect.recycle) && (
                 <div
-                  className={cn("text-center h-full text-2xl font-bold", {
+                  className={cn("text-center text-2xl font-bold", {
                     "text-muted-foreground/30": quality.transparency,
                     "text-muted-foreground": !quality.transparency,
                   })}

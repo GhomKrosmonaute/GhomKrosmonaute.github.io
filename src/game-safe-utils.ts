@@ -10,7 +10,7 @@ import {
   UPGRADE_COST_THRESHOLDS,
 } from "@/game-constants.ts"
 
-import type {
+import {
   ActionCardFamily,
   ActionCardInfo,
   ColorClass,
@@ -18,17 +18,17 @@ import type {
   DynamicEffectValue,
   Effect,
   EffectBuilder,
-  GameCardIndice,
+  GameCardCompact,
   GameCardInfo,
   GameCardState,
   GameLog,
   GameResource,
-  LocalAdvantage,
-  GameResolvable,
+  isGameResource,
+  RarityName,
   RawUpgrade,
   StateDependentValue,
   Upgrade,
-  UpgradeIndice,
+  UpgradeCompact,
 } from "@/game-typings.ts"
 
 import { defaultSettings } from "@/game-settings.ts"
@@ -192,35 +192,11 @@ export function pick<T extends object, K extends keyof T>(
   return clone
 }
 
-export function calculateLocalAdvantage(
-  localAdvantage: LocalAdvantage,
+export function calculateRarityAdvantage(
+  initialRarity: number,
   state: GameState & GlobalGameState,
 ) {
-  return (
-    localAdvantage.initial + GAME_ADVANTAGE[state.difficulty] - state.inflation
-  )
-}
-
-export function isGameResource(option: GameResolvable): option is GameResource {
-  return (
-    Array.isArray(option) &&
-    option.length === 4 &&
-    typeof option[3] === "string"
-  )
-}
-
-export function isGameCardIndice(
-  option: GameResolvable,
-): option is GameCardIndice {
-  return /^\[".+","[a-z]+",\{"initial":\d+,"current":\d+}]$/.test(
-    JSON.stringify(option),
-  )
-}
-
-export function isGameCardInfo(
-  option: GameResolvable,
-): option is GameCardInfo<true> {
-  return typeof option === "object" && "effect" in option
+  return initialRarity + GAME_ADVANTAGE[state.difficulty]
 }
 
 /**
@@ -229,68 +205,82 @@ export function isGameCardInfo(
  * @param cardName card(s) to exclude
  */
 export function excludeCard(
-  from: GameCardIndice[],
+  from: GameCardCompact[],
   cardName: string | string[],
-): GameCardIndice[] {
+): GameCardCompact[] {
   const toExclude: string[] =
     typeof cardName === "string" ? [cardName] : cardName
-  return from.filter((c) => !toExclude.includes(c[0]))
+  return from.filter((c) => !toExclude.includes(c.name))
 }
 
+/**
+ * Return a new list of cards with only the given card(s)
+ * @param from initial list of cards
+ * @param cardName card(s) to include
+ */
 export function includeCard(
-  from: GameCardIndice[],
+  from: GameCardCompact[],
   cardName: string | string[],
-): GameCardIndice[] {
+): GameCardCompact[] {
   const toInclude: string[] =
     typeof cardName === "string" ? [cardName] : cardName
-  return from.filter((c) => toInclude.includes(c[0]))
+  return from.filter((c) => toInclude.includes(c.name))
 }
 
 /**
  * Update the state of a card in a list of cards
  */
-export function updateCardState<T extends (GameCardIndice | GameResource)[]>(
+export function updateCardState<T extends (GameCardCompact | GameResource)[]>(
   from: T,
   newState: GameCardState,
 ): T
-export function updateCardState<T extends (GameCardIndice | GameResource)[]>(
+export function updateCardState<T extends (GameCardCompact | GameResource)[]>(
   from: T,
   cardName: string | string[],
   newState: GameCardState,
 ): T
-export function updateCardState<T extends (GameCardIndice | GameResource)[]>(
+export function updateCardState<T extends (GameCardCompact | GameResource)[]>(
   from: T,
   cardName: string | string[] | GameCardState,
   newState?: GameCardState,
 ): T {
   if (arguments.length === 2) {
     return from.map((c) => {
-      return isGameResource(c)
-        ? [c[0], cardName as GameCardState, c[2], c[3]]
-        : [c[0], cardName as GameCardState, c[2]]
+      return { ...c, state: cardName as GameCardState }
     }) as T
   } else {
     const toUpdate: string[] =
       typeof cardName === "string" ? [cardName] : cardName!
     return from.map((c) => {
-      if (toUpdate.includes(c[0]))
-        return isGameResource(c)
-          ? [c[0], newState!, c[2], c[3]]
-          : [c[0], newState!, c[2]]
+      if (toUpdate.includes(isGameResource(c) ? c.id : c.name))
+        return { ...c, state: newState! }
       return c
     }) as T
   }
 }
-
-export function cardInfoToIndice(
-  card: GameCardInfo<true>,
-  newState?: GameCardState,
-): GameCardIndice {
-  return [card.name, newState ?? card.state, card.localAdvantage]
-}
-
-export function upgradeToIndice(upgrade: Upgrade): UpgradeIndice {
-  return [upgrade.name, upgrade.cumul, upgrade.state]
+export function updateUpgradeState(
+  from: UpgradeCompact[],
+  upgradeName: Upgrade["state"],
+): UpgradeCompact[]
+export function updateUpgradeState(
+  from: UpgradeCompact[],
+  upgradeName: string,
+  newState: Upgrade["state"],
+): UpgradeCompact[]
+export function updateUpgradeState(
+  from: UpgradeCompact[],
+  upgradeName: string | Upgrade["state"],
+  newState?: Upgrade["state"],
+): UpgradeCompact[] {
+  if (arguments.length === 2) {
+    return from.map((u) => {
+      return { ...u, state: upgradeName as Upgrade["state"] }
+    })
+  } else {
+    return from.map((u) => {
+      return u.name === upgradeName ? { ...u, state: newState! } : u
+    })
+  }
 }
 
 export function log<T>(label: string, items: T): T {
@@ -369,7 +359,7 @@ export async function handleErrorsAsync(
  * Generate a random advantage from LOCAL_ADVANTAGE (represents rarities)
  * Each rarity has a different probability to be selected
  */
-export function generateRandomAdvantage(): LocalAdvantage {
+export function generateRandomAdvantage(): number {
   let advantage: number = LOCAL_ADVANTAGE.common
 
   const seed = Math.random()
@@ -379,10 +369,7 @@ export function generateRandomAdvantage(): LocalAdvantage {
   else if (seed < 0.12) advantage = LOCAL_ADVANTAGE.epic
   else if (seed < 0.3) advantage = LOCAL_ADVANTAGE.rare
 
-  return {
-    initial: advantage,
-    current: advantage,
-  }
+  return advantage
 }
 
 export function generateRandomResource(state: GameState): GameResource {
@@ -390,30 +377,37 @@ export function generateRandomResource(state: GameState): GameResource {
   const id = Math.random().toFixed(6)
 
   if (type < 0.48) {
-    const { current } = generateRandomAdvantage()
-    return [id, "drawing", 50 * Math.max(1, current), "money"]
+    const advantage = generateRandomAdvantage()
+
+    return {
+      id,
+      type: "money",
+      state: "drawing",
+      value: 50 * Math.max(1, advantage),
+    }
   } else if (type < 0.96) {
     const rdm = Math.random()
-    return [
+
+    return {
       id,
-      "drawing",
-      rdm < 0.6 ? Math.floor(state.energyMax / 2) : state.energyMax,
-      "energy",
-    ]
+      state: "drawing",
+      value: rdm < 0.6 ? Math.floor(state.energyMax / 2) : state.energyMax,
+      type: "energy",
+    }
   } else {
     const rdm = Math.random()
-    return [
+    return {
       id,
-      "drawing",
-      rdm < 0.6 ? Math.floor(MAX_REPUTATION / 2) : MAX_REPUTATION,
-      "reputation",
-    ]
+      state: "drawing",
+      value: rdm < 0.6 ? Math.floor(MAX_REPUTATION / 2) : MAX_REPUTATION,
+      type: "reputation",
+    }
   }
 }
 
 export function getDeck(
   state: Pick<GameState, "draw" | "discard" | "hand">,
-): GameCardIndice[] {
+): GameCardCompact[] {
   return [...state.draw, ...state.discard, ...state.hand]
 }
 
@@ -971,27 +965,42 @@ export function recursiveClone<T>(something: T): T {
 }
 
 export function getRarityName(localAdvantage: number, full: true): string
-export function getRarityName(
-  localAdvantage: number,
-  full?: false,
-): keyof typeof LOCAL_ADVANTAGE
+export function getRarityName(localAdvantage: number, full?: false): RarityName
 export function getRarityName(localAdvantage: number, full = false) {
-  let rarityName = Object.entries(LOCAL_ADVANTAGE)
-    .sort((a, b) => b[1] - a[1])
-    .find(
-      ([, advantage]) => localAdvantage >= advantage,
-    )![0] as keyof typeof LOCAL_ADVANTAGE
+  let rarityName: RarityName = "common"
+  let lastName: RarityName = "common"
+
+  for (const name in LOCAL_ADVANTAGE) {
+    const advantage = LOCAL_ADVANTAGE[name as RarityName]
+
+    if (advantage === localAdvantage) {
+      rarityName = name as RarityName
+      break
+    } else if (advantage > localAdvantage) {
+      rarityName = lastName
+      break
+      // lastName = name as keyof typeof LOCAL_ADVANTAGE
+    }
+
+    lastName = name as RarityName
+  }
 
   if (full)
-    rarityName +=
-      localAdvantage > LOCAL_ADVANTAGE[rarityName]
+    return (
+      rarityName +
+      (localAdvantage > LOCAL_ADVANTAGE[rarityName]
         ? "+".repeat(
             Math.floor(
               Math.max(0, localAdvantage - LOCAL_ADVANTAGE[rarityName]) /
                 ADVANTAGE_THRESHOLD,
             ),
           )
-        : ""
+        : rarityName === "common" && localAdvantage < 0
+          ? "-".repeat(
+              Math.floor(Math.max(0, -localAdvantage) / ADVANTAGE_THRESHOLD),
+            )
+          : "")
+    )
 
   return rarityName
 }

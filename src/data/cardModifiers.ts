@@ -1,7 +1,7 @@
-import type { CardModifier, LocalAdvantage } from "@/game-typings"
+import type { CardModifier } from "@/game-typings"
 import { ENERGY_TO_MONEY } from "@/game-constants.ts"
 import {
-  calculateLocalAdvantage,
+  calculateRarityAdvantage,
   getUpgradeCost,
   costTo,
 } from "@/game-safe-utils.ts"
@@ -24,31 +24,6 @@ const cardModifiers = {
       return card
     },
   }),
-
-  // "all card inflation": () => ({
-  //   condition: () => true,
-  //   use: (card, state) => ({
-  //     ...card,
-  //     effect: {
-  //       ...card.effect,
-  //       cost: {
-  //         type: card.effect.cost.type,
-  //         value:
-  //           card.effect.cost.value +
-  //           costTo(
-  //             {
-  //               value: Math.max(
-  //                 0,
-  //                 state.inflation - GAME_ADVANTAGE[state.difficulty],
-  //               ),
-  //               type: "energy",
-  //             },
-  //             card.effect.cost.type,
-  //           ),
-  //       },
-  //     },
-  //   }),
-  // }),
 
   "lowers price of hand cards": (
     handCardNames: string[],
@@ -127,16 +102,31 @@ const cardModifiers = {
     index: GlobalCardModifierIndex.First,
     condition: (card) => handCardNames.includes(card.name),
     use: (card, state, raw) => {
-      const localAdvantage: LocalAdvantage = {
-        initial: card.localAdvantage.initial,
-        current: card.localAdvantage.current + advantage,
-      }
+      const rarity = card.rarity + advantage
 
       return {
         ...card,
-        localAdvantage,
+        rarity,
         effect: raw.effect(
-          calculateLocalAdvantage(localAdvantage, state),
+          calculateRarityAdvantage(rarity, state),
+          state,
+          card,
+        ),
+      }
+    },
+  }),
+
+  "all card inflation": () => ({
+    index: GlobalCardModifierIndex.First,
+    condition: () => true,
+    use: (card, state, raw) => {
+      const rarity = card.rarity - state.inflation
+
+      return {
+        ...card,
+        rarity,
+        effect: raw.effect(
+          calculateRarityAdvantage(rarity, state),
           state,
           card,
         ),

@@ -2,10 +2,14 @@ import React from "react"
 
 import type { GameState, GlobalGameState } from "@/hooks/useCardGame"
 
-import { GAME_ADVANTAGE } from "@/game-constants.ts"
+import { GAME_ADVANTAGE, LOCAL_ADVANTAGE } from "@/game-constants.ts"
 
 import events from "@/data/events.ts"
 import { GlobalCardModifierIndex, Speed } from "@/game-enums.ts"
+import { pick } from "@/game-safe-utils.ts"
+import type cardModifiers from "@/data/cardModifiers.ts"
+
+export type RarityName = keyof typeof LOCAL_ADVANTAGE
 
 export interface QualityOptions {
   shadows: boolean // ajoute les ombres
@@ -31,8 +35,6 @@ export type Difficulty = keyof typeof GAME_ADVANTAGE
 
 export type UpgradeState = "appear" | "idle" | "triggered"
 
-export type UpgradeIndice = [name: string, cumul: number, state: UpgradeState]
-
 export interface Upgrade {
   type: "upgrade"
   name: string
@@ -49,6 +51,12 @@ export interface Upgrade {
   state: UpgradeState
   cumul: number
   max: number
+}
+
+export type UpgradeCompact = Pick<Upgrade, "cumul" | "state" | "name">
+
+export function compactUpgrade(upgrade: Upgrade): UpgradeCompact {
+  return pick(upgrade, "cumul", "state", "name")
 }
 
 export type RawUpgrade = Pick<
@@ -104,32 +112,31 @@ export interface Effect<Data extends any[]> {
   upgrade?: boolean
 }
 
-export interface ActionCardInfo<Resolved = false> {
-  type: "action"
+export type CommonCardInfo<Resolved = false> = {
   name: string
   image: string
+} & (Resolved extends true
+  ? {
+      effect: Effect<any[]>
+      state: GameCardState
+      rarity: number
+      readonly initialRarity: number
+    }
+  : {
+      effect: EffectBuilder<any[]>
+    })
+
+export type ActionCardInfo<Resolved = false> = {
+  type: "action"
   families: ActionCardFamily[]
-  effect: Resolved extends true ? Effect<any[]> : EffectBuilder<any[]>
-  state: Resolved extends true ? GameCardState : null
-  localAdvantage: Resolved extends true ? LocalAdvantage : null
   description?: string
   detail?: string
   url?: string
-}
+} & CommonCardInfo<Resolved>
 
-export interface SupportCardInfo<Resolved = false> {
+export type SupportCardInfo<Resolved = false> = {
   type: "support"
-  name: string
-  image: string
-  effect: Resolved extends true ? Effect<any[]> : EffectBuilder<any[]>
-  state: Resolved extends true ? GameCardState : null
-  localAdvantage: Resolved extends true ? LocalAdvantage : null
-}
-
-export type LocalAdvantage = {
-  initial: number
-  current: number
-}
+} & CommonCardInfo<Resolved>
 
 export type GameCardState =
   | "landing"
@@ -141,6 +148,7 @@ export type GameCardState =
   | "removing"
   | "removed"
   | "idle"
+  | "highlighted"
   | null
 
 export type ActionCardFamily =
@@ -158,12 +166,49 @@ export type GameCardInfo<Resolved = false> =
   | ActionCardInfo<Resolved>
   | SupportCardInfo<Resolved>
 
-export type GameResource = [
-  id: string,
-  state: GameCardState,
-  value: number,
-  type: "money" | "reputation" | "energy",
-]
+export function isGameCardInfo(
+  option: GameResolvable,
+): option is GameCardInfo<true> {
+  return "effect" in option && typeof option.effect !== "function"
+}
+
+export type GameCardCompact = Pick<
+  GameCardInfo<true>,
+  "name" | "state" | "initialRarity"
+>
+
+export function compactGameCardInfo(
+  card: GameCardInfo<true>,
+  newState?: GameCardState,
+): GameCardCompact {
+  return {
+    name: card.name,
+    state: newState ?? card.state,
+    initialRarity: card.initialRarity,
+  }
+}
+
+export interface GameResource {
+  id: string
+  state: GameCardState
+  value: number
+  type: "money" | "reputation" | "energy"
+}
+
+export function isGameResource(option: GameResolvable): option is GameResource {
+  return "id" in option && "value" in option && "type" in option
+}
+
+export function isGameCardCompact(
+  option: GameResolvable,
+): option is GameCardCompact {
+  return (
+    "name" in option &&
+    "state" in option &&
+    "initialRarity" in option &&
+    Object.keys(option).length === 3
+  )
+}
 
 export type CardModifier = {
   index: GlobalCardModifierIndex
@@ -180,24 +225,18 @@ export type CardModifier = {
   once?: boolean
 }
 
-export type GameCardIndice = [
-  name: string,
-  state: GameCardState,
-  localAdvantage: LocalAdvantage,
-]
-
-export type CardModifierIndice = [
-  name: string,
-  params: unknown[],
-  reason: GameModifierLog["reason"],
-]
+export type CardModifierCompact<Name extends keyof typeof cardModifiers> = {
+  name: Name
+  params: Parameters<(typeof cardModifiers)[Name]>
+  reason: GameModifierLog["reason"]
+}
 
 export type GameResolvable =
-  | GameCardIndice
+  | GameCardCompact
   | GameResource
   | GameCardInfo
   | GameCardInfo<true>
-  | UpgradeIndice
+  | UpgradeCompact
 
 export type TriggerEventName = keyof typeof events
 
@@ -217,14 +256,14 @@ export type GameOverReason =
 export type GameLog = {
   type: "money" | "reputation" | "energy" | "level"
   value: number
-  reason: GameCardIndice | UpgradeIndice | string
+  reason: GameCardCompact | UpgradeCompact | string
 }
 
-export type GameModifierLog = { reason: GameCardIndice | string } & (
+export type GameModifierLog = { reason: GameCardCompact | string } & (
   | {
       type: "localAdvantage"
-      before: LocalAdvantage
-      after: LocalAdvantage
+      before: number
+      after: number
     }
   | {
       type: "cost"

@@ -542,11 +542,9 @@ const supports: SupportCardInfo[] = (
         costType: "money",
       }),
     },
-  ] satisfies Omit<SupportCardInfo, "type" | "state" | "localAdvantage">[]
+  ] satisfies Omit<SupportCardInfo, "type">[]
 ).map<SupportCardInfo>((support) => ({
   ...support,
-  state: null,
-  localAdvantage: null,
   type: "support",
   image: `images/techno/${support.image}`,
 }))

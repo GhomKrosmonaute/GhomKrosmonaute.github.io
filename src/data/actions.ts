@@ -1,5 +1,6 @@
-import type {
+import {
   ActionCardInfo,
+  compactGameCardInfo,
   EffectBuilder,
   GameCardInfo,
 } from "@/game-typings.ts"
@@ -21,7 +22,6 @@ import {
   createEffect,
   costToEnergy,
   formatCoinFlipText,
-  cardInfoToIndice,
 } from "@/game-safe-utils.ts"
 
 import { bank } from "@/sound.ts"
@@ -40,7 +40,7 @@ const reusable = {
         await state.addGlobalCardModifier(
           "level up cards",
           [cards.filter(filter).map((card) => card.name), ADVANTAGE_THRESHOLD],
-          cardInfoToIndice(card),
+          compactGameCardInfo(card),
         )
       },
       ephemeral: true,
@@ -66,6 +66,7 @@ const reusable = {
 
         await wait()
       },
+      ephemeral: true,
     }),
 } satisfies Record<string, (...params: any[]) => EffectBuilder<any[]>>
 
@@ -227,7 +228,7 @@ const actions: ActionCardInfo[] = (
           await state.addGlobalCardModifier(
             "lowers price of hand cards",
             [handCardNames, this.value!],
-            cardInfoToIndice(card),
+            compactGameCardInfo(card),
           )
         },
         ephemeral: true,
@@ -250,7 +251,7 @@ const actions: ActionCardInfo[] = (
           await state.addGlobalCardModifier(
             "level up cards",
             [state.revivedHand.map((card) => card.name), ADVANTAGE_THRESHOLD],
-            cardInfoToIndice(card),
+            compactGameCardInfo(card),
           )
         },
         ephemeral: true,
@@ -337,7 +338,7 @@ const actions: ActionCardInfo[] = (
           await state.addGlobalCardModifier(
             "next card half cost",
             [],
-            cardInfoToIndice(card),
+            compactGameCardInfo(card),
           )
         },
       }),
@@ -436,12 +437,10 @@ const actions: ActionCardInfo[] = (
         },
       }),
     },
-  ] as Omit<ActionCardInfo, "type" | "state" | "localAdvantage">[]
+  ] as Omit<ActionCardInfo, "type">[]
 ).map<ActionCardInfo>((action) => ({
   ...action,
   type: "action",
-  state: null,
-  localAdvantage: null,
   image: `images/projects/${action.image}`,
 }))
 

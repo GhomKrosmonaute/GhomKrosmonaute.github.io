@@ -237,7 +237,7 @@ const steps: TutorialStep[] = [
         <h2>Les logs</h2>
         <p>
           Ici, tu pourras voir les effets des cartes que tu as jouées. <br />
-          Les logs sont triés par ordre chronologique.
+          Les logs sont triés par ordre tri chronologique.
         </p>
         <img src="images/logs.png" alt="logs" />
         <div className="flex gap-2">
