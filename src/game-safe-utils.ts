@@ -167,7 +167,7 @@ export function formatUpgradeText(text: string, cumul: number) {
       /@cumul/g,
       `<span style="color: #f59e0b; font-weight: bold">${cumul}</span>`,
     )
-    .replace(/$s/g, cumul > 1 ? "s" : "")
+    .replace(/\$s/g, cumul > 1 ? "s" : "")
 }
 
 export function omit<T extends object, K extends keyof T>(

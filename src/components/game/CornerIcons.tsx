@@ -11,13 +11,17 @@ import { cn } from "@/utils.ts"
 
 import { Button, buttonVariants } from "@/components/ui/button.tsx"
 import { BuyMeACoffee } from "@/components/ui/buy-me-a-coffe.tsx"
+import { useTutorial } from "@/hooks/useTutorial.ts"
 
 const github = socials.find((s) => s.name === "Github")!
 
 export const CornerIcons = (props: { show: boolean }) => {
-  const enableTutorial = useGlobalState(
-    (state) => () => state.setTutorial(true),
-  )
+  const { start } = useTutorial()
+
+  const enableTutorial = useGlobalState((state) => () => {
+    state.setTutorial(true)
+    start()
+  })
 
   const [animation, transparency] = useSettings((state) => [
     state.quality.animations,

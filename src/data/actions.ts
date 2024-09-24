@@ -214,15 +214,14 @@ const actions: ActionCardInfo[] = (
       effect: createEffect({
         basePrice: MAX_HAND_SIZE,
         dynamicEffect: { cost: 1, max: 5 },
+        hint: "Ta main doit contenir d'autres cartes",
         description:
           "Baisse le prix des cartes en main de $n @energy$s ou de $$",
         condition: (state, card) =>
-          state.revivedHand.some(
-            (c) => c.name !== card.name && c.effect.cost.value > 0,
-          ),
+          state.hand.filter((c) => c.name !== card.name).length > 0,
         async onPlayed(state, card) {
           const handCardNames = state.revivedHand
-            .filter((c) => c.name !== card.name && card.effect.cost.value > 0)
+            .filter((c) => c.name !== card.name)
             .map((c) => c.name)
 
           await state.addGlobalCardModifier(
@@ -265,8 +264,8 @@ const actions: ActionCardInfo[] = (
         "Réalisé avec TypeScript, Three.js et Booyah avec l'équipe PlayCurious.",
       url: "https://playcurious.games/our-games/sea-rescue/",
       families: ["Jeu vidéo", "TypeScript", "PlayCurious"],
-      effect: reusable.choseSpecific("Recyclage", (c) =>
-        Boolean(c.effect().recycle),
+      effect: reusable.choseSpecific("qui @recycle", (c) =>
+        c.effect().description.toLowerCase().includes("@recycle"),
       ),
     },
     {
@@ -408,8 +407,14 @@ const actions: ActionCardInfo[] = (
           min: 5,
           max: (state) => Math.floor(state.energyMax / 2),
         },
-        costType: "money",
         description: "Gagne $n @energy$s",
+        async onPlayed(state, _, reason) {
+          await state.addEnergy(this.value!, {
+            skipGameOverPause: true,
+            reason,
+          })
+        },
+        costType: "money",
       }),
     },
     {

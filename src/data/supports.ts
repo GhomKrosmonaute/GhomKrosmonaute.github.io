@@ -67,7 +67,7 @@ const reusable = {
           `${
             drawSpecific.value > 0 ? "" : "<muted>"
           }Pioche ${drawSpecific.value > 0 ? drawSpecific.value : baseEffect} carte${drawSpecific.s} ${options.label.replace(
-            /$s/g,
+            /\$s/g,
             drawSpecific.value > 1 ? "s" : "",
           )}${
             drawSpecific.value > 0 ? "" : "</muted>"
@@ -76,6 +76,7 @@ const reusable = {
             money,
           })}`,
         ),
+        condition: (state) => state.revivedDraw.some(options.filter),
         onPlayed: async (state, _, reason) => {
           await state.drawCard(drawSpecific.value, {
             filter: options.filter,
@@ -90,14 +91,16 @@ const reusable = {
             reason,
           })
         },
-        condition: (state) => state.revivedDraw.some(options.filter),
         cost: resolveCost(price.value),
+        ephemeral: options.ephemeral,
+        needsPlayZone: true,
       }
     }
   },
   recycleSpecific: (options: {
     label: string
     filter: (card: GameCardInfo<true>) => boolean
+    hint?: string
   }) => {
     return (advantage = 0, state = fakeMegaState) => {
       const basePrice = ACTIONS_COST.drawSpecific
@@ -133,13 +136,15 @@ const reusable = {
 
       return {
         hint: formatText(
-          `La défausse doit contenir au moins une carte ${options.label} pour déclencher l'effet "@recycle"`,
+          `La défausse doit contenir au moins une carte ${options.label} pour déclencher l'effet "@recycle"${
+            options.hint ? " et " + options.hint.toLowerCase() : ""
+          }.`,
         ),
         description: formatText(
           `${
             recycleSpecific.value > 0 ? "" : "<muted>"
           }@recycle ${recycleSpecific.value > 0 ? recycleSpecific.value : baseEffect} carte${recycleSpecific.s} ${options.label.replace(
-            /$s/g,
+            /\$s/g,
             recycleSpecific.value > 1 ? "s" : "",
           )}${
             recycleSpecific.value > 0 ? "" : "</muted>"
@@ -148,6 +153,7 @@ const reusable = {
             money,
           })}`,
         ),
+        condition: (state) => state.revivedDiscard.some(options.filter),
         onPlayed: async (state, _, reason) => {
           if (recycleSpecific.value > 0)
             await state.recycleCard(recycleSpecific.value, {
@@ -162,7 +168,6 @@ const reusable = {
             reason,
           })
         },
-        condition: (state) => state.revivedDiscard.some(options.filter),
         cost: resolveCost(price.value),
       }
     }
@@ -186,7 +191,9 @@ const supports: SupportCardInfo[] = (
       effect: reusable.drawSpecific({
         label: "#TypeScript",
         filter: (card) =>
-          card.type === "action" && card.families.includes("TypeScript"),
+          !card.effect.upgrade &&
+          card.type === "action" &&
+          card.families.includes("TypeScript"),
       }),
     },
     {
@@ -201,9 +208,12 @@ const supports: SupportCardInfo[] = (
       name: "React",
       image: "react.webp",
       effect: reusable.drawSpecific({
-        label: "#React",
+        label: "#React ou #Site web",
         filter: (card) =>
-          card.type === "action" && card.families.includes("React"),
+          !card.effect.upgrade &&
+          card.type === "action" &&
+          (card.families.includes("React") ||
+            card.families.includes("Site web")),
       }),
     },
     {
@@ -237,8 +247,9 @@ const supports: SupportCardInfo[] = (
       name: "NodeJS",
       image: "node.png",
       effect: reusable.drawSpecific({
-        label: "Recyclage",
-        filter: (card) => Boolean(card.effect.recycle),
+        label: "qui @recycle",
+        filter: (card) =>
+          !card.effect.upgrade && card.effect.description.includes("@recycle"),
       }),
     },
     {
@@ -299,7 +310,9 @@ const supports: SupportCardInfo[] = (
       effect: reusable.drawSpecific({
         label: "#Jeu vidéo",
         filter: (card) =>
-          card.type === "action" && card.families.includes("Jeu vidéo"),
+          !card.effect.upgrade &&
+          card.type === "action" &&
+          card.families.includes("Jeu vidéo"),
       }),
     },
     {
@@ -308,7 +321,9 @@ const supports: SupportCardInfo[] = (
       effect: reusable.recycleSpecific({
         label: "#Jeu vidéo",
         filter: (card) =>
-          card.type === "action" && card.families.includes("Jeu vidéo"),
+          !card.effect.upgrade &&
+          card.type === "action" &&
+          card.families.includes("Jeu vidéo"),
       }),
     },
     {
@@ -317,6 +332,7 @@ const supports: SupportCardInfo[] = (
       effect: reusable.recycleSpecific({
         label: "qui pioche",
         filter: (card) =>
+          !card.effect.upgrade &&
           /pioche \d+ carte/.test(card.effect.description.toLowerCase()),
       }),
     },
@@ -426,7 +442,7 @@ const supports: SupportCardInfo[] = (
         description: "Pioche une carte",
         condition: (state) => state.draw.length >= 1,
         async onPlayed(state, _, reason) {
-          await state.drawCard(1, { reason })
+          await state.drawCard(1, { reason, skipGameOverPause: true })
         },
         waitBeforePlay: true,
         costType: "money",
@@ -438,11 +454,11 @@ const supports: SupportCardInfo[] = (
       effect: createEffect({
         basePrice: 2,
         description: "@recycle une carte aléatoire",
-        condition: (state) => state.draw.length >= 1,
+        condition: (state) => state.discard.length >= 1,
         async onPlayed(state, _, reason) {
-          await state.drawCard(1, { reason })
+          await state.recycleCard(1, { skipGameOverPause: true, reason })
         },
-        waitBeforePlay: true,
+        needsPlayZone: true,
         costType: "money",
         recycle: true,
       }),
@@ -497,9 +513,10 @@ const supports: SupportCardInfo[] = (
       name: "Jetbrains",
       image: "jetbrains.webp",
       effect: reusable.recycleSpecific({
-        label: "qui recycle",
+        label: "qui @recycle",
         filter: (card) =>
-          card.effect.description.toLowerCase().includes("recycle"),
+          !card.effect.upgrade &&
+          card.effect.description.toLowerCase().includes("@recycle"),
       }),
     },
     {

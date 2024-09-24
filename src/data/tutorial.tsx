@@ -31,7 +31,7 @@ const steps: TutorialStep[] = [
           </Button>
         </div>
         <img
-          src="images/ghom.png"
+          src="images/tutorial/ghom.png"
           alt="ghom face"
           className="absolute right-0 bottom-0 w-32 translate-x-1/3 translate-y-1/3"
         />
@@ -220,7 +220,7 @@ const steps: TutorialStep[] = [
           Elles s'activeront automatiquement en fonction de certaines
           conditions.
         </p>
-        <img src="images/upgrades.png" alt="upgrades" />
+        <img src="images/tutorial/upgrades.png" alt="upgrades" />
         <div className="flex gap-2">
           <Button onClick={back}>Retour</Button>
           <Button variant="cta" size="cta" onClick={next}>
@@ -237,9 +237,9 @@ const steps: TutorialStep[] = [
         <h2>Les logs</h2>
         <p>
           Ici, tu pourras voir les effets des cartes que tu as jouées. <br />
-          Les logs sont triés par ordre tri chronologique.
+          Les logs sont triés par ordre chronologique.
         </p>
-        <img src="images/logs.png" alt="logs" />
+        <img src="images/tutorial/logs.png" alt="logs" />
         <div className="flex gap-2">
           <Button onClick={back}>Retour</Button>
           <Button variant="cta" size="cta" onClick={next}>
@@ -262,6 +262,33 @@ const steps: TutorialStep[] = [
           Par exemple, choisir une carte à ajouter à ton deck <br />
           ou même piocher une carte si tu ne peux pas jouer
         </p>
+        <div className="flex gap-2">
+          <Button onClick={back}>Retour</Button>
+          <Button variant="cta" size="cta" onClick={next}>
+            Suivant
+          </Button>
+        </div>
+      </Tutorial>
+    ),
+  },
+  {
+    id: "_detail",
+    render: ({ next, back }) => (
+      <Tutorial style={cardStyle} location="center">
+        <h2>Informations d'une carte</h2>
+        <p>
+          Si tu veux plus d'informations sur une carte, <br />
+          tu peux faire un clic droit dessus.
+        </p>
+        <p>
+          Une popup s'ouvrira avec les formes alternatives <br />
+          de la carte et plein d'autres informations utiles !
+        </p>
+        <img
+          src="images/tutorial/detail.png"
+          alt="card detail"
+          className="w-[500px]"
+        />
         <div className="flex gap-2">
           <Button onClick={back}>Retour</Button>
           <Button
@@ -294,7 +321,7 @@ const steps: TutorialStep[] = [
           </Button>
         </div>
         <img
-          src="images/ghom.png"
+          src="images/tutorial/ghom.png"
           alt="ghom face"
           className="absolute right-0 bottom-0 w-32 translate-x-1/3 translate-y-1/3"
         />
