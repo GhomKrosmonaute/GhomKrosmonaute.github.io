@@ -60,9 +60,7 @@ const reusable = {
       const money = energy.rest * ENERGY_TO_MONEY
 
       return {
-        hint: formatText(
-          `La pioche doit contenir au moins une carte ${options.label} pour déclencher l'effet de pioche.`,
-        ),
+        hint: `La pioche doit contenir au moins une carte ${options.label} pour déclencher l'effet de pioche.`,
         description: formatText(
           `${
             drawSpecific.value > 0 ? "" : "<muted>"
@@ -135,11 +133,9 @@ const reusable = {
       const money = energy.rest * ENERGY_TO_MONEY
 
       return {
-        hint: formatText(
-          `La défausse doit contenir au moins une carte ${options.label} pour déclencher l'effet "@recycle"${
-            options.hint ? " et " + options.hint.toLowerCase() : ""
-          }.`,
-        ),
+        hint: `La défausse doit contenir au moins une carte ${options.label} pour déclencher l'effet "@recycle"${
+          options.hint ? " et " + options.hint.toLowerCase() : ""
+        }.`,
         description: formatText(
           `${
             recycleSpecific.value > 0 ? "" : "<muted>"
@@ -263,7 +259,7 @@ const supports: SupportCardInfo[] = (
           min: 1,
           max: Math.floor(MAX_HAND_SIZE / 2),
         },
-        hint: formatText("La pioche doit contenir au moins une carte @action"),
+        hint: "La pioche doit contenir au moins une carte @action",
         description:
           "Pioche $n carte$s @action si tu n'as pas de carte @action en main",
         condition: (state) =>
@@ -357,7 +353,7 @@ const supports: SupportCardInfo[] = (
           })
         },
         needsPlayZone: true,
-        recycle: true,
+        recyclage: true,
       }),
     },
     {
@@ -460,7 +456,7 @@ const supports: SupportCardInfo[] = (
         },
         needsPlayZone: true,
         costType: "money",
-        recycle: true,
+        recyclage: true,
       }),
     },
     {
@@ -559,11 +555,43 @@ const supports: SupportCardInfo[] = (
         costType: "money",
       }),
     },
+    {
+      name: "PlayCurious",
+      image: "play-curious.png",
+      effect: createEffect({
+        basePrice:
+          ACTIONS_COST.discardAll -
+          ACTIONS_COST.condition +
+          ACTIONS_COST.drawSpecific * 2,
+        hint: "Ta main doit contenir au moins une autre carte et la pioche doit contenir au moins une carte #PlayCurious",
+        description:
+          "Défausse ta main sauf les cartes #TypeScript puis pioche 2 cartes #PlayCurious",
+        condition: (state, card) =>
+          state.revivedDraw.some(
+            (card) =>
+              card.type === "action" && card.families.includes("PlayCurious"),
+          ) && state.hand.filter((c) => c.name !== card.name).length > 0,
+        async onPlayed(state, _, reason) {
+          await state.discardCard({
+            filter: (card) =>
+              card.type !== "action" || !card.families.includes("TypeScript"),
+            reason,
+          })
+
+          await state.drawCard(2, {
+            filter: (card) =>
+              card.type === "action" && card.families.includes("PlayCurious"),
+            skipGameOverPause: true,
+            reason,
+          })
+        },
+      }),
+    },
   ] satisfies Omit<SupportCardInfo, "type">[]
 ).map<SupportCardInfo>((support) => ({
   ...support,
   type: "support",
-  image: `images/techno/${support.image}`,
+  image: `images/supports/${support.image}`,
 }))
 
 export default supports

@@ -22,14 +22,15 @@ import {
   createEffect,
   costToEnergy,
   formatCoinFlipText,
+  shuffle,
 } from "@/game-safe-utils.ts"
 
 import { bank } from "@/sound.ts"
 
 const reusable = {
-  levelUpAllLabel: (label: string, filter: (card: GameCardInfo) => boolean) =>
+  levelUpLabel: (label: string, filter: (card: GameCardInfo) => boolean) =>
     createEffect({
-      basePrice: ACTIONS_COST.levelUpFamily,
+      basePrice: ACTIONS_COST.levelUpLabel,
       description: `Augmente d'un @level toutes les cartes ${label}`,
       hint: "Agis aussi sur les cartes non-obtenues",
       async onPlayed(state, card) {
@@ -39,7 +40,13 @@ const reusable = {
 
         await state.addGlobalCardModifier(
           "level up cards",
-          [cards.filter(filter).map((card) => card.name), ADVANTAGE_THRESHOLD],
+          [
+            cards
+              .filter((c) => !c.effect().token)
+              .filter(filter)
+              .map((card) => card.name),
+            ADVANTAGE_THRESHOLD,
+          ],
           compactGameCardInfo(card),
         )
       },
@@ -80,7 +87,7 @@ const actions: ActionCardInfo[] = (
         "Inclus un CLI pour générer des bots et des fichiers de bot. Actuellement mon projet le plus important.",
       url: "https://ghom.gitbook.io/bot.ts",
       families: ["TypeScript", "Outil", "Open Source"],
-      effect: reusable.levelUpAllLabel(
+      effect: reusable.levelUpLabel(
         "#Bot Discord",
         (card) =>
           card.type === "action" && card.families.includes("Bot Discord"),
@@ -165,17 +172,208 @@ const actions: ActionCardInfo[] = (
     },
     {
       name: "Les Labs JS",
-      image: "js-labs.png",
+      image: "labs-js.gif",
       description: "A Discord server for JavaScript developers I own",
       detail:
         "Le meilleur endroit pour apprendre et partager sur l'écosystème JavaScript",
       url: "https://discord.gg/3vC2XWK",
       families: ["Serveur Discord"],
-      effect: reusable.levelUpAllLabel(
-        "#TypeScript",
+      effect: reusable.choseSpecific(
+        "#Bot Discord",
         (card) =>
-          card.type === "action" && card.families.includes("TypeScript"),
+          card.type === "action" && card.families.includes("Bot Discord"),
       ),
+    },
+    {
+      name: "Les Labs PHP",
+      image: "labs-php.gif",
+      description: "A Discord server for PHP developers",
+      detail:
+        "Le meilleur endroit pour apprendre et partager sur l'écosystème PHP",
+      url: "https://discord.gg/bepg8DsUHj",
+      families: ["Serveur Discord"],
+      effect: reusable.levelUpLabel(
+        "@support",
+        (card) => card.type === "support",
+      ),
+    },
+    {
+      name: "Les Labs Python",
+      image: "labs-py.gif",
+      description: "A Discord server for Python developers",
+      detail:
+        "Le meilleur endroit pour apprendre et partager sur l'écosystème Python",
+      url: "https://discord.gg/AqfmMqjfMz",
+      families: ["Serveur Discord"],
+      effect: createEffect({
+        basePrice: 2 * Math.floor(MAX_HAND_SIZE / 2),
+        description: `Gagne ${2 * ENERGY_TO_MONEY}M$ par cumul d'@upgrades possédées`,
+        hint: "Tu dois posséder des @upgrades",
+        condition: (state) => state.upgrades.length > 0,
+        onPlayed: async (state, _, reason) => {
+          const cumul = state.upgrades.reduce((prev, u) => prev + u.cumul, 0)
+
+          await state.addMoney(cumul * 2 * ENERGY_TO_MONEY, {
+            skipGameOverPause: true,
+            reason,
+          })
+        },
+      }),
+    },
+    {
+      name: "Les Labs Java",
+      image: "labs-java.gif",
+      description: "A Discord server for Java developers",
+      detail:
+        "Le meilleur endroit pour apprendre et partager sur l'écosystème Java",
+      url: "https://discord.gg/wd5eCj7",
+      families: ["Serveur Discord"],
+      effect: createEffect({
+        basePrice: ACTIONS_COST.condition + ACTIONS_COST.levelUp * 2,
+        description: "Augmente de 2 @levelx une carte en main aléatoire",
+        condition: (state, card) =>
+          state.hand.filter((c) => c.name !== card.name).length > 0,
+        async onPlayed(state, card) {
+          const target = shuffle(
+            state.revivedHand
+              .filter((c) => !c.effect.token)
+              .filter((c) => c.name !== card.name),
+            3,
+          )[0]
+
+          if (!target) throw new Error("No target found")
+
+          await state.addGlobalCardModifier(
+            "level up cards",
+            [[target.name], ADVANTAGE_THRESHOLD * 2],
+            compactGameCardInfo(card),
+          )
+        },
+      }),
+    },
+    {
+      name: "Les Labs Ruby",
+      image: "labs-ruby.gif",
+      description: "A Discord server for Ruby developers",
+      detail:
+        "Le meilleur endroit pour apprendre et partager sur l'écosystème Ruby",
+      url: "https://discord.gg/4P7XcmbDnt",
+      families: ["Serveur Discord"],
+      effect: createEffect({
+        basePrice: 20,
+        dynamicEffect: { cost: 1 / ENERGY_TO_MONEY, min: 20 },
+        description: `Gagne $$`,
+        async onPlayed(state, _, reason) {
+          await state.addMoney(this.value! * ENERGY_TO_MONEY, {
+            skipGameOverPause: true,
+            reason,
+          })
+        },
+      }),
+    },
+    {
+      name: "Lab Tools",
+      image: "lab-tools.png",
+      description: "The tools bot of Labs Discord servers",
+      detail:
+        "Un bot Discord pour gérer Les Laboratoires sur Discord réalisé avec Bot.ts en TypeScript",
+      url: "https://github.com/Les-Laboratoires/lab-tools",
+      families: ["Bot Discord", "TypeScript", "Open Source"],
+      effect: reusable.levelUpLabel(
+        "#Serveur Discord",
+        (card) =>
+          card.type === "action" && card.families.includes("Serveur Discord"),
+      ),
+    },
+    {
+      name: "Unicorn Trap",
+      image: "unicorn-trap.png",
+      description: "Discord bot for managing role colors",
+      detail:
+        "Un bot Discord pour gérer les couleurs de rôles réalisé avec Bot.ts en TypeScript",
+      url: "https://github.com/GhomKrosmonaute/unicorn-trap",
+      families: ["Bot Discord", "TypeScript", "Open Source"],
+      effect: createEffect<[selected: GameCardInfo<true>]>({
+        basePrice: ACTIONS_COST.levelDown * 2 + 20,
+        description: `Diminue de 2 @levelx une carte, puis gagne ${20 * ENERGY_TO_MONEY}M$`,
+        condition: (state, card) =>
+          state.revivedHand
+            .filter((c) => !c.effect.token)
+            .filter((c) => c.name !== card.name).length > 0,
+        select: (_, card, testedCard) => card.name !== testedCard.name,
+        async onPlayed(state, card, reason, selected) {
+          await state.addGlobalCardModifier(
+            "level up cards",
+            [[selected.name], -ADVANTAGE_THRESHOLD * 2],
+            compactGameCardInfo(card),
+          )
+
+          await state.addMoney(20 * ENERGY_TO_MONEY, {
+            skipGameOverPause: true,
+            reason,
+          })
+        },
+        needsPlayZone: true,
+        token: true,
+      }),
+    },
+    {
+      name: "DJS Bot",
+      image: "djs-bot.png",
+      description: "Discord bot for browse Discord.js documentation",
+      detail:
+        "Un bot Discord pour rechercher dans la documentation technique de Discord.js réalisé avec Bot.ts en TypeScript",
+      url: "https://github.com/GhomKrosmonaute/djs-docs-bot.git",
+      families: ["Bot Discord", "TypeScript", "Open Source"],
+      effect: createEffect({
+        basePrice: 10,
+        description: `Gagne ${10 * ENERGY_TO_MONEY}M$ par carte #Bot Discord en main en comptant celle-ci`,
+        condition: (state) =>
+          state.revivedHand.some(
+            (c) => c.type === "action" && c.families.includes("Bot Discord"),
+          ),
+        onPlayed: async (state, _, reason) => {
+          await state.addMoney(
+            10 *
+              state.revivedHand.filter(
+                (card) =>
+                  card.type === "action" &&
+                  card.families.includes("Bot Discord"),
+              ).length *
+              ENERGY_TO_MONEY,
+            { skipGameOverPause: true, reason },
+          )
+        },
+      }),
+    },
+    {
+      name: "Glink",
+      image: "glink.png",
+      description: "Discord bot for connect channels together",
+      detail:
+        "Un bot Discord pour connecter des salons entre eux réalisé avec Bot.ts en TypeScript",
+      url: "https://github.com/GhomKrosmonaute/glink",
+      families: ["Bot Discord", "TypeScript", "Open Source"],
+      effect: createEffect({
+        hint: `Ta @reputation doit être supérieur ou égale à ${MAX_REPUTATION - 2}`,
+        description: `Consomme la @reputation de ${MAX_REPUTATION - 2} et remplis la jauge d'@energy`,
+        condition: (state) =>
+          state.reputation >= Math.floor(MAX_REPUTATION - 2),
+        onPlayed: async (state, _, reason) => {
+          await state.addReputation(-Math.floor(MAX_REPUTATION - 2), {
+            skipGameOverPause: true,
+            reason,
+          })
+
+          await state.addEnergy(state.energyMax, {
+            skipGameOverPause: true,
+            reason,
+          })
+        },
+        ephemeral: true,
+        skipEnergyGain: true,
+        costType: "money",
+      }),
     },
     {
       name: "2D Shooter",
@@ -198,7 +396,7 @@ const actions: ActionCardInfo[] = (
         "Un simple jeu de plateforme 2D avec un système de checkpoint réalisé avec p5.js en TypeScript",
       url: "https://github.com/GhomKrosmonaute/Gario",
       families: ["Jeu vidéo", "TypeScript"],
-      effect: reusable.levelUpAllLabel(
+      effect: reusable.levelUpLabel(
         "#Jeu vidéo",
         (card) => card.type === "action" && card.families.includes("Jeu vidéo"),
       ),
@@ -249,7 +447,12 @@ const actions: ActionCardInfo[] = (
         async onPlayed(state, card) {
           await state.addGlobalCardModifier(
             "level up cards",
-            [state.revivedHand.map((card) => card.name), ADVANTAGE_THRESHOLD],
+            [
+              state.revivedHand
+                .filter((c) => !c.effect.token)
+                .map((card) => card.name),
+              ADVANTAGE_THRESHOLD,
+            ],
             compactGameCardInfo(card),
           )
         },
@@ -446,7 +649,7 @@ const actions: ActionCardInfo[] = (
 ).map<ActionCardInfo>((action) => ({
   ...action,
   type: "action",
-  image: `images/projects/${action.image}`,
+  image: `images/actions/${action.image}`,
 }))
 
 export default actions

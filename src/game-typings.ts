@@ -108,8 +108,9 @@ export interface Effect<Data extends any[]> {
   needsPlayZone?: boolean
   waitBeforePlay?: boolean
   ephemeral?: boolean
-  recycle?: boolean
+  recyclage?: boolean
   upgrade?: boolean
+  token?: boolean
 }
 
 export type CommonCardInfo<Resolved = false> = {

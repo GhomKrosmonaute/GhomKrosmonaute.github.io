@@ -84,7 +84,10 @@ export const GameDebugActions = () => {
         onClick={() =>
           game.addGlobalCardModifier(
             "level up cards",
-            [cards.map((c) => c.name), ADVANTAGE_THRESHOLD],
+            [
+              cards.filter((c) => !c.effect().token).map((c) => c.name),
+              ADVANTAGE_THRESHOLD,
+            ],
             "Level up button",
           )
         }

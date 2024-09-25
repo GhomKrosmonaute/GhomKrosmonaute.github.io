@@ -1421,7 +1421,7 @@ function generateGameMethods(
         reviveCard(compactGameCardInfo(card), state, { clean: true })
 
         const removing = willBeRemoved(getState(), card)
-        const recycling = card.effect.recycle
+        const recycling = card.effect.recyclage
 
         const firstState = removing ? "removing" : "playing"
 

@@ -29,6 +29,7 @@ const upgradeCards = upgrades.map<GameCardInfo>((upgrade) => {
       cost: upgrade.cost,
       waitBeforePlay: false,
       upgrade: true,
+      token: true,
     }),
   }
 })

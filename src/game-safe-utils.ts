@@ -53,6 +53,27 @@ export const families: ActionCardFamily[] = [
   "PlayCurious",
 ]
 
+export const subTypes = {
+  ephemeral: {
+    name: "Éphémère",
+    description: "Une carte Éphémère se détruit lorsqu'elle est jouée",
+  },
+  recyclage: {
+    name: "Recyclage",
+    description:
+      "Une carte Recyclage retourne dans la pioche lorsqu'elle est jouée",
+  },
+  token: {
+    name: "Token",
+    description:
+      "Les changements de niveau n'ont aucun effet sur les cartes Token",
+  },
+  upgrade: {
+    name: "Amélioration",
+    description: "Ajoute un effet permanent à la partie",
+  },
+}
+
 export function formatText(text: string) {
   const x = (keyword: `@${string}`) =>
     new RegExp(`${keyword}([^\\s.:,)<>"]*)`, "g")
@@ -63,7 +84,7 @@ export function formatText(text: string) {
     "font-weight: bold",
   ]
 
-  return text
+  text = text
     .replace(
       /(\(.+?\))/g,
       `<span style="position: relative; transform-style: preserve-3d; display: inline-block; width: 0; height: 0.8em;">
@@ -85,6 +106,22 @@ export function formatText(text: string) {
         ? `${(amount / 1000).toFixed(2).replace(".00", "").replace(/\.0\b/, "")}B$`
         : `${amount}M$`
     })
+    .replace(
+      /((?:[\de+.]+|<span[^>]*>[\de+.]+<\/span>)[MB]\$)/g,
+      `<span 
+        style="
+          ${sharedStyles[0]};
+          ${sharedStyles[1]};
+          background-color: hsl(var(--money)); 
+          color: hsl(var(--money-foreground));
+          padding: 0 4px; 
+          border: 1px hsl(var(--money-foreground)) solid; 
+          font-family: Changa, sans-serif;
+          font-size: 0.8em;"
+        >
+          $1
+        </span>`,
+    )
     .replace(
       new RegExp(`#(${families.join("|")})`, "g"),
       `<span style="${sharedStyles.join(";")}; color: hsl(var(--action)); white-space: nowrap;" title="Famille $1">#$1</span>`,
@@ -134,25 +171,21 @@ export function formatText(text: string) {
       `<span style="${sharedStyles.join(";")};" title="Renvoie le sujet dans la pioche">Rend$1</span>`,
     )
     .replace(
-      /((?:[\de+.]+|<span[^>]*>[\de+.]+<\/span>)[MB]\$)/g,
-      `<span 
-        style="
-          ${sharedStyles[0]};
-          ${sharedStyles[1]};
-          background-color: hsl(var(--money)); 
-          color: hsl(var(--money-foreground));
-          padding: 0 4px; 
-          border: 1px hsl(var(--money-foreground)) solid; 
-          font-family: Changa, sans-serif;
-          font-size: 0.8em;"
-        >
-          $1
-        </span>`,
-    )
-    .replace(
       /<muted>(.+)<\/muted>/g,
       `<span style="filter: grayscale(100%) opacity(50%)">$1</span>`,
     )
+
+  for (const key in subTypes) {
+    const subType = subTypes[key as keyof typeof subTypes]
+    const { name, description } = subType
+
+    text = text.replace(
+      x(`@${key}`),
+      `<span style="${sharedStyles.join(";")}; color: hsl(var(--muted-foreground))" title="${description}">${name}$1</span>`,
+    )
+  }
+
+  return text
 }
 
 export function formatCoinFlipText(options: { heads: string; tails: string }) {
@@ -538,6 +571,12 @@ export function isActionCardInfo(
   card: GameCardInfo<true>,
 ): card is ActionCardInfo<true> {
   return card.type === "action"
+}
+
+export function resolveSubTypes(effect: Effect<any>) {
+  return (["ephemeral", "recyclage", "upgrade", "token"] as const).filter(
+    (subType) => effect[subType],
+  )
 }
 
 export function createEffect<Data extends any[]>(

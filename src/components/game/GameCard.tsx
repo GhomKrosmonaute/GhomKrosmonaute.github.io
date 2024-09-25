@@ -19,7 +19,13 @@ import { cn } from "@/utils.ts"
 import { Tilt, TiltFoil } from "@/components/game/Tilt.tsx"
 import { BorderLight } from "@/components/ui/border-light.tsx"
 import upgrades from "@/data/upgrades.ts"
-import { canBeBuy, getRarityName, isActionCardInfo } from "@/game-safe-utils.ts"
+import {
+  canBeBuy,
+  formatText,
+  getRarityName,
+  isActionCardInfo,
+  resolveSubTypes,
+} from "@/game-safe-utils.ts"
 import { GameCost } from "@/components/game/GameCost.tsx"
 import { GameAdvantageBadge } from "@/components/game/GameAdvantageBadge.tsx"
 // import { GameCardPopover } from "@/components/game/GameCardPopover.tsx"
@@ -68,7 +74,7 @@ export const GameCard = (
 
   return (
     <div
-      key={props.card.name + props.card.rarity + props.card.state}
+      key={props.card.name + props.card.rarity}
       className={cn(
         "game-card",
         "relative w-[210px] h-[293px]",
@@ -142,14 +148,14 @@ export const GameCard = (
               {
                 "text-card/60": quality.transparency,
                 "text-card": !quality.transparency,
-              },
-              {
-                "stroke-common": rarityName === "common",
-                "stroke-rare": rarityName === "rare",
-                "stroke-epic": rarityName === "epic",
-                "stroke-legendary": rarityName === "legendary",
-                "stroke-cosmic": rarityName === "cosmic",
-                "stroke-singularity": rarityName === "singularity",
+                [cn({
+                  "stroke-common": rarityName === "common",
+                  "stroke-rare": rarityName === "rare",
+                  "stroke-epic": rarityName === "epic",
+                  "stroke-legendary": rarityName === "legendary",
+                  "stroke-cosmic": rarityName === "cosmic",
+                  "stroke-singularity": rarityName === "singularity",
+                })]: !props.card.effect.token,
               },
             )}
             style={{
@@ -174,16 +180,15 @@ export const GameCard = (
               // "shadow-action": props.card.effect.type === "action",
               "transition-shadow duration-200 ease-in-out hover:shadow-glow-20 shadow-primary":
                 quality.shadows,
-            },
-            "ring-2",
-            {
-              "ring-common shadow-common": rarityName === "common",
-              "ring-rare shadow-rare": rarityName === "rare",
-              "ring-epic shadow-epic": rarityName === "epic",
-              "ring-legendary shadow-legendary": rarityName === "legendary",
-              "ring-cosmic shadow-cosmic": rarityName === "cosmic",
-              "ring-singularity shadow-singularity":
-                rarityName === "singularity",
+              [cn("ring-2", {
+                "ring-common shadow-common": rarityName === "common",
+                "ring-rare shadow-rare": rarityName === "rare",
+                "ring-epic shadow-epic": rarityName === "epic",
+                "ring-legendary shadow-legendary": rarityName === "legendary",
+                "ring-cosmic shadow-cosmic": rarityName === "cosmic",
+                "ring-singularity shadow-singularity":
+                  rarityName === "singularity",
+              })]: !props.card.effect.token,
             },
           )}
         >
@@ -209,10 +214,8 @@ export const GameCard = (
                 "relative flex justify-start items-center h-10 rounded-t-xl",
                 {
                   "bg-action": props.card.type === "action",
-                  [cn({
-                    "bg-support/50": quality.transparency,
-                    "bg-support": !quality.transparency,
-                  })]: props.card.type === "support",
+                  "bg-support": props.card.type === "support",
+                  "bg-upgrade": props.card.effect.upgrade,
                 },
               )}
               style={{
@@ -243,6 +246,7 @@ export const GameCard = (
                     })]: props.card.effect.cost.value > 0,
                     "text-action-foreground": props.card.type === "action",
                     "text-support-foreground": props.card.type === "support",
+                    "text-upgrade-foreground": props.card.effect.upgrade,
                   },
                 )}
                 style={{
@@ -262,10 +266,12 @@ export const GameCard = (
                   },
                 )}
               >
-                {!props.card.effect.upgrade ? (
+                {!props.card.effect.token && (
                   /* Rarity indicator */
                   <GameAdvantageBadge advantage={props.card.rarity} />
-                ) : (
+                )}
+
+                {props.card.effect.upgrade && (
                   /* Upgrade max indicator */
                   <div className="bg-upgrade">
                     {(() => {
@@ -313,15 +319,22 @@ export const GameCard = (
                 }}
               />
 
-              {(props.card.effect.ephemeral || props.card.effect.recycle) && (
+              {(props.card.effect.ephemeral ||
+                props.card.effect.recyclage ||
+                props.card.effect.token) && (
                 <div
                   className={cn("text-center text-2xl font-bold", {
-                    "text-muted-foreground/30": quality.transparency,
+                    "text-muted-foreground/50": quality.transparency,
                     "text-muted-foreground": !quality.transparency,
                   })}
-                >
-                  {props.card.effect.ephemeral ? "Éphémère" : "Recyclage"}
-                </div>
+                  dangerouslySetInnerHTML={{
+                    __html: formatText(
+                      resolveSubTypes(props.card.effect)
+                        .map((type) => `@${type}`)
+                        .join("<br>"),
+                    ),
+                  }}
+                />
               )}
             </div>
 
@@ -349,14 +362,10 @@ export const GameCard = (
 const GameCardProject = (
   props: React.PropsWithoutRef<{ card: ActionCardInfo<true> }>,
 ) => {
-  const { shadows, perspective, transparency, animation } = useSettings(
-    (state) => ({
-      shadows: state.quality.shadows,
-      perspective: state.quality.perspective,
-      transparency: state.quality.transparency,
-      animation: state.quality.animations,
-    }),
-  )
+  const { shadows, perspective } = useSettings((state) => ({
+    shadows: state.quality.shadows,
+    perspective: state.quality.perspective,
+  }))
 
   return (
     <div
@@ -383,23 +392,6 @@ const GameCardProject = (
           }}
         />
       </div>
-
-      {props.card.description && (
-        <div
-          className={cn(
-            "bottom-0 absolute w-full h-1/3 flex justify-center items-center",
-            {
-              "transition-opacity duration-1000": animation,
-              "group-hover/image:opacity-0 bg-background/50": transparency,
-            },
-          )}
-          style={{
-            transform: perspective ? "translateZ(-5px)" : "none",
-          }}
-        >
-          <p className="text-sm text-center">"{props.card.description}"</p>
-        </div>
-      )}
     </div>
   )
 }

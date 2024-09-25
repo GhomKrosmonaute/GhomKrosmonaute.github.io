@@ -22,12 +22,16 @@ import {
   calculateRarityAdvantage,
   formatText,
   getRarityName,
+  resolveSubTypes,
+  subTypes,
 } from "@/game-safe-utils.ts"
 import { Button } from "@/components/ui/button.tsx"
 
 export const GameCardDetail = (props: { show: boolean }) => {
   const state = useCardGame()
   const settings = useSettings()
+
+  const colRef = React.useRef<HTMLDivElement>(null)
 
   const [sortBy, setSortBy] = React.useState<
     "tri par ordre d'exécution" | "tri par raison" | "tri par type"
@@ -38,6 +42,11 @@ export const GameCardDetail = (props: { show: boolean }) => {
     ? getGlobalCardModifierLogs(state, state.cardDetail)
     : []
   const rarityName = card ? getRarityName(card.rarity, true) : null
+  const cardSubTypes = card ? resolveSubTypes(card.effect) : null
+
+  const colBeGrid = React.useMemo(() => {
+    return (colRef.current?.children.length ?? 0) > 3
+  }, [colRef])
 
   return (
     <div
@@ -64,35 +73,37 @@ export const GameCardDetail = (props: { show: boolean }) => {
       {card && (
         <Card className="space-y-4 z-30 w-fit h-fit flex flex-col items-center">
           <h1 className="text-3xl">A propos de "{card.name}"</h1>
-          <div className="flex">
-            {Object.entries(LOCAL_ADVANTAGE)
-              .sort(([, a], [, b]) => a - b)
-              .map(([rarity, level]) => {
-                const advantage = calculateRarityAdvantage(level, state)
+          {!card.effect.token && (
+            <div className="flex">
+              {Object.entries(LOCAL_ADVANTAGE)
+                .sort(([, a], [, b]) => a - b)
+                .map(([rarity, level]) => {
+                  const advantage = calculateRarityAdvantage(level, state)
 
-                return (
-                  <div key={rarity}>
-                    <GameCard
-                      withoutDetail
-                      card={reviveCard(
-                        {
-                          name: card.name,
-                          state:
-                            rarityName === rarity && modifiers.length === 0
-                              ? "highlighted"
-                              : "idle",
-                          initialRarity: advantage,
-                        },
-                        state,
-                        {
-                          withoutModifiers: true,
-                        },
-                      )}
-                    />
-                  </div>
-                )
-              })}
-          </div>
+                  return (
+                    <div key={rarity}>
+                      <GameCard
+                        withoutDetail
+                        card={reviveCard(
+                          {
+                            name: card.name,
+                            state:
+                              rarityName === rarity && modifiers.length === 0
+                                ? "highlighted"
+                                : "idle",
+                            initialRarity: advantage,
+                          },
+                          state,
+                          {
+                            withoutModifiers: true,
+                          },
+                        )}
+                      />
+                    </div>
+                  )
+                })}
+            </div>
+          )}
           <div className="flex gap-5">
             {modifiers.length > 0 && (
               <div className="shrink-0 flex flex-col p-5 space-y-2 border rounded-lg relative">
@@ -186,21 +197,53 @@ export const GameCardDetail = (props: { show: boolean }) => {
                 </div>
               </div>
             )}
-            {modifiers.length > 0 && (
+            {(card.effect.token || modifiers.length > 0) && (
               <div className="shrink-0 p-5 space-y-2 border rounded-lg">
                 <h2 className="text-center text-2xl">Ta carte</h2>
                 <GameCard card={card} withoutDetail />
               </div>
             )}
 
-            <div className="flex flex-col gap-5 *:p-5 *:space-y-2 *:border *:rounded-lg">
+            <div
+              ref={colRef}
+              className={cn(
+                "flex flex-col gap-5 *:p-5 *:space-y-2 *:border *:rounded-lg",
+                {
+                  "grid grid-cols-2": colBeGrid,
+                },
+              )}
+            >
+              <div>
+                <h2
+                  className="text-2xl"
+                  dangerouslySetInnerHTML={{
+                    __html: formatText(`Type @${card.type}`),
+                  }}
+                />
+                {(card.effect.upgrade ||
+                  card.effect.token ||
+                  card.effect.ephemeral ||
+                  card.effect.recyclage) &&
+                  cardSubTypes!.map((type) => (
+                    <div>
+                      <span
+                        className="text-2xl"
+                        dangerouslySetInnerHTML={{
+                          __html: formatText(`@${type}`),
+                        }}
+                      />{" "}
+                      - {subTypes[type].description}
+                    </div>
+                  ))}
+              </div>
+
               {card.effect.hint && (
                 <div>
                   <h2 className="text-2xl">A savoir</h2>
                   <p
                     className="text-2xl"
                     dangerouslySetInnerHTML={{
-                      __html: card.effect.hint,
+                      __html: formatText(card.effect.hint),
                     }}
                   />
                 </div>
