@@ -2,7 +2,7 @@ import React from "react"
 import { cn } from "@/utils.ts"
 import { BorderLight } from "@/components/ui/border-light.tsx"
 import { useSettings } from "@/hooks/useSettings.ts"
-import { omit } from "@/game-safe-utils.ts"
+import { omit } from "@/game-safe-utils.tsx"
 
 export const Card = React.forwardRef<
   HTMLDivElement,

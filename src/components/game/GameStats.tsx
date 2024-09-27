@@ -2,11 +2,14 @@ import React from "react"
 
 import { cn } from "@/utils.ts"
 import { reviveCard } from "@/game-utils.ts"
-import { formatText } from "@/game-safe-utils.ts"
 import { translations } from "@/game-settings.ts"
-import { MAX_REPUTATION, MONEY_TO_REACH } from "@/game-constants.ts"
+import {
+  ADVANTAGE_THRESHOLD,
+  MAX_REPUTATION,
+  MONEY_TO_REACH,
+} from "@/game-constants.ts"
 
-import { useCardGame } from "@/hooks/useCardGame.ts"
+import { useCardGame } from "@/hooks/useCardGame.tsx"
 import { useSettings } from "@/hooks/useSettings.ts"
 
 import Day from "@/assets/icons/game/day.svg"
@@ -26,6 +29,8 @@ import { Separator } from "@/components/ui/separator.tsx"
 import { GameGauge } from "@/components/game/GameGauge.tsx"
 import { MiniatureImage } from "@/components/game/GameMiniature.tsx"
 import { GameCardPopover } from "@/components/game/GameCardPopover.tsx"
+
+import { Money as Dollars, Tag } from "@/components/game/Texts.tsx"
 
 export const Stat = ({
   name,
@@ -140,7 +145,8 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
                   )
                     .map((c) => reviveCard(c, game))
                     .toSorted((a, b) => {
-                      if (a.type === b.type) return a.effect.upgrade ? 1 : -1
+                      if (a.type === b.type)
+                        return a.effect.tags.includes("upgrade") ? 1 : -1
                       return b.type > a.type ? 1 : -1
                     })
                     .map((c, i) => (
@@ -153,7 +159,8 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
                               {
                                 "border-action": c.type === "action",
                                 "border-support": c.type === "support",
-                                "border-upgrade": c.effect.upgrade,
+                                "border-upgrade":
+                                  c.effect.tags.includes("upgrade"),
                               },
                             )}
                           />
@@ -203,13 +210,14 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
           Icon={Money}
           name="Dollars"
           value={
-            <span
-              dangerouslySetInnerHTML={{
-                __html: formatText(
-                  `${game.money}M$ ${props.forHUD ? `sur ${MONEY_TO_REACH}M$` : ""}`,
-                ),
-              }}
-            />
+            <span>
+              <Dollars M$={game.money} />{" "}
+              {props.forHUD && (
+                <>
+                  sur <Dollars M$={MONEY_TO_REACH} />
+                </>
+              )}
+            </span>
           }
         />
         <Stat
@@ -227,10 +235,8 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
             name="Inflation"
             value={
               <span className="text-inflation font-changa">
-                {game.inflation.toLocaleString("fr")}{" "}
-                <span
-                  dangerouslySetInnerHTML={{ __html: formatText("@energys") }}
-                />
+                -{Math.floor(game.inflation / ADVANTAGE_THRESHOLD)}{" "}
+                <Tag name="level" plural={game.inflation >= 4} />
               </span>
             }
           />

@@ -250,9 +250,11 @@ module.exports = {
         trigger:
           "trigger calc(var(--game-speed) / 2) ease-in-out forwards 0.25s",
         "ping-forwards": "ping 2s cubic-bezier(0, 0, 0.2, 1) forwards",
-        notification: "notification 2s forwards",
-        "to-right": "to-right 2s ease-in-out forwards",
-        "to-left": "to-left 2s ease-in-out forwards",
+        notification: "notification var(--tw-animation-duration, 2s) forwards",
+        "to-right":
+          "to-right var(--tw-animation-duration, 2s) ease-in-out forwards",
+        "to-left":
+          "to-left var(--tw-animation-duration, 2s) ease-in-out forwards",
       },
     },
   },

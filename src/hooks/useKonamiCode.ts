@@ -2,7 +2,7 @@
 
 import React from "react"
 
-import { useCardGame } from "@/hooks/useCardGame.ts"
+import { useCardGame } from "@/hooks/useCardGame.tsx"
 
 const KONAMI_CODE = [
   "ArrowUp",

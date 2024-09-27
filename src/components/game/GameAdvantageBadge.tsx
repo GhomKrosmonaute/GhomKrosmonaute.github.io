@@ -1,17 +1,16 @@
 import React from "react"
 import { cn } from "@/utils.ts"
-import { getRarityName, log } from "@/game-safe-utils.ts"
+import { getRarityName } from "@/game-safe-utils.tsx"
 
 export const GameAdvantageBadge = (props: {
   advantage: number
   orphan?: boolean
 }) => {
-  const [, name, full] = React.useMemo(() => {
-    return log("advantage", [
-      props.advantage,
+  const [name, full] = React.useMemo(() => {
+    return [
       getRarityName(props.advantage),
       getRarityName(props.advantage, true),
-    ])
+    ]
   }, [props.advantage])
 
   return (

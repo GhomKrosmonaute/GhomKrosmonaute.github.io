@@ -5,9 +5,9 @@ import {
 } from "@/components/ui/hover-card.tsx"
 import React from "react"
 import type { GameCardInfo } from "@/game-typings.ts"
-import { isActionCardInfo } from "@/game-safe-utils.ts"
-import { GameFamilyBadge } from "@/components/game/GameFamilyBadge.tsx"
+import { isActionCardInfo } from "@/game-safe-utils.tsx"
 import { GameCost } from "@/components/game/GameCost.tsx"
+import { Family } from "@/components/game/Texts.tsx"
 
 export const GameCardPopover = (
   props: React.PropsWithChildren<{
@@ -25,17 +25,13 @@ export const GameCardPopover = (
               <GameCost cost={props.card.effect.cost} miniature />
               <h2>{props.card.name}</h2>
             </div>
-            <p
-              dangerouslySetInnerHTML={{
-                __html: props.card.effect.description,
-              }}
-            />
+            <p>{props.card.effect.description}</p>
           </>
         )}
         {isActionCardInfo(props.card) && props.card.families.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-4">
             {props.card.families.map((family) => (
-              <GameFamilyBadge family={family} key={family} />
+              <Family name={family} key={family} />
             ))}
           </div>
         )}

@@ -1,6 +1,6 @@
 import React from "react"
 import { cn } from "@/utils.ts"
-import helpers from "@/data/helpers.json"
+import helpers from "@/data/helpers.tsx"
 import { reviveCard } from "@/game-utils.ts"
 import {
   ENERGY_TO_MONEY,
@@ -12,16 +12,16 @@ import { Label } from "@/components/ui/label.tsx"
 import { Button } from "@/components/ui/button.tsx"
 import { useGlobalState } from "@/hooks/useGlobalState.ts"
 import Cross from "@/assets/icons/cross.svg"
-import { useCardGame } from "@/hooks/useCardGame.ts"
-import achievements from "@/data/achievements.ts"
+import { useCardGame } from "@/hooks/useCardGame.tsx"
+import achievements from "@/data/achievements.tsx"
 import { GameCardPopover } from "@/components/game/GameCardPopover.tsx"
 import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card.tsx"
-import cards from "@/data/cards.ts"
-import { formatText } from "@/game-safe-utils.ts"
+import cards from "@/data/cards.tsx"
+import { Money, Tag } from "@/components/game/Texts.tsx"
 
 export const GameRules = (props: { show: boolean }) => {
   const close = useGlobalState((state) => state.toggleRules)
@@ -58,12 +58,7 @@ export const GameRules = (props: { show: boolean }) => {
             <h2 className="text-3xl">Règles du jeu</h2>
             <div className="max-h-[60vh] overflow-y-scroll space-y-2">
               {helpers.map((helper, i) => (
-                <div
-                  key={i}
-                  dangerouslySetInnerHTML={{
-                    __html: formatText(helper),
-                  }}
-                />
+                <div key={i}>{helper}</div>
               ))}
             </div>
           </div>
@@ -74,12 +69,9 @@ export const GameRules = (props: { show: boolean }) => {
                 <thead>
                   <tr>
                     <th className="text-right">
-                      <Label
-                        htmlFor="energy-input"
-                        dangerouslySetInnerHTML={{
-                          __html: formatText("En @energy :"),
-                        }}
-                      />
+                      <Label htmlFor="energy-input">
+                        En <Tag name="energy" /> :
+                      </Label>
                     </th>
                     <th>
                       <Input
@@ -96,29 +88,21 @@ export const GameRules = (props: { show: boolean }) => {
                 </thead>
                 <tbody>
                   <tr>
-                    <td className="text-right">En Dollars :</td>
-                    <td
-                      dangerouslySetInnerHTML={{
-                        __html: formatText(`${value * ENERGY_TO_MONEY}M$`),
-                      }}
-                    ></td>
+                    <td className="text-right">En dollars :</td>
+                    <td>
+                      <Money M$={value * ENERGY_TO_MONEY} />
+                    </td>
                   </tr>
                   <tr>
-                    <td
-                      className="text-right"
-                      dangerouslySetInnerHTML={{
-                        __html: formatText("En @reputation :"),
-                      }}
-                    ></td>
+                    <td className="text-right">
+                      En <Tag name="reputation" /> :
+                    </td>
                     <td>{(value / REPUTATION_TO_ENERGY).toFixed(2)}</td>
                   </tr>
                   <tr>
-                    <td
-                      className="text-right"
-                      dangerouslySetInnerHTML={{
-                        __html: formatText("En @day :"),
-                      }}
-                    ></td>
+                    <td className="text-right">
+                      En <Tag name="day" /> :
+                    </td>
                     <td>
                       {value * ENERGY_TO_DAYS > 1
                         ? `${Math.floor(value * ENERGY_TO_DAYS)} jours`
@@ -153,11 +137,9 @@ export const GameRules = (props: { show: boolean }) => {
                     </tr>
                     <tr>
                       <td>Argent total</td>
-                      <td
-                        dangerouslySetInnerHTML={{
-                          __html: formatText(`${stats.totalMoney}M$`),
-                        }}
-                      ></td>
+                      <td>
+                        <Money M$={stats.totalMoney} />
+                      </td>
                     </tr>
                     <tr>
                       <td>Parties gagnées</td>
@@ -210,15 +192,13 @@ export const GameRules = (props: { show: boolean }) => {
                           </HoverCardTrigger>
                           <HoverCardContent className="pointer-events-none">
                             <h2 className="mb-2">{achievement}</h2>
-                            <p
-                              dangerouslySetInnerHTML={{
-                                __html: formatText(
-                                  achievements.find(
-                                    (a) => a.name === achievement,
-                                  )!.description,
-                                ),
-                              }}
-                            />
+                            <p>
+                              {
+                                achievements.find(
+                                  (a) => a.name === achievement,
+                                )!.description
+                              }
+                            </p>
                           </HoverCardContent>
                         </HoverCard>
                       ))

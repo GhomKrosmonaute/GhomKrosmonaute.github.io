@@ -1,14 +1,14 @@
 import React from "react"
 
-import { useCardGame } from "@/hooks/useCardGame.ts"
+import { useCardGame } from "@/hooks/useCardGame.tsx"
 import { useSettings } from "@/hooks/useSettings.ts"
 import { useGlobalState } from "@/hooks/useGlobalState.ts"
 
 import { settings } from "@/game-settings.ts"
-import { formatText, rankColor } from "@/game-safe-utils.ts"
+import { getNodeText, rankColor } from "@/game-safe-utils.tsx"
 
 import scores from "@/data/scores.json"
-import helpers from "@/data/helpers.json"
+import helpers from "@/data/helpers.tsx"
 
 import { Button } from "@/components/ui/button.tsx"
 import { BuyMeACoffee } from "@/components/ui/buy-me-a-coffe.tsx"
@@ -156,35 +156,37 @@ export const GameOver = (props: { show: boolean }) => {
               <div className="text-2xl group/helpers">
                 {helpers
                   .filter((helper) => {
+                    const text = getNodeText(helper).toLowerCase()
+
                     switch (game.reason) {
                       case "reputation":
                         return (
-                          helper.includes("@reputation") ||
-                          helper.includes("gagnes la partie")
+                          text.includes("réputation") ||
+                          text.includes("gagnes la partie")
                         )
                       case "mill":
                         return (
-                          helper.includes("plus jouer") ||
-                          helper.includes("défausse") ||
-                          helper.includes("limitée") ||
-                          helper.includes("Recycler") ||
-                          helper.includes("gagnes la partie")
+                          text.includes("plus jouer") ||
+                          text.includes("défausse") ||
+                          text.includes("limitée") ||
+                          text.includes("Recycler") ||
+                          text.includes("gagnes la partie")
                         )
                       case "soft-lock":
                         return (
-                          helper.includes("plus jouer") ||
-                          helper.includes("progressivement") ||
-                          helper.includes("cartes à jouer") ||
-                          helper.includes("gagnes la partie")
+                          text.includes("plus jouer") ||
+                          text.includes("progressivement") ||
+                          text.includes("cartes à jouer") ||
+                          text.includes("gagnes la partie")
                         )
                       case "mill-lock":
                         return (
-                          helper.includes("plus jouer") ||
-                          helper.includes("pioche") ||
-                          helper.includes("Quand une carte est jouée") ||
-                          helper.includes("cartes à jouer") ||
-                          helper.includes("Recycler") ||
-                          helper.includes("gagnes la partie")
+                          text.includes("plus jouer") ||
+                          text.includes("pioche") ||
+                          text.includes("Quand une carte est jouée") ||
+                          text.includes("cartes à jouer") ||
+                          text.includes("recycler") ||
+                          text.includes("gagnes la partie")
                         )
                       default:
                         return false
@@ -200,7 +202,7 @@ export const GameOver = (props: { show: boolean }) => {
                     >
                       <p
                         className={cn("hover:text-foreground", {
-                          [cn("animate-trigger", {
+                          [cn("animate-trigger delay-1000", {
                             "delay-0": i === 0,
                             "delay-100": i === 1,
                             "delay-200": i === 2,
@@ -209,10 +211,9 @@ export const GameOver = (props: { show: boolean }) => {
                             "delay-700": i === 5,
                           })]: quality.animation,
                         })}
-                        dangerouslySetInnerHTML={{
-                          __html: formatText(helper),
-                        }}
-                      />
+                      >
+                        {helper}
+                      </p>
                     </div>
                   ))}
               </div>

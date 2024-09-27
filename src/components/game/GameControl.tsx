@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button.tsx"
 
 import { cn } from "@/utils.ts"
 
-import { useCardGame } from "@/hooks/useCardGame.ts"
+import { useCardGame } from "@/hooks/useCardGame.tsx"
 import { useGlobalState } from "@/hooks/useGlobalState.ts"
 import { useSettings } from "@/hooks/useSettings.ts"
 

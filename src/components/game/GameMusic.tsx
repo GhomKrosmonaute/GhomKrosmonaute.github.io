@@ -1,6 +1,6 @@
 import React from "react"
 import ReactHowler from "react-howler"
-import { useCardGame } from "@/hooks/useCardGame.ts"
+import { useCardGame } from "@/hooks/useCardGame.tsx"
 import { useGlobalState } from "@/hooks/useGlobalState.ts"
 
 const MAX_VOLUME = 0.4

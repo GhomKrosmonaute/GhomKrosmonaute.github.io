@@ -1,13 +1,15 @@
-import type { GlobalGameState, GameState } from "@/hooks/useCardGame.ts"
+import React from "react"
+import type { GlobalGameState, GameState } from "@/hooks/useCardGame.tsx"
 import { reviveCard } from "@/game-utils.ts"
 import { MAX_HAND_SIZE } from "@/game-constants.ts"
-import cards from "@/data/cards.ts"
-import upgrades from "@/data/upgrades.ts"
-import { fetchSettings } from "@/game-safe-utils.ts"
+import cards from "@/data/cards.tsx"
+import upgrades from "@/data/upgrades.tsx"
+import { fetchSettings, getNodeText } from "@/game-safe-utils.tsx"
+import { Money, Tag } from "@/components/game/Texts.tsx"
 
 const achievements: {
   name: string
-  description: string
+  description: React.ReactNode
   unlockCondition: (state: GameState & GlobalGameState) => boolean
 }[] = [
   {
@@ -35,7 +37,7 @@ const achievements: {
     description: "Utiliser toutes les améliorations économiques en une partie",
     unlockCondition: (state) =>
       upgrades
-        .filter((raw) => raw.description.includes("M$"))
+        .filter((raw) => /\$|capital/.test(getNodeText(raw.description(1))))
         .every((raw) =>
           state.upgrades.some((upgrade) => upgrade.name === raw.name),
         ),
@@ -45,19 +47,25 @@ const achievements: {
     description: "Utiliser toutes les améliorations énergétiques en une partie",
     unlockCondition: (state) =>
       upgrades
-        .filter((raw) => raw.description.includes("@energy"))
+        .filter((raw) =>
+          /énergie|réputation/.test(getNodeText(raw.description(1))),
+        )
         .every((raw) =>
           state.upgrades.some((upgrade) => upgrade.name === raw.name),
         ),
   },
   {
     name: "Ecaflip",
-    description: "Faire 20 lancés de pièce en une partie",
+    description: (
+      <>
+        <Tag name="coinFlip" /> 20 fois en une partie
+      </>
+    ),
     unlockCondition: (state) => state.coinFlips >= 20,
   },
   {
     name: "Xelor",
-    description: `Avoir ${MAX_HAND_SIZE} cartes en main qui coutent zéro`,
+    description: `Avoir ${MAX_HAND_SIZE} cartes en main qui coutent zéro en même temps`,
     unlockCondition: (state) =>
       state.hand.filter(
         (card) => reviveCard(card, state).effect.cost.value === 0,
@@ -65,34 +73,54 @@ const achievements: {
   },
   {
     name: "Sadida",
-    description: "Recycler 150 cartes en une partie",
+    description: (
+      <>
+        <Tag name="recycle" /> 150 cartes en une partie
+      </>
+    ),
     unlockCondition: (state) => state.recycledCards >= 150,
   },
   {
     name: "Sacrieur",
-    description: "Défausser 50 cartes en une partie",
+    description: (
+      <>
+        <Tag name="discard" /> 50 cartes en une partie
+      </>
+    ),
     unlockCondition: (state) => state.discardedCards >= 50,
   },
   {
     name: "Trader",
-    description: "Avoir 7 cartes @action en main",
+    description: (
+      <>
+        Avoir 7 cartes <Tag name="action" /> en main en même temps
+      </>
+    ),
     unlockCondition: (state) =>
       state.hand.filter((card) => reviveCard(card, state).type === "action")
         .length >= 7,
   },
   {
     name: "Milliardaire",
-    description: "Obtenir 1000M$",
+    description: (
+      <>
+        Gagne <Money M$={1000} /> en une partie
+      </>
+    ),
     unlockCondition: (state) => state.money >= 1000,
   },
   {
     name: "Collectionneur",
-    description: "Découvrir 20 cartes différentes",
-    unlockCondition: (state) => state.discoveries.length >= 20,
+    description: "Découvrir 30 cartes différentes",
+    unlockCondition: (state) => state.discoveries.length >= 30,
   },
   {
     name: "Perfectionniste",
-    description: "Découvrir toutes les cartes @upgrade",
+    description: (
+      <>
+        Découvrir toutes les cartes <Tag name="upgrade" />
+      </>
+    ),
     unlockCondition: (state) =>
       upgrades.every((raw) => state.discoveries.includes(raw.name)),
   },
@@ -113,12 +141,20 @@ const achievements: {
   },
   {
     name: "Procrastinateur",
-    description: "Faire durer la partie plus de 90 jours",
+    description: (
+      <>
+        Faire durer la partie plus de 90 <Tag name="day" plural />
+      </>
+    ),
     unlockCondition: (state) => state.day >= 90,
   },
   {
     name: "Sélectif",
-    description: "Passer 20 choix de carte en une partie",
+    description: (
+      <>
+        Passer 20 <Tag name="pick">choix de carte</Tag> en une partie
+      </>
+    ),
     unlockCondition: (state) => state.skippedChoices >= 20,
   },
   {

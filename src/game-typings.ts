@@ -1,12 +1,12 @@
-import React from "react"
+import type React from "react"
 
-import type { GameState, GlobalGameState } from "@/hooks/useCardGame"
+import type { GameState, GlobalGameState } from "@/hooks/useCardGame.tsx"
 
 import { GAME_ADVANTAGE, LOCAL_ADVANTAGE } from "@/game-constants.ts"
 
-import events from "@/data/events.ts"
+import events from "@/data/events.tsx"
 import { GlobalCardModifierIndex, Speed } from "@/game-enums.ts"
-import { pick } from "@/game-safe-utils.ts"
+import { pick, tags } from "@/game-safe-utils.tsx"
 import type cardModifiers from "@/data/cardModifiers.ts"
 
 export type RarityName = keyof typeof LOCAL_ADVANTAGE
@@ -38,7 +38,7 @@ export type UpgradeState = "appear" | "idle" | "triggered"
 export interface Upgrade {
   type: "upgrade"
   name: string
-  description: string
+  description: (cumul: number) => React.ReactNode
   image: string
   eventName: TriggerEventName
   condition?: (state: GameState, upgrade: Upgrade) => boolean
@@ -62,12 +62,12 @@ export function compactUpgrade(upgrade: Upgrade): UpgradeCompact {
 export type RawUpgrade = Pick<
   Upgrade,
   | "name"
-  | "description"
   | "image"
   | "onTrigger"
   | "cost"
   | "condition"
   | "eventName"
+  | "description"
 > & {
   max?: number
 }
@@ -88,8 +88,8 @@ export type Cost = {
 }
 
 export interface Effect<Data extends any[]> {
-  description: string
-  hint?: string
+  description: React.ReactNode
+  hint?: React.ReactNode
   cost: Cost
   condition?: (
     state: GameState & GlobalGameState,
@@ -107,10 +107,7 @@ export interface Effect<Data extends any[]> {
   ) => Promise<unknown>
   needsPlayZone?: boolean
   waitBeforePlay?: boolean
-  ephemeral?: boolean
-  recyclage?: boolean
-  upgrade?: boolean
-  token?: boolean
+  tags: (keyof typeof tags)[]
 }
 
 export type CommonCardInfo<Resolved = false> = {
@@ -242,7 +239,7 @@ export type GameResolvable =
 export type TriggerEventName = keyof typeof events
 
 export type TriggerEvent = {
-  name: string
+  name: React.ReactNode
   icon: React.FunctionComponent<React.ComponentProps<"div">>
   colors?: ColorClass | [ColorClass, ColorClass]
 }
@@ -260,7 +257,7 @@ export type GameLog = {
   reason: GameCardCompact | UpgradeCompact | string
 }
 
-export type GameModifierLog = { reason: GameCardCompact | string } & (
+export type GameModifierLog = { reason: GameCardCompact | React.ReactNode } & (
   | {
       type: "localAdvantage"
       before: number
@@ -274,8 +271,9 @@ export type GameModifierLog = { reason: GameCardCompact | string } & (
 )
 
 export type ScreenMessageOptions = {
+  id: number
   header?: string
-  message: string
+  message: React.ReactNode
   className: ColorClass
 }
 
@@ -288,6 +286,24 @@ export type MethodWhoLog = {
 }
 
 export type GameMethodOptions = MethodWhoCheckIfGameOver & MethodWhoLog
+
+export type CoinFlipSide = {
+  message: React.ReactNode
+  onTrigger: (
+    state: GameState,
+    card: GameCardInfo<true>,
+    reason: GameLog["reason"],
+  ) => Promise<void>
+}
+
+export type CoinFlipOptions<Resolved extends boolean> = {
+  head: Resolved extends true
+    ? CoinFlipSide
+    : (advantage: number) => CoinFlipSide
+  tail: Resolved extends true
+    ? CoinFlipSide
+    : (advantage: number) => CoinFlipSide
+}
 
 export type ColorClass = `bg-${string}` & string
 
@@ -305,4 +321,10 @@ export interface ChoiceOptionsGeneratorOptions {
   exclude?: string[]
   filter?: (card: GameCardInfo, state: GameState) => boolean
   noResource?: boolean
+  header: React.ReactNode
+}
+
+export interface ChoiceOptions {
+  header: React.ReactNode
+  options: (GameCardCompact | GameResource)[]
 }

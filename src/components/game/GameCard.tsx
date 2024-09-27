@@ -11,23 +11,23 @@ import {
   SupportCardInfo,
 } from "@/game-typings"
 
-import { useCardGame } from "@/hooks/useCardGame.ts"
+import { useCardGame } from "@/hooks/useCardGame.tsx"
 import { useSettings } from "@/hooks/useSettings.ts"
 
 import { cn } from "@/utils.ts"
 
 import { Tilt, TiltFoil } from "@/components/game/Tilt.tsx"
 import { BorderLight } from "@/components/ui/border-light.tsx"
-import upgrades from "@/data/upgrades.ts"
+import upgrades from "@/data/upgrades.tsx"
 import {
   canBeBuy,
-  formatText,
   getRarityName,
   isActionCardInfo,
   resolveSubTypes,
-} from "@/game-safe-utils.ts"
+} from "@/game-safe-utils.tsx"
 import { GameCost } from "@/components/game/GameCost.tsx"
 import { GameAdvantageBadge } from "@/components/game/GameAdvantageBadge.tsx"
+import { Tag } from "@/components/game/Texts.tsx"
 // import { GameCardPopover } from "@/components/game/GameCardPopover.tsx"
 
 export const GameCard = (
@@ -71,6 +71,7 @@ export const GameCard = (
     : game.operationInProgress.length > 0
 
   const rarityName = getRarityName(props.card.rarity)
+  const subTypes = resolveSubTypes(props.card.effect)
 
   return (
     <div
@@ -155,7 +156,7 @@ export const GameCard = (
                   "stroke-legendary": rarityName === "legendary",
                   "stroke-cosmic": rarityName === "cosmic",
                   "stroke-singularity": rarityName === "singularity",
-                })]: !props.card.effect.token,
+                })]: !props.card.effect.tags.includes("token"),
               },
             )}
             style={{
@@ -188,7 +189,7 @@ export const GameCard = (
                 "ring-cosmic shadow-cosmic": rarityName === "cosmic",
                 "ring-singularity shadow-singularity":
                   rarityName === "singularity",
-              })]: !props.card.effect.token,
+              })]: !props.card.effect.tags.includes("token"),
             },
           )}
         >
@@ -215,7 +216,7 @@ export const GameCard = (
                 {
                   "bg-action": props.card.type === "action",
                   "bg-support": props.card.type === "support",
-                  "bg-upgrade": props.card.effect.upgrade,
+                  "bg-upgrade": props.card.effect.tags.includes("upgrade"),
                 },
               )}
               style={{
@@ -246,7 +247,8 @@ export const GameCard = (
                     })]: props.card.effect.cost.value > 0,
                     "text-action-foreground": props.card.type === "action",
                     "text-support-foreground": props.card.type === "support",
-                    "text-upgrade-foreground": props.card.effect.upgrade,
+                    "text-upgrade-foreground":
+                      props.card.effect.tags.includes("upgrade"),
                   },
                 )}
                 style={{
@@ -266,12 +268,12 @@ export const GameCard = (
                   },
                 )}
               >
-                {!props.card.effect.token && (
+                {!props.card.effect.tags.includes("token") && (
                   /* Rarity indicator */
                   <GameAdvantageBadge advantage={props.card.rarity} />
                 )}
 
-                {props.card.effect.upgrade && (
+                {props.card.effect.tags.includes("upgrade") && (
                   /* Upgrade max indicator */
                   <div className="bg-upgrade">
                     {(() => {
@@ -314,27 +316,21 @@ export const GameCard = (
                   transform: quality.perspective ? "translateZ(10px)" : "none",
                   transformStyle: quality.perspective ? "preserve-3d" : "flat",
                 }}
-                dangerouslySetInnerHTML={{
-                  __html: props.card.effect.description,
-                }}
-              />
+              >
+                {props.card.effect.description}
+              </div>
 
-              {(props.card.effect.ephemeral ||
-                props.card.effect.recyclage ||
-                props.card.effect.token) && (
+              {subTypes.length > 0 && (
                 <div
                   className={cn("text-center text-2xl font-bold", {
                     "text-muted-foreground/50": quality.transparency,
                     "text-muted-foreground": !quality.transparency,
                   })}
-                  dangerouslySetInnerHTML={{
-                    __html: formatText(
-                      resolveSubTypes(props.card.effect)
-                        .map((type) => `@${type}`)
-                        .join("<br>"),
-                    ),
-                  }}
-                />
+                >
+                  {subTypes.map((type) => (
+                    <Tag name={type} key={type} />
+                  ))}
+                </div>
               )}
             </div>
 

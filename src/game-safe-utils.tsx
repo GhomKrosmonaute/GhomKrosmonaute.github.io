@@ -1,10 +1,11 @@
+import React from "react"
+
 import {
   ADVANTAGE_THRESHOLD,
   ENERGY_TO_MONEY,
   GAME_ADVANTAGE,
   LOCAL_ADVANTAGE,
   MAX_ENERGY,
-  MAX_HAND_SIZE,
   MAX_REPUTATION,
   MONEY_TO_REACH,
   UPGRADE_COST_THRESHOLDS,
@@ -35,7 +36,21 @@ import { defaultSettings } from "@/game-settings.ts"
 
 import type { Settings } from "@/game-typings.ts"
 
-import type { GameState, GlobalGameState } from "@/hooks/useCardGame.ts"
+import type { GameState, GlobalGameState } from "@/hooks/useCardGame.tsx"
+import { Money, Muted, Tag } from "@/components/game/Texts.tsx"
+
+export function includesSome<T>(array: T[], ...values: T[]): boolean {
+  return values.some((value) => array.includes(value))
+}
+
+export function getNodeText(node: React.ReactNode): string {
+  if (node == void 0 || node == false) return ""
+  if (["string", "number"].includes(typeof node)) return String(node)
+  if (node instanceof Array) return node.map(getNodeText).join("")
+  if (typeof node === "object" && node && React.isValidElement(node))
+    return getNodeText(node.props.children)
+  throw new Error("Invalid node type")
+}
 
 export async function fetch<T>(importer: Promise<{ default: T }>): Promise<T> {
   return importer.then((m) => m.default)
@@ -53,154 +68,134 @@ export const families: ActionCardFamily[] = [
   "PlayCurious",
 ]
 
-export const subTypes = {
+export const tags = {
   ephemeral: {
     name: "Éphémère",
+    plural: "s",
     description: "Une carte Éphémère se détruit lorsqu'elle est jouée",
+    className: "text-muted-foreground",
   },
   recyclage: {
     name: "Recyclage",
+    plural: "s",
     description:
       "Une carte Recyclage retourne dans la pioche lorsqu'elle est jouée",
+    className: "text-muted-foreground",
   },
   token: {
     name: "Token",
+    plural: "s",
     description:
       "Les changements de niveau n'ont aucun effet sur les cartes Token",
+    className: "text-muted-foreground",
   },
   upgrade: {
     name: "Amélioration",
+    plural: "s",
     description: "Ajoute un effet permanent à la partie",
   },
-}
-
-export function formatText(text: string) {
-  const x = (keyword: `@${string}`) =>
-    new RegExp(`${keyword}([^\\s.:,)<>"]*)`, "g")
-
-  const sharedStyles = [
-    "display: inline-block",
-    "transform: translateZ(3px)",
-    "font-weight: bold",
-  ]
-
-  text = text
-    .replace(
-      /(\(.+?\))/g,
-      `<span style="position: relative; transform-style: preserve-3d; display: inline-block; width: 0; height: 0.8em;">
-        <span style="
-          position: absolute; 
-          font-size: 12px; 
-          white-space: nowrap;
-          top: 0;
-          ${sharedStyles[0]};
-          transform: rotate(5deg) translateX(-50%) translateY(-30%) translateZ(5px);">$1</span>
-      </span>`,
-    )
-    .replace(/MONEY_TO_REACH/g, String(MONEY_TO_REACH))
-    .replace(/MAX_HAND_SIZE/g, String(MAX_HAND_SIZE))
-    .replace(/\b([\de+.]+)M\$/g, (_, n) => {
-      const amount = Number(n)
-
-      return amount >= 1000
-        ? `${(amount / 1000).toFixed(2).replace(".00", "").replace(/\.0\b/, "")}B$`
-        : `${amount}M$`
-    })
-    .replace(
-      /((?:[\de+.]+|<span[^>]*>[\de+.]+<\/span>)[MB]\$)/g,
-      `<span 
-        style="
-          ${sharedStyles[0]};
-          ${sharedStyles[1]};
-          background-color: hsl(var(--money)); 
-          color: hsl(var(--money-foreground));
-          padding: 0 4px; 
-          border: 1px hsl(var(--money-foreground)) solid; 
-          font-family: Changa, sans-serif;
-          font-size: 0.8em;"
-        >
-          $1
-        </span>`,
-    )
-    .replace(
-      new RegExp(`#(${families.join("|")})`, "g"),
-      `<span style="${sharedStyles.join(";")}; color: hsl(var(--action)); white-space: nowrap;" title="Famille $1">#$1</span>`,
-    )
-    .replace(
-      x("@action"),
-      `<span style="${sharedStyles.join(";")}; color: hsl(var(--action));">Action$1</span>`,
-    )
-    .replace(
-      x("@reputation"),
-      `<span style="${sharedStyles.join(";")}; color: hsl(var(--reputation));">Réputation$1</span>`,
-    )
-    .replace(
-      x("@upgrade"),
-      `<span style="${sharedStyles.join(";")}; color: hsl(var(--upgrade));">Amélioration$1</span>`,
-    )
-    .replace(
-      x("@sprint"),
-      `<span style="${sharedStyles.join(";")}; color: hsl(var(--upgrade));">Sprint$1</span>`,
-    )
-    .replace(
-      x("@support"),
-      `<span style="${sharedStyles.join(";")}; background-color: hsla(var(--support) / 0.5); color: hsl(var(--support-foreground)); padding: 0 6px; border-radius: 4px;">Support$1</span>`,
-    )
-    .replace(
-      x("@energy"),
-      `<span style="${sharedStyles.join(";")}; color: hsl(var(--energy));">Énergie$1</span>`,
-    )
-    .replace(
-      x("@day"),
-      `<span style="${sharedStyles.join(";")}; color: hsl(var(--day));">Jour$1</span>`,
-    )
-    .replace(
-      x("@inflation"),
-      `<span style="${sharedStyles.join(";")}; color: hsl(var(--inflation));">Inflation$1</span>`,
-    )
-    .replace(
-      x("@level"),
-      `<span style="${sharedStyles.join(";")}; color: hsl(var(--inflation));">Niveau$1</span>`,
-    )
-    .replace(
-      x("@recycle"),
-      `<span style="${sharedStyles.join(";")};" title="Déplace le sujet de la défausse vers la pioche">Recycle$1</span>`,
-    )
-    .replace(
-      x("@giveBack"),
-      `<span style="${sharedStyles.join(";")};" title="Renvoie le sujet dans la pioche">Rend$1</span>`,
-    )
-    .replace(
-      /<muted>(.+)<\/muted>/g,
-      `<span style="filter: grayscale(100%) opacity(50%)">$1</span>`,
-    )
-
-  for (const key in subTypes) {
-    const subType = subTypes[key as keyof typeof subTypes]
-    const { name, description } = subType
-
-    text = text.replace(
-      x(`@${key}`),
-      `<span style="${sharedStyles.join(";")}; color: hsl(var(--muted-foreground))" title="${description}">${name}$1</span>`,
-    )
+  action: {
+    name: "Action",
+    plural: "s",
+    description:
+      "Une carte Action représente un projet sur lequel Ghom a travaillé. Jouez-la pour obtenir des ressources.",
+  },
+  support: {
+    name: "Support",
+    plural: "s",
+    description:
+      "Les cartes Support représentent des technologies que Ghom utilise pour ses projets. Elles permettent de gérer les cartes.",
+  },
+  energy: {
+    name: "Énergie",
+    plural: "s",
+    description: "L'énergie est une ressource pour jouer des cartes",
+  },
+  reputation: {
+    name: "Réputation",
+    plural: "s",
+    description:
+      "La réputation est une ressource pour jouer des cartes, si elle s'épuise, vous perdez la partie",
+  },
+  day: {
+    name: "Jour",
+    plural: "s",
+    description:
+      "Chaque jour, vous gagnez une carte, le temps avance lorsque vous jouez des cartes",
+  },
+  sprint: {
+    name: "Sprint",
+    plural: "s",
+    description:
+      "Un sprint est une période de 7 jours. A la fin d'un sprint, vous gagnez des cartes",
+  },
+  inflation: {
+    name: "Inflation",
+    plural: "s",
+    description:
+      "L'inflation augmente le niveau de difficulté du jeu tous les 28 jours",
+    className: "text-inflation",
+  },
+  level: {
+    name: "Niveau",
+    plural: "x",
+    description: "Le niveau d'une carte agis sur sa rareté et sa puissance",
+    className: "text-inflation",
+  },
+  draw: {
+    name: "Pioche",
+    description: "Retire une carte de la pioche et l'ajoute à ta main",
+  },
+  discard: {
+    name: "Défausse",
+    description: "Retire une carte de ta main et la place dans la défausse",
+  },
+  recycle: {
+    name: "Recycle",
+    plural: "nt",
+    description: "Déplace le sujet de la défausse vers la pioche",
+    className: "text-foreground",
+  },
+  giveBack: {
+    name: "Rend",
+    description: "Renvoie le sujet dans la pioche",
+    className: "text-foreground",
+  },
+  pick: {
+    name: "Choisi",
+    description: "Choisi une carte a ajouter à ton deck",
+    className: "text-foreground",
+  },
+  coinFlip: {
+    name: "Lance une pièce",
+    description: "Lance une pièce pour obtenir un effet aléatoire",
+    className: "text-foreground",
+  },
+  destroy: {
+    name: "Détruit",
+    description: "Retire le sujet du deck",
+    className: "text-destructive",
+  },
+} satisfies Record<
+  string,
+  {
+    name: string
+    description: string
+    plural?: string
+    className?: string
   }
+>
 
-  return text
-}
-
-export function formatCoinFlipText(options: { heads: string; tails: string }) {
-  return formatText(
-    `Lance une pièce. <br/> Face: ${options.heads} <br/> Pile: ${options.tails}`,
+export function formatCoinFlipText(options: {
+  heads: React.ReactNode
+  tails: React.ReactNode
+}) {
+  return (
+    <>
+      <Tag name="coinFlip" />. <br /> Face: {options.heads} <br /> Pile:{" "}
+      {options.tails}
+    </>
   )
-}
-
-export function formatUpgradeText(text: string, cumul: number) {
-  return text
-    .replace(
-      /@cumul/g,
-      `<span style="color: #f59e0b; font-weight: bold">${cumul}</span>`,
-    )
-    .replace(/\$s/g, cumul > 1 ? "s" : "")
 }
 
 export function omit<T extends object, K extends keyof T>(
@@ -351,6 +346,31 @@ export function isGameWon(state: GameState): boolean {
   return !state.infinityMode && !state.isWon && state.money >= MONEY_TO_REACH
 }
 
+export function isReactNode(node: any): node is React.ReactNode {
+  if (node === null || node === undefined) {
+    return true // null ou undefined sont valides en tant que ReactNode
+  }
+
+  // Vérifier les types primitifs que ReactNode peut être
+  if (
+    typeof node === "string" ||
+    typeof node === "number" ||
+    typeof node === "boolean"
+  ) {
+    return true
+  }
+
+  // Vérifier si c'est un élément React
+  if (React.isValidElement(node)) {
+    return true
+  }
+
+  if (typeof node === "object" && "key" in node && "props" in node) return true
+
+  // Vérifier si c'est un tableau de ReactNodes
+  return Array.isArray(node) && !node.some((i) => !isReactNode(i))
+}
+
 export function getGameSpeed(): number {
   return log(
     "anim",
@@ -469,6 +489,17 @@ export async function waitAnimationFrame() {
   return new Promise((resolve) => requestAnimationFrame(resolve))
 }
 
+export async function waitFor(callback: () => boolean): Promise<void> {
+  return new Promise((resolve) => {
+    const interval = setInterval(() => {
+      if (callback()) {
+        clearInterval(interval)
+        resolve()
+      }
+    }, getGameSpeed())
+  })
+}
+
 export function shuffle<T>(cards: T[], times = 1): T[] {
   for (let i = 0; i < times; i++) {
     cards.sort(() => Math.random() - 0.5)
@@ -527,14 +558,13 @@ export function smartClamp(
 ): {
   value: number
   rest: number
-  s: string
+  plural: boolean
 } {
-  if (value < min && value > max) return { value: 0, rest: value, s: "" }
-  if (value < min)
-    return { value: min, rest: value - min, s: min > 1 ? "s" : "" }
-  if (value > max)
-    return { value: max, rest: value - max, s: max > 1 ? "s" : "" }
-  return { value, rest: 0, s: value > 1 ? "s" : "" }
+  if (value < min && value > max)
+    return { value: 0, rest: value, plural: false }
+  if (value < min) return { value: min, rest: value - min, plural: min > 1 }
+  if (value > max) return { value: max, rest: value - max, plural: max > 1 }
+  return { value, rest: 0, plural: value > 1 }
 }
 
 /**
@@ -575,11 +605,14 @@ export function isActionCardInfo(
 
 export function resolveSubTypes(effect: Effect<any>) {
   return (["ephemeral", "recyclage", "upgrade", "token"] as const).filter(
-    (subType) => effect[subType],
+    (subType) => effect.tags.includes(subType),
   )
 }
 
-export function createEffect<Data extends any[]>(
+export function createEffect<
+  Data extends any[],
+  Dynamic extends DynamicEffectValue | never,
+>(
   options: Partial<Omit<Effect<Data>, "description" | "onPlayed" | "cost">> & {
     basePrice?: number
     /**
@@ -588,14 +621,20 @@ export function createEffect<Data extends any[]>(
      * Use $$ to replace with the value of the effect in money <br>
      * Use $s to add an "s" if the value is greater than 1
      */
-    description?: string
+    description?:
+      | React.ReactNode
+      | ((
+          ctx: Dynamic extends DynamicEffectValue
+            ? { value: number; plural: boolean }
+            : undefined,
+        ) => React.ReactNode)
     select?: (
       state: GameState & GlobalGameState,
       card: GameCardInfo<true>,
       testedCard: GameCardInfo<true>,
     ) => boolean
     onPlayed?: (
-      this: { value?: number },
+      this: Dynamic extends DynamicEffectValue ? { value: number } : never,
       state: GameState & GlobalGameState,
       card: GameCardInfo<true>,
       reason: GameLog["reason"],
@@ -603,7 +642,7 @@ export function createEffect<Data extends any[]>(
     ) => Promise<unknown>
     costType?: Cost["type"]
     skipEnergyGain?: boolean
-    dynamicEffect?: DynamicEffectValue
+    dynamicEffect?: Dynamic
   },
 ): EffectBuilder<Data> {
   return (advantage = 0, state = fakeMegaState) => {
@@ -617,32 +656,36 @@ export function createEffect<Data extends any[]>(
     })
 
     return {
-      description: formatText(
-        options.description
-          ? (options.dynamicEffect
-              ? computed.effect
-                ? options.description
-                    .replace(/\$n/g, String(computed.effect.value))
-                    .replace(
-                      /\$\$/g,
-                      `${computed.effect.value * ENERGY_TO_MONEY}M$`,
-                    )
-                    .replace(/\$s/g, computed.effect.value > 1 ? "s" : "")
-                : `<muted>${options.description
-                    .replace(
-                      /\$n/g,
-                      String(_val(options.dynamicEffect.min, state) ?? 1),
-                    )
-                    .replace(
-                      /\$\$/g,
-                      String(
-                        (_val(options.dynamicEffect.min, state) ?? 1) *
-                          ENERGY_TO_MONEY,
-                      ),
-                    )
-                    .replace(/\$s/g, "")}</muted>`
-              : options.description) + computed.description
-          : computed.description,
+      description: (
+        <>
+          {options.description &&
+            (options.dynamicEffect ? (
+              computed.effect ? (
+                typeof options.description === "function" ? (
+                  // @ts-expect-error DynamicEffectValue is never
+                  options.description({
+                    value: computed.effect.value,
+                    plural: computed.effect.value > 1,
+                  })
+                ) : (
+                  options.description
+                )
+              ) : (
+                <Muted>
+                  {typeof options.description === "function"
+                    ? // @ts-expect-error DynamicEffectValue is never
+                      options.description({
+                        value: _val(options.dynamicEffect.min, state) ?? 1,
+                        plural: false,
+                      })
+                    : options.description}
+                </Muted>
+              )
+            ) : (
+              options.description
+            ))}
+          {computed.description}
+        </>
       ),
       condition: options.select
         ? (state, card) =>
@@ -666,12 +709,11 @@ export function createEffect<Data extends any[]>(
           }
         : undefined,
       onPlayed: async (state, card, reason, ...data) => {
-        await options.onPlayed?.bind({ value: computed.effect?.value })(
-          state,
-          card,
-          reason,
-          ...data,
-        )
+        // @ts-expect-error DynamicEffectValue is never
+        await options.onPlayed?.bind(
+          // @ts-expect-error DynamicEffectValue is never
+          options.dynamicEffect ? { value: computed.effect!.value } : undefined,
+        )(state, card, reason, ...data)
         await computed.onPlayed(state, reason)
       },
       cost: {
@@ -691,7 +733,9 @@ export function createEffect<Data extends any[]>(
         "onPlayed",
         "select",
         "skipEnergyGain",
+        "tags",
       ),
+      tags: options.tags ?? [],
     }
   }
 }
@@ -767,25 +811,44 @@ export function computeEffect(options: {
 
 export function computeEffectDescription(options: {
   nothingBefore?: boolean
-  energy?: { value: number; rest: number; s: string }
+  energy?: { value: number; rest: number; plural: boolean }
   money?: number
-}) {
-  const before = options.nothingBefore ? "" : "<hr>"
+}): React.ReactNode {
   if (
     (!options.energy || options.energy.value <= 0) &&
     (!options.money || options.money <= 0)
   )
-    return ""
-  if (!options.energy || options.energy.value <= 0)
-    return `${before}Gagne ${options.money}M$`
-  if (!options.money || options.money <= 0)
-    return `${before}Gagne ${options.energy.value} @energy${options.energy.s}`
+    return null
 
-  return options.energy.value > 0
-    ? `${before}Gagne ${options.energy.value} @energy${options.energy.s}${
-        options.money > 0 ? ` et ${options.money}M$` : ""
-      }`
-    : ""
+  const before: React.ReactNode = options.nothingBefore ? null : <hr />
+
+  if (!options.energy || options.energy.value <= 0)
+    return (
+      <>
+        {before}Gagne <Money M$={options.money!} />
+      </>
+    )
+
+  if (!options.money || options.money <= 0)
+    return (
+      <>
+        {before}Gagne {options.energy.value}{" "}
+        <Tag name="energy" plural={options.energy.plural} />
+      </>
+    )
+
+  return options.energy.value > 0 ? (
+    <>
+      {before}Gagne {options.energy.value}{" "}
+      <Tag name="energy" plural={options.energy.plural} />
+      {options.money > 0 ? (
+        <>
+          {" "}
+          et <Money M$={options.money} />
+        </>
+      ) : null}
+    </>
+  ) : null
 }
 
 export async function computeEffectOnPlayed(options: {
@@ -838,7 +901,7 @@ export const fakeState: GameState = {
   addLog: () => {},
   addMaxEnergy: async () => {},
   addMoney: async () => {},
-  addNotification: async () => {},
+  addScreenMessage: async () => {},
   addReputation: async () => {},
   advanceTime: async () => {},
   choiceOptionCount: 0,
@@ -870,7 +933,7 @@ export const fakeState: GameState = {
   isWon: false,
   logs: [],
   money: 0,
-  screenMessages: [],
+  screenMessageQueue: [],
   operationInProgress: [],
   pickOption: async () => {},
   playCard: async () => {},

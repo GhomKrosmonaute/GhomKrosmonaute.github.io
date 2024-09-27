@@ -1,3 +1,5 @@
+import React from "react"
+
 import type {
   EffectBuilder,
   GameCardInfo,
@@ -16,14 +18,15 @@ import {
   computeEffectOnPlayed,
   createEffect,
   resolveCost,
-  formatText,
   smartClamp,
   fakeMegaState,
-} from "@/game-safe-utils.ts"
+  tags,
+} from "@/game-safe-utils.tsx"
+import { Bracket, Family, Muted, Tag } from "@/components/game/Texts.tsx"
 
 const reusable = {
   drawSpecific: (options: {
-    label: string
+    label: React.ReactNode | ((plural: boolean) => React.ReactNode)
     filter: (card: GameCardInfo<true>) => boolean
     ephemeral?: boolean
   }) => {
@@ -48,7 +51,7 @@ const reusable = {
           : {
               value: 0,
               rest: Math.abs(price.rest),
-              s: "",
+              plural: false,
             }
 
       const energy = smartClamp(
@@ -60,19 +63,38 @@ const reusable = {
       const money = energy.rest * ENERGY_TO_MONEY
 
       return {
-        hint: `La pioche doit contenir au moins une carte ${options.label} pour déclencher l'effet de pioche.`,
-        description: formatText(
-          `${
-            drawSpecific.value > 0 ? "" : "<muted>"
-          }Pioche ${drawSpecific.value > 0 ? drawSpecific.value : baseEffect} carte${drawSpecific.s} ${options.label.replace(
-            /\$s/g,
-            drawSpecific.value > 1 ? "s" : "",
-          )}${
-            drawSpecific.value > 0 ? "" : "</muted>"
-          }${computeEffectDescription({
-            energy,
-            money,
-          })}`,
+        hint: (
+          <>
+            La pioche doit contenir au moins une carte {options.label} pour
+            déclencher l'effet de pioche.
+          </>
+        ),
+        description: (
+          <>
+            {drawSpecific.value <= 0 ? (
+              <Muted>
+                <Tag name="draw" />{" "}
+                {drawSpecific.value > 0 ? drawSpecific.value : baseEffect} carte
+                {drawSpecific.plural && "s"}{" "}
+                {typeof options.label === "function"
+                  ? options.label(drawSpecific.plural)
+                  : options.label}
+              </Muted>
+            ) : (
+              <>
+                <Tag name="draw" />{" "}
+                {drawSpecific.value > 0 ? drawSpecific.value : baseEffect} carte
+                {drawSpecific.plural && "s"}{" "}
+                {typeof options.label === "function"
+                  ? options.label(drawSpecific.plural)
+                  : options.label}
+              </>
+            )}
+            {computeEffectDescription({
+              energy,
+              money,
+            })}
+          </>
         ),
         condition: (state) => state.revivedDraw.some(options.filter),
         onPlayed: async (state, _, reason) => {
@@ -92,11 +114,14 @@ const reusable = {
         cost: resolveCost(price.value),
         ephemeral: options.ephemeral,
         needsPlayZone: true,
+        tags: ["draw", options.ephemeral ? "ephemeral" : null].filter(
+          (tag) => !!tag,
+        ) as (keyof typeof tags)[],
       }
     }
   },
   recycleSpecific: (options: {
-    label: string
+    label: React.ReactNode | ((plural: boolean) => React.ReactNode)
     filter: (card: GameCardInfo<true>) => boolean
     hint?: string
   }) => {
@@ -121,7 +146,7 @@ const reusable = {
           : {
               value: 0,
               rest: Math.abs(price.rest),
-              s: "",
+              plural: false,
             }
 
       const energy = smartClamp(
@@ -133,21 +158,39 @@ const reusable = {
       const money = energy.rest * ENERGY_TO_MONEY
 
       return {
-        hint: `La défausse doit contenir au moins une carte ${options.label} pour déclencher l'effet "@recycle"${
-          options.hint ? " et " + options.hint.toLowerCase() : ""
-        }.`,
-        description: formatText(
-          `${
-            recycleSpecific.value > 0 ? "" : "<muted>"
-          }@recycle ${recycleSpecific.value > 0 ? recycleSpecific.value : baseEffect} carte${recycleSpecific.s} ${options.label.replace(
-            /\$s/g,
-            recycleSpecific.value > 1 ? "s" : "",
-          )}${
-            recycleSpecific.value > 0 ? "" : "</muted>"
-          }${computeEffectDescription({
-            energy,
-            money,
-          })}`,
+        hint: (
+          <>
+            La défausse doit contenir au moins une carte {options.label} pour
+            déclencher l'effet <Tag name="recycle" />
+            {options.hint && " et " + options.hint.toLowerCase()}.
+          </>
+        ),
+        description: (
+          <>
+            {recycleSpecific.value > 0 ? (
+              <>
+                <Tag name="recycle" />{" "}
+                {recycleSpecific.value > 0 ? recycleSpecific.value : baseEffect}{" "}
+                carte{recycleSpecific.plural && "s"}{" "}
+                {typeof options.label === "function"
+                  ? options.label(recycleSpecific.plural)
+                  : options.label}
+              </>
+            ) : (
+              <Muted>
+                <Tag name="recycle" />{" "}
+                {recycleSpecific.value > 0 ? recycleSpecific.value : baseEffect}{" "}
+                carte{recycleSpecific.plural && "s"}{" "}
+                {typeof options.label === "function"
+                  ? options.label(recycleSpecific.plural)
+                  : options.label}
+              </Muted>
+            )}
+            {computeEffectDescription({
+              energy,
+              money,
+            })}
+          </>
         ),
         condition: (state) => state.revivedDiscard.some(options.filter),
         onPlayed: async (state, _, reason) => {
@@ -165,6 +208,7 @@ const reusable = {
           })
         },
         cost: resolveCost(price.value),
+        tags: ["recycle"],
       }
     }
   },
@@ -176,7 +220,12 @@ const supports: SupportCardInfo[] = (
       name: "EJS",
       image: "ejs.png",
       effect: reusable.drawSpecific({
-        label: "coûtant de l'@energy",
+        label: (
+          <>
+            coûtant de l'
+            <Tag name="energy" />
+          </>
+        ),
         filter: (card) =>
           card.effect.cost.value > 0 && card.effect.cost.type === "energy",
       }),
@@ -185,9 +234,9 @@ const supports: SupportCardInfo[] = (
       name: "TypeScript",
       image: "ts.png",
       effect: reusable.drawSpecific({
-        label: "#TypeScript",
+        label: <Family name="TypeScript" />,
         filter: (card) =>
-          !card.effect.upgrade &&
+          !card.effect.tags.includes("upgrade") &&
           card.type === "action" &&
           card.families.includes("TypeScript"),
       }),
@@ -196,7 +245,7 @@ const supports: SupportCardInfo[] = (
       name: "JavaScript",
       image: "js.png",
       effect: reusable.drawSpecific({
-        label: "@support",
+        label: <Tag name="support" />,
         filter: (card) => card.type === "support",
       }),
     },
@@ -204,9 +253,13 @@ const supports: SupportCardInfo[] = (
       name: "React",
       image: "react.webp",
       effect: reusable.drawSpecific({
-        label: "#React ou #Site web",
+        label: (
+          <>
+            <Family name="React" /> ou <Family name="Site web" />
+          </>
+        ),
         filter: (card) =>
-          !card.effect.upgrade &&
+          !card.effect.tags.includes("upgrade") &&
           card.type === "action" &&
           (card.families.includes("React") ||
             card.families.includes("Site web")),
@@ -222,7 +275,13 @@ const supports: SupportCardInfo[] = (
           min: 3,
           max: Math.floor(MAX_HAND_SIZE / 2),
         },
-        description: `Défausse les cartes @action en main(min 1) et pioche $n carte$s`,
+        description: ({ value, plural }) => (
+          <>
+            <Tag name="discard" /> les cartes <Tag name="action" /> en main
+            <Bracket>min 1</Bracket> puis <Tag name="draw" />
+            {value} carte{plural && "s"}
+          </>
+        ),
         condition: (state) =>
           state.revivedHand.some((card) => card.type === "action"),
         async onPlayed(state, _, reason) {
@@ -237,15 +296,19 @@ const supports: SupportCardInfo[] = (
           })
         },
         waitBeforePlay: true,
+        tags: ["discard", "draw"],
       }),
     },
     {
       name: "NodeJS",
       image: "node.png",
       effect: reusable.drawSpecific({
-        label: "qui @recycle",
-        filter: (card) =>
-          !card.effect.upgrade && card.effect.description.includes("@recycle"),
+        label: (
+          <>
+            qui <Tag name="recycle" />
+          </>
+        ),
+        filter: (card) => !card.effect.tags.includes("recycle"),
       }),
     },
     {
@@ -259,27 +322,37 @@ const supports: SupportCardInfo[] = (
           min: 1,
           max: Math.floor(MAX_HAND_SIZE / 2),
         },
-        hint: "La pioche doit contenir au moins une carte @action",
-        description:
-          "Pioche $n carte$s @action si tu n'as pas de carte @action en main",
+        hint: (
+          <>
+            La pioche doit contenir au moins une carte <Tag name="action" />
+          </>
+        ),
+        description: ({ value, plural }) => (
+          <>
+            <Tag name="draw" /> {value} carte{plural && "s"}{" "}
+            <Tag name="action" /> si tu n'as pas de carte <Tag name="action" />{" "}
+            en main
+          </>
+        ),
         condition: (state) =>
           !state.revivedHand.some((card) => card.type === "action") &&
           state.revivedDraw.some((card) => card.type === "action"),
         async onPlayed(state, _, reason) {
-          await state.drawCard(this.value!, {
+          await state.drawCard(this.value, {
             filter: (card) => card.type === "action",
             skipGameOverPause: true,
             reason,
           })
         },
         waitBeforePlay: true,
+        tags: ["draw"],
       }),
     },
     {
       name: "Vercel",
       image: "vercel.png",
       effect: reusable.drawSpecific({
-        label: "@action",
+        label: <Tag name="action" />,
         filter: (card) => card.type === "action",
       }),
     },
@@ -287,8 +360,8 @@ const supports: SupportCardInfo[] = (
       name: "PostgreSQL",
       image: "pgsql.png",
       effect: reusable.drawSpecific({
-        label: "@upgrade",
-        filter: (card) => Boolean(card.effect.upgrade),
+        label: <Tag name="upgrade" />,
+        filter: (card) => Boolean(card.effect.tags.includes("upgrade")),
         ephemeral: true,
       }),
     },
@@ -296,7 +369,7 @@ const supports: SupportCardInfo[] = (
       name: "Docker",
       image: "docker.webp",
       effect: reusable.drawSpecific({
-        label: "gratuite$s",
+        label: (plural) => <>gratuite{plural && "s"}</>,
         filter: (card) => card.effect.cost.value <= 0,
       }),
     },
@@ -304,9 +377,9 @@ const supports: SupportCardInfo[] = (
       name: "PixiJS",
       image: "pixi.png",
       effect: reusable.drawSpecific({
-        label: "#Jeu vidéo",
+        label: <Family name="Jeu vidéo" />,
         filter: (card) =>
-          !card.effect.upgrade &&
+          !card.effect.tags.includes("upgrade") &&
           card.type === "action" &&
           card.families.includes("Jeu vidéo"),
       }),
@@ -315,9 +388,9 @@ const supports: SupportCardInfo[] = (
       name: "Three.js",
       image: "three.png",
       effect: reusable.recycleSpecific({
-        label: "#Jeu vidéo",
+        label: <Family name="Jeu vidéo" />,
         filter: (card) =>
-          !card.effect.upgrade &&
+          !card.effect.tags.includes("upgrade") &&
           card.type === "action" &&
           card.families.includes("Jeu vidéo"),
       }),
@@ -326,10 +399,12 @@ const supports: SupportCardInfo[] = (
       name: "Gulp",
       image: "gulp.webp",
       effect: reusable.recycleSpecific({
-        label: "qui pioche",
-        filter: (card) =>
-          !card.effect.upgrade &&
-          /pioche \d+ carte/.test(card.effect.description.toLowerCase()),
+        label: (plural) => (
+          <>
+            qui <Tag name="draw" plural={plural} />
+          </>
+        ),
+        filter: (card) => card.effect.tags.includes("draw"),
       }),
     },
     {
@@ -343,7 +418,11 @@ const supports: SupportCardInfo[] = (
           min: 1,
           max: Math.floor(MAX_HAND_SIZE / 2),
         },
-        description: "Pioche $n carte$s dans la défausse",
+        description: ({ value, plural }) => (
+          <>
+            <Tag name="draw" /> {value} carte{plural && "s"} dans la défausse
+          </>
+        ),
         condition: (state) => state.discard.length >= 1,
         async onPlayed(state, _, reason) {
           await state.drawCard(this.value!, {
@@ -353,7 +432,7 @@ const supports: SupportCardInfo[] = (
           })
         },
         needsPlayZone: true,
-        recyclage: true,
+        tags: ["recyclage", "draw", "recycle"],
       }),
     },
     {
@@ -362,7 +441,11 @@ const supports: SupportCardInfo[] = (
       effect: createEffect({
         basePrice: 10,
         skipEnergyGain: true,
-        description: "@recycle toutes les cartes de la défausse",
+        description: (
+          <>
+            <Tag name="recycle" /> toutes les cartes de la défausse
+          </>
+        ),
         condition: (state) => state.discard.length > 0,
         async onPlayed(state, _, reason) {
           await state.recycleCard(state.discard.length, { reason })
@@ -375,12 +458,17 @@ const supports: SupportCardInfo[] = (
       image: "jest.png",
       effect: createEffect({
         basePrice: 1,
-        description: "Pioche une carte",
+        description: (
+          <>
+            <Tag name="draw" /> une carte
+          </>
+        ),
         condition: (state) => state.draw.length >= 1,
         async onPlayed(state, _, reason) {
           await state.drawCard(1, { reason })
         },
         waitBeforePlay: true,
+        tags: ["draw"],
       }),
     },
     {
@@ -393,8 +481,13 @@ const supports: SupportCardInfo[] = (
           min: Math.floor(MAX_HAND_SIZE / 2),
           max: MAX_HAND_SIZE,
         },
-        hint: "La pioche doit contenir au moins 1 carte",
-        description: "Défausse toutes les cartes en main et pioche $n carte$s",
+        hint: "La pioche doit contenir au moins une carte",
+        description: ({ value, plural }) => (
+          <>
+            <Tag name="discard" /> toutes les cartes en main et{" "}
+            <Tag name="draw" /> {value} carte{plural && "s"}
+          </>
+        ),
         condition: (state) => state.draw.length >= 1,
         async onPlayed(state, _, reason) {
           await state.discardCard({ reason })
@@ -404,7 +497,8 @@ const supports: SupportCardInfo[] = (
             reason,
           })
         },
-        waitBeforePlay: true,
+        needsPlayZone: true,
+        tags: ["discard", "draw"],
       }),
     },
     {
@@ -418,16 +512,22 @@ const supports: SupportCardInfo[] = (
           min: 5,
           max: MAX_HAND_SIZE,
         },
-        description: "@giveBack ta main puis pioche $n carte$s",
+        description: ({ value, plural }) => (
+          <>
+            <Tag name="giveBack" /> ta main puis <Tag name="draw" /> {value}{" "}
+            carte{plural && "s"}
+          </>
+        ),
         async onPlayed(state, _, reason) {
           await state.discardCard({ toDraw: true, reason })
 
-          await state.drawCard(this.value!, {
+          await state.drawCard(this.value, {
             skipGameOverPause: true,
             reason,
           })
         },
         needsPlayZone: true,
+        tags: ["giveBack", "draw"],
       }),
     },
     {
@@ -435,13 +535,18 @@ const supports: SupportCardInfo[] = (
       image: "processing.webp",
       effect: createEffect({
         basePrice: 1,
-        description: "Pioche une carte",
+        description: (
+          <>
+            <Tag name="draw" /> une carte
+          </>
+        ),
         condition: (state) => state.draw.length >= 1,
         async onPlayed(state, _, reason) {
           await state.drawCard(1, { reason, skipGameOverPause: true })
         },
         waitBeforePlay: true,
         costType: "money",
+        tags: ["draw"],
       }),
     },
     {
@@ -449,14 +554,18 @@ const supports: SupportCardInfo[] = (
       image: "p5.png",
       effect: createEffect({
         basePrice: 2,
-        description: "@recycle une carte aléatoire",
+        description: (
+          <>
+            <Tag name="recycle" /> une carte aléatoire
+          </>
+        ),
         condition: (state) => state.discard.length >= 1,
         async onPlayed(state, _, reason) {
           await state.recycleCard(1, { skipGameOverPause: true, reason })
         },
         needsPlayZone: true,
         costType: "money",
-        recyclage: true,
+        tags: ["recycle", "recyclage"],
       }),
     },
     {
@@ -470,22 +579,28 @@ const supports: SupportCardInfo[] = (
           min: 2,
           max: Math.floor(MAX_HAND_SIZE / 2),
         },
-        description: "Pioche $n carte$s si tu as moins de 5 cartes en main",
+        description: ({ value, plural }) => (
+          <>
+            <Tag name="draw" /> {value} carte{plural && "s"} si tu as moins de 5
+            cartes en main
+          </>
+        ),
         condition: (state) => state.hand.length < 5 && state.draw.length >= 1,
         async onPlayed(state, _, reason) {
-          await state.drawCard(this.value!, {
+          await state.drawCard(this.value, {
             skipGameOverPause: true,
             reason,
           })
         },
         waitBeforePlay: true,
+        tags: ["draw"],
       }),
     },
     {
       name: "Windows",
       image: "windows.png",
       effect: reusable.recycleSpecific({
-        label: "@action",
+        label: <Tag name="action" />,
         filter: (card) => card.type === "action",
       }),
     },
@@ -493,7 +608,7 @@ const supports: SupportCardInfo[] = (
       name: "Linux",
       image: "linux.png",
       effect: reusable.recycleSpecific({
-        label: "@support",
+        label: <Tag name="support" />,
         filter: (card) => card.type === "support",
       }),
     },
@@ -501,7 +616,7 @@ const supports: SupportCardInfo[] = (
       name: "MacOS",
       image: "macos.png",
       effect: reusable.recycleSpecific({
-        label: "gratuite$s",
+        label: (plural) => <>gratuite{plural && "s"}</>,
         filter: (card) => card.effect.cost.value <= 0,
       }),
     },
@@ -509,10 +624,12 @@ const supports: SupportCardInfo[] = (
       name: "Jetbrains",
       image: "jetbrains.webp",
       effect: reusable.recycleSpecific({
-        label: "qui @recycle",
-        filter: (card) =>
-          !card.effect.upgrade &&
-          card.effect.description.toLowerCase().includes("@recycle"),
+        label: (plural) => (
+          <>
+            qui <Tag name="recycle" plural={plural} />
+          </>
+        ),
+        filter: (card) => card.effect.tags.includes("recycle"),
       }),
     },
     {
@@ -520,18 +637,29 @@ const supports: SupportCardInfo[] = (
       image: "ruby.png",
       effect: createEffect({
         basePrice: 10,
-        hint: "La pioche doit contenir au moins une carte @upgrade",
-        description: "Pioche une carte @upgrade si ta @reputation est au max",
-        condition: (state) => state.revivedDraw.some((c) => c.effect.upgrade),
+        hint: (
+          <>
+            La pioche doit contenir au moins une carte <Tag name="upgrade" />
+          </>
+        ),
+        description: (
+          <>
+            <Tag name="draw" /> une carte <Tag name="upgrade" /> si ta{" "}
+            <Tag name="reputation" /> est au max
+          </>
+        ),
+        condition: (state) =>
+          state.revivedDraw.some((c) => c.effect.tags.includes("upgrade")),
         async onPlayed(state, _, reason) {
           await state.drawCard(1, {
-            filter: (card) => Boolean(card.effect.upgrade),
+            filter: (card) => Boolean(card.effect.tags.includes("upgrade")),
             skipGameOverPause: true,
             reason,
           })
         },
         waitBeforePlay: true,
         costType: "money",
+        tags: ["draw"],
       }),
     },
     {
@@ -539,14 +667,24 @@ const supports: SupportCardInfo[] = (
       image: "esbuild.png",
       effect: createEffect({
         basePrice: 10,
-        hint: "La pioche doit contenir au moins une carte @upgrade",
-        description: `Si la @reputation est inférieur à ${Math.floor(MAX_REPUTATION / 2)}, pioche une carte @upgrade`,
+        hint: (
+          <>
+            La pioche doit contenir au moins une carte <Tag name="upgrade" />
+          </>
+        ),
+        description: (
+          <>
+            Si la <Tag name="reputation" /> est inférieur à{" "}
+            {Math.floor(MAX_REPUTATION / 2)}. <Tag name="draw" /> une carte{" "}
+            <Tag name="upgrade" />
+          </>
+        ),
         condition: (state) =>
           state.reputation < Math.floor(MAX_REPUTATION / 2) &&
-          state.revivedDraw.some((c) => c.effect.upgrade),
+          state.revivedDraw.some((c) => c.effect.tags.includes("upgrade")),
         async onPlayed(state, _, reason) {
           await state.drawCard(1, {
-            filter: (card) => Boolean(card.effect.upgrade),
+            filter: (card) => Boolean(card.effect.tags.includes("upgrade")),
             skipGameOverPause: true,
             reason,
           })
@@ -563,9 +701,19 @@ const supports: SupportCardInfo[] = (
           ACTIONS_COST.discardAll -
           ACTIONS_COST.condition +
           ACTIONS_COST.drawSpecific * 2,
-        hint: "Ta main doit contenir au moins une autre carte et la pioche doit contenir au moins une carte #PlayCurious",
-        description:
-          "Défausse ta main sauf les cartes #TypeScript puis pioche 2 cartes #PlayCurious",
+        hint: (
+          <>
+            Ta main doit contenir au moins une autre carte et la pioche doit
+            contenir au moins une carte <Family name="PlayCurious" />
+          </>
+        ),
+        description: (
+          <>
+            <Tag name="discard" /> ta main sauf les cartes{" "}
+            <Family name="TypeScript" /> puis
+            <Tag name="draw" /> 2 cartes <Family name="PlayCurious" />
+          </>
+        ),
         condition: (state, card) =>
           state.revivedDraw.some(
             (card) =>
@@ -585,6 +733,8 @@ const supports: SupportCardInfo[] = (
             reason,
           })
         },
+        needsPlayZone: true,
+        tags: ["discard", "draw"],
       }),
     },
   ] satisfies Omit<SupportCardInfo, "type">[]

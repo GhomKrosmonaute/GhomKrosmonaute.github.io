@@ -7,20 +7,33 @@ import Draw from "@/assets/icons/game/draw.svg"
 import Down from "@/assets/icons/game/down.svg"
 import Cross from "@/assets/icons/cross.svg"
 import Upgrade from "@/assets/icons/game/upgrade.svg"
+import { Tag } from "@/components/game/Texts.tsx"
 
 const events = {
   daily: {
-    name: "Tous les @days",
+    name: (
+      <>
+        Tous les <Tag name="day" plural />
+      </>
+    ),
     icon: Day,
     colors: "bg-day",
   },
   weekly: {
-    name: "Toutes les fins de @sprint",
+    name: (
+      <>
+        Toutes les fins de <Tag name="sprint" />
+      </>
+    ),
     icon: Sprint,
     colors: "bg-upgrade",
   },
   monthly: {
-    name: "Tous les mois",
+    name: (
+      <>
+        Tous les <Tag name="inflation">Mois</Tag>
+      </>
+    ),
     icon: Sprint,
     colors: "bg-inflation",
   },
@@ -29,7 +42,11 @@ const events = {
     icon: Play,
   },
   onDraw: {
-    name: "À chaque pioche",
+    name: (
+      <>
+        À chaque <Tag name="draw" />
+      </>
+    ),
     icon: Draw,
   },
   onEmptyHand: {
@@ -37,12 +54,16 @@ const events = {
     icon: Cross,
   },
   onReputationDeclines: {
-    name: "Quand la @reputation diminue",
+    name: (
+      <>
+        Quand la <Tag name="reputation" /> diminue
+      </>
+    ),
     icon: Down,
     colors: "bg-reputation",
   },
   onUpgradeThis: {
-    name: "Quand tu obtiens cette amélioration",
+    name: "Chaque fois que tu joues la carte de cette amélioration",
     icon: Upgrade,
     colors: "bg-upgrade",
   },

@@ -9,7 +9,7 @@ import {
 } from "@/game-typings.ts"
 import { reviveCard, reviveUpgrade } from "@/game-utils.ts"
 
-import { useCardGame } from "@/hooks/useCardGame.ts"
+import { useCardGame } from "@/hooks/useCardGame.tsx"
 
 export const GameMiniature = (props: { item: GameLog["reason"] }) => {
   const game = useCardGame()

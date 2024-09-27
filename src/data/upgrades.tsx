@@ -1,12 +1,17 @@
 import type { RawUpgrade } from "@/game-typings"
 import { MAX_HAND_SIZE, MAX_REPUTATION } from "@/game-constants.ts"
+import { Money, Tag } from "@/components/game/Texts.tsx"
 
 const upgrades: RawUpgrade[] = [
   {
     name: "Starbucks",
     eventName: "daily",
-    description: "Rend @cumul @energy$s",
     image: "starbucks.png",
+    description: (cumul) => (
+      <>
+        Gagne {cumul} <Tag name="energy" plural={cumul > 1} />
+      </>
+    ),
     condition: (state) => state.energy < state.energyMax,
     onTrigger: async (state, upgrade, reason) => {
       await state.addEnergy(upgrade.cumul, {
@@ -15,13 +20,17 @@ const upgrades: RawUpgrade[] = [
       })
     },
     max: 10,
-    cost: { type: "money", value: 100 },
+    cost: { type: "money", value: 200 },
   },
   {
     name: "Sport",
     eventName: "daily",
-    description: "Gagne @cumul @reputation$s",
     image: "sport.png",
+    description: (cumul) => (
+      <>
+        Augmente la <Tag name="reputation" /> de {cumul}
+      </>
+    ),
     condition: (state) => state.reputation < MAX_REPUTATION,
     onTrigger: async (state, upgrade, reason) => {
       await state.addReputation(upgrade.cumul, {
@@ -38,8 +47,13 @@ const upgrades: RawUpgrade[] = [
   {
     name: "Méditation",
     eventName: "onPlay",
-    description: "Pioche @cumul carte$s si tu as moins de 5 cartes en main",
     image: "meditation.png",
+    description: (cumul) => (
+      <>
+        <Tag name="draw" /> {cumul} carte{cumul > 1 && "s"} si tu as moins de 5
+        cartes en main
+      </>
+    ),
     condition: (state) => state.draw.length > 0 && state.hand.length < 5,
     onTrigger: async (state, upgrade, reason) => {
       await state.drawCard(
@@ -48,13 +62,13 @@ const upgrades: RawUpgrade[] = [
       )
     },
     max: 3,
-    cost: { type: "money", value: 100 },
+    cost: { type: "money", value: 200 },
   },
   {
     name: "Bourse",
     eventName: "weekly",
-    description: "Gagne @cumul% de ton capital",
     image: "bourse.png",
+    description: (cumul) => <>Gagne {cumul}% de ton capital</>,
     condition: (state) => state.money > 0,
     onTrigger: async (state, upgrade, reason) => {
       await state.addMoney(Math.ceil(upgrade.cumul * (state.money / 100)), {
@@ -63,25 +77,34 @@ const upgrades: RawUpgrade[] = [
       })
     },
     max: 5,
-    cost: { type: "money", value: 100 },
+    cost: { type: "money", value: 500 },
   },
   {
     name: "Recyclage",
     eventName: "onDraw",
-    description: "@recycle @cumul carte$s aléatoire$s de la défausse",
     image: "recyclage.png",
+    description: (cumul) => (
+      <>
+        <Tag name="recycle" /> {cumul} carte{cumul > 1 && "s"} aléatoire
+        {cumul > 1 && "s"}
+      </>
+    ),
     condition: (state) => state.discard.length > 0,
     onTrigger: async (state, upgrade, reason) => {
       await state.recycleCard(upgrade.cumul, { reason })
     },
     max: 5,
-    cost: { type: "money", value: 50 },
+    cost: { type: "money", value: 150 },
   },
   {
     name: "I.A",
     eventName: "weekly",
-    description: "Gagne @cumulM$ par carte en défausse",
     image: "ia.png",
+    description: (cumul) => (
+      <>
+        Gagne <Money M$={cumul} /> par carte en défausse
+      </>
+    ),
     condition: (state) => state.discard.length > 0,
     onTrigger: async (state, upgrade, reason) => {
       await state.addMoney(upgrade.cumul * state.discard.length, {
@@ -90,13 +113,17 @@ const upgrades: RawUpgrade[] = [
       })
     },
     max: 10,
-    cost: { type: "money", value: 100 },
+    cost: { type: "money", value: 500 },
   },
   {
     name: "PC Puissant",
     eventName: "daily",
-    description: "Gagne @cumulM$ par @energy en réserve",
     image: "pc-puissant.png",
+    description: (cumul) => (
+      <>
+        Gagne <Money M$={cumul}></Money> par <Tag name="energy" /> en réserve
+      </>
+    ),
     condition: (state) => state.energy > 0,
     onTrigger: async (state, upgrade, reason) => {
       await state.addMoney(upgrade.cumul * state.energy, {
@@ -105,13 +132,17 @@ const upgrades: RawUpgrade[] = [
       })
     },
     max: 10,
-    cost: { type: "money", value: 100 },
+    cost: { type: "money", value: 200 },
   },
   {
     name: "Stagiaire",
     eventName: "onPlay",
-    description: "Gagne @cumulM$ par cartes en main",
     image: "stagiaire.png",
+    description: (cumul) => (
+      <>
+        Gagne <Money M$={cumul} /> par carte en main
+      </>
+    ),
     condition: (state) => state.hand.length > 0,
     onTrigger: async (state, upgrade, reason) => {
       await state.addMoney(upgrade.cumul * state.hand.length, {
@@ -120,13 +151,17 @@ const upgrades: RawUpgrade[] = [
       })
     },
     max: 5,
-    cost: { type: "money", value: 50 },
+    cost: { type: "money", value: 500 },
   },
   {
     name: "DevOps",
     eventName: "onEmptyHand",
-    description: "Pioche @cumul carte$s",
     image: "devops.png",
+    description: (cumul) => (
+      <>
+        <Tag name="draw" /> {cumul} carte{cumul > 1 && "s"}
+      </>
+    ),
     condition: (state) =>
       state.draw.length > 0 && state.hand.length < MAX_HAND_SIZE,
     onTrigger: async (state, upgrade, reason) => {
@@ -136,36 +171,49 @@ const upgrades: RawUpgrade[] = [
       )
     },
     max: Math.floor(MAX_HAND_SIZE / 2),
-    cost: { type: "money", value: 25 },
+    cost: { type: "money", value: 100 },
   },
   {
     name: "Data Center",
     eventName: "onUpgradeThis",
-    description: "Augmente la taille de la jauge d'@energy de 5",
     image: "data-center.png",
+    description: () => (
+      <>
+        Augmente la taille de la jauge d'
+        <Tag name="energy" /> de 5
+      </>
+    ),
     onTrigger: async (state, _, reason) => {
       await state.addMaxEnergy(5, { reason })
     },
     max: 4,
-    cost: { type: "money", value: 50 },
+    cost: { type: "money", value: 250 },
   },
   {
     name: "Méthode Agile",
     eventName: "onUpgradeThis",
-    description: "Ajoute une option lors du choix de carte",
     image: "agile.png",
+    description: () => (
+      <>
+        Ajoute une option lors du <Tag name="pick">choix de carte</Tag>
+      </>
+    ),
     onTrigger: async (state) => {
       state.dangerouslyUpdate({
         choiceOptionCount: state.choiceOptionCount + 1,
       })
     },
     max: 3,
-    cost: { type: "money", value: 100 },
+    cost: { type: "money", value: 500 },
   },
   {
     name: "Anti-virus",
     eventName: "onReputationDeclines",
-    description: "Gagne @cumul @energy$s",
+    description: (cumul) => (
+      <>
+        Gagne {cumul} <Tag name="energy" plural={cumul > 1} />
+      </>
+    ),
     image: "anti-virus.png",
     condition: (state) => state.energy < state.energyMax,
     onTrigger: async (state, upgrade, reason) => {
@@ -175,7 +223,7 @@ const upgrades: RawUpgrade[] = [
       })
     },
     max: 5,
-    cost: { type: "money", value: 100 },
+    cost: { type: "money", value: 250 },
   },
 ]
 

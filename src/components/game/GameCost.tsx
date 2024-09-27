@@ -1,8 +1,8 @@
 import { Cost } from "@/game-typings.ts"
 import { GameMoneyIcon } from "@/components/game/GameMoneyIcon.tsx"
 import { GameValueIcon } from "@/components/game/GameValueIcon.tsx"
-import { energyCostColor, getUsableCost } from "@/game-safe-utils.ts"
-import { useCardGame } from "@/hooks/useCardGame.ts"
+import { energyCostColor, getUsableCost } from "@/game-safe-utils.tsx"
+import { useCardGame } from "@/hooks/useCardGame.tsx"
 import { useSettings } from "@/hooks/useSettings.ts"
 import { cn } from "@/utils.ts"
 

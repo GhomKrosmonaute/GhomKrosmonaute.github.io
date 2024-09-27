@@ -19,7 +19,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog.tsx"
 
-import { useCardGame } from "@/hooks/useCardGame.ts"
+import { useCardGame } from "@/hooks/useCardGame.tsx"
 import { useGlobalState } from "@/hooks/useGlobalState.ts"
 import { useSettings } from "@/hooks/useSettings.ts"
 

@@ -1,11 +1,11 @@
 import { ADVANTAGE_THRESHOLD, ENERGY_TO_DAYS } from "@/game-constants.ts"
 
-import { useCardGame } from "@/hooks/useCardGame.ts"
+import { useCardGame } from "@/hooks/useCardGame.tsx"
 
 import { Button } from "@/components/ui/button.tsx"
-import upgrades from "@/data/upgrades.ts"
-import { wait } from "@/game-safe-utils.ts"
-import cards from "@/data/cards.ts"
+import upgrades from "@/data/upgrades.tsx"
+import { wait } from "@/game-safe-utils.tsx"
+import cards from "@/data/cards.tsx"
 
 export const GameDebugActions = () => {
   const game = useCardGame()
@@ -25,7 +25,7 @@ export const GameDebugActions = () => {
       <Button
         size="cta"
         onClick={() =>
-          game.addNotification({
+          game.addScreenMessage({
             header: "Test de notif",
             message: "Une notification",
             className: "bg-background text-foreground",
@@ -85,7 +85,9 @@ export const GameDebugActions = () => {
           game.addGlobalCardModifier(
             "level up cards",
             [
-              cards.filter((c) => !c.effect().token).map((c) => c.name),
+              cards
+                .filter((c) => !c.effect().tags.includes("token"))
+                .map((c) => c.name),
               ADVANTAGE_THRESHOLD,
             ],
             "Level up button",

@@ -3,11 +3,15 @@ import React from "react"
 import ghom from "@/data/ghom.json"
 
 import { CrashReportContext, useCrashReport } from "@/hooks/useCrashReport.ts"
-import { GlobalGameState, GameState, useCardGame } from "@/hooks/useCardGame.ts"
+import {
+  GlobalGameState,
+  GameState,
+  useCardGame,
+} from "@/hooks/useCardGame.tsx"
 
 import { Button } from "@/components/ui/button.tsx"
 import { bank } from "@/sound.ts"
-import { omit, stringifyClone, wait } from "@/game-safe-utils.ts"
+import { omit, stringifyClone, wait } from "@/game-safe-utils.tsx"
 
 export const CrashReportProvider = ({ children }: React.PropsWithChildren) => {
   const [gameError, update, getState] = useCardGame((state) => [

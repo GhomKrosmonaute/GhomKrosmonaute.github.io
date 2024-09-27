@@ -21,7 +21,7 @@ Applied on [effects.ts](./src/data/effects.ts). These rules are used to calculat
 - middle effect = 4 energy
 - recycle = 1 energy
 
-For the price rules of [upgrades.ts](./src/data/upgrades.ts), we just need to add a time parameter for the calculation 
+For the price rules of [upgrades.tsx](./src/data/upgrades.tsx), we just need to add a time parameter for the calculation 
 over a period with all statistics set to average. But it's the same!
 
 - game days average = 10

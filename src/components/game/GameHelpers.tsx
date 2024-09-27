@@ -1,6 +1,6 @@
 import React from "react"
 
-import helpers from "@/data/helpers.json"
+import helpers from "@/data/helpers.tsx"
 
 import { useSettings } from "@/hooks/useSettings.ts"
 
@@ -8,7 +8,6 @@ import Question from "@/assets/icons/question.svg"
 
 import { useHover } from "usehooks-ts"
 import { cn } from "@/utils.ts"
-import { formatText } from "@/game-safe-utils.ts"
 
 export const GameHelpers = (props: { show: boolean }) => {
   const ref = React.useRef<HTMLDivElement>(null)
@@ -51,12 +50,7 @@ export const GameHelpers = (props: { show: boolean }) => {
       <div className="flex gap-2 items-center justify-start select-none">
         <div className="flex items-center gap-2 pointer-events-auto">
           <Question className="h-6 cursor-pointer" />
-          <span
-            className="whitespace-nowrap"
-            dangerouslySetInnerHTML={{
-              __html: formatText(helpers[helpIndex]),
-            }}
-          />
+          <span className="whitespace-nowrap">{helpers[helpIndex]}</span>
         </div>
       </div>
     </div>

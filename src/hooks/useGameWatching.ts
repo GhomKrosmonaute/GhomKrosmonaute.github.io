@@ -1,6 +1,6 @@
 import React from "react"
 import { useGlobalState } from "@/hooks/useGlobalState.ts"
-import { useCardGame } from "@/hooks/useCardGame.ts"
+import { useCardGame } from "@/hooks/useCardGame.tsx"
 
 export const useGameWatching = () => {
   const show = useGlobalState((state) => state.isCardGameVisible)

@@ -11,15 +11,10 @@ import { GameCard } from "@/components/game/GameCard.tsx"
 import { GameValueIcon } from "@/components/game/GameValueIcon.tsx"
 import { GameResourceCard } from "@/components/game/GameResourceCard.tsx"
 
-import { useCardGame } from "@/hooks/useCardGame.ts"
+import { useCardGame } from "@/hooks/useCardGame.tsx"
 import { useSettings } from "@/hooks/useSettings.ts"
 
-import {
-  energyCostColor,
-  formatText,
-  isNewSprint,
-  wait,
-} from "@/game-safe-utils.ts"
+import { energyCostColor, isNewSprint, wait } from "@/game-safe-utils.tsx"
 import { isGameResource } from "@/game-typings.ts"
 
 export const GameActions = (props: { show: boolean }) => {
@@ -31,7 +26,7 @@ export const GameActions = (props: { show: boolean }) => {
 
   const newSprint = React.useMemo(() => isNewSprint(game.day), [game.day])
   const sortedOptions = React.useMemo(
-    () => toSortedCards(game.choiceOptions[0] ?? [], game),
+    () => toSortedCards(game.choiceOptions[0]?.options ?? [], game),
     [game],
   )
 
@@ -72,36 +67,19 @@ export const GameActions = (props: { show: boolean }) => {
         <h2
           className={cn(
             "text-3xl ml-2 select-none",
-            game.choiceOptions.length > 0 && game.choiceOptions[0].length < 4
+            game.choiceOptions.length > 0 &&
+              game.choiceOptions[0].options.length < 4
               ? "text-left"
               : "text-center",
           )}
         >
-          {game.playZone.length > 0 ? (
-            game.operationInProgress.includes("selectCard") ? (
-              "Clique sur une carte de la main"
-            ) : (
-              game.playZone[game.playZone.length - 1].name
-            ) // Affiche le titre de la dernière carte ajoutée à la playZone
-          ) : game.choiceOptions.length > 0 ? (
-            <>
-              Choisis une carte{" "}
-              {newSprint && game.choiceOptions.length <= 2 && (
-                <span
-                  dangerouslySetInnerHTML={{
-                    __html: formatText(
-                      game.choiceOptions.length === 1 ? "@upgrade" : "@action",
-                    ),
-                  }}
-                />
-              )}{" "}
-              {game.choiceOptions.length > 1 &&
-                !newSprint &&
-                `(x${game.choiceOptions.length})`}
-            </>
-          ) : (
-            "Actions"
-          )}
+          {game.playZone.length > 0
+            ? game.operationInProgress.includes("selectCard")
+              ? "Clique sur une carte de la main"
+              : game.playZone[game.playZone.length - 1].name // Affiche le titre de la dernière carte ajoutée à la playZone
+            : game.choiceOptions.length > 0
+              ? game.choiceOptions[0].header
+              : "Actions"}
         </h2>
         {game.playZone.length > 0 ? (
           <div className="flex justify-center">
@@ -164,7 +142,7 @@ export const GameActions = (props: { show: boolean }) => {
               Passer
             </Button>
             {(() => {
-              if (game.choiceOptions[0].length === 0) {
+              if (game.choiceOptions[0].options.length === 0) {
                 game.dangerouslyUpdate({
                   choiceOptions: game.choiceOptions.slice(1),
                 })

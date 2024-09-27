@@ -1,5 +1,5 @@
 import { cn } from "@/utils.ts"
-import { useCardGame } from "@/hooks/useCardGame.ts"
+import { useCardGame } from "@/hooks/useCardGame.tsx"
 import { GameMiniature } from "@/components/game/GameMiniature.tsx"
 import { GameMoneyIcon } from "@/components/game/GameMoneyIcon.tsx"
 import { GameValueIcon } from "@/components/game/GameValueIcon.tsx"

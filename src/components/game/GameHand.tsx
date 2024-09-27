@@ -1,5 +1,5 @@
 import { cn } from "@/utils"
-import { useCardGame } from "@/hooks/useCardGame"
+import { useCardGame } from "@/hooks/useCardGame.tsx"
 import { useSettings } from "@/hooks/useSettings.ts"
 import { GameCard } from "@/components/game/GameCard"
 

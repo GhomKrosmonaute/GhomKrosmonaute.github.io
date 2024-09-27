@@ -1,5 +1,8 @@
+import React from "react"
+
 import {
   ActionCardInfo,
+  CoinFlipOptions,
   compactGameCardInfo,
   EffectBuilder,
   GameCardInfo,
@@ -16,25 +19,33 @@ import {
 
 import {
   wait,
-  formatText,
   smartClamp,
   resolveCost,
   createEffect,
   costToEnergy,
   formatCoinFlipText,
   shuffle,
-} from "@/game-safe-utils.ts"
+  computeEffectDescription,
+} from "@/game-safe-utils.tsx"
 
 import { bank } from "@/sound.ts"
+import { Family, Money, Tag } from "@/components/game/Texts.tsx"
 
 const reusable = {
-  levelUpLabel: (label: string, filter: (card: GameCardInfo) => boolean) =>
+  levelUpLabel: (
+    label: React.ReactNode,
+    filter: (card: GameCardInfo) => boolean,
+  ) =>
     createEffect({
       basePrice: ACTIONS_COST.levelUpLabel,
-      description: `Augmente d'un @level toutes les cartes ${label}`,
+      description: (
+        <>
+          Augmente d'un <Tag name="level" /> toutes les cartes {label}
+        </>
+      ),
       hint: "Agis aussi sur les cartes non-obtenues",
       async onPlayed(state, card) {
-        const cards = await import("@/data/cards.ts").then(
+        const cards = await import("@/data/cards.tsx").then(
           (module) => module.default,
         )
 
@@ -42,7 +53,7 @@ const reusable = {
           "level up cards",
           [
             cards
-              .filter((c) => !c.effect().token)
+              .filter((c) => !c.effect().tags.includes("token"))
               .filter(filter)
               .map((card) => card.name),
             ADVANTAGE_THRESHOLD,
@@ -50,12 +61,19 @@ const reusable = {
           compactGameCardInfo(card),
         )
       },
-      ephemeral: true,
+      tags: ["ephemeral", "level"],
     }),
-  choseSpecific: (label: string, filter: (card: GameCardInfo) => boolean) =>
+  choseSpecific: (
+    label: React.ReactNode,
+    filter: (card: GameCardInfo) => boolean,
+  ) =>
     createEffect({
       basePrice: ACTIONS_COST.choseSpecific,
-      description: `Choisi une carte ${label}`,
+      description: (
+        <>
+          <Tag name="pick" /> une carte {label}
+        </>
+      ),
       onPlayed: async (state) => {
         bank.powerUp.play()
 
@@ -65,6 +83,7 @@ const reusable = {
           choiceOptions: [
             ...state.choiceOptions,
             generateChoiceOptions(state, {
+              header: <>Choisis une carte {label}</>,
               filter,
               noResource: true,
             }),
@@ -73,8 +92,31 @@ const reusable = {
 
         await wait()
       },
-      ephemeral: true,
+      tags: ["ephemeral", "pick"],
     }),
+  coinFlip: (options: CoinFlipOptions<false>) => {
+    return (advantage = 0) => {
+      const [heads, tails] = [options.head(advantage), options.tail(advantage)]
+
+      return {
+        description: formatCoinFlipText({
+          heads: heads.message,
+          tails: tails.message,
+        }),
+        onPlayed: async (state, card, reason) =>
+          await state.coinFlip({
+            head: heads,
+            tail: tails,
+            card,
+            reason,
+          }),
+        type: "action",
+        cost: resolveCost(3),
+        needsPlayZone: true,
+        tags: ["coinFlip"],
+      }
+    }
+  },
 } satisfies Record<string, (...params: any[]) => EffectBuilder<any[]>>
 
 const actions: ActionCardInfo[] = (
@@ -88,7 +130,7 @@ const actions: ActionCardInfo[] = (
       url: "https://ghom.gitbook.io/bot.ts",
       families: ["TypeScript", "Outil", "Open Source"],
       effect: reusable.levelUpLabel(
-        "#Bot Discord",
+        <Family name="Bot Discord" />,
         (card) =>
           card.type === "action" && card.families.includes("Bot Discord"),
       ),
@@ -101,43 +143,45 @@ const actions: ActionCardInfo[] = (
         "Un jeu de puzzle sur l'édition de gènes réalisé avec TypeScript, PixiJS et Booyah avec l'équipe PlayCurious.",
       url: "https://playcurious.games/our-games/crispr-crunch",
       families: ["Jeu vidéo", "TypeScript", "PlayCurious"],
-      effect: (advantage = 0) => {
-        const energyGain = smartClamp(4 + advantage, 4, MAX_HAND_SIZE)
-        const moneyGain = energyGain.rest * ENERGY_TO_MONEY
+      effect: reusable.coinFlip({
+        head: (advantage) => ({
+          message: (
+            <>
+              Gagne <Money M$={(4 + advantage) * ENERGY_TO_MONEY} />
+            </>
+          ),
+          onTrigger: async (state, _, reason) => {
+            await state.addMoney((4 + advantage) * ENERGY_TO_MONEY, {
+              skipGameOverPause: true,
+              reason,
+            })
+          },
+        }),
+        tail: (advantage) => {
+          const energyGain = smartClamp(4 + advantage, 4, MAX_HAND_SIZE)
+          const moneyGain = energyGain.rest * ENERGY_TO_MONEY
 
-        return {
-          description: formatCoinFlipText({
-            heads: `gagne ${(4 + advantage) * ENERGY_TO_MONEY}M$`,
-            tails: `gagne ${energyGain.value} @energy${energyGain.s}${
-              moneyGain > 0 ? ` et ${moneyGain}M$` : ""
-            }`,
-          }),
-          onPlayed: async (state, _, reason) =>
-            await state.coinFlip({
-              onHead: async () =>
-                await state.addMoney((4 + advantage) * ENERGY_TO_MONEY, {
-                  skipGameOverPause: true,
-                  reason,
-                }),
-              onTail: async () => {
-                await state.addEnergy(energyGain.value, {
+          return {
+            message: computeEffectDescription({
+              money: moneyGain,
+              energy: energyGain,
+            }),
+            onTrigger: async (state, _, reason) => {
+              await state.addEnergy(energyGain.value, {
+                skipGameOverPause: true,
+                reason,
+              })
+
+              if (moneyGain > 0) {
+                await state.addMoney(moneyGain, {
                   skipGameOverPause: true,
                   reason,
                 })
-
-                if (moneyGain > 0) {
-                  await state.addMoney(moneyGain, {
-                    skipGameOverPause: true,
-                    reason,
-                  })
-                }
-              },
-            }),
-          type: "action",
-          cost: resolveCost(3),
-          needsPlayZone: true,
-        }
-      },
+              }
+            },
+          }
+        },
+      }),
     },
     {
       name: "Portfolio",
@@ -154,8 +198,11 @@ const actions: ActionCardInfo[] = (
         const moneyGain = baseMoneyGain + Math.abs(price.rest) * ENERGY_TO_MONEY
 
         return {
-          description: formatText(
-            `Gagne ${moneyGain}M$ par carte @action en main en comptant celle-ci`,
+          description: (
+            <>
+              Gagne <Money M$={moneyGain} /> par carte <Tag name="action" /> en
+              main en comptant celle-ci
+            </>
           ),
           onPlayed: async (state, _, reason) => {
             await state.addMoney(
@@ -167,6 +214,7 @@ const actions: ActionCardInfo[] = (
           },
           type: "action",
           cost: resolveCost(price.value),
+          tags: [],
         }
       },
     },
@@ -179,7 +227,7 @@ const actions: ActionCardInfo[] = (
       url: "https://discord.gg/3vC2XWK",
       families: ["Serveur Discord"],
       effect: reusable.choseSpecific(
-        "#Bot Discord",
+        <Family name="Bot Discord" />,
         (card) =>
           card.type === "action" && card.families.includes("Bot Discord"),
       ),
@@ -193,7 +241,7 @@ const actions: ActionCardInfo[] = (
       url: "https://discord.gg/bepg8DsUHj",
       families: ["Serveur Discord"],
       effect: reusable.levelUpLabel(
-        "@support",
+        <Tag name="support" />,
         (card) => card.type === "support",
       ),
     },
@@ -207,8 +255,18 @@ const actions: ActionCardInfo[] = (
       families: ["Serveur Discord"],
       effect: createEffect({
         basePrice: 2 * Math.floor(MAX_HAND_SIZE / 2),
-        description: `Gagne ${2 * ENERGY_TO_MONEY}M$ par cumul d'@upgrades possédées`,
-        hint: "Tu dois posséder des @upgrades",
+        description: (
+          <>
+            Gagne <Money M$={2 * ENERGY_TO_MONEY} /> par cumul d'
+            <Tag name="upgrade" plural />
+            possédées
+          </>
+        ),
+        hint: (
+          <>
+            Tu dois posséder des <Tag name="upgrade" plural />
+          </>
+        ),
         condition: (state) => state.upgrades.length > 0,
         onPlayed: async (state, _, reason) => {
           const cumul = state.upgrades.reduce((prev, u) => prev + u.cumul, 0)
@@ -230,13 +288,18 @@ const actions: ActionCardInfo[] = (
       families: ["Serveur Discord"],
       effect: createEffect({
         basePrice: ACTIONS_COST.condition + ACTIONS_COST.levelUp * 2,
-        description: "Augmente de 2 @levelx une carte en main aléatoire",
+        description: (
+          <>
+            Augmente de 2 <Tag name="level" plural /> une carte en main
+            aléatoire
+          </>
+        ),
         condition: (state, card) =>
           state.hand.filter((c) => c.name !== card.name).length > 0,
         async onPlayed(state, card) {
           const target = shuffle(
             state.revivedHand
-              .filter((c) => !c.effect.token)
+              .filter((c) => !c.effect.tags.includes("token"))
               .filter((c) => c.name !== card.name),
             3,
           )[0]
@@ -249,6 +312,7 @@ const actions: ActionCardInfo[] = (
             compactGameCardInfo(card),
           )
         },
+        tags: ["level"],
       }),
     },
     {
@@ -262,9 +326,13 @@ const actions: ActionCardInfo[] = (
       effect: createEffect({
         basePrice: 20,
         dynamicEffect: { cost: 1 / ENERGY_TO_MONEY, min: 20 },
-        description: `Gagne $$`,
+        description: ({ value }) => (
+          <>
+            Gagne <Money M$={value * ENERGY_TO_MONEY} />
+          </>
+        ),
         async onPlayed(state, _, reason) {
-          await state.addMoney(this.value! * ENERGY_TO_MONEY, {
+          await state.addMoney(this.value * ENERGY_TO_MONEY, {
             skipGameOverPause: true,
             reason,
           })
@@ -280,7 +348,7 @@ const actions: ActionCardInfo[] = (
       url: "https://github.com/Les-Laboratoires/lab-tools",
       families: ["Bot Discord", "TypeScript", "Open Source"],
       effect: reusable.levelUpLabel(
-        "#Serveur Discord",
+        <Family name="Serveur Discord" />,
         (card) =>
           card.type === "action" && card.families.includes("Serveur Discord"),
       ),
@@ -293,12 +361,17 @@ const actions: ActionCardInfo[] = (
         "Un bot Discord pour gérer les couleurs de rôles réalisé avec Bot.ts en TypeScript",
       url: "https://github.com/GhomKrosmonaute/unicorn-trap",
       families: ["Bot Discord", "TypeScript", "Open Source"],
-      effect: createEffect<[selected: GameCardInfo<true>]>({
+      effect: createEffect<[selected: GameCardInfo<true>], never>({
         basePrice: ACTIONS_COST.levelDown * 2 + 20,
-        description: `Diminue de 2 @levelx une carte, puis gagne ${20 * ENERGY_TO_MONEY}M$`,
+        description: (
+          <>
+            Diminue de 2 <Tag name="level" plural /> une carte, puis gagne{" "}
+            <Money M$={20 * ENERGY_TO_MONEY} />
+          </>
+        ),
         condition: (state, card) =>
           state.revivedHand
-            .filter((c) => !c.effect.token)
+            .filter((c) => !c.effect.tags.includes("token"))
             .filter((c) => c.name !== card.name).length > 0,
         select: (_, card, testedCard) => card.name !== testedCard.name,
         async onPlayed(state, card, reason, selected) {
@@ -314,7 +387,7 @@ const actions: ActionCardInfo[] = (
           })
         },
         needsPlayZone: true,
-        token: true,
+        tags: ["token", "level"],
       }),
     },
     {
@@ -327,7 +400,12 @@ const actions: ActionCardInfo[] = (
       families: ["Bot Discord", "TypeScript", "Open Source"],
       effect: createEffect({
         basePrice: 10,
-        description: `Gagne ${10 * ENERGY_TO_MONEY}M$ par carte #Bot Discord en main en comptant celle-ci`,
+        description: (
+          <>
+            Gagne <Money M$={10 * ENERGY_TO_MONEY} /> par carte{" "}
+            <Family name="Bot Discord" /> en main en comptant celle-ci
+          </>
+        ),
         condition: (state) =>
           state.revivedHand.some(
             (c) => c.type === "action" && c.families.includes("Bot Discord"),
@@ -355,8 +433,19 @@ const actions: ActionCardInfo[] = (
       url: "https://github.com/GhomKrosmonaute/glink",
       families: ["Bot Discord", "TypeScript", "Open Source"],
       effect: createEffect({
-        hint: `Ta @reputation doit être supérieur ou égale à ${MAX_REPUTATION - 2}`,
-        description: `Consomme la @reputation de ${MAX_REPUTATION - 2} et remplis la jauge d'@energy`,
+        hint: (
+          <>
+            Ta <Tag name="reputation" /> doit être supérieur ou égale à{" "}
+            {MAX_REPUTATION - 2}
+          </>
+        ),
+        description: (
+          <>
+            Consomme la <Tag name="reputation" /> de {MAX_REPUTATION - 2} et
+            remplis la jauge d'
+            <Tag name="energy" />
+          </>
+        ),
         condition: (state) =>
           state.reputation >= Math.floor(MAX_REPUTATION - 2),
         onPlayed: async (state, _, reason) => {
@@ -370,9 +459,9 @@ const actions: ActionCardInfo[] = (
             reason,
           })
         },
-        ephemeral: true,
         skipEnergyGain: true,
         costType: "money",
+        tags: ["ephemeral"],
       }),
     },
     {
@@ -384,7 +473,7 @@ const actions: ActionCardInfo[] = (
       url: "https://github.com/GhomKrosmonaute/TypedShooterGame",
       families: ["Jeu vidéo", "TypeScript"],
       effect: reusable.choseSpecific(
-        "#PlayCurious",
+        <Family name="PlayCurious" />,
         (c) => c.type === "action" && c.families.includes("PlayCurious"),
       ),
     },
@@ -397,7 +486,7 @@ const actions: ActionCardInfo[] = (
       url: "https://github.com/GhomKrosmonaute/Gario",
       families: ["Jeu vidéo", "TypeScript"],
       effect: reusable.levelUpLabel(
-        "#Jeu vidéo",
+        <Family name="Jeu vidéo" />,
         (card) => card.type === "action" && card.families.includes("Jeu vidéo"),
       ),
     },
@@ -413,8 +502,13 @@ const actions: ActionCardInfo[] = (
         basePrice: MAX_HAND_SIZE,
         dynamicEffect: { cost: 1, max: 5 },
         hint: "Ta main doit contenir d'autres cartes",
-        description:
-          "Baisse le prix des cartes en main de $n @energy$s ou de $$",
+        description: ({ value, plural }) => (
+          <>
+            Baisse le prix des cartes en main de {value}{" "}
+            <Tag name="energy" plural={plural} /> ou de{" "}
+            <Money M$={value * ENERGY_TO_MONEY} />
+          </>
+        ),
         condition: (state, card) =>
           state.hand.filter((c) => c.name !== card.name).length > 0,
         async onPlayed(state, card) {
@@ -424,12 +518,12 @@ const actions: ActionCardInfo[] = (
 
           await state.addGlobalCardModifier(
             "lowers price of hand cards",
-            [handCardNames, this.value!],
+            [handCardNames, this.value],
             compactGameCardInfo(card),
           )
         },
-        ephemeral: true,
         needsPlayZone: true,
+        tags: ["ephemeral"],
       }),
     },
     {
@@ -443,20 +537,24 @@ const actions: ActionCardInfo[] = (
       effect: createEffect({
         basePrice: ACTIONS_COST.levelUp * MAX_HAND_SIZE,
         costType: "money",
-        description: "Augmente d'un @level les cartes en main",
+        description: (
+          <>
+            Augmente d'un <Tag name="level" /> les cartes en main
+          </>
+        ),
         async onPlayed(state, card) {
           await state.addGlobalCardModifier(
             "level up cards",
             [
               state.revivedHand
-                .filter((c) => !c.effect.token)
+                .filter((c) => !c.effect.tags.includes("token"))
                 .map((card) => card.name),
               ADVANTAGE_THRESHOLD,
             ],
             compactGameCardInfo(card),
           )
         },
-        ephemeral: true,
+        tags: ["ephemeral", "level"],
       }),
     },
     {
@@ -467,8 +565,11 @@ const actions: ActionCardInfo[] = (
         "Réalisé avec TypeScript, Three.js et Booyah avec l'équipe PlayCurious.",
       url: "https://playcurious.games/our-games/sea-rescue/",
       families: ["Jeu vidéo", "TypeScript", "PlayCurious"],
-      effect: reusable.choseSpecific("qui @recycle", (c) =>
-        c.effect().description.toLowerCase().includes("@recycle"),
+      effect: reusable.choseSpecific(
+        <>
+          qui <Tag name="recycle" />
+        </>,
+        (c) => c.effect().tags.includes("recycle"),
       ),
     },
     {
@@ -480,12 +581,16 @@ const actions: ActionCardInfo[] = (
       families: ["Site web", "TypeScript", "React", "React"],
       effect: createEffect({
         basePrice: Math.floor(MAX_REPUTATION / 2) * REPUTATION_TO_ENERGY,
-        description: "Remplis la jauge de @reputation",
+        description: (
+          <>
+            Remplis la jauge de <Tag name="reputation" />
+          </>
+        ),
         onPlayed: async (state, _, reason) => {
           await state.addReputation(10, { skipGameOverPause: true, reason })
         },
         costType: "money",
-        ephemeral: true,
+        tags: ["ephemeral"],
       }),
     },
     {
@@ -502,7 +607,7 @@ const actions: ActionCardInfo[] = (
         "Open Source",
         "PlayCurious",
       ],
-      effect: createEffect<[GameCardInfo<true>]>({
+      effect: createEffect<[GameCardInfo<true>], never>({
         basePrice: 2,
         description: "Joue une carte gratuitement",
         hint: "Tu dois avoir une carte avec un coût dans la main",
@@ -529,7 +634,8 @@ const actions: ActionCardInfo[] = (
       name: "WakFight",
       image: "wak-fight.png",
       description: "RPG fighting Discord bot",
-      detail: "Mon premier bot Discord RPG basé sur l'univers de Wakfu.",
+      detail:
+        "Mon premier bot Discord de type Gacha RPG basé sur l'univers de Wakfu.",
       url: "https://discord.gg/yJCK2kH",
       families: ["Bot Discord", "Open Source", "Jeu vidéo"],
       effect: createEffect({
@@ -554,8 +660,13 @@ const actions: ActionCardInfo[] = (
       url: "https://playcurious.games/our-games/edenred-boat-quest/",
       families: ["Jeu vidéo", "TypeScript", "PlayCurious"],
       effect: createEffect({
-        hint: "Tu dois avoir une carte avec un coût dans la main",
-        description: "Détruit une carte et gagne son coût en @reputation",
+        hint: "Tu dois avoir une carte avec un coût positif dans la main",
+        description: (
+          <>
+            <Tag name="destroy" /> une carte et gagne son coût en{" "}
+            <Tag name="reputation" />
+          </>
+        ),
         select: (_, card, testedCard) =>
           testedCard.name !== card.name && testedCard.effect.cost.value > 0,
         onPlayed: async (state, _, reason, selected) => {
@@ -566,7 +677,7 @@ const actions: ActionCardInfo[] = (
             reason,
           })
         },
-        ephemeral: true,
+        tags: ["ephemeral"],
       }),
     },
     {
@@ -578,7 +689,11 @@ const actions: ActionCardInfo[] = (
       families: ["Bot Discord", "Jeu vidéo"],
       effect: createEffect({
         skipEnergyGain: true,
-        description: "Défausse une carte et gagne son coût en @energy",
+        description: () => (
+          <>
+            Défausse une carte et gagne son coût en <Tag name="energy" />
+          </>
+        ),
         select: (_, card, testedCard) =>
           testedCard.name !== card.name && testedCard.effect.cost.value > 0,
         onPlayed: async (state, _, reason, selected) => {
@@ -610,9 +725,13 @@ const actions: ActionCardInfo[] = (
           min: 5,
           max: (state) => Math.floor(state.energyMax / 2),
         },
-        description: "Gagne $n @energy$s",
+        description: ({ value, plural }) => (
+          <>
+            Gagne {value} <Tag name="energy" plural={plural} />
+          </>
+        ),
         async onPlayed(state, _, reason) {
-          await state.addEnergy(this.value!, {
+          await state.addEnergy(this.value, {
             skipGameOverPause: true,
             reason,
           })
@@ -635,10 +754,16 @@ const actions: ActionCardInfo[] = (
           cost: 1,
           max: (state) => Math.floor(state.energyMax / 2),
         },
-        description: `Si la @reputation est inférieur à ${Math.floor(MAX_REPUTATION / 2)}, gagne $n @energy$s`,
+        description: ({ value, plural }) => (
+          <>
+            Si la <Tag name="reputation" /> est inférieur à{" "}
+            {Math.floor(MAX_REPUTATION / 2)}, gagne {value}{" "}
+            <Tag name="energy" plural={plural} />
+          </>
+        ),
         condition: (state) => state.reputation < Math.floor(MAX_REPUTATION / 2),
         async onPlayed(state, _, reason) {
-          await state.addEnergy(this.value!, {
+          await state.addEnergy(this.value, {
             skipGameOverPause: true,
             reason,
           })

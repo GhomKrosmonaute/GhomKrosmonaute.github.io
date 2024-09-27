@@ -1,4 +1,4 @@
-import type { GameState, GlobalGameState } from "@/hooks/useCardGame"
+import type { GameState, GlobalGameState } from "@/hooks/useCardGame.tsx"
 
 import {
   Upgrade,
@@ -14,6 +14,7 @@ import {
   GameResolvable,
   isGameResource,
   isGameCardInfo,
+  ChoiceOptions,
 } from "@/game-typings"
 
 import {
@@ -22,8 +23,8 @@ import {
   INFINITE_DRAW_COST,
 } from "@/game-constants"
 
-import cards from "@/data/cards.ts"
-import upgrades from "@/data/upgrades.ts"
+import cards from "@/data/cards.tsx"
+import upgrades from "@/data/upgrades.tsx"
 import cardModifiers from "@/data/cardModifiers.ts"
 
 import {
@@ -32,21 +33,24 @@ import {
   canBeBuy,
   shuffle,
   calculateRarityAdvantage,
-} from "@/game-safe-utils.ts"
+  getNodeText,
+} from "@/game-safe-utils.tsx"
 
 export function generateChoiceOptions(
   state: GameState & GlobalGameState,
   options?: ChoiceOptionsGeneratorOptions,
-): (GameCardCompact | GameResource)[] {
+): ChoiceOptions {
   state.setOperationInProgress("choices", true)
 
   const _cards: (GameCardInfo | GameResource)[] = cards.filter(
     (card) =>
       (state.choiceOptions.length === 0 ||
         state.choiceOptions.every(
-          (o) =>
-            o.length === 0 ||
-            o.every((i) => !isGameResource(i) && i.name !== card.name),
+          (choice) =>
+            choice.options.length === 0 ||
+            choice.options.every(
+              (i) => !isGameResource(i) && i.name !== card.name,
+            ),
         )) &&
       (state.draw.length === 0 ||
         state.draw.every((c) => c.name !== card.name)) &&
@@ -57,7 +61,7 @@ export function generateChoiceOptions(
       (!options?.exclude ||
         options?.exclude?.every((name) => name !== card.name)) &&
       (!options?.filter || options?.filter?.(card, state)) &&
-      (!card.effect().upgrade ||
+      (!card.effect().tags.includes("upgrade") ||
         state.upgrades.length === 0 ||
         state.upgrades.every((u) => {
           const up = reviveUpgrade(u)
@@ -76,17 +80,20 @@ export function generateChoiceOptions(
     }
   }
 
-  return shuffle(_cards, 3)
-    .slice(0, state.choiceOptionCount)
-    .map((option) => {
-      if (isGameResource(option)) return option
+  return {
+    header: options?.header ?? "Choisis une carte",
+    options: shuffle(_cards, 3)
+      .slice(0, state.choiceOptionCount)
+      .map((option) => {
+        if (isGameResource(option)) return option
 
-      return {
-        name: option.name,
-        state: "landing",
-        initialRarity: generateRandomAdvantage(),
-      } as GameCardCompact
-    })
+        return {
+          name: option.name,
+          state: "landing",
+          initialRarity: generateRandomAdvantage(),
+        } as GameCardCompact
+      }),
+  }
 }
 
 export function isGameOver(
@@ -187,9 +194,9 @@ export function applyGlobalCardModifiers(
 }
 
 export function willBeRemoved(state: GameState, card: GameCardInfo<true>) {
-  if (card.effect.ephemeral) return true
+  if (card.effect.tags.includes("ephemeral")) return true
 
-  if (card.effect.upgrade) {
+  if (card.effect.tags.includes("upgrade")) {
     const rawUpgrade = upgrades.find((u) => u.name === card.name)!
 
     if (rawUpgrade.max) {
@@ -249,7 +256,9 @@ export function toSortedCards<T extends GameResolvable>(
         const priceB = b.effect.cost.type === "money" ? 1 : 0
         const costA = a.effect.cost.value
         const costB = b.effect.cost.value
-        const effect = a.effect.description.localeCompare(b.effect.description)
+        const effect = getNodeText(a.effect.description).localeCompare(
+          getNodeText(b.effect.description),
+        )
         return typeA - typeB || priceA - priceB || costA - costB || effect
       }
 

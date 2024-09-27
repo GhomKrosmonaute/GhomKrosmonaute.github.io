@@ -4,15 +4,15 @@ import {
   calculateRarityAdvantage,
   getUpgradeCost,
   costTo,
-} from "@/game-safe-utils.ts"
+} from "@/game-safe-utils.tsx"
 import { GlobalCardModifierIndex } from "@/game-enums.ts"
 
 const cardModifiers = {
   "upgrade cost threshold": () => ({
     index: GlobalCardModifierIndex.Last,
-    condition: (card) => Boolean(card.effect.upgrade),
+    condition: (card) => card.effect.tags.includes("upgrade"),
     use: (card, state) => {
-      if (card.effect.upgrade) {
+      if (card.effect.tags.includes("upgrade")) {
         return {
           ...card,
           effect: {

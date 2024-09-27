@@ -1,5 +1,5 @@
 import React from "react"
-import { useCardGame } from "@/hooks/useCardGame.ts"
+import { useCardGame } from "@/hooks/useCardGame.tsx"
 import { Card } from "@/components/Card.tsx"
 import { cn } from "@/utils.ts"
 import { GameDebugActions } from "@/components/game/GameDebugActions.tsx"

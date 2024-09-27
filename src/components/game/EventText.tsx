@@ -1,6 +1,5 @@
 import { TriggerEventName } from "@/game-typings.ts"
-import { formatText } from "@/game-safe-utils.ts"
-import events from "@/data/events.ts"
+import events from "@/data/events.tsx"
 import { cn } from "@/utils.ts"
 
 export const EventText = (props: {
@@ -10,14 +9,9 @@ export const EventText = (props: {
   const event = events[props.eventName]
 
   return (
-    <div className={cn("flex items-center gap-1", props.className)}>
-      <event.icon className="w-6 h-6" />
-      <span
-        className="font-zain"
-        dangerouslySetInnerHTML={{
-          __html: formatText(event.name),
-        }}
-      />
+    <div className={cn("inline-flex items-center gap-1", props.className)}>
+      <event.icon className="w-4 h-4" />
+      <span className="font-zain test-sm">{event.name}</span>
     </div>
   )
 }

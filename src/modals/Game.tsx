@@ -1,6 +1,6 @@
 import React from "react"
 
-import { useCardGame } from "@/hooks/useCardGame.ts"
+import { useCardGame } from "@/hooks/useCardGame.tsx"
 import { useKonamiCode } from "@/hooks/useKonamiCode.ts"
 import { useGlobalState } from "@/hooks/useGlobalState.ts"
 import { useGameWatching } from "@/hooks/useGameWatching.ts"

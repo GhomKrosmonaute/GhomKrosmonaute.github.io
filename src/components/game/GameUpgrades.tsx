@@ -1,7 +1,7 @@
-import { useCardGame } from "@/hooks/useCardGame.ts"
+import { useCardGame } from "@/hooks/useCardGame.tsx"
 import { useSettings } from "@/hooks/useSettings.ts"
 
-import events from "@/data/events.ts"
+import events from "@/data/events.tsx"
 
 import { reviveUpgrade } from "@/game-utils.ts"
 import { cn } from "@/utils.ts"
@@ -10,7 +10,6 @@ import { Card } from "@/components/Card.tsx"
 import { Progress } from "@/components/ui/progress.tsx"
 import { GameValueIcon } from "@/components/game/GameValueIcon.tsx"
 import { EventText } from "@/components/game/EventText.tsx"
-import { formatText, formatUpgradeText } from "@/game-safe-utils.ts"
 
 export const GameUpgrades = (props: { show: boolean }) => {
   const quality = useSettings((state) => ({
@@ -123,13 +122,7 @@ export const GameUpgrades = (props: { show: boolean }) => {
                           : ""}
                       </span>
                     </h3>
-                    <p
-                      dangerouslySetInnerHTML={{
-                        __html: formatText(
-                          formatUpgradeText(upgrade.description, upgrade.cumul),
-                        ),
-                      }}
-                    />
+                    <p>{upgrade.description(upgrade.cumul)}</p>
                     <EventText eventName={upgrade.eventName} />
                   </Card>
                 </div>

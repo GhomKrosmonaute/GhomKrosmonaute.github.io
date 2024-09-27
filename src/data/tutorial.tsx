@@ -5,7 +5,7 @@ import { TutorialStep } from "@/components/game/TutorialProvider.tsx"
 import { Button } from "@/components/ui/button.tsx"
 import { MONEY_TO_REACH } from "@/game-constants.ts"
 import { bank } from "@/sound.ts"
-import { formatText } from "@/game-safe-utils.ts"
+import { Money } from "@/components/game/Texts.tsx"
 
 const cardStyle: React.CSSProperties = {
   backgroundColor: "hsl(var(--card))",
@@ -147,20 +147,10 @@ const steps: TutorialStep[] = [
     id: "#money",
     render: ({ next, back }) => (
       <Tutorial location="right" style={cardStyle} highlight>
-        <h2>L'argent</h2>
+        <h2>Les dollars</h2>
+        <p>Ils te permettent d'acheter de jouer certaines cartes</p>
         <p>
-          L'argent est une ressource secondaire. <br />
-          Il te permet d'acheter des cartes au marché ou <br />
-          de jouer des cartes.
-        </p>
-        <p>
-          Si tu atteins les{" "}
-          <span
-            dangerouslySetInnerHTML={{
-              __html: formatText(`${MONEY_TO_REACH}M$`),
-            }}
-          />
-          , tu gagnes la partie.
+          Si tu atteins les <Money M$={MONEY_TO_REACH} />, tu gagnes la partie.
         </p>
         <div className="flex gap-2">
           <Button onClick={back}>Retour</Button>

@@ -4,7 +4,7 @@ import scores from "@/data/scores.json"
 import { useSettings } from "@/hooks/useSettings.ts"
 import { cn } from "@/utils.ts"
 import { translations } from "@/game-settings.ts"
-import { rankColor } from "@/game-safe-utils.ts"
+import { rankColor } from "@/game-safe-utils.tsx"
 
 export const Scoreboard = (props: { show: boolean }) => {
   const { shadows, animation, transparency } = useSettings((state) => ({

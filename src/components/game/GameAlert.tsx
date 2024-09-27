@@ -1,9 +1,10 @@
 import { cn } from "@/utils.ts"
-import { useCardGame } from "@/hooks/useCardGame.ts"
+import { useCardGame } from "@/hooks/useCardGame.tsx"
 import { MAX_HAND_SIZE } from "@/game-constants.ts"
 import { useSettings } from "@/hooks/useSettings.ts"
 import Warning from "@/assets/icons/Warning.svg"
-import { formatText, getDeck } from "@/game-safe-utils.ts"
+import { getDeck } from "@/game-safe-utils.tsx"
+import { Tag } from "@/components/game/Texts.tsx"
 
 export const GameAlert = (props: { show?: boolean }) => {
   const quality = useSettings((state) => ({
@@ -62,12 +63,8 @@ export const GameAlert = (props: { show?: boolean }) => {
         )}
         {game.almostEmptyReputation && (
           <div>
-            <Warning className="w-10" />{" "}
-            <span
-              dangerouslySetInnerHTML={{
-                __html: formatText("Ta @reputation est basse !"),
-              }}
-            />
+            <Warning className="w-10" /> Ta <Tag name="reputation" /> est basse
+            !
           </div>
         )}
       </div>

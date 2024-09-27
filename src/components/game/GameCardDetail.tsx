@@ -1,31 +1,33 @@
 import React from "react"
 
+import { ArrowRight, Link } from "lucide-react"
+
 import QuoteLeft from "@/assets/icons/quote-left.svg"
 import QuoteRight from "@/assets/icons/quote-right.svg"
 
-import { ActionCardInfo, GameCardInfo } from "@/game-typings.ts"
-
-import { LOCAL_ADVANTAGE } from "@/game-constants.ts"
-
-import { useCardGame } from "@/hooks/useCardGame.ts"
-import { cn } from "@/utils.ts"
-import { Card } from "@/components/Card.tsx"
-import { useSettings } from "@/hooks/useSettings.ts"
-import { GameCard } from "@/components/game/GameCard.tsx"
-import { getGlobalCardModifierLogs, reviveCard } from "@/game-utils.ts"
-import { GameCost } from "@/components/game/GameCost.tsx"
-import { GameAdvantageBadge } from "@/components/game/GameAdvantageBadge.tsx"
-import { ArrowRight, Link } from "lucide-react"
-import { GameMiniature } from "@/components/game/GameMiniature.tsx"
-import { GameFamilyBadge } from "@/components/game/GameFamilyBadge.tsx"
 import {
-  calculateRarityAdvantage,
-  formatText,
+  tags,
   getRarityName,
   resolveSubTypes,
-  subTypes,
-} from "@/game-safe-utils.ts"
+  calculateRarityAdvantage,
+  isReactNode,
+  getNodeText,
+} from "@/game-safe-utils.tsx"
+import { getGlobalCardModifierLogs, reviveCard } from "@/game-utils.ts"
+import { ActionCardInfo, GameCardInfo } from "@/game-typings.ts"
+import { LOCAL_ADVANTAGE } from "@/game-constants.ts"
+import { cn } from "@/utils.ts"
+
+import { useCardGame } from "@/hooks/useCardGame.tsx"
+import { useSettings } from "@/hooks/useSettings.ts"
+
+import { Card } from "@/components/Card.tsx"
 import { Button } from "@/components/ui/button.tsx"
+import { GameCard } from "@/components/game/GameCard.tsx"
+import { GameCost } from "@/components/game/GameCost.tsx"
+import { GameMiniature } from "@/components/game/GameMiniature.tsx"
+import { GameAdvantageBadge } from "@/components/game/GameAdvantageBadge.tsx"
+import { Family, Tag } from "@/components/game/Texts.tsx"
 
 export const GameCardDetail = (props: { show: boolean }) => {
   const state = useCardGame()
@@ -73,7 +75,7 @@ export const GameCardDetail = (props: { show: boolean }) => {
       {card && (
         <Card className="space-y-4 z-30 w-fit h-fit flex flex-col items-center">
           <h1 className="text-3xl">A propos de "{card.name}"</h1>
-          {!card.effect.token && (
+          {!card.effect.tags.includes("token") && (
             <div className="flex">
               {Object.entries(LOCAL_ADVANTAGE)
                 .sort(([, a], [, b]) => a - b)
@@ -133,12 +135,12 @@ export const GameCardDetail = (props: { show: boolean }) => {
 
                           if (sortBy === "tri par raison") {
                             return (
-                              typeof a.reason === "string"
-                                ? a.reason
+                              isReactNode(a.reason)
+                                ? getNodeText(a.reason)
                                 : a.reason.name
                             ).localeCompare(
-                              typeof b.reason === "string"
-                                ? b.reason
+                              isReactNode(b.reason)
+                                ? getNodeText(b.reason)
                                 : b.reason.name,
                             )
                           }
@@ -149,12 +151,8 @@ export const GameCardDetail = (props: { show: boolean }) => {
                           <tr key={index} className="odd:bg-muted/50">
                             <th>#{index + 1}</th>
                             <th className="whitespace-nowrap">
-                              {typeof modifier.reason === "string" ? (
-                                <span
-                                  dangerouslySetInnerHTML={{
-                                    __html: formatText(modifier.reason),
-                                  }}
-                                />
+                              {isReactNode(modifier.reason) ? (
+                                <span>{modifier.reason}</span>
                               ) : (
                                 <GameMiniature item={modifier.reason} />
                               )}
@@ -197,7 +195,7 @@ export const GameCardDetail = (props: { show: boolean }) => {
                 </div>
               </div>
             )}
-            {(card.effect.token || modifiers.length > 0) && (
+            {(card.effect.tags.includes("token") || modifiers.length > 0) && (
               <div className="shrink-0 p-5 space-y-2 border rounded-lg">
                 <h2 className="text-center text-2xl">Ta carte</h2>
                 <GameCard card={card} withoutDetail />
@@ -214,25 +212,15 @@ export const GameCardDetail = (props: { show: boolean }) => {
               )}
             >
               <div>
-                <h2
-                  className="text-2xl"
-                  dangerouslySetInnerHTML={{
-                    __html: formatText(`Type @${card.type}`),
-                  }}
-                />
-                {(card.effect.upgrade ||
-                  card.effect.token ||
-                  card.effect.ephemeral ||
-                  card.effect.recyclage) &&
-                  cardSubTypes!.map((type) => (
-                    <div>
-                      <span
-                        className="text-2xl"
-                        dangerouslySetInnerHTML={{
-                          __html: formatText(`@${type}`),
-                        }}
-                      />{" "}
-                      - {subTypes[type].description}
+                <h2 className="text-2xl">
+                  Type <Tag name={card.type} />
+                </h2>
+                {cardSubTypes &&
+                  cardSubTypes.length > 0 &&
+                  cardSubTypes.map((type) => (
+                    <div key={type}>
+                      <Tag name={type} className="text-2xl" /> -{" "}
+                      {tags[type].description}
                     </div>
                   ))}
               </div>
@@ -240,12 +228,7 @@ export const GameCardDetail = (props: { show: boolean }) => {
               {card.effect.hint && (
                 <div>
                   <h2 className="text-2xl">A savoir</h2>
-                  <p
-                    className="text-2xl"
-                    dangerouslySetInnerHTML={{
-                      __html: formatText(card.effect.hint),
-                    }}
-                  />
+                  <p className="text-2xl">{card.effect.hint}</p>
                 </div>
               )}
 
@@ -275,7 +258,7 @@ export const ActionCardDetail = (props: { card: ActionCardInfo<true> }) => {
           <h2 className="text-2xl">Familles</h2>
           <div className="flex flex-wrap gap-2">
             {props.card.families.map((family) => (
-              <GameFamilyBadge family={family} key={family} />
+              <Family name={family} key={family} />
             ))}
           </div>
         </div>

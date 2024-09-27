@@ -1,5 +1,5 @@
 import React from "react"
-import type { GlobalGameState, GameState } from "@/hooks/useCardGame.ts"
+import type { GlobalGameState, GameState } from "@/hooks/useCardGame.tsx"
 
 export const CrashReportContext = React.createContext<{
   resetCrashReport: () => void

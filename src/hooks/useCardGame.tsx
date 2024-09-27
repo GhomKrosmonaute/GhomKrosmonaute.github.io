@@ -1,9 +1,9 @@
 import { bank } from "@/sound.ts"
 import { create } from "zustand"
 
-import cards from "@/data/cards.ts"
-import upgrades from "@/data/upgrades.ts"
-import achievements from "@/data/achievements.ts"
+import cards from "@/data/cards.tsx"
+import upgrades from "@/data/upgrades.tsx"
+import achievements from "@/data/achievements.tsx"
 import cardModifiers from "@/data/cardModifiers.ts"
 
 import {
@@ -23,6 +23,8 @@ import {
   compactUpgrade,
   compactGameCardInfo,
   isGameResource,
+  ChoiceOptions,
+  CoinFlipOptions,
 } from "@/game-typings"
 
 import {
@@ -71,7 +73,9 @@ import {
   costToEnergy,
   save,
   updateUpgradeState,
-} from "@/game-safe-utils.ts"
+  waitFor,
+} from "@/game-safe-utils.tsx"
+import { Tag } from "@/components/game/Texts.tsx"
 
 export interface GlobalGameState {
   debug: boolean
@@ -105,9 +109,9 @@ export interface GameState {
   error: Error | null
   handleError: <T>(error: T) => T
   choiceOptionCount: number
-  choiceOptions: (GameCardCompact | GameResource)[][]
+  choiceOptions: ChoiceOptions[]
   logs: GameLog[]
-  screenMessages: ScreenMessageOptions[]
+  screenMessageQueue: ScreenMessageOptions[]
   operationInProgress: string[]
   setOperationInProgress: (operation: string, value: boolean) => void
   reason: GameOverReason
@@ -135,13 +139,13 @@ export interface GameState {
   energyMax: number
   reputation: number
   money: number
-  coinFlip: (options: {
-    onHead: (state: GameState) => Promise<void>
-    onTail: (state: GameState) => Promise<void>
-  }) => Promise<void>
+  coinFlip: (
+    options: CoinFlipOptions<true> &
+      MethodWhoLog & { card: GameCardInfo<true> },
+  ) => Promise<void>
   advanceTime: (energy: number) => Promise<void>
   addLog: (log: GameLog) => void
-  addNotification: (options: ScreenMessageOptions) => Promise<void>
+  addScreenMessage: (message: Omit<ScreenMessageOptions, "id">) => Promise<void>
   dangerouslyUpdate: (partial: Partial<GameState>) => void
   updateScore: () => void
   addEnergy: (count: number, options: GameMethodOptions) => Promise<void>
@@ -303,7 +307,7 @@ function generateGlobalGameMethods(
 
         bank.achievement.play()
 
-        await getState().addNotification({
+        await getState().addScreenMessage({
           header: "Succès déverrouillé",
           message: name,
           className: "bg-primary text-primary-foreground text-center",
@@ -363,18 +367,21 @@ function generateGameState(): Omit<
 
   // startingDeck = shuffle(startingDeck, 3)
 
-  const startingChoices: GameCardCompact[][] = []
+  const startingChoices: ChoiceOptions[] = []
 
   for (let i = 0; i < INITIAL_CHOICE_COUNT; i++) {
-    startingChoices.push(
-      shuffle(
+    startingChoices.push({
+      header: "Choisis une carte",
+      options: shuffle(
         cards.filter(
           (c) =>
-            startingChoices.every((options) =>
-              options.every((o) => o.name !== c.name),
+            startingChoices.every((choice) =>
+              choice.options.every(
+                (o) => (o as GameCardCompact).name !== c.name,
+              ),
             ) &&
             startingDeck.every((name) => name !== c.name) &&
-            !c.effect().upgrade,
+            !c.effect().tags.includes("upgrade"),
         ),
         5,
       )
@@ -384,7 +391,7 @@ function generateGameState(): Omit<
           state: "idle",
           initialRarity: generateRandomAdvantage(),
         })),
-    )
+    })
   }
 
   return {
@@ -399,7 +406,7 @@ function generateGameState(): Omit<
     choiceOptions: startingChoices,
     choiceOptionCount: INITIAL_CHOICE_OPTION_COUNT,
     logs: [],
-    screenMessages: [],
+    screenMessageQueue: [],
     operationInProgress: ["choices"],
     score: 0,
     reason: null,
@@ -429,7 +436,11 @@ function generateGameState(): Omit<
         params: [],
         reason: "Promotion temporaire",
       },
-      { name: "all card inflation", params: [], reason: "@inflation" },
+      {
+        name: "all card inflation",
+        params: [],
+        reason: "Inflation",
+      },
     ],
     day: 0,
     dayFull: false,
@@ -515,25 +526,20 @@ function generateGameMethods(
         state.setOperationInProgress("coinFlip", true)
 
         const result = Math.random() > 0.5
-        const resultName = result ? "Face" : "Pile"
+        const resultName = result ? "head" : "tail"
 
-        const card = reviveCard(
-          state.playZone[state.playZone.length - 1],
-          state,
-        )
-
-        const message = card.effect.description
-          .split("<br/>")
-          .slice(1)
-          .map((s) => s.trim())
-          .find((line) => line.startsWith(resultName))
+        const message = options[resultName].message
 
         await Promise.all([
-          await state.addNotification({
-            message: message?.replace(`${resultName}:`, "") ?? resultName,
+          await state.addScreenMessage({
+            message,
             className: "bg-background text-foreground",
           }),
-          await options[result ? "onHead" : "onTail"](state),
+          await options[resultName].onTrigger(
+            state,
+            options.card,
+            options.reason,
+          ),
         ])
 
         await state.increments("coinFlips")
@@ -578,7 +584,7 @@ function generateGameMethods(
           bank.bell.play()
           if (newSprint) bank.upgrade.play()
 
-          await state.addNotification({
+          await state.addScreenMessage({
             message: newSprint
               ? `Sprint ${Math.floor((currentDay + 1) / 7)}`
               : `Jour ${currentDay + 1}`,
@@ -596,7 +602,8 @@ function generateGameMethods(
               : [
                   ...state.choiceOptions,
                   generateChoiceOptions(getState(), {
-                    filter: (c) => !c.effect().upgrade,
+                    header: "Choisis une carte",
+                    filter: (c) => !c.effect().tags.includes("upgrade"),
                   }),
                 ],
           }))
@@ -612,17 +619,28 @@ function generateGameMethods(
                 ...state.choiceOptions,
                 generateChoiceOptions(fullState, {
                   noResource: true,
-                  filter: (c) => !c.effect().upgrade && c.type === "action",
+                  header: (
+                    <>
+                      Choisis une carte <Tag name="action" />
+                    </>
+                  ),
+                  filter: (c) =>
+                    !c.effect().tags.includes("upgrade") && c.type === "action",
                 }),
                 generateChoiceOptions(fullState, {
                   noResource: true,
-                  filter: (c) => Boolean(c.effect().upgrade),
+                  header: (
+                    <>
+                      Choisis une carte <Tag name="upgrade" />
+                    </>
+                  ),
+                  filter: (c) => Boolean(c.effect().tags.includes("upgrade")),
                 }),
               ],
             }))
 
             if (newMonth) {
-              await state.addNotification({
+              await state.addScreenMessage({
                 header: "L'inflation augmente",
                 message: `Mois ${Math.floor((currentDay + 1) / 7)}`,
                 className: "bg-inflation text-inflation-foreground",
@@ -649,27 +667,24 @@ function generateGameMethods(
       }))
     },
 
-    addNotification: async (notification) => {
+    addScreenMessage: async (message) => {
       await handleErrorsAsync(getState, async () => {
         const state = getState()
 
-        if (state.screenMessages.length > 0) {
-          throw state.handleError(
-            new Error(
-              `Trying to add a notification while one is already displayed: ${JSON.stringify(notification)}`,
-            ),
-          )
-        }
+        const firstMessage = state.screenMessageQueue.length === 0
 
-        set((state) => ({
-          screenMessages: [notification, ...state.screenMessages],
-        }))
+        if (firstMessage) state.setOperationInProgress("screenMessage", true)
 
-        await wait(2000)
+        set({
+          screenMessageQueue: [
+            ...state.screenMessageQueue,
+            { ...message, id: Math.random() },
+          ],
+        })
 
-        set((state) => ({
-          screenMessages: state.screenMessages.slice(1),
-        }))
+        await waitFor(() => getState().screenMessageQueue.length === 0)
+
+        if (firstMessage) state.setOperationInProgress("screenMessage", false)
       })
     },
 
@@ -1421,7 +1436,7 @@ function generateGameMethods(
         reviveCard(compactGameCardInfo(card), state, { clean: true })
 
         const removing = willBeRemoved(getState(), card)
-        const recycling = card.effect.recyclage
+        const recycling = card.effect.tags.includes("recyclage")
 
         const firstState = removing ? "removing" : "playing"
 
@@ -1517,17 +1532,20 @@ function generateGameMethods(
 
         // on joue le son de la banque
         bank.gain.play()
-        if (state.choiceOptions[0].length > 1) bank.remove.play()
+        if (state.choiceOptions[0].options.length > 1) bank.remove.play()
 
         // on active les animations
         set({
-          choiceOptions: state.choiceOptions.map((options) => {
-            return options.map((c) => {
-              return (isGameResource(c) ? c.id : c.name) ===
-                (isGameResource(option) ? option.id : option.name)
-                ? { ...c, state: "playing" }
-                : { ...c, state: "removing" }
-            })
+          choiceOptions: state.choiceOptions.map((choice) => {
+            return {
+              ...choice,
+              options: choice.options.map((c) => {
+                return (isGameResource(c) ? c.id : c.name) ===
+                  (isGameResource(option) ? option.id : option.name)
+                  ? { ...c, state: "playing" }
+                  : { ...c, state: "removing" }
+              }),
+            }
           }),
         })
 
@@ -1558,14 +1576,20 @@ function generateGameMethods(
           await wait()
 
           set((state) => ({
-            choiceOptions: state.choiceOptions.map((options) => {
-              return updateCardState(options, option.id, "removed")
+            choiceOptions: state.choiceOptions.map((choice) => {
+              return {
+                ...choice,
+                options: updateCardState(choice.options, option.id, "removed"),
+              }
             }),
           }))
 
           set((state) => ({
-            choiceOptions: state.choiceOptions.map((options) => {
-              return updateCardState(options, null)
+            choiceOptions: state.choiceOptions.map((choice) => {
+              return {
+                ...choice,
+                options: updateCardState(choice.options, null),
+              }
             }),
           }))
 
@@ -1580,14 +1604,24 @@ function generateGameMethods(
           await wait()
 
           set((state) => ({
-            choiceOptions: state.choiceOptions.map((options) => {
-              return updateCardState(options, option.name, "removed")
+            choiceOptions: state.choiceOptions.map((choice) => {
+              return {
+                ...choice,
+                options: updateCardState(
+                  choice.options,
+                  option.name,
+                  "removed",
+                ),
+              }
             }),
           }))
 
           set((state) => ({
-            choiceOptions: state.choiceOptions.map((options) => {
-              return updateCardState(options, null)
+            choiceOptions: state.choiceOptions.map((choice) => {
+              return {
+                ...choice,
+                options: updateCardState(choice.options, null),
+              }
             }),
           }))
 

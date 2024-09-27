@@ -6,13 +6,13 @@ import BrokenCard from "@/assets/icons/game/broken-card.svg"
 
 import type { GameResource } from "@/game-typings"
 
-import { useCardGame } from "@/hooks/useCardGame.ts"
+import { useCardGame } from "@/hooks/useCardGame.tsx"
 import { useSettings } from "@/hooks/useSettings.ts"
-import { formatText } from "@/game-safe-utils.ts"
 import { cn } from "@/utils.ts"
 
 import { Tilt, TiltFoil } from "@/components/game/Tilt.tsx"
 import { BorderLight } from "@/components/ui/border-light.tsx"
+import { Money, Tag } from "@/components/game/Texts.tsx"
 
 export const GameResourceCard = (
   props: React.PropsWithoutRef<{
@@ -123,14 +123,15 @@ export const GameResourceCard = (
                 transform: quality.perspective ? "translateZ(10px)" : "none",
                 transformStyle: quality.perspective ? "preserve-3d" : "flat",
               }}
-              dangerouslySetInnerHTML={{
-                __html: formatText(
-                  props.resource.type === "money"
-                    ? `${props.resource.value}M$`
-                    : `${props.resource.value} @${props.resource.type}`,
-                ),
-              }}
-            />
+            >
+              {props.resource.type === "money" ? (
+                <Money M$={props.resource.value} />
+              ) : (
+                <>
+                  {props.resource.value} <Tag name={props.resource.type} />
+                </>
+              )}
+            </div>
 
             <div
               className={cn("text-center h-full text-2xl font-bold", {
