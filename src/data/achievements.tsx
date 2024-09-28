@@ -4,7 +4,7 @@ import { reviveCard } from "@/game-utils.ts"
 import { MAX_HAND_SIZE } from "@/game-constants.ts"
 import cards from "@/data/cards.tsx"
 import upgrades from "@/data/upgrades.tsx"
-import { fetchSettings, getNodeText } from "@/game-safe-utils.tsx"
+import { fetchSettings } from "@/game-safe-utils.tsx"
 import { Money, Tag } from "@/components/game/Texts.tsx"
 
 const achievements: {
@@ -37,7 +37,7 @@ const achievements: {
     description: "Utiliser toutes les améliorations économiques en une partie",
     unlockCondition: (state) =>
       upgrades
-        .filter((raw) => /\$|capital/.test(getNodeText(raw.description(1))))
+        .filter((raw) => raw.tags.includes("money"))
         .every((raw) =>
           state.upgrades.some((upgrade) => upgrade.name === raw.name),
         ),
@@ -47,8 +47,9 @@ const achievements: {
     description: "Utiliser toutes les améliorations énergétiques en une partie",
     unlockCondition: (state) =>
       upgrades
-        .filter((raw) =>
-          /énergie|réputation/.test(getNodeText(raw.description(1))),
+        .filter(
+          (raw) =>
+            raw.tags.includes("energy") || raw.tags.includes("reputation"),
         )
         .every((raw) =>
           state.upgrades.some((upgrade) => upgrade.name === raw.name),

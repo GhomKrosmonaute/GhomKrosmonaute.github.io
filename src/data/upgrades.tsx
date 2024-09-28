@@ -21,6 +21,7 @@ const upgrades: RawUpgrade[] = [
     },
     max: 10,
     cost: { type: "money", value: 200 },
+    tags: ["energy"],
   },
   {
     name: "Sport",
@@ -43,6 +44,7 @@ const upgrades: RawUpgrade[] = [
       type: "energy",
       value: 20,
     },
+    tags: ["reputation"],
   },
   {
     name: "Méditation",
@@ -63,6 +65,7 @@ const upgrades: RawUpgrade[] = [
     },
     max: 3,
     cost: { type: "money", value: 200 },
+    tags: ["draw"],
   },
   {
     name: "Bourse",
@@ -78,6 +81,7 @@ const upgrades: RawUpgrade[] = [
     },
     max: 5,
     cost: { type: "money", value: 500 },
+    tags: ["money"],
   },
   {
     name: "Recyclage",
@@ -95,6 +99,7 @@ const upgrades: RawUpgrade[] = [
     },
     max: 5,
     cost: { type: "money", value: 150 },
+    tags: ["recycle"],
   },
   {
     name: "I.A",
@@ -114,6 +119,7 @@ const upgrades: RawUpgrade[] = [
     },
     max: 10,
     cost: { type: "money", value: 500 },
+    tags: ["money"],
   },
   {
     name: "PC Puissant",
@@ -133,6 +139,7 @@ const upgrades: RawUpgrade[] = [
     },
     max: 10,
     cost: { type: "money", value: 200 },
+    tags: ["money"],
   },
   {
     name: "Stagiaire",
@@ -152,6 +159,7 @@ const upgrades: RawUpgrade[] = [
     },
     max: 5,
     cost: { type: "money", value: 500 },
+    tags: ["money"],
   },
   {
     name: "DevOps",
@@ -172,6 +180,7 @@ const upgrades: RawUpgrade[] = [
     },
     max: Math.floor(MAX_HAND_SIZE / 2),
     cost: { type: "money", value: 100 },
+    tags: ["draw"],
   },
   {
     name: "Data Center",
@@ -188,6 +197,7 @@ const upgrades: RawUpgrade[] = [
     },
     max: 4,
     cost: { type: "money", value: 250 },
+    tags: ["energy"],
   },
   {
     name: "Méthode Agile",
@@ -205,6 +215,7 @@ const upgrades: RawUpgrade[] = [
     },
     max: 3,
     cost: { type: "money", value: 500 },
+    tags: ["pick"],
   },
   {
     name: "Anti-virus",
@@ -224,6 +235,7 @@ const upgrades: RawUpgrade[] = [
     },
     max: 5,
     cost: { type: "money", value: 250 },
+    tags: ["energy"],
   },
 ]
 

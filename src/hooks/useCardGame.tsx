@@ -1651,6 +1651,8 @@ function generateGameMethods(
           set((state) => ({
             hand: updateCardState(state.hand, "idle"),
           }))
+
+          state.checkDiscoveries()
         }
 
         state.setOperationInProgress(

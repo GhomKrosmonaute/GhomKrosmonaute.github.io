@@ -3,11 +3,7 @@ import { cn } from "@/utils.ts"
 import { tags } from "@/game-safe-utils.tsx"
 import type { ActionCardFamily } from "@/game-typings.ts"
 import { useLazyImport } from "@/hooks/useLazyImport.ts"
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover-card.tsx"
+import { useHelpPopover } from "@/hooks/useHelpPopover.tsx"
 
 const sharedClassName = "inline-block font-bold"
 const sharedParentStyle = { transformStyle: "preserve-3d" } as const
@@ -69,91 +65,98 @@ export const Tag = ({
   plural,
   children,
   ...props
-}: React.ComponentProps<"span"> & {
+}: Omit<React.ComponentProps<"span">, "ref"> & {
   name: keyof typeof tags
   plural?: boolean
 }) => {
   const tag = tags[name]
 
+  const ref = React.useRef<HTMLSpanElement>(null)
+  useHelpPopover(
+    ref,
+    <>
+      <h3>{tag.name}</h3>
+      {tag.description}
+    </>,
+  )
+
   return (
-    <HoverCard openDelay={1000} closeDelay={1500}>
-      <HoverCardTrigger asChild>
-        <span
-          {...props}
-          className={cn(
-            sharedClassName,
-            "className" in tag && tag.className,
-            props.className,
-          )}
-          style={{
-            ...sharedStyle,
-            ...props.style,
-          }}
-        >
-          {children ?? (
-            <>
-              {tag.name}
-              {plural && "plural" in tag ? tag.plural : ""}
-            </>
-          )}
-        </span>
-      </HoverCardTrigger>
-      <HoverCardContent side="left" sideOffset={100}>
-        {tag.description}
-      </HoverCardContent>
-    </HoverCard>
+    <span
+      ref={ref}
+      {...props}
+      className={cn(
+        sharedClassName,
+        "className" in tag && tag.className,
+        props.className,
+      )}
+      style={{
+        ...sharedStyle,
+        ...props.style,
+        color: "className" in tag ? undefined : `hsl(var(--${name}))`,
+      }}
+    >
+      {children ?? (
+        <>
+          {tag.name}
+          {plural && "plural" in tag ? tag.plural : ""}
+        </>
+      )}
+    </span>
   )
 }
 
 export const Family = ({
   name,
   ...props
-}: React.ComponentProps<"span"> & { name: ActionCardFamily }) => {
+}: Omit<React.ComponentProps<"span">, "ref"> & { name: ActionCardFamily }) => {
+  const ref = React.useRef<HTMLSpanElement>(null)
   const cards = useLazyImport(() => import("@/data/cards.tsx"))
 
+  useHelpPopover(
+    ref,
+    <>
+      <h3 className="mb-2">Famille {name}</h3>
+      <ul className="flex flex-wrap gap-2">
+        {cards
+          ?.filter(
+            (card) => card.type === "action" && card.families.includes(name),
+          )
+          .map((card) => (
+            <li key={card.name} className="border rounded-md px-1 bg-muted">
+              {card.name}
+            </li>
+          ))}
+      </ul>
+    </>,
+  )
+
   return (
-    <HoverCard openDelay={1000} closeDelay={1500}>
-      <HoverCardTrigger asChild>
-        <span
-          {...props}
-          className={cn(
-            "text-lg text-action-foreground font-bold bg-action/30 ring-1 ring-action px-1 rounded-sm inline-flex leading-3 pt-1",
-            props.className,
-          )}
-          style={{
-            ...sharedParentStyle,
-            ...sharedStyle,
-            ...props.style,
-          }}
-        >
-          # {name}
-        </span>
-      </HoverCardTrigger>
-      <HoverCardContent asChild side="left" sideOffset={100}>
-        {cards && (
-          <div
-            style={{
-              ...sharedParentStyle,
-              ...sharedStyle,
-              ...props.style,
-            }}
-          >
-            Famille {name} :
-            <ul className="flex flex-wrap gap-1 text-sm">
-              {cards
-                .filter(
-                  (card) =>
-                    card.type === "action" && card.families.includes(name),
-                )
-                .map((card) => (
-                  <li key={card.name} className="border rounded-md px-1">
-                    {card.name}
-                  </li>
-                ))}
-            </ul>
-          </div>
-        )}
-      </HoverCardContent>
-    </HoverCard>
+    <span
+      ref={ref}
+      {...props}
+      className={cn(
+        "text-lg text-action-foreground font-bold bg-action/30 ring-1 ring-action px-1 rounded-sm inline-flex leading-3 pt-1",
+        props.className,
+      )}
+      style={{
+        ...sharedStyle,
+        ...props.style,
+      }}
+    >
+      # {name}
+    </span>
+  )
+}
+
+export const New = () => {
+  return (
+    <span
+      className="text-xs text-white bg-pink-800 px-1 py-0.5 rounded-md inline-block font-changa"
+      style={{
+        transform: "translateZ(25px)",
+      }}
+    >
+      NEW!
+    </span>
   )
 }

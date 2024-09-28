@@ -15,6 +15,7 @@ import { GameUpgrades } from "@/components/game/GameUpgrades.tsx"
 import { CornerIcons } from "@/components/game/CornerIcons.tsx"
 import { GameActions } from "@/components/game/GameActions.tsx"
 import { GameHelpers } from "@/components/game/GameHelpers.tsx"
+import { HelpPopover } from "@/components/game/HelpPopover.tsx"
 import { GameValues } from "@/components/game/GameValues.tsx"
 import { Scoreboard } from "@/components/game/Scoreboard.tsx"
 import { GameAlert } from "@/components/game/GameAlert.tsx"
@@ -82,6 +83,7 @@ export const Game = () => {
         <GameRules show={show && showRules} />
         <GameHand show={show} />
         <GameCardDetail show={show} />
+        <HelpPopover show={show} />
         <GameTutorial show={show} />
         <ScreenMessages show={show} />
 

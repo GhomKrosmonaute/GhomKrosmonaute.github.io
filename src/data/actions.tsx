@@ -257,8 +257,11 @@ const actions: ActionCardInfo[] = (
         basePrice: 2 * Math.floor(MAX_HAND_SIZE / 2),
         description: (
           <>
-            Gagne <Money M$={2 * ENERGY_TO_MONEY} /> par cumul d'
-            <Tag name="upgrade" plural />
+            Gagne <Money M$={2 * ENERGY_TO_MONEY} /> par cumul{" "}
+            <span className="whitespace-nowrap">
+              d'
+              <Tag name="upgrade" plural />
+            </span>{" "}
             possédées
           </>
         ),

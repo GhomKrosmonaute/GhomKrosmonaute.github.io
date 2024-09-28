@@ -176,6 +176,12 @@ export const tags = {
     description: "Retire le sujet du deck",
     className: "text-destructive",
   },
+  money: {
+    name: "Argent",
+    description:
+      "L'argent est la ressource principale du jeu, elle peut servir a jouer certaines cartes.",
+    className: "bg-money text-money-foreground",
+  },
 } satisfies Record<
   string,
   {

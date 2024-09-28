@@ -27,7 +27,7 @@ import {
 } from "@/game-safe-utils.tsx"
 import { GameCost } from "@/components/game/GameCost.tsx"
 import { GameAdvantageBadge } from "@/components/game/GameAdvantageBadge.tsx"
-import { Tag } from "@/components/game/Texts.tsx"
+import { New, Tag } from "@/components/game/Texts.tsx"
 // import { GameCardPopover } from "@/components/game/GameCardPopover.tsx"
 
 export const GameCard = (
@@ -209,6 +209,13 @@ export const GameCard = (
               />
             )}
 
+            {/* New */}
+            {!game.discoveries.includes(props.card.name) && (
+              <div className="absolute left-1/2 -top-1 -translate-y-full -translate-x-1/2 animate-pulse">
+                <New />
+              </div>
+            )}
+
             {/* Header */}
             <div
               className={cn(
@@ -252,6 +259,7 @@ export const GameCard = (
                   },
                 )}
                 style={{
+                  transformStyle: quality.perspective ? "preserve-3d" : "flat",
                   transform: quality.perspective ? "translateZ(5px)" : "none",
                 }}
               >

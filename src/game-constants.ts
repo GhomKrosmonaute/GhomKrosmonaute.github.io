@@ -67,5 +67,6 @@ export const ACTIONS_COST = {
   discardAll: -4,
   levelUp: ADVANTAGE_THRESHOLD,
   levelDown: -ADVANTAGE_THRESHOLD,
+  levelDownRandom: -2 * ADVANTAGE_THRESHOLD,
   levelUpLabel: ADVANTAGE_THRESHOLD * 5,
 } as const

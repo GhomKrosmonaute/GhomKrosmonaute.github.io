@@ -51,6 +51,7 @@ export interface Upgrade {
   state: UpgradeState
   cumul: number
   max: number
+  tags: (keyof typeof tags)[]
 }
 
 export type UpgradeCompact = Pick<Upgrade, "cumul" | "state" | "name">
@@ -61,6 +62,7 @@ export function compactUpgrade(upgrade: Upgrade): UpgradeCompact {
 
 export type RawUpgrade = Pick<
   Upgrade,
+  | "tags"
   | "name"
   | "image"
   | "onTrigger"

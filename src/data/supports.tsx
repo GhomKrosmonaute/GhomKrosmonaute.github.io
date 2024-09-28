@@ -222,8 +222,11 @@ const supports: SupportCardInfo[] = (
       effect: reusable.drawSpecific({
         label: (
           <>
-            coûtant de l'
-            <Tag name="energy" />
+            coûtant de{" "}
+            <span className="whitespace-nowrap">
+              l'
+              <Tag name="energy" />
+            </span>
           </>
         ),
         filter: (card) =>
@@ -514,8 +517,8 @@ const supports: SupportCardInfo[] = (
         },
         description: ({ value, plural }) => (
           <>
-            <Tag name="giveBack" /> ta main puis <Tag name="draw" /> {value}{" "}
-            carte{plural && "s"}
+            <Tag name="giveBack" /> ta main puis <br />
+            <Tag name="draw" /> {value} carte{plural && "s"}
           </>
         ),
         async onPlayed(state, _, reason) {
