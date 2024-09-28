@@ -4,7 +4,7 @@ import {
   ADVANTAGE_THRESHOLD,
   ENERGY_TO_MONEY,
   GAME_ADVANTAGE,
-  LOCAL_ADVANTAGE,
+  RARITIES,
   MAX_ENERGY,
   MAX_REPUTATION,
   MONEY_TO_REACH,
@@ -39,17 +39,28 @@ import type { Settings } from "@/game-typings.ts"
 import type { GameState, GlobalGameState } from "@/hooks/useCardGame.tsx"
 import { Money, Muted, Tag } from "@/components/game/Texts.tsx"
 
-export function includesSome<T>(array: T[], ...values: T[]): boolean {
-  return values.some((value) => array.includes(value))
+export const extractTextFromReactNode = (node: React.ReactNode): string => {
+  if (typeof node === "string" || typeof node === "number") {
+    // Si le noeud est une chaîne ou un nombre, on le retourne tel quel
+    return node.toString()
+  }
+
+  if (Array.isArray(node)) {
+    // Si le noeud est un tableau (par exemple un fragment), on parcourt chaque élément
+    return node.map(extractTextFromReactNode).join("")
+  }
+
+  if (React.isValidElement(node)) {
+    // Si le noeud est un élément React, on extrait le texte des children
+    return extractTextFromReactNode(node.props.children)
+  }
+
+  // Sinon, on retourne une chaîne vide pour les autres types de noeuds (null, undefined, etc.)
+  return ""
 }
 
-export function getNodeText(node: React.ReactNode): string {
-  if (node == void 0 || node == false) return ""
-  if (["string", "number"].includes(typeof node)) return String(node)
-  if (node instanceof Array) return node.map(getNodeText).join("")
-  if (typeof node === "object" && node && React.isValidElement(node))
-    return getNodeText(node.props.children)
-  throw new Error("Invalid node type")
+export function includesSome<T>(array: T[], ...values: T[]): boolean {
+  return values.some((value) => array.includes(value))
 }
 
 export async function fetch<T>(importer: Promise<{ default: T }>): Promise<T> {
@@ -174,7 +185,7 @@ export const tags = {
   destroy: {
     name: "Détruit",
     description: "Retire le sujet du deck",
-    className: "text-destructive",
+    className: "bg-destructive text-destructive-foreground",
   },
   money: {
     name: "Argent",
@@ -419,14 +430,14 @@ export async function handleErrorsAsync(
  * Each rarity has a different probability to be selected
  */
 export function generateRandomAdvantage(): number {
-  let advantage: number = LOCAL_ADVANTAGE.common
+  let advantage: number = RARITIES.common
 
   const seed = Math.random()
 
-  if (seed < 0.015) advantage = LOCAL_ADVANTAGE.cosmic
-  else if (seed < 0.04) advantage = LOCAL_ADVANTAGE.legendary
-  else if (seed < 0.12) advantage = LOCAL_ADVANTAGE.epic
-  else if (seed < 0.3) advantage = LOCAL_ADVANTAGE.rare
+  if (seed < 0.015) advantage = RARITIES.cosmic
+  else if (seed < 0.04) advantage = RARITIES.legendary
+  else if (seed < 0.12) advantage = RARITIES.epic
+  else if (seed < 0.3) advantage = RARITIES.rare
 
   return advantage
 }
@@ -661,34 +672,35 @@ export function createEffect<
       state,
     })
 
+    // @ts-expect-error DynamicEffectValue is never
+    const description:
+      | ((ctx?: { value: number; plural: boolean }) => React.ReactNode)
+      | null = options.description
+      ? typeof options.description === "function"
+        ? options.description
+        : () => options.description
+      : null
+
     return {
       description: (
         <>
-          {options.description &&
+          {description &&
             (options.dynamicEffect ? (
               computed.effect ? (
-                typeof options.description === "function" ? (
-                  // @ts-expect-error DynamicEffectValue is never
-                  options.description({
-                    value: computed.effect.value,
-                    plural: computed.effect.value > 1,
-                  })
-                ) : (
-                  options.description
-                )
+                description({
+                  value: computed.effect.value,
+                  plural: computed.effect.value > 1,
+                })
               ) : (
                 <Muted>
-                  {typeof options.description === "function"
-                    ? // @ts-expect-error DynamicEffectValue is never
-                      options.description({
-                        value: _val(options.dynamicEffect.min, state) ?? 1,
-                        plural: false,
-                      })
-                    : options.description}
+                  {description({
+                    value: _val(options.dynamicEffect.min, state) ?? 1,
+                    plural: false,
+                  })}
                 </Muted>
               )
             ) : (
-              options.description
+              description()
             ))}
           {computed.description}
         </>
@@ -1075,11 +1087,11 @@ export function recursiveClone<T>(something: T): T {
 export function getRarityName(localAdvantage: number, full: true): string
 export function getRarityName(localAdvantage: number, full?: false): RarityName
 export function getRarityName(localAdvantage: number, full = false) {
-  let rarityName: RarityName = "common"
+  let rarityName: RarityName = "singularity"
   let lastName: RarityName = "common"
 
-  for (const name in LOCAL_ADVANTAGE) {
-    const advantage = LOCAL_ADVANTAGE[name as RarityName]
+  for (const name in RARITIES) {
+    const advantage = RARITIES[name as RarityName]
 
     if (advantage === localAdvantage) {
       rarityName = name as RarityName
@@ -1096,10 +1108,10 @@ export function getRarityName(localAdvantage: number, full = false) {
   if (full)
     return (
       rarityName +
-      (localAdvantage > LOCAL_ADVANTAGE[rarityName]
+      (localAdvantage > RARITIES[rarityName]
         ? "+".repeat(
             Math.floor(
-              Math.max(0, localAdvantage - LOCAL_ADVANTAGE[rarityName]) /
+              Math.max(0, localAdvantage - RARITIES[rarityName]) /
                 ADVANTAGE_THRESHOLD,
             ),
           )

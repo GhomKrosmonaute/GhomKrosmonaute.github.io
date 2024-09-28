@@ -90,7 +90,10 @@ export const GameDebugActions = () => {
                 .map((c) => c.name),
               ADVANTAGE_THRESHOLD,
             ],
-            "Level up button",
+            {
+              name: "Level up button",
+              body: "Level up button",
+            },
           )
         }
       >

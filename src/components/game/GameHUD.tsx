@@ -9,7 +9,7 @@ import { Card } from "@/components/Card.tsx"
 
 import { cn } from "@/utils.ts"
 
-export const GameValues = (props: { show: boolean }) => {
+export const GameHUD = (props: { show: boolean }) => {
   const { shadows, animation } = useSettings((state) => ({
     shadows: state.quality.shadows,
     animation: state.quality.animations,

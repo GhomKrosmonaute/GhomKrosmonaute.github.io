@@ -10,12 +10,11 @@ import {
   getRarityName,
   resolveSubTypes,
   calculateRarityAdvantage,
-  isReactNode,
-  getNodeText,
+  isActionCardInfo,
 } from "@/game-safe-utils.tsx"
 import { getGlobalCardModifierLogs, reviveCard } from "@/game-utils.ts"
 import { ActionCardInfo, GameCardInfo } from "@/game-typings.ts"
-import { LOCAL_ADVANTAGE } from "@/game-constants.ts"
+import { RARITIES } from "@/game-constants.ts"
 import { cn } from "@/utils.ts"
 
 import { useCardGame } from "@/hooks/useCardGame.tsx"
@@ -26,8 +25,8 @@ import { Button } from "@/components/ui/button.tsx"
 import { GameCard } from "@/components/game/GameCard.tsx"
 import { GameCost } from "@/components/game/GameCost.tsx"
 import { GameMiniature } from "@/components/game/GameMiniature.tsx"
-import { GameAdvantageBadge } from "@/components/game/GameAdvantageBadge.tsx"
-import { Family, Tag } from "@/components/game/Texts.tsx"
+import { Family, Tag, RarityBadge } from "@/components/game/Texts.tsx"
+import { GameCardSubType } from "@/components/game/GameCardSubType.tsx"
 
 export const GameCardDetail = (props: { show: boolean }) => {
   const state = useCardGame()
@@ -77,7 +76,7 @@ export const GameCardDetail = (props: { show: boolean }) => {
           <h1 className="text-3xl">A propos de "{card.name}"</h1>
           {!card.effect.tags.includes("token") && (
             <div className="flex">
-              {Object.entries(LOCAL_ADVANTAGE)
+              {Object.entries(RARITIES)
                 .sort(([, a], [, b]) => a - b)
                 .map(([rarity, level]) => {
                   const advantage = calculateRarityAdvantage(level, state)
@@ -134,15 +133,7 @@ export const GameCardDetail = (props: { show: boolean }) => {
                           }
 
                           if (sortBy === "tri par raison") {
-                            return (
-                              isReactNode(a.reason)
-                                ? getNodeText(a.reason)
-                                : a.reason.name
-                            ).localeCompare(
-                              isReactNode(b.reason)
-                                ? getNodeText(b.reason)
-                                : b.reason.name,
-                            )
+                            return a.reason.name.localeCompare(b.reason.name)
                           }
 
                           return 0
@@ -151,8 +142,8 @@ export const GameCardDetail = (props: { show: boolean }) => {
                           <tr key={index} className="odd:bg-muted/50">
                             <th>#{index + 1}</th>
                             <th className="whitespace-nowrap">
-                              {isReactNode(modifier.reason) ? (
-                                <span>{modifier.reason}</span>
+                              {"body" in modifier.reason ? (
+                                <span>{modifier.reason.body}</span>
                               ) : (
                                 <GameMiniature item={modifier.reason} />
                               )}
@@ -160,7 +151,7 @@ export const GameCardDetail = (props: { show: boolean }) => {
                             {modifier.type === "localAdvantage" ? (
                               <>
                                 <td className="text-right">
-                                  <GameAdvantageBadge
+                                  <RarityBadge
                                     advantage={modifier.before}
                                     orphan
                                   />
@@ -169,7 +160,7 @@ export const GameCardDetail = (props: { show: boolean }) => {
                                   <ArrowRight className="w-4" />
                                 </td>
                                 <td>
-                                  <GameAdvantageBadge
+                                  <RarityBadge
                                     advantage={modifier.after}
                                     orphan
                                   />
@@ -247,7 +238,26 @@ export const GameCardDetail = (props: { show: boolean }) => {
 export const MinimalistGameCardDetail = (props: {
   card: GameCardInfo<true>
 }) => {
-  return <div>{props.card.effect.description}</div>
+  return (
+    <>
+      <div className="flex mb-2 gap-2">
+        <GameCost cost={props.card.effect.cost} miniature />
+        <h2>{props.card.name}</h2>
+      </div>
+      <p>{props.card.effect.description}</p>
+      <GameCardSubType card={props.card} />
+      {isActionCardInfo(props.card) && props.card.families.length > 0 && (
+        <>
+          <hr />
+          <div className="flex flex-wrap gap-2">
+            {props.card.families.map((family) => (
+              <Family name={family} key={family} />
+            ))}
+          </div>
+        </>
+      )}
+    </>
+  )
 }
 
 export const ActionCardDetail = (props: { card: ActionCardInfo<true> }) => {

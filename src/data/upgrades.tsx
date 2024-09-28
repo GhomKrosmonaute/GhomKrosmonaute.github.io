@@ -103,7 +103,7 @@ const upgrades: RawUpgrade[] = [
   },
   {
     name: "I.A",
-    eventName: "weekly",
+    eventName: "daily",
     image: "ia.png",
     description: (cumul) => (
       <>

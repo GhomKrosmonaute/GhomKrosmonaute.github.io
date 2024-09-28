@@ -16,7 +16,7 @@ import { CornerIcons } from "@/components/game/CornerIcons.tsx"
 import { GameActions } from "@/components/game/GameActions.tsx"
 import { GameHelpers } from "@/components/game/GameHelpers.tsx"
 import { HelpPopover } from "@/components/game/HelpPopover.tsx"
-import { GameValues } from "@/components/game/GameValues.tsx"
+import { GameHUD } from "@/components/game/GameHUD.tsx"
 import { Scoreboard } from "@/components/game/Scoreboard.tsx"
 import { GameAlert } from "@/components/game/GameAlert.tsx"
 import { GameDebug } from "@/components/game/GameDebug.tsx"
@@ -74,7 +74,7 @@ export const Game = () => {
         <GameHelpers show={show} />
         <GameAlert show={show} />
         <Scoreboard show={show} />
-        <GameValues show={show} />
+        <GameHUD show={show} />
         <GameOver show={show} />
         <GameActions show={show} />
         <GameUpgrades show={show} />

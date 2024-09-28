@@ -1,11 +1,11 @@
 import React from "react"
 import type { GlobalGameState, GameState } from "@/hooks/useCardGame.tsx"
 import { reviveCard } from "@/game-utils.ts"
-import { MAX_HAND_SIZE } from "@/game-constants.ts"
+import { RARITIES, MAX_HAND_SIZE } from "@/game-constants.ts"
 import cards from "@/data/cards.tsx"
 import upgrades from "@/data/upgrades.tsx"
-import { fetchSettings } from "@/game-safe-utils.tsx"
-import { Money, Tag } from "@/components/game/Texts.tsx"
+import { fetchSettings, getRevivedDeck } from "@/game-safe-utils.tsx"
+import { Money, Tag, RarityBadge } from "@/components/game/Texts.tsx"
 
 const achievements: {
   name: string
@@ -14,27 +14,27 @@ const achievements: {
 }[] = [
   {
     name: "Première victoire",
-    description: "Gagner une partie",
+    description: "Gagne une partie",
     unlockCondition: (state) => state.wonGames >= 1,
   },
   {
     name: "Conquérant",
-    description: "Gagner 5 parties",
+    description: "Gagne 5 parties",
     unlockCondition: (state) => state.wonGames >= 5,
   },
   {
     name: "Try harder",
-    description: "Gagner 25 parties",
+    description: "Gagne 25 parties",
     unlockCondition: (state) => state.wonGames >= 10,
   },
   {
     name: "Maître du jeu",
-    description: "Utiliser 5 améliorations différentes en une partie",
+    description: "Utilise 5 améliorations différentes en une partie",
     unlockCondition: (state) => state.upgrades.length >= 5,
   },
   {
     name: "Enutrof",
-    description: "Utiliser toutes les améliorations économiques en une partie",
+    description: "Utilise toutes les améliorations économiques en une partie",
     unlockCondition: (state) =>
       upgrades
         .filter((raw) => raw.tags.includes("money"))
@@ -44,7 +44,7 @@ const achievements: {
   },
   {
     name: "Eliatrop",
-    description: "Utiliser toutes les améliorations énergétiques en une partie",
+    description: "Utilise toutes les améliorations énergétiques en une partie",
     unlockCondition: (state) =>
       upgrades
         .filter(
@@ -94,7 +94,7 @@ const achievements: {
     name: "Trader",
     description: (
       <>
-        Avoir 7 cartes <Tag name="action" /> en main en même temps
+        Ai 7 cartes <Tag name="action" /> en main en même temps
       </>
     ),
     unlockCondition: (state) =>
@@ -112,7 +112,7 @@ const achievements: {
   },
   {
     name: "Collectionneur",
-    description: "Découvrir 30 cartes différentes",
+    description: "Découvre 30 cartes différentes",
     unlockCondition: (state) => state.discoveries.length >= 30,
   },
   {
@@ -127,17 +127,17 @@ const achievements: {
   },
   {
     name: "Complétionniste",
-    description: "Découvrir toutes les cartes",
+    description: "Découvre toutes les cartes",
     unlockCondition: (state) => state.discoveries.length === cards.length,
   },
   {
     name: "Retro gamer",
-    description: "Utiliser le Konami code",
+    description: "Utilise le Konami code",
     unlockCondition: (state) => state.debug,
   },
   {
     name: "Changer de thême",
-    description: "Changer le thême du jeu",
+    description: "Change le thême du jeu",
     unlockCondition: () => fetchSettings().theme !== "default",
   },
   {
@@ -160,9 +160,29 @@ const achievements: {
   },
   {
     name: "Jour, nuit, jour, nuit...",
-    description: "Passer du thème clair au thème sombre 2 fois",
+    description: "Passe du thème clair au thème sombre 2 fois",
     unlockCondition: () =>
       +(localStorage.getItem("Jour, nuit, jour, nuit...") ?? 0) >= 4,
+  },
+  {
+    name: "Le temps c'est de l'argent",
+    description: (
+      <>
+        Gagne <Money M$={100} /> avant le deuxième <Tag name="day" />
+      </>
+    ),
+    unlockCondition: (state) => state.money >= 100 && state.day <= 2,
+  },
+  {
+    name: "Ultra badass",
+    description: (
+      <>
+        Obtient une carte de <Tag name="level" />{" "}
+        <RarityBadge advantage={RARITIES.singularity} /> ou plus
+      </>
+    ),
+    unlockCondition: (state) =>
+      getRevivedDeck(state).some((card) => card.rarity >= RARITIES.singularity),
   },
 ]
 

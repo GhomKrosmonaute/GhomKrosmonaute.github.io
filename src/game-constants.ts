@@ -9,7 +9,7 @@ export const GAME_ADVANTAGE = {
   veteran: -4,
 } as const
 
-export const LOCAL_ADVANTAGE = {
+export const RARITIES = {
   common: 0, // +2 = 2
   rare: 2, //  +4 = 6
   epic: 6, //  +6 = 12

@@ -1,35 +1,35 @@
 import React from "react"
 import { cn } from "@/utils.ts"
-import { tags } from "@/game-safe-utils.tsx"
+import { getRarityName, tags } from "@/game-safe-utils.tsx"
 import type { ActionCardFamily } from "@/game-typings.ts"
 import { useLazyImport } from "@/hooks/useLazyImport.ts"
 import { useHelpPopover } from "@/hooks/useHelpPopover.tsx"
 
-const sharedClassName = "inline-block font-bold"
-const sharedParentStyle = { transformStyle: "preserve-3d" } as const
+const sharedClassName = "inline-block font-bold px-0.5 -mx-0.5 py-0 rounded-sm"
+// const sharedParentStyle = { transformStyle: "preserve-3d" } as const
 const sharedStyle = { transform: "translateZ(3px)" }
 
 export const Muted = (props: React.ComponentProps<"span">) => {
   return <span {...props} className="grayscale opacity-50" />
 }
 
-export const Bracket = (props: React.ComponentProps<"span">) => {
+export const Bracket = ({
+  children,
+  ...props
+}: React.ComponentProps<"span">) => {
   return (
     <span
-      className="relative inline-block w-0 h-auto"
-      style={sharedParentStyle}
+      {...props}
+      className={cn(
+        " text-sm whitespace-nowrap top-0 inline-block",
+        props.className,
+      )}
+      style={{
+        transform: `rotate(3deg) ${sharedStyle.transform}`,
+        ...props.style,
+      }}
     >
-      <span
-        {...props}
-        className={cn(
-          "absolute text-xs whitespace-nowrap top-0 inline-block",
-          props.className,
-        )}
-        style={{
-          transform: `rotate(5deg) translateX(-50%) translateY(-30%) ${sharedStyle.transform}`,
-          ...props.style,
-        }}
-      />
+      ( {children} )
     </span>
   )
 }
@@ -72,6 +72,7 @@ export const Tag = ({
   const tag = tags[name]
 
   const ref = React.useRef<HTMLSpanElement>(null)
+
   useHelpPopover(
     ref,
     <>
@@ -116,17 +117,17 @@ export const Family = ({
     ref,
     <>
       <h3 className="mb-2">Famille {name}</h3>
-      <ul className="flex flex-wrap gap-2">
+      <BadgeList>
         {cards
           ?.filter(
             (card) => card.type === "action" && card.families.includes(name),
           )
           .map((card) => (
-            <li key={card.name} className="border rounded-md px-1 bg-muted">
-              {card.name}
+            <li key={card.name}>
+              <Badge>{card.name}</Badge>
             </li>
           ))}
-      </ul>
+      </BadgeList>
     </>,
   )
 
@@ -159,4 +160,40 @@ export const New = () => {
       NEW!
     </span>
   )
+}
+
+export const RarityBadge = (props: { advantage: number; orphan?: boolean }) => {
+  const [name, full] = React.useMemo(() => {
+    return [
+      getRarityName(props.advantage),
+      getRarityName(props.advantage, true),
+    ]
+  }, [props.advantage])
+
+  return (
+    <span
+      className={cn(
+        "inline-block z-10 w-fit",
+        props.orphan && "rounded-lg px-1",
+      )}
+      style={{
+        color: `hsl(var(--${name}-foreground))`,
+        backgroundColor: `hsl(var(--${name}))`,
+      }}
+    >
+      {full}
+    </span>
+  )
+}
+
+export const Badge = (props: React.ComponentProps<"span">) => {
+  return (
+    <span className="inline-block border rounded-md px-1 bg-muted text-foreground">
+      {props.children}
+    </span>
+  )
+}
+
+export const BadgeList = (props: { children: React.ReactNode }) => {
+  return <ul className="flex flex-wrap gap-x-2 gap-y-1">{props.children}</ul>
 }

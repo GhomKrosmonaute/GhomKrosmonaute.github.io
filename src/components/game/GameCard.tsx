@@ -23,12 +23,10 @@ import {
   canBeBuy,
   getRarityName,
   isActionCardInfo,
-  resolveSubTypes,
 } from "@/game-safe-utils.tsx"
+import { New, RarityBadge } from "@/components/game/Texts.tsx"
 import { GameCost } from "@/components/game/GameCost.tsx"
-import { GameAdvantageBadge } from "@/components/game/GameAdvantageBadge.tsx"
-import { New, Tag } from "@/components/game/Texts.tsx"
-// import { GameCardPopover } from "@/components/game/GameCardPopover.tsx"
+import { GameCardSubType } from "@/components/game/GameCardSubType.tsx"
 
 export const GameCard = (
   props: React.PropsWithoutRef<{
@@ -71,7 +69,6 @@ export const GameCard = (
     : game.operationInProgress.length > 0
 
   const rarityName = getRarityName(props.card.rarity)
-  const subTypes = resolveSubTypes(props.card.effect)
 
   return (
     <div
@@ -193,7 +190,6 @@ export const GameCard = (
             },
           )}
         >
-          {/*<GameCardPopover card={props.card} justFamily>*/}
           <>
             {/* Background */}
             {quality.perspective && quality.tilt && (
@@ -278,7 +274,7 @@ export const GameCard = (
               >
                 {!props.card.effect.tags.includes("token") && (
                   /* Rarity indicator */
-                  <GameAdvantageBadge advantage={props.card.rarity} />
+                  <RarityBadge advantage={props.card.rarity} />
                 )}
 
                 {props.card.effect.tags.includes("upgrade") && (
@@ -328,18 +324,8 @@ export const GameCard = (
                 {props.card.effect.description}
               </div>
 
-              {subTypes.length > 0 && (
-                <div
-                  className={cn("text-center text-2xl font-bold", {
-                    "text-muted-foreground/50": quality.transparency,
-                    "text-muted-foreground": !quality.transparency,
-                  })}
-                >
-                  {subTypes.map((type) => (
-                    <Tag name={type} key={type} />
-                  ))}
-                </div>
-              )}
+              {/* Sub types */}
+              <GameCardSubType card={props.card} />
             </div>
 
             <BorderLight
@@ -356,7 +342,6 @@ export const GameCard = (
 
             <TiltFoil />
           </>
-          {/*</GameCardPopover>*/}
         </Tilt>
       )}
     </div>

@@ -2,14 +2,14 @@ import type React from "react"
 
 import type { GameState, GlobalGameState } from "@/hooks/useCardGame.tsx"
 
-import { GAME_ADVANTAGE, LOCAL_ADVANTAGE } from "@/game-constants.ts"
+import { GAME_ADVANTAGE, RARITIES } from "@/game-constants.ts"
 
 import events from "@/data/events.tsx"
 import { GlobalCardModifierIndex, Speed } from "@/game-enums.ts"
 import { pick, tags } from "@/game-safe-utils.tsx"
 import type cardModifiers from "@/data/cardModifiers.ts"
 
-export type RarityName = keyof typeof LOCAL_ADVANTAGE
+export type RarityName = keyof typeof RARITIES
 
 export interface QualityOptions {
   shadows: boolean // ajoute les ombres
@@ -259,7 +259,9 @@ export type GameLog = {
   reason: GameCardCompact | UpgradeCompact | string
 }
 
-export type GameModifierLog = { reason: GameCardCompact | React.ReactNode } & (
+export type GameModifierLog = {
+  reason: GameCardCompact | { name: string; body: React.ReactNode }
+} & (
   | {
       type: "localAdvantage"
       before: number

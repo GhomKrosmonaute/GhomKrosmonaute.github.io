@@ -5,7 +5,7 @@ import { useCursor } from "@/hooks/useCursor.ts"
 import { useHelpPopoverPrivate } from "@/hooks/useHelpPopover.tsx"
 
 export const HelpPopover = (props: { show: boolean }) => {
-  const { subject } = useHelpPopoverPrivate()
+  const { subjects, clear } = useHelpPopoverPrivate()
   const settings = useSettings()
   const cursor = useCursor()
   const [lastSubject, setLastSubject] = React.useState<React.ReactNode | null>(
@@ -13,10 +13,23 @@ export const HelpPopover = (props: { show: boolean }) => {
   )
 
   React.useEffect(() => {
-    if (subject) {
-      setLastSubject(subject)
+    if (subjects[0]) {
+      setLastSubject(subjects[0])
     }
-  }, [subject])
+  }, [subjects])
+
+  // timeout pour remove le state apres un certain temps d'inactivité
+  React.useEffect(() => {
+    const timeout = setTimeout(() => {
+      clear()
+    }, 2000)
+
+    return () => {
+      clearTimeout(timeout)
+    }
+  }, [lastSubject])
+
+  const show = props.show && subjects.length > 0
 
   return (
     <div
@@ -24,14 +37,11 @@ export const HelpPopover = (props: { show: boolean }) => {
         "pointer-events-none z-50 fixed bg-card p-2 rounded-md shadow-sm shadow-primary max-w-md",
         {
           [cn("transition-opacity", {
-            "opacity-100 duration-75 ease-[cubic-bezier(0.4, 0, 1, 1)]":
-              props.show && subject,
+            "opacity-100 duration-75 ease-[cubic-bezier(0.4, 0, 1, 1)]": show,
             "opacity-0 duration-1000 ease-[cubic-bezier(0.0, 0, 0.2, 1)]":
-              !props.show || !subject,
+              !show,
           })]: settings.quality.transparency,
-          [cn("hidden", {
-            block: props.show && subject,
-          })]: !settings.quality.transparency,
+          [cn("hidden", { block: show })]: !settings.quality.transparency,
         },
       )}
       style={{

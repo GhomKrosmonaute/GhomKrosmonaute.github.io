@@ -17,11 +17,7 @@ import {
   ChoiceOptions,
 } from "@/game-typings"
 
-import {
-  MAX_HAND_SIZE,
-  LOCAL_ADVANTAGE,
-  INFINITE_DRAW_COST,
-} from "@/game-constants"
+import { MAX_HAND_SIZE, RARITIES, INFINITE_DRAW_COST } from "@/game-constants"
 
 import cards from "@/data/cards.tsx"
 import upgrades from "@/data/upgrades.tsx"
@@ -33,7 +29,6 @@ import {
   canBeBuy,
   shuffle,
   calculateRarityAdvantage,
-  getNodeText,
 } from "@/game-safe-utils.tsx"
 
 export function generateChoiceOptions(
@@ -44,14 +39,14 @@ export function generateChoiceOptions(
 
   const _cards: (GameCardInfo | GameResource)[] = cards.filter(
     (card) =>
-      (state.choiceOptions.length === 0 ||
-        state.choiceOptions.every(
-          (choice) =>
-            choice.options.length === 0 ||
-            choice.options.every(
-              (i) => !isGameResource(i) && i.name !== card.name,
-            ),
-        )) &&
+      // (state.choiceOptions.length === 0 ||
+      //   state.choiceOptions.every(
+      //     (choice) =>
+      //       choice.options.length === 0 ||
+      //       choice.options.every(
+      //         (i) => !isGameResource(i) && i.name !== card.name,
+      //       ),
+      //   )) &&
       (state.draw.length === 0 ||
         state.draw.every((c) => c.name !== card.name)) &&
       (state.discard.length === 0 ||
@@ -256,9 +251,9 @@ export function toSortedCards<T extends GameResolvable>(
         const priceB = b.effect.cost.type === "money" ? 1 : 0
         const costA = a.effect.cost.value
         const costB = b.effect.cost.value
-        const effect = getNodeText(a.effect.description).localeCompare(
-          getNodeText(b.effect.description),
-        )
+        const effect = a.effect.tags
+          .join(",")
+          .localeCompare(b.effect.tags.join(","))
         return typeA - typeB || priceA - priceB || costA - costB || effect
       }
 
@@ -326,7 +321,7 @@ export function reviveCard(
   const card = resolveCard(compact)
 
   const initialRarity =
-    typeof compact !== "string" ? compact.initialRarity : LOCAL_ADVANTAGE.common
+    typeof compact !== "string" ? compact.initialRarity : RARITIES.common
 
   const output: Omit<GameCardInfo<true>, "effect"> = {
     ...card,

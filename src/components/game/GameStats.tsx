@@ -1,7 +1,6 @@
 import React from "react"
 
 import { cn } from "@/utils.ts"
-import { reviveCard } from "@/game-utils.ts"
 import { translations } from "@/game-settings.ts"
 import {
   ADVANTAGE_THRESHOLD,
@@ -13,24 +12,30 @@ import { useCardGame } from "@/hooks/useCardGame.tsx"
 import { useSettings } from "@/hooks/useSettings.ts"
 
 import Day from "@/assets/icons/game/day.svg"
-import Deck from "@/assets/icons/game/deck.svg"
-import Discard from "@/assets/icons/game/discard.svg"
 import Infinity from "@/assets/icons/game/infinity.svg"
 import Money from "@/assets/icons/game/money.svg"
 import Score from "@/assets/icons/game/score.svg"
 import Settings from "@/assets/icons/settings.svg"
 import Sprint from "@/assets/icons/game/sprint.svg"
-import Draw from "@/assets/icons/game/draw.svg"
 import Energy from "@/assets/icons/game/energy.svg"
 import Reputation from "@/assets/icons/game/reputation.svg"
 import Inflation from "@/assets/icons/game/inflation.svg"
+import Cross from "@/assets/icons/cross.svg"
 
 import { Separator } from "@/components/ui/separator.tsx"
 import { GameGauge } from "@/components/game/GameGauge.tsx"
 import { MiniatureImage } from "@/components/game/GameMiniature.tsx"
-import { GameCardPopover } from "@/components/game/GameCardPopover.tsx"
 
 import { Money as Dollars, Tag } from "@/components/game/Texts.tsx"
+import { Input } from "@/components/ui/input.tsx"
+import { CollectionCounter } from "@/components/game/CollectionCounter.tsx"
+import {
+  extractTextFromReactNode,
+  getRevivedDeck,
+  tags,
+} from "@/game-safe-utils.tsx"
+import { HelpPopoverTrigger } from "@/components/game/HelpPopoverTrigger.tsx"
+import { MinimalistGameCardDetail } from "@/components/game/GameCardDetail.tsx"
 
 export const Stat = ({
   name,
@@ -64,6 +69,8 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
     animation: state.quality.animations,
     transparency: state.quality.transparency,
   }))
+
+  const [search, setSearch] = React.useState("")
 
   return (
     <>
@@ -132,68 +139,71 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
             </div>
           </div>
           <Separator />
-          <div className="grid grid-cols-3 w-full gap-x-2" id="deck">
-            {(["deck", "draw", "discard"] as const).map((collection) => (
-              <div
-                className="grid grid-cols-subgrid col-span-3 space-y-1"
-                key={collection}
-              >
-                <div className="flex justify-end col-span-2">
-                  {(collection === "deck"
-                    ? [...game.draw, ...game.discard, ...game.hand]
-                    : game[collection]
-                  )
-                    .map((c) => reviveCard(c, game))
-                    .toSorted((a, b) => {
-                      if (a.type === b.type)
-                        return a.effect.tags.includes("upgrade") ? 1 : -1
-                      return b.type > a.type ? 1 : -1
-                    })
-                    .map((c, i) => (
-                      <GameCardPopover key={i} card={c}>
-                        <div className="h-6 hover:shrink-0 pointer-events-auto">
-                          <MiniatureImage
-                            item={c}
-                            className={cn(
-                              "ring-0 rounded-none object-contain border-b-2",
-                              {
-                                "border-action": c.type === "action",
-                                "border-support": c.type === "support",
-                                "border-upgrade":
-                                  c.effect.tags.includes("upgrade"),
-                              },
-                            )}
-                          />
-                        </div>
-                      </GameCardPopover>
-                    ))}
-                </div>
-                <Stat
-                  Icon={
-                    collection === "deck"
-                      ? Deck
-                      : collection === "draw"
-                        ? Draw
-                        : Discard
-                  }
-                  name={
-                    collection === "deck"
-                      ? "Deck"
-                      : collection === "draw"
-                        ? "Pioche"
-                        : "Défausse"
-                  }
-                  value={
-                    collection === "deck"
-                      ? game.draw.length +
-                        game.discard.length +
-                        game.hand.length
-                      : game[collection].length
-                  }
-                  className="h-5"
-                />
-              </div>
-            ))}
+          <div className="relative">
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Rechercher dans le deck..."
+              className="flex-grow"
+            />
+            {search.length > 0 && (
+              <Cross
+                onClick={() => setSearch("")}
+                className="cursor-pointer w-3 h-3 absolute top-1/2 right-4 -translate-y-1/2"
+              />
+            )}
+          </div>
+          <div id="deck" className="flex justify-between">
+            <div className="flex justify-end col-span-2">
+              {getRevivedDeck(game)
+                .filter(
+                  (c) =>
+                    !search ||
+                    c.name.toLowerCase().includes(search.toLowerCase()) ||
+                    c.effect.tags.some(
+                      (t) =>
+                        t.includes(search.toLowerCase()) ||
+                        tags[t]?.name
+                          .toLowerCase()
+                          .includes(search.toLowerCase()),
+                    ) ||
+                    extractTextFromReactNode(c.effect.description)
+                      .toLowerCase()
+                      .includes(search.toLowerCase()),
+                )
+                .toSorted((a, b) => {
+                  if (a.type === b.type)
+                    return a.effect.tags.includes("upgrade") ? 1 : -1
+                  return b.type > a.type ? 1 : -1
+                })
+                .map((c, i) => (
+                  <HelpPopoverTrigger
+                    popover={<MinimalistGameCardDetail card={c} />}
+                    key={i}
+                  >
+                    <div
+                      className="h-6 hover:shrink-0 pointer-events-auto cursor-help"
+                      onContextMenu={(e) => {
+                        e.preventDefault()
+                        game.setCardDetail(c)
+                      }}
+                    >
+                      <MiniatureImage
+                        item={c}
+                        className={cn(
+                          "ring-0 rounded-none object-contain border-b-2",
+                          {
+                            "border-action": c.type === "action",
+                            "border-support": c.type === "support",
+                            "border-upgrade": c.effect.tags.includes("upgrade"),
+                          },
+                        )}
+                      />
+                    </div>
+                  </HelpPopoverTrigger>
+                ))}
+            </div>
+            <CollectionCounter collection="deck" />
           </div>
           <Separator />
         </>

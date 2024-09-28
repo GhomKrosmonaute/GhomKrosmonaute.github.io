@@ -5,10 +5,10 @@ import { useSettings } from "@/hooks/useSettings.ts"
 import { useGlobalState } from "@/hooks/useGlobalState.ts"
 
 import { settings } from "@/game-settings.ts"
-import { getNodeText, rankColor } from "@/game-safe-utils.tsx"
+import { rankColor } from "@/game-safe-utils.tsx"
 
 import scores from "@/data/scores.json"
-import helpers from "@/data/helpers.tsx"
+import helpers, { gameOverHelpers } from "@/data/helpers.tsx"
 
 import { Button } from "@/components/ui/button.tsx"
 import { BuyMeACoffee } from "@/components/ui/buy-me-a-coffe.tsx"
@@ -154,45 +154,8 @@ export const GameOver = (props: { show: boolean }) => {
               </div>
             ) : (
               <div className="text-2xl group/helpers">
-                {helpers
-                  .filter((helper) => {
-                    const text = getNodeText(helper).toLowerCase()
-
-                    switch (game.reason) {
-                      case "reputation":
-                        return (
-                          text.includes("réputation") ||
-                          text.includes("gagnes la partie")
-                        )
-                      case "mill":
-                        return (
-                          text.includes("plus jouer") ||
-                          text.includes("défausse") ||
-                          text.includes("limitée") ||
-                          text.includes("Recycler") ||
-                          text.includes("gagnes la partie")
-                        )
-                      case "soft-lock":
-                        return (
-                          text.includes("plus jouer") ||
-                          text.includes("progressivement") ||
-                          text.includes("cartes à jouer") ||
-                          text.includes("gagnes la partie")
-                        )
-                      case "mill-lock":
-                        return (
-                          text.includes("plus jouer") ||
-                          text.includes("pioche") ||
-                          text.includes("Quand une carte est jouée") ||
-                          text.includes("cartes à jouer") ||
-                          text.includes("recycler") ||
-                          text.includes("gagnes la partie")
-                        )
-                      default:
-                        return false
-                    }
-                  })
-                  .map((helper, i) => (
+                {game.reason &&
+                  gameOverHelpers[game.reason].map((helper, i) => (
                     <div
                       key={i}
                       className={cn("transform hover:scale-110", {
@@ -212,7 +175,7 @@ export const GameOver = (props: { show: boolean }) => {
                           })]: quality.animation,
                         })}
                       >
-                        {helper}
+                        {helpers[helper]}
                       </p>
                     </div>
                   ))}

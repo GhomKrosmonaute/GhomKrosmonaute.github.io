@@ -112,7 +112,6 @@ const reusable = {
           })
         },
         cost: resolveCost(price.value),
-        ephemeral: options.ephemeral,
         needsPlayZone: true,
         tags: ["draw", options.ephemeral ? "ephemeral" : null].filter(
           (tag) => !!tag,
@@ -275,14 +274,17 @@ const supports: SupportCardInfo[] = (
         skipEnergyGain: true,
         dynamicEffect: {
           cost: ACTIONS_COST.draw,
-          min: 3,
+          min: 2,
           max: Math.floor(MAX_HAND_SIZE / 2),
         },
         description: ({ value, plural }) => (
           <>
-            <Tag name="discard" /> les cartes <Tag name="action" /> en main
-            <Bracket>min 1</Bracket> puis <Tag name="draw" />
-            {value} carte{plural && "s"}
+            <Tag name="discard" /> les cartes <Tag name="action" /> en main{" "}
+            <Bracket>min 1</Bracket> puis <Tag name="draw" />{" "}
+            <span className="whitespace-nowrap">
+              {value} carte
+              {plural && "s"}
+            </span>
           </>
         ),
         condition: (state) =>
@@ -293,7 +295,7 @@ const supports: SupportCardInfo[] = (
             reason,
           })
 
-          await state.drawCard(this.value!, {
+          await state.drawCard(this.value, {
             skipGameOverPause: true,
             reason,
           })

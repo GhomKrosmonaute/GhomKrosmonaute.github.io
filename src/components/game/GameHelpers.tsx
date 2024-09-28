@@ -1,6 +1,6 @@
 import React from "react"
 
-import helpers from "@/data/helpers.tsx"
+import _helpers from "@/data/helpers.tsx"
 
 import { useSettings } from "@/hooks/useSettings.ts"
 
@@ -8,6 +8,8 @@ import Question from "@/assets/icons/question.svg"
 
 import { useHover } from "usehooks-ts"
 import { cn } from "@/utils.ts"
+
+const helpers = Object.values(_helpers)
 
 export const GameHelpers = (props: { show: boolean }) => {
   const ref = React.useRef<HTMLDivElement>(null)

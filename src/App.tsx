@@ -128,7 +128,7 @@ export default function App() {
           {desktop && animation ? (
             <>
               <React.Suspense>
-                <SplineMacbook />
+                <SplineMacbook showGame={isCardGameVisible} />
               </React.Suspense>
               <Macbook />
             </>

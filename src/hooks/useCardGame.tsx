@@ -34,7 +34,7 @@ import {
   MONEY_TO_REACH,
   ENERGY_TO_DAYS,
   ENERGY_TO_MONEY,
-  LOCAL_ADVANTAGE,
+  RARITIES,
   REPUTATION_TO_ENERGY,
   INITIAL_CHOICE_COUNT,
   INITIAL_CHOICE_OPTION_COUNT,
@@ -417,12 +417,12 @@ function generateGameState(): Omit<
     draw: startingDeck.slice(MAX_HAND_SIZE - 2).map((name) => ({
       name,
       state: "idle",
-      initialRarity: LOCAL_ADVANTAGE.common,
+      initialRarity: RARITIES.common,
     })),
     hand: startingDeck.slice(0, MAX_HAND_SIZE - 2).map((name) => ({
       name,
       state: "idle",
-      initialRarity: LOCAL_ADVANTAGE.common,
+      initialRarity: RARITIES.common,
     })),
     revivedHand: [],
     revivedDraw: [],
@@ -434,12 +434,18 @@ function generateGameState(): Omit<
       {
         name: "upgrade cost threshold",
         params: [],
-        reason: "Promotion temporaire",
+        reason: {
+          name: "Promotion temporaire",
+          body: "Promotion temporaire",
+        },
       },
       {
         name: "all card inflation",
         params: [],
-        reason: "Inflation",
+        reason: {
+          name: "Inflation",
+          body: <Tag name="inflation" />,
+        },
       },
     ],
     day: 0,
@@ -556,9 +562,18 @@ function generateGameMethods(
 
         state.setOperationInProgress("advanceTime", true)
 
-        const addedTime = Math.max(ENERGY_TO_DAYS, energy * ENERGY_TO_DAYS)
+        const upgradeCompletion = state.upgrade.length / upgrades.length
+        const cardCompletion = getDeck(state).length / cards.length
+        const energyToDays =
+          ENERGY_TO_DAYS -
+          ENERGY_TO_DAYS *
+            0.7 *
+            (0.5 * cardCompletion) *
+            (0.5 * upgradeCompletion)
 
-        if (addedTime < ENERGY_TO_DAYS) {
+        const addedTime = Math.max(energyToDays, energy * energyToDays)
+
+        if (addedTime < energyToDays) {
           throw state.handleError(
             new Error(`Not enough energy to advance time: ${energy}`),
           )

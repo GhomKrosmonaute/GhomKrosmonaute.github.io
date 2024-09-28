@@ -14,14 +14,10 @@ import { useGlobalState } from "@/hooks/useGlobalState.ts"
 import Cross from "@/assets/icons/cross.svg"
 import { useCardGame } from "@/hooks/useCardGame.tsx"
 import achievements from "@/data/achievements.tsx"
-import { GameCardPopover } from "@/components/game/GameCardPopover.tsx"
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover-card.tsx"
 import cards from "@/data/cards.tsx"
-import { Money, Tag } from "@/components/game/Texts.tsx"
+import { Badge, BadgeList, Money, Tag } from "@/components/game/Texts.tsx"
+import { HelpPopoverTrigger } from "@/components/game/HelpPopoverTrigger.tsx"
+import { MinimalistGameCardDetail } from "@/components/game/GameCardDetail.tsx"
 
 export const GameRules = (props: { show: boolean }) => {
   const close = useGlobalState((state) => state.toggleRules)
@@ -57,7 +53,7 @@ export const GameRules = (props: { show: boolean }) => {
           <div className="bg-card p-5 rounded-xl space-y-2">
             <h2 className="text-3xl">Règles du jeu</h2>
             <div className="max-h-[60vh] overflow-y-scroll space-y-2">
-              {helpers.map((helper, i) => (
+              {Object.values(helpers).map((helper, i) => (
                 <div key={i}>{helper}</div>
               ))}
             </div>
@@ -167,18 +163,24 @@ export const GameRules = (props: { show: boolean }) => {
 
               <div>
                 <h3 className="font-changa">Cartes découvertes</h3>
-                <ul className="flex flex-wrap gap-x-2">
+                <BadgeList>
                   {stats.discoveries.length > 0
                     ? stats.discoveries.map((discovery, i) => (
-                        <GameCardPopover
-                          card={reviveCard(discovery, stats)}
+                        <HelpPopoverTrigger
                           key={i}
+                          popover={
+                            <MinimalistGameCardDetail
+                              card={reviveCard(discovery, stats)}
+                            />
+                          }
                         >
-                          <li>{discovery}</li>
-                        </GameCardPopover>
+                          <li>
+                            <Badge>{discovery}</Badge>
+                          </li>
+                        </HelpPopoverTrigger>
                       ))
                     : "Aucune découverte"}
-                </ul>
+                </BadgeList>
               </div>
 
               <div>
@@ -186,21 +188,25 @@ export const GameRules = (props: { show: boolean }) => {
                 <ul className="flex flex-wrap gap-x-2">
                   {stats.achievements.length > 0
                     ? stats.achievements.map((achievement, i) => (
-                        <HoverCard openDelay={0} closeDelay={0} key={i}>
-                          <HoverCardTrigger asChild>
-                            <li>{achievement}</li>
-                          </HoverCardTrigger>
-                          <HoverCardContent className="pointer-events-none">
-                            <h2 className="mb-2">{achievement}</h2>
-                            <p>
-                              {
-                                achievements.find(
-                                  (a) => a.name === achievement,
-                                )!.description
-                              }
-                            </p>
-                          </HoverCardContent>
-                        </HoverCard>
+                        <HelpPopoverTrigger
+                          key={i}
+                          popover={
+                            <>
+                              <h2 className="mb-2">{achievement}</h2>
+                              <p>
+                                {
+                                  achievements.find(
+                                    (a) => a.name === achievement,
+                                  )!.description
+                                }
+                              </p>
+                            </>
+                          }
+                        >
+                          <li>
+                            <Badge>{achievement}</Badge>
+                          </li>
+                        </HelpPopoverTrigger>
                       ))
                     : "Aucun succès"}
                 </ul>
