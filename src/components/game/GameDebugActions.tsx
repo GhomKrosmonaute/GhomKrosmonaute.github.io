@@ -81,21 +81,22 @@ export const GameDebugActions = () => {
       </Button>
       <Button
         size="cta"
-        onClick={() =>
-          game.addGlobalCardModifier(
-            "level up cards",
-            [
-              cards
-                .filter((c) => !c.effect().tags.includes("token"))
-                .map((c) => c.name),
-              ADVANTAGE_THRESHOLD,
-            ],
-            {
-              name: "Level up button",
-              body: "Level up button",
-            },
+        onClick={async () => {
+          const targets = cards
+            .filter((c) => !c.effect().tags.includes("token"))
+            .map((c) => c.name)
+
+          await game.transformCardsAnimation(targets, () =>
+            game.addGlobalCardModifier(
+              "level up cards",
+              [targets, ADVANTAGE_THRESHOLD],
+              {
+                name: "Level up button",
+                body: "Level up button",
+              },
+            ),
           )
-        }
+        }}
       >
         Level up cards
       </Button>

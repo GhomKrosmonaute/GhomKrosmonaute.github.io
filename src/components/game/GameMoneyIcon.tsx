@@ -16,8 +16,8 @@ export const GameMoneyIcon = (
   return (
     <div
       className={cn(
-        "text-2xl font-changa border border-white px-1 bg-money text-money-foreground w-fit",
-        { "text-md": props.miniature },
+        "text-2xl font-changa text-money w-fit h-fit bg-card flex justify-center px-1 shadow-lg",
+        { "text-md px-0": props.miniature },
         props.className,
       )}
       style={props.style}

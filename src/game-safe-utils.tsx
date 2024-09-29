@@ -209,8 +209,9 @@ export function formatCoinFlipText(options: {
 }) {
   return (
     <>
-      <Tag name="coinFlip" />. <br /> Face: {options.heads} <br /> Pile:{" "}
-      {options.tails}
+      <Tag name="coinFlip" />. <br />
+      Face: {options.heads} <br />
+      Pile: {options.tails}
     </>
   )
 }
@@ -913,6 +914,7 @@ export function canBeBuy(card: GameCardInfo<true>, state: GameState) {
 
 export const fakeState: GameState = {
   cardDetail: null,
+  transformCardsAnimation: async () => {},
   setCardDetail: () => {},
   addEnergy: async () => {},
   addGlobalCardModifier: async () => {},

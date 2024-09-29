@@ -16,7 +16,7 @@ export const GameCost = (props: { cost: Cost; miniature?: boolean }) => {
     return (
       <div
         className={cn(
-          "flex gap-1 bg-pink-500 pl-2 pr-3 py-1 rounded-sm rounded-r-xl text-md font-changa h-6",
+          "flex gap-1 bg-pink-500 text-white pl-2 pr-3 py-1 rounded-sm rounded-r-xl text-md font-changa h-6",
           {
             "inline-flex px-1 py-0 rounded-sm h-5 w-fit": props.miniature,
           },

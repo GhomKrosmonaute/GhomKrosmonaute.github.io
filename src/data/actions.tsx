@@ -49,19 +49,21 @@ const reusable = {
           (module) => module.default,
         )
 
-        await state.addGlobalCardModifier(
-          "level up cards",
-          [
-            cards
-              .filter((c) => !c.effect().tags.includes("token"))
-              .filter(filter)
-              .map((card) => card.name),
-            ADVANTAGE_THRESHOLD,
-          ],
-          compactGameCardInfo(card),
-        )
+        const targets = cards
+          .filter((c) => !c.effect().tags.includes("token"))
+          .filter(filter)
+          .map((card) => card.name)
+
+        await state.transformCardsAnimation(targets, async () => {
+          await state.addGlobalCardModifier(
+            "level up cards",
+            [targets, ADVANTAGE_THRESHOLD],
+            compactGameCardInfo(card),
+          )
+        })
       },
       tags: ["ephemeral", "level"],
+      needsPlayZone: true,
     }),
   choseSpecific: (
     label: React.ReactNode,
@@ -163,6 +165,7 @@ const actions: ActionCardInfo[] = (
 
           return {
             message: computeEffectDescription({
+              nothingBefore: true,
               money: moneyGain,
               energy: energyGain,
             }),
@@ -309,13 +312,16 @@ const actions: ActionCardInfo[] = (
 
           if (!target) throw new Error("No target found")
 
-          await state.addGlobalCardModifier(
-            "level up cards",
-            [[target.name], ADVANTAGE_THRESHOLD * 2],
-            compactGameCardInfo(card),
-          )
+          await state.transformCardsAnimation([target.name], async () => {
+            await state.addGlobalCardModifier(
+              "level up cards",
+              [[target.name], ADVANTAGE_THRESHOLD * 2],
+              compactGameCardInfo(card),
+            )
+          })
         },
         tags: ["level"],
+        needsPlayZone: true,
       }),
     },
     {
@@ -378,10 +384,12 @@ const actions: ActionCardInfo[] = (
             .filter((c) => c.name !== card.name).length > 0,
         select: (_, card, testedCard) => card.name !== testedCard.name,
         async onPlayed(state, card, reason, selected) {
-          await state.addGlobalCardModifier(
-            "level up cards",
-            [[selected.name], -ADVANTAGE_THRESHOLD * 2],
-            compactGameCardInfo(card),
+          await state.transformCardsAnimation([selected.name], () =>
+            state.addGlobalCardModifier(
+              "level up cards",
+              [[selected.name], -ADVANTAGE_THRESHOLD * 2],
+              compactGameCardInfo(card),
+            ),
           )
 
           await state.addMoney(20 * ENERGY_TO_MONEY, {
@@ -519,10 +527,12 @@ const actions: ActionCardInfo[] = (
             .filter((c) => c.name !== card.name)
             .map((c) => c.name)
 
-          await state.addGlobalCardModifier(
-            "lowers price of hand cards",
-            [handCardNames, this.value],
-            compactGameCardInfo(card),
+          await state.transformCardsAnimation(handCardNames, () =>
+            state.addGlobalCardModifier(
+              "lowers price of hand cards",
+              [handCardNames, this.value],
+              compactGameCardInfo(card),
+            ),
           )
         },
         needsPlayZone: true,
@@ -546,15 +556,16 @@ const actions: ActionCardInfo[] = (
           </>
         ),
         async onPlayed(state, card) {
-          await state.addGlobalCardModifier(
-            "level up cards",
-            [
-              state.revivedHand
-                .filter((c) => !c.effect.tags.includes("token"))
-                .map((card) => card.name),
-              ADVANTAGE_THRESHOLD,
-            ],
-            compactGameCardInfo(card),
+          const targets = state.revivedHand
+            .filter((c) => !c.effect.tags.includes("token"))
+            .map((card) => card.name)
+
+          await state.transformCardsAnimation(targets, () =>
+            state.addGlobalCardModifier(
+              "level up cards",
+              [targets, ADVANTAGE_THRESHOLD],
+              compactGameCardInfo(card),
+            ),
           )
         },
         tags: ["ephemeral", "level"],
@@ -646,10 +657,16 @@ const actions: ActionCardInfo[] = (
         description: "La prochaine carte jouée coûte la moitié de son prix",
         hint: "N'agit pas sur les cartes gratuites",
         onPlayed: async (state, card) => {
-          await state.addGlobalCardModifier(
-            "next card half cost",
-            [],
-            compactGameCardInfo(card),
+          await state.transformCardsAnimation(
+            state.revivedHand
+              .filter((c) => c.effect.cost.value > 1)
+              .map((c) => c.name),
+            () =>
+              state.addGlobalCardModifier(
+                "next card half cost",
+                [],
+                compactGameCardInfo(card),
+              ),
           )
         },
       }),

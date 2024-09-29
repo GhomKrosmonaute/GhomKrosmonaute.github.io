@@ -5,6 +5,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/utils"
 import { BorderLight } from "@/components/ui/border-light.tsx"
 import { useSettings } from "@/hooks/useSettings.ts"
+import { HelpPopoverTrigger } from "@/components/game/HelpPopoverTrigger.tsx"
 
 const buttonVariants = cva(
   cn(
@@ -46,13 +47,38 @@ export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
   asChild?: boolean
+  popover?: React.ReactNode
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
+  ({ className, popover, variant, size, asChild = false, ...props }, ref) => {
     const shadows = useSettings((state) => state.quality.shadows)
     const Comp = asChild ? Slot : "button"
-    return (
+    return popover ? (
+      <HelpPopoverTrigger popover={popover}>
+        <Comp
+          {...props}
+          type={props.type || "button"}
+          className={cn(
+            buttonVariants({ variant, size }),
+            {
+              "shadow-none hover:shadow-none": !shadows,
+            },
+            className,
+          )}
+          ref={ref}
+        >
+          {props.children}
+
+          <BorderLight
+            opposed={variant === "cta"}
+            groupName="button"
+            appearOnHover
+            fast
+          />
+        </Comp>
+      </HelpPopoverTrigger>
+    ) : (
       <Comp
         {...props}
         type={props.type || "button"}

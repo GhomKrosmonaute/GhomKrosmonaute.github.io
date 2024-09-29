@@ -149,6 +149,7 @@ export type GameCardState =
   | "removed"
   | "idle"
   | "highlighted"
+  | "transforming"
   | null
 
 export type ActionCardFamily =

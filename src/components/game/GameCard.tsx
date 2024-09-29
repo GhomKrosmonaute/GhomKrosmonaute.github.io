@@ -72,7 +72,7 @@ export const GameCard = (
 
   return (
     <div
-      key={props.card.name + props.card.rarity}
+      // key={props.card.name}
       className={cn(
         "game-card",
         "relative w-[210px] h-[293px]",

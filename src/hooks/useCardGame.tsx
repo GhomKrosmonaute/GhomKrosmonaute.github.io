@@ -74,6 +74,8 @@ import {
   save,
   updateUpgradeState,
   waitFor,
+  getRevivedDeck,
+  getGameSpeed,
 } from "@/game-safe-utils.tsx"
 import { Tag } from "@/components/game/Texts.tsx"
 
@@ -162,6 +164,10 @@ export interface GameState {
     name: CardModifierName,
     params: Parameters<(typeof cardModifiers)[CardModifierName]>,
     reason: GameModifierLog["reason"],
+  ) => Promise<void>
+  transformCardsAnimation: (
+    names: string[],
+    onMiddle: (cards: GameCardInfo<true>[]) => unknown,
   ) => Promise<void>
   drawCard: (
     count: number,
@@ -1058,6 +1064,40 @@ function generateGameMethods(
         })
 
         await wait()
+      })
+    },
+
+    transformCardsAnimation: async (names, onMiddle) => {
+      await handleErrorsAsync(getState, async () => {
+        const state = getState()
+
+        state.setOperationInProgress("transformCards", true)
+
+        const speed = getGameSpeed()
+
+        const cards = getRevivedDeck(state).filter((c) =>
+          names.includes(c.name),
+        )
+
+        set((state) => ({
+          hand: updateCardState(state.hand, names, "transforming"),
+          draw: updateCardState(state.draw, names, "transforming"),
+          discard: updateCardState(state.discard, names, "transforming"),
+        }))
+
+        await wait(speed / 2)
+
+        await onMiddle(cards)
+
+        await wait(speed / 2)
+
+        set((state) => ({
+          hand: updateCardState(state.hand, names, "idle"),
+          draw: updateCardState(state.draw, names, "idle"),
+          discard: updateCardState(state.discard, names, "idle"),
+        }))
+
+        state.setOperationInProgress("transformCards", false)
       })
     },
 

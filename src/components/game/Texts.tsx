@@ -37,25 +37,37 @@ export const Bracket = ({
 export const Money = ({
   M$,
   ...props
-}: React.ComponentProps<"span"> & { M$: number }) => {
+}: Omit<React.ComponentProps<"span">, "ref"> & { M$: number }) => {
+  const ref = React.useRef<HTMLSpanElement>(null)
+
+  useHelpPopover(
+    ref,
+    <>
+      <h3>Argent</h3>
+      <p>
+        L'argent est la monnaie du jeu. <br />
+        Il est utilisé pour jouer certaines cartes.
+      </p>
+    </>,
+  )
+
   const final =
     M$ >= 1000
-      ? `${(M$ / 1000).toFixed(2).replace(".00", "").replace(/\.0\b/, "")}B$`
-      : `${M$}M$`
+      ? `${(M$ / 1000).toFixed(2).replace(".00", "").replace(/\.0\b/, "")}B`
+      : `${M$}M`
 
   return (
     <span
+      ref={ref}
       {...props}
-      className={cn(
-        "bg-money text-money-foreground px-1 py-0 border border-money-foreground font-changa",
-        sharedClassName,
-      )}
+      className={cn(sharedClassName, "text-money font-changa", props.className)}
       style={{
         ...sharedStyle,
         ...props.style,
       }}
     >
       {final}
+      <span className="text-money">$</span>
     </span>
   )
 }
@@ -136,7 +148,7 @@ export const Family = ({
       ref={ref}
       {...props}
       className={cn(
-        "text-lg text-action-foreground font-bold bg-action/30 ring-1 ring-action px-1 rounded-sm inline-flex leading-3 pt-1",
+        "text-lg text-foreground font-bold bg-action/30 ring-1 ring-action px-1 rounded-sm inline-flex leading-3 pt-1",
         props.className,
       )}
       style={{

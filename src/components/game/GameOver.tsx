@@ -196,6 +196,16 @@ export const GameOver = (props: { show: boolean }) => {
               {game.isWon && (
                 <Button
                   onClick={() => game.continue()}
+                  popover={
+                    <div>
+                      <h3>Mode Infini</h3>
+                      <p>
+                        Si tu veux continuer a t'amuser sur cette partie, c'est
+                        possible ! Mais le jeu continueras indéfiniment et ton
+                        score ne sera pas recevable
+                      </p>
+                    </div>
+                  }
                   variant="cta"
                   size="cta"
                 >
