@@ -21,14 +21,15 @@ export const GameActions = (props: { show: boolean }) => {
   const game = useCardGame()
   const animation = useSettings((state) => state.quality.animations)
 
+  const newSprint = React.useMemo(() => isNewSprint(game.day), [game.day])
+
+  const resolvedOptions = React.useMemo(
+    () => toSortedCards(game.choiceOptions[0]?.options() ?? [], game),
+    [game.choiceOptions[0]],
+  )
+
   const runningOps =
     game.operationInProgress.filter((o) => o !== "choices").length > 0
-
-  const newSprint = React.useMemo(() => isNewSprint(game.day), [game.day])
-  const sortedOptions = React.useMemo(
-    () => toSortedCards(game.choiceOptions[0]?.options ?? [], game),
-    [game],
-  )
 
   const drawButtonDisabled =
     game.energy + game.reputation < INFINITE_DRAW_COST ||
@@ -67,8 +68,7 @@ export const GameActions = (props: { show: boolean }) => {
         <h2
           className={cn(
             "text-3xl ml-2 select-none",
-            game.choiceOptions.length > 0 &&
-              game.choiceOptions[0].options.length < 4
+            game.choiceOptions.length > 0 && resolvedOptions.length < 4
               ? "text-left"
               : "text-center",
           )}
@@ -142,7 +142,7 @@ export const GameActions = (props: { show: boolean }) => {
               Passer
             </Button>
             {(() => {
-              if (game.choiceOptions[0].options.length === 0) {
+              if (resolvedOptions.length === 0) {
                 game.dangerouslyUpdate({
                   choiceOptions: game.choiceOptions.slice(1),
                 })
@@ -151,19 +151,28 @@ export const GameActions = (props: { show: boolean }) => {
               return (
                 <div
                   className={cn("flex justify-center", {
-                    "grid grid-cols-3": sortedOptions.length < 3,
+                    "grid grid-cols-3": resolvedOptions.length < 3,
                   })}
                 >
                   <div
                     className={cn({
-                      hidden: sortedOptions.length !== 1,
+                      hidden: resolvedOptions.length !== 1,
                     })}
                   />
-                  {sortedOptions.map((option, i) =>
+                  {resolvedOptions.map((option, i) =>
                     isGameResource(option) ? (
-                      <GameResourceCard key={i} resource={option} />
+                      <GameResourceCard
+                        key={i}
+                        resource={option}
+                        options={resolvedOptions}
+                      />
                     ) : (
-                      <GameCard key={i} card={option} isChoice />
+                      <GameCard
+                        key={i}
+                        card={option}
+                        isChoice
+                        options={resolvedOptions}
+                      />
                     ),
                   )}
                 </div>

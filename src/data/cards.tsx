@@ -17,7 +17,7 @@ const upgradeCards = upgrades.map<GameCardInfo>((upgrade) => {
     families: [],
     effect: () => ({
       description: (
-        <div className="flex gap-2 items-center">
+        <div className="flex gap-2 items-center justify-center">
           <HelpPopoverTrigger popover={event.name}>
             <GameValueIcon
               value={<event.icon className="h-5" />}

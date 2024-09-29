@@ -7,27 +7,26 @@ import { useGameWatching } from "@/hooks/useGameWatching.ts"
 
 import steps from "@/data/tutorial.tsx"
 
+import { SettingsModal } from "@/components/game/settings/SettingsModal.tsx"
 import { CrashReportProvider } from "@/components/game/CrashReportProvider.tsx"
 import { TutorialProvider } from "@/components/game/TutorialProvider.tsx"
 import { ScreenMessages } from "@/components/game/ScreenMessages.tsx"
+import { GameCardDetail } from "@/components/game/GameCardDetail.tsx"
+import { GameCardStacks } from "@/components/game/GameCardStacks.tsx"
 import { GameTutorial } from "@/components/game/GameTutorial.tsx"
 import { GameUpgrades } from "@/components/game/GameUpgrades.tsx"
 import { CornerIcons } from "@/components/game/CornerIcons.tsx"
 import { GameActions } from "@/components/game/GameActions.tsx"
 import { GameHelpers } from "@/components/game/GameHelpers.tsx"
 import { HelpPopover } from "@/components/game/HelpPopover.tsx"
-import { GameHUD } from "@/components/game/GameHUD.tsx"
-import { Scoreboard } from "@/components/game/Scoreboard.tsx"
 import { GameAlert } from "@/components/game/GameAlert.tsx"
 import { GameDebug } from "@/components/game/GameDebug.tsx"
 import { GameMusic } from "@/components/game/GameMusic.tsx"
-import { GameRules } from "@/components/game/GameRules.tsx"
 import { GameOver } from "@/components/game/GameOver.tsx"
-import { Settings } from "@/components/game/Settings.tsx"
 import { GameHand } from "@/components/game/GameHand.tsx"
+import { GameHUD } from "@/components/game/GameHUD.tsx"
 
 import "@/game-automatisms.ts"
-import { GameCardDetail } from "@/components/game/GameCardDetail.tsx"
 
 export const Game = () => {
   useKonamiCode()
@@ -38,10 +37,9 @@ export const Game = () => {
     state.handleError,
   ])
 
-  const [show, showSettings, showRules] = useGlobalState((state) => [
+  const [show, showSettings] = useGlobalState((state) => [
     state.isCardGameVisible,
     state.settingsVisible,
-    state.rulesVisible,
   ])
 
   const handleErrorEvent = React.useCallback(
@@ -73,16 +71,15 @@ export const Game = () => {
         <GameMusic />
         <GameHelpers show={show} />
         <GameAlert show={show} />
-        <Scoreboard show={show} />
         <GameHUD show={show} />
         <GameOver show={show} />
         <GameActions show={show} />
         <GameUpgrades show={show} />
         <CornerIcons show={show} />
-        <Settings show={show && showSettings} />
-        <GameRules show={show && showRules} />
+        <GameCardStacks show={show} />
         <GameHand show={show} />
         <GameCardDetail show={show} />
+        <SettingsModal show={show && showSettings} />
         <HelpPopover show={show} />
         <GameTutorial show={show} />
         <ScreenMessages show={show} />

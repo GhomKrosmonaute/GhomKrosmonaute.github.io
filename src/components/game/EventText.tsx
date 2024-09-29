@@ -10,7 +10,12 @@ export const EventText = (props: {
   const event = events[props.eventName]
 
   return (
-    <div className={cn("inline-flex items-center gap-1", props.className)}>
+    <div
+      className={cn(
+        "inline-flex justify-center items-center gap-1 mx-auto",
+        props.className,
+      )}
+    >
       <GameValueIcon
         value={<event.icon className="h-5" />}
         colors={"colors" in event ? event.colors : "bg-background"}

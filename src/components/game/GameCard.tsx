@@ -8,6 +8,7 @@ import {
   ActionCardInfo,
   compactGameCardInfo,
   GameCardInfo,
+  GameResource,
   SupportCardInfo,
 } from "@/game-typings"
 
@@ -27,11 +28,14 @@ import {
 import { New, RarityBadge } from "@/components/game/Texts.tsx"
 import { GameCost } from "@/components/game/GameCost.tsx"
 import { GameCardSubType } from "@/components/game/GameCardSubType.tsx"
+import { GAME_CARD_SIZE } from "@/game-constants.ts"
 
 export const GameCard = (
   props: React.PropsWithoutRef<{
     card: GameCardInfo<true>
+    options?: (GameCardInfo<true> | GameResource)[]
     position?: number
+    isStack?: boolean
     isChoice?: boolean
     isPlaying?: boolean
     withoutDetail?: boolean
@@ -74,12 +78,13 @@ export const GameCard = (
     <div
       // key={props.card.name}
       className={cn(
-        "game-card",
-        "relative w-[210px] h-[293px]",
+        "game-card relative",
+        GAME_CARD_SIZE,
         "-mx-3.5 z-10 hover:z-30 cursor-pointer select-none",
         {
           // "z-20": props.card.state === "highlighted",
           "cursor-not-allowed":
+            props.isStack ||
             (game.selectionInProgress && props.card.state !== "selected") ||
             (!game.selectionInProgress &&
               (notAllowed ||
@@ -97,12 +102,17 @@ export const GameCard = (
                   !game.canBeBuy ||
                   !game.canTriggerEffect)),
             // "translate-y-8": !canTriggerEffect || !haveEnoughResources,
-          })]: !props.isChoice && !props.isPlaying && !props.withoutDetail,
+          })]:
+            !props.isStack &&
+            !props.isChoice &&
+            !props.isPlaying &&
+            !props.withoutDetail,
         },
       )}
       onClick={async () => {
         if (props.withoutDetail) return
         if (props.isPlaying) return
+        if (props.isStack) return
 
         if (!props.isChoice) {
           if (game.selectionInProgress) {
@@ -165,6 +175,7 @@ export const GameCard = (
         <></>
       ) : (
         <Tilt
+          disabled={props.isStack}
           scale={1.1}
           className={cn(
             "group/game-card",

@@ -12,7 +12,7 @@ export const GameCost = (props: { cost: Cost; miniature?: boolean }) => {
 
   const cost = getUsableCost(props.cost, game)
 
-  if (cost === 0) {
+  if (cost <= 0) {
     return (
       <div
         className={cn(

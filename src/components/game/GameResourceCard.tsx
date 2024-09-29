@@ -4,7 +4,7 @@ import "./GameCard.css"
 
 import BrokenCard from "@/assets/icons/game/broken-card.svg"
 
-import type { GameResource } from "@/game-typings"
+import { GameResource } from "@/game-typings"
 
 import { useCardGame } from "@/hooks/useCardGame.tsx"
 import { useSettings } from "@/hooks/useSettings.ts"

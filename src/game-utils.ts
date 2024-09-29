@@ -15,6 +15,7 @@ import {
   isGameResource,
   isGameCardInfo,
   ChoiceOptions,
+  compactGameCardInfo,
 } from "@/game-typings"
 
 import { MAX_HAND_SIZE, RARITIES, INFINITE_DRAW_COST } from "@/game-constants"
@@ -37,57 +38,59 @@ export function generateChoiceOptions(
 ): ChoiceOptions {
   state.setOperationInProgress("choices", true)
 
-  const _cards: (GameCardInfo | GameResource)[] = cards.filter(
-    (card) =>
-      // (state.choiceOptions.length === 0 ||
-      //   state.choiceOptions.every(
-      //     (choice) =>
-      //       choice.options.length === 0 ||
-      //       choice.options.every(
-      //         (i) => !isGameResource(i) && i.name !== card.name,
-      //       ),
-      //   )) &&
-      (state.draw.length === 0 ||
-        state.draw.every((c) => c.name !== card.name)) &&
-      (state.discard.length === 0 ||
-        state.discard.every((c) => c.name !== card.name)) &&
-      (state.hand.length === 0 ||
-        state.hand.every((c) => c.name !== card.name)) &&
-      (!options?.exclude ||
-        options?.exclude?.every((name) => name !== card.name)) &&
-      (!options?.filter || options?.filter?.(card, state)) &&
-      (!card.effect().tags.includes("upgrade") ||
-        state.upgrades.length === 0 ||
-        state.upgrades.every((u) => {
-          const up = reviveUpgrade(u)
-          return up.name !== card.name || up.cumul < up.max
-        })),
-  )
-
-  if (_cards.length < state.choiceOptionCount) {
-    while (_cards.length < state.choiceOptionCount) {
-      _cards.push(generateRandomResource(state))
-    }
-  } else if (!options?.noResource) {
-    const length = _cards.length
-    for (let i = 0; i < Math.ceil(length / 10); i++) {
-      _cards.push(generateRandomResource(state))
-    }
-  }
+  const filter = (card: GameCardInfo) =>
+    // (state.choiceOptions.length === 0 ||
+    //   state.choiceOptions.every(
+    //     (choice) =>
+    //       choice.options.length === 0 ||
+    //       choice.options.every(
+    //         (i) => !isGameResource(i) && i.name !== card.name,
+    //       ),
+    //   )) &&
+    (state.draw.length === 0 ||
+      state.draw.every((c) => c.name !== card.name)) &&
+    (state.discard.length === 0 ||
+      state.discard.every((c) => c.name !== card.name)) &&
+    (state.hand.length === 0 ||
+      state.hand.every((c) => c.name !== card.name)) &&
+    (!options?.exclude ||
+      options?.exclude?.every((name) => name !== card.name)) &&
+    (!options?.filter || options?.filter?.(card, state)) &&
+    (!card.effect().tags.includes("upgrade") ||
+      state.upgrades.length === 0 ||
+      state.upgrades.every((u) => {
+        const up = reviveUpgrade(u)
+        return up.name !== card.name || up.cumul < up.max
+      }))
 
   return {
     header: options?.header ?? "Choisis une carte",
-    options: shuffle(_cards, 3)
-      .slice(0, state.choiceOptionCount)
-      .map((option) => {
-        if (isGameResource(option)) return option
+    options: () => {
+      const _cards: (GameCardInfo | GameResource)[] = cards.filter(filter)
 
-        return {
-          name: option.name,
-          state: "landing",
-          initialRarity: generateRandomAdvantage(),
-        } as GameCardCompact
-      }),
+      if (_cards.length < state.choiceOptionCount) {
+        while (_cards.length < state.choiceOptionCount) {
+          _cards.push(generateRandomResource(state))
+        }
+      } else if (!options?.noResource) {
+        const length = _cards.length
+        for (let i = 0; i < Math.ceil(length / 10); i++) {
+          _cards.push(generateRandomResource(state))
+        }
+      }
+
+      return shuffle(_cards, 3)
+        .slice(0, state.choiceOptionCount)
+        .map((option) => {
+          if (isGameResource(option)) return option
+
+          return {
+            name: option.name,
+            state: "landing",
+            initialRarity: generateRandomAdvantage(),
+          } as GameCardCompact
+        })
+    },
   }
 }
 
@@ -247,8 +250,10 @@ export function toSortedCards<T extends GameResolvable>(
       if (isGameCardInfo(a) && isGameCardInfo(b)) {
         const typeA = a.type === "action" ? 1 : 0
         const typeB = b.type === "action" ? 1 : 0
-        const priceA = a.effect.cost.type === "money" ? 1 : 0
-        const priceB = b.effect.cost.type === "money" ? 1 : 0
+        const priceA =
+          a.effect.cost.value > 0 && a.effect.cost.type === "money" ? 1 : 0
+        const priceB =
+          b.effect.cost.value > 0 && b.effect.cost.type === "money" ? 1 : 0
         const costA = a.effect.cost.value
         const costB = b.effect.cost.value
         const effect = a.effect.tags
@@ -263,11 +268,19 @@ export function toSortedCards<T extends GameResolvable>(
 
 export function revivedState(
   state: GameState & GlobalGameState,
-): Pick<GameState, "revivedHand" | "revivedDraw" | "revivedDiscard"> {
+  sortHand = false,
+): Pick<GameState, "revivedHand" | "revivedDraw" | "revivedDiscard" | "hand"> {
+  const revivedHand = sortHand
+    ? toSortedCards(state.hand, state)
+    : state.hand.map((i) => reviveCard(i, state))
+
   return {
-    revivedHand: toSortedCards(state.hand, state),
+    revivedHand,
     revivedDraw: state.draw.map((i) => reviveCard(i, state)),
     revivedDiscard: state.discard.map((i) => reviveCard(i, state)),
+    hand: sortHand
+      ? revivedHand.map((c) => compactGameCardInfo(c))
+      : state.hand,
   }
 }
 

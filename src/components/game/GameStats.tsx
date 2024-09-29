@@ -159,6 +159,7 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
                 .filter(
                   (c) =>
                     !search ||
+                    c.type.includes(search.toLowerCase()) ||
                     c.name.toLowerCase().includes(search.toLowerCase()) ||
                     c.effect.tags.some(
                       (t) =>
@@ -167,6 +168,10 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
                           .toLowerCase()
                           .includes(search.toLowerCase()),
                     ) ||
+                    (c.type === "action" &&
+                      c.families.some((f) =>
+                        f.toLowerCase().includes(search.toLowerCase()),
+                      )) ||
                     extractTextFromReactNode(c.effect.description)
                       .toLowerCase()
                       .includes(search.toLowerCase()),

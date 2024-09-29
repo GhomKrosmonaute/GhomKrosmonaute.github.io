@@ -191,7 +191,7 @@ export const tags = {
     name: "Argent",
     description:
       "L'argent est la ressource principale du jeu, elle peut servir a jouer certaines cartes.",
-    className: "bg-money text-money-foreground",
+    className: "text-money font-changa",
   },
 } satisfies Record<
   string,
@@ -561,6 +561,7 @@ export function parseSave(save: string) {
   state.revivedHand = []
   state.revivedDraw = []
   state.revivedDiscard = []
+  state.choiceOptions = []
 
   return state
 }

@@ -7,11 +7,9 @@ type State = {
   musicVolume: number
   isCardGameVisible: boolean
   splineLoaded: boolean
-  rulesVisible: boolean
   settingsVisible: boolean
   setCardGameVisibility: (visible: boolean) => void
   setSplineLoaded: (loaded: boolean) => void
-  toggleRules: () => void
   toggleSettings: () => void
   toggleMusicMuted: () => void
   setMusicVolume: (cb: (currentVolume: number) => number) => void
@@ -23,7 +21,6 @@ export const useGlobalState = create<State>((set) => ({
   musicMuted: localStorage.getItem("muted") === "true",
   musicVolume: 0,
   isCardGameVisible: new URLSearchParams(location.search).has("game"),
-  rulesVisible: false,
   splineLoaded: false,
   settingsVisible: false,
   setCardGameVisibility: (visible) => set({ isCardGameVisible: visible }),
@@ -37,7 +34,6 @@ export const useGlobalState = create<State>((set) => ({
     }),
   setMusicVolume: (volume) =>
     set((state) => ({ musicVolume: volume(state.musicVolume) })),
-  toggleRules: () => set((state) => ({ rulesVisible: !state.rulesVisible })),
   setTutorial: (enable) => {
     localStorage.setItem(
       "settings",

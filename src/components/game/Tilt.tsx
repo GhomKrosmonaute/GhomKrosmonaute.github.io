@@ -17,6 +17,7 @@ interface TiltProps {
   className?: string // Classe CSS pour styliser le conteneur
   children: React.ReactNode
   style?: React.CSSProperties
+  disabled?: boolean
 }
 
 const constantStyle = {
@@ -31,6 +32,7 @@ export const Tilt: React.FC<TiltProps> = ({
   className = "",
   children,
   style,
+  disabled = false,
 }) => {
   const enabled = useSettings(
     (state) => state.quality.tilt && state.quality.animations,
@@ -43,7 +45,7 @@ export const Tilt: React.FC<TiltProps> = ({
 
   const handleMouseMove = React.useCallback(
     (e: MouseEvent) => {
-      if (containerRef.current) {
+      if (!disabled && containerRef.current) {
         const rect = containerRef.current.getBoundingClientRect()
         const x = e.clientX - rect.left
         const y = e.clientY - rect.top

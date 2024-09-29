@@ -331,5 +331,5 @@ export interface ChoiceOptionsGeneratorOptions {
 
 export interface ChoiceOptions {
   header: React.ReactNode
-  options: (GameCardCompact | GameResource)[]
+  options: () => (GameCardCompact | GameResource)[]
 }

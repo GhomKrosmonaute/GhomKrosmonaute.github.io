@@ -569,6 +569,7 @@ const actions: ActionCardInfo[] = (
           )
         },
         tags: ["ephemeral", "level"],
+        needsPlayZone: true,
       }),
     },
     {

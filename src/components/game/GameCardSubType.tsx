@@ -18,7 +18,9 @@ export const GameCardSubType = (props: { card: GameCardInfo<true> }) => {
       })}
     >
       {subTypes.map((type) => (
-        <Tag name={type} key={type} />
+        <div key={type}>
+          <Tag name={type} />
+        </div>
       ))}
     </div>
   )

@@ -148,7 +148,7 @@ export const Family = ({
       ref={ref}
       {...props}
       className={cn(
-        "text-lg text-foreground font-bold bg-action/30 ring-1 ring-action px-1 rounded-sm inline-flex leading-3 pt-1",
+        "text-lg text-foreground font-bold font-zain bg-action/30 ring-1 ring-action px-1 rounded-sm inline-flex leading-3 pt-1",
         props.className,
       )}
       style={{

@@ -48,6 +48,7 @@ import {
   willBeRemoved,
   generateChoiceOptions,
   revivedState,
+  toSortedCards,
 } from "@/game-utils.ts"
 
 import { metadata } from "@/game-metadata.ts"
@@ -200,7 +201,7 @@ export interface GameState {
     timeout?: number
   }) => Promise<GameCardInfo<true> | null>
   skip: (options: MethodWhoLog) => Promise<void>
-  pickOption: (card: GameCardInfo<true> | GameResource) => Promise<void>
+  pickOption: (option: GameCardInfo<true> | GameResource) => Promise<void>
   win: () => void
   defeat: (reason: GameOverReason) => void
   reset: () => void
@@ -376,27 +377,29 @@ function generateGameState(): Omit<
   const startingChoices: ChoiceOptions[] = []
 
   for (let i = 0; i < INITIAL_CHOICE_COUNT; i++) {
+    const current = shuffle(
+      cards.filter(
+        (c) =>
+          startingChoices.every((choice) =>
+            choice
+              .options()
+              .every((o) => (o as GameCardCompact).name !== c.name),
+          ) &&
+          startingDeck.every((name) => name !== c.name) &&
+          !c.effect().tags.includes("upgrade"),
+      ),
+      5,
+    )
+      .slice(0, INITIAL_CHOICE_OPTION_COUNT)
+      .map((c) => ({
+        name: c.name,
+        state: "idle" as const,
+        initialRarity: generateRandomAdvantage(),
+      }))
+
     startingChoices.push({
       header: "Choisis une carte",
-      options: shuffle(
-        cards.filter(
-          (c) =>
-            startingChoices.every((choice) =>
-              choice.options.every(
-                (o) => (o as GameCardCompact).name !== c.name,
-              ),
-            ) &&
-            startingDeck.every((name) => name !== c.name) &&
-            !c.effect().tags.includes("upgrade"),
-        ),
-        5,
-      )
-        .slice(0, INITIAL_CHOICE_OPTION_COUNT)
-        .map((c) => ({
-          name: c.name,
-          state: "idle",
-          initialRarity: generateRandomAdvantage(),
-        })),
+      options: () => current,
     })
   }
 
@@ -494,9 +497,9 @@ function generateGameMethods(
           },
         )
 
-        set({
+        set((state) => ({
           choiceOptions: state.choiceOptions.slice(1),
-        })
+        }))
 
         await state.increments("skippedChoices")
       })
@@ -1109,7 +1112,7 @@ function generateGameMethods(
 
         const fromKey = options?.fromDiscardPile ? "discard" : "draw"
 
-        const hand = state.hand.slice()
+        let hand = state.hand.slice()
 
         const from = state[fromKey].slice().filter((c) => {
           const card = reviveCard(c, state)
@@ -1142,6 +1145,8 @@ function generateGameMethods(
           if (fromKey === "draw") bank.draw.play()
           else bank.recycle.play()
         }
+
+        hand = toSortedCards(hand, state).map((c) => compactGameCardInfo(c))
 
         set({
           hand,
@@ -1585,23 +1590,27 @@ function generateGameMethods(
           true,
         )
 
+        const choice = state.choiceOptions[0]
+
         // on joue le son de la banque
         bank.gain.play()
-        if (state.choiceOptions[0].options.length > 1) bank.remove.play()
+        if (choice.options().length > 1) bank.remove.play()
 
         // on active les animations
         set({
-          choiceOptions: state.choiceOptions.map((choice) => {
-            return {
+          choiceOptions: [
+            {
               ...choice,
-              options: choice.options.map((c) => {
-                return (isGameResource(c) ? c.id : c.name) ===
-                  (isGameResource(option) ? option.id : option.name)
-                  ? { ...c, state: "playing" }
-                  : { ...c, state: "removing" }
-              }),
-            }
-          }),
+              options: () =>
+                choice.options().map((c) => {
+                  return (isGameResource(c) ? c.id : c.name) ===
+                    (isGameResource(option) ? option.id : option.name)
+                    ? { ...c, state: "playing" }
+                    : { ...c, state: "removing" }
+                }),
+            },
+            ...state.choiceOptions.slice(1),
+          ],
         })
 
         if (isGameResource(option)) {
@@ -1631,24 +1640,27 @@ function generateGameMethods(
           await wait()
 
           set((state) => ({
-            choiceOptions: state.choiceOptions.map((choice) => {
-              return {
+            choiceOptions: [
+              {
                 ...choice,
-                options: updateCardState(choice.options, option.id, "removed"),
-              }
-            }),
+                options: () =>
+                  updateCardState(choice.options(), option.id, "removed"),
+              },
+              ...state.choiceOptions.slice(1),
+            ],
           }))
 
           set((state) => ({
-            choiceOptions: state.choiceOptions.map((choice) => {
-              return {
+            choiceOptions: [
+              {
                 ...choice,
-                options: updateCardState(choice.options, null),
-              }
-            }),
+                options: () => updateCardState(choice.options(), null),
+              },
+              ...state.choiceOptions.slice(1),
+            ],
           }))
 
-          // on retire un groupe de choix et on ajoute la carte à la pioche
+          // on retire un groupe de choix
 
           set((state) => ({
             choiceOptions: state.choiceOptions.slice(1),
@@ -1659,44 +1671,51 @@ function generateGameMethods(
           await wait()
 
           set((state) => ({
-            choiceOptions: state.choiceOptions.map((choice) => {
-              return {
+            choiceOptions: [
+              {
                 ...choice,
-                options: updateCardState(
-                  choice.options,
-                  option.name,
-                  "removed",
-                ),
-              }
-            }),
+                options: () =>
+                  updateCardState(choice.options(), option.name, "removed"),
+              },
+              ...state.choiceOptions.slice(1),
+            ],
           }))
 
           set((state) => ({
-            choiceOptions: state.choiceOptions.map((choice) => {
-              return {
+            choiceOptions: [
+              {
                 ...choice,
-                options: updateCardState(choice.options, null),
-              }
-            }),
+                options: () => updateCardState(choice.options(), null),
+              },
+              ...state.choiceOptions.slice(1),
+            ],
           }))
 
-          // on retire un groupe de choix et on ajoute la carte à la pioche
+          // on retire un groupe de choix et on ajoute la carte à la main ou la pioche
 
           set((state) => {
             const to = state.hand.length < MAX_HAND_SIZE ? "hand" : "draw"
 
+            let picked =
+              to === "draw"
+                ? shuffle([...state.draw, compactGameCardInfo(option)], 3)
+                : [
+                    ...state.hand,
+                    compactGameCardInfo(
+                      option,
+                      "landing",
+                    ) satisfies GameCardCompact,
+                  ]
+
+            if (to === "hand")
+              picked = toSortedCards(
+                picked,
+                state as GameState & GlobalGameState,
+              ).map((c) => compactGameCardInfo(c))
+
             return {
               choiceOptions: state.choiceOptions.slice(1),
-              [to]:
-                to === "draw"
-                  ? shuffle([...state.draw, compactGameCardInfo(option)], 3)
-                  : [
-                      ...state.hand,
-                      compactGameCardInfo(
-                        option,
-                        "landing",
-                      ) satisfies GameCardCompact,
-                    ],
+              [to]: picked,
             }
           })
 
@@ -1790,29 +1809,14 @@ useCardGame.subscribe(async (state, prevState) => {
       )
         state.updateScore()
 
-      save(state)
-
-      // si la main change, on met a jour les revived cards
-      if (
-        state.hand.map((c) => c.name + c.state).join(",") !==
-          prevState.hand.map((c) => c.name + c.state).join(",") ||
-        state.draw.map((c) => c.name + c.state).join(",") !==
-          prevState.draw.map((c) => c.name + c.state).join(",") ||
-        state.discard.map((c) => c.name + c.state).join(",") !==
-          prevState.discard.map((c) => c.name + c.state).join(",") ||
-        state.inflation !== prevState.inflation ||
-        state.globalCardModifiers.map((m) => m.name).join(",") !==
-          prevState.globalCardModifiers.map((m) => m.name).join(",")
-      ) {
-        state.dangerouslyUpdate(revivedState(state))
-      }
-
       // si aucune opération n'est en cours
       if (
         state.operationInProgress.join(",") !==
           prevState.operationInProgress.join("") &&
         state.operationInProgress.length === 0
       ) {
+        state.dangerouslyUpdate(revivedState(state, true))
+
         if (isGameWon(state)) {
           await state.addAchievement("Première victoire")
         }
@@ -1835,6 +1839,8 @@ useCardGame.subscribe(async (state, prevState) => {
             state.addPlayedGame()
           }
         }
+
+        save(state)
 
         // todo: trouver un moyen de faire fonctionner les templates
         // const cardWithTemplate = state.hand.filter((card) => card.effect.template);
@@ -1871,6 +1877,20 @@ useCardGame.subscribe(async (state, prevState) => {
         //     }),
         //   });
         // }
+
+        // si la main change, on met a jour les revived cards
+      } else if (
+        state.hand.map((c) => c.name + c.state).join(",") !==
+          prevState.hand.map((c) => c.name + c.state).join(",") ||
+        state.draw.map((c) => c.name + c.state).join(",") !==
+          prevState.draw.map((c) => c.name + c.state).join(",") ||
+        state.discard.map((c) => c.name + c.state).join(",") !==
+          prevState.discard.map((c) => c.name + c.state).join(",") ||
+        state.inflation !== prevState.inflation ||
+        state.globalCardModifiers.map((m) => m.name).join(",") !==
+          prevState.globalCardModifiers.map((m) => m.name).join(",")
+      ) {
+        state.dangerouslyUpdate(revivedState(state))
       }
     },
   )

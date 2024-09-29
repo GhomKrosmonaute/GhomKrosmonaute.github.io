@@ -66,10 +66,10 @@ const achievements: {
   },
   {
     name: "Xelor",
-    description: `Avoir ${MAX_HAND_SIZE} cartes en main qui coutent zéro en même temps`,
+    description: `Ai ${MAX_HAND_SIZE} cartes en main qui coutent zéro en même temps`,
     unlockCondition: (state) =>
       state.hand.filter(
-        (card) => reviveCard(card, state).effect.cost.value === 0,
+        (card) => reviveCard(card, state).effect.cost.value <= 0,
       ).length >= 5,
   },
   {

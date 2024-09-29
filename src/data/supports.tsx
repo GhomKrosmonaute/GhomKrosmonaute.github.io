@@ -96,13 +96,13 @@ const reusable = {
             })}
           </>
         ),
-        condition: (state) => state.revivedDraw.some(options.filter),
         onPlayed: async (state, _, reason) => {
-          await state.drawCard(drawSpecific.value, {
-            filter: options.filter,
-            skipGameOverPause: true,
-            reason,
-          })
+          if (possibleDraw > 0)
+            await state.drawCard(drawSpecific.value, {
+              filter: options.filter,
+              skipGameOverPause: true,
+              reason,
+            })
 
           await computeEffectOnPlayed({
             state,
