@@ -4,8 +4,9 @@ import { useCardGame } from "@/hooks/useCardGame.tsx"
 
 import { Button } from "@/components/ui/button.tsx"
 import upgrades from "@/data/upgrades.tsx"
-import { wait } from "@/game-safe-utils.tsx"
+import { generateRandomRarity, wait } from "@/game-safe-utils.tsx"
 import cards from "@/data/cards.tsx"
+import { reviveCard } from "@/game-utils.ts"
 
 export const GameDebugActions = () => {
   const game = useCardGame()
@@ -48,9 +49,20 @@ export const GameDebugActions = () => {
       <Button
         size="cta"
         disabled={runningOps}
+        onClick={async () => {
+          const week = 7
+          const energy = Math.round(week / ENERGY_TO_DAYS)
+          await game.advanceTime(energy)
+        }}
+      >
+        Ajouter une semaine
+      </Button>
+      <Button
+        size="cta"
+        disabled={runningOps}
         className="text-upgrade"
         onClick={async () => {
-          game.setOperationInProgress("all upgrades", true)
+          game.setOperationInProgress("get all upgrades", true)
 
           game.upgrades = []
 
@@ -65,10 +77,40 @@ export const GameDebugActions = () => {
             await game.removeCard(raw.name)
           }
 
-          game.setOperationInProgress("all upgrades", false)
+          game.setOperationInProgress("get all upgrades", false)
         }}
       >
         Toutes les améliorations
+      </Button>
+      <Button
+        size="cta"
+        onClick={async () => {
+          game.choiceOptions = []
+          game.operationInProgress = []
+          game.setOperationInProgress("get all cards", true)
+
+          for (const card of cards) {
+            if (game.hand.some((c) => c.name === card.name)) continue
+            if (game.draw.some((c) => c.name === card.name)) continue
+            if (game.playZone.some((c) => c.name === card.name)) continue
+            if (game.discard.some((c) => c.name === card.name)) continue
+
+            game.draw.push(
+              reviveCard(
+                {
+                  name: card.name,
+                  state: "idle",
+                  initialRarity: generateRandomRarity(),
+                },
+                game,
+              ),
+            )
+          }
+
+          game.setOperationInProgress("get all cards", false)
+        }}
+      >
+        Toutes les cartes
       </Button>
       <Button
         size="cta"

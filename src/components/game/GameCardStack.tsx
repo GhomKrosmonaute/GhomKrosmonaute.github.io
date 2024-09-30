@@ -1,19 +1,29 @@
+import React from "react"
 import { GameCard } from "@/components/game/GameCard.tsx"
 import { GameState, useCardGame } from "@/hooks/useCardGame.tsx"
 import { GAME_CARD_SIZE } from "@/game-constants.ts"
 import { cn } from "@/utils.ts"
 import { getRarityName } from "@/game-safe-utils.tsx"
-
-const cardThickness = 2
+import { useHover } from "@/hooks/useHover.ts"
 
 export const GameCardStack = (props: {
   name: string
   revivedKey: keyof GameState & `revived${string}`
+  zIndex?: number
 }) => {
+  const ref = React.useRef<HTMLDivElement>(null)
+  const isHover = useHover(ref)
   const cards = useCardGame((state) => state[props.revivedKey])
+  const isShuffling = useCardGame((state) =>
+    state.operationInProgress.includes(
+      `shuffleStack ${props.revivedKey.replace("revived", "").toLowerCase()}`,
+    ),
+  )
+
+  const cardThickness = isHover ? 2 : 1
 
   return (
-    <div className="space-y-4">
+    <div ref={ref} className="space-y-4" style={{ zIndex: props.zIndex ?? 1 }}>
       <div className={cn(GAME_CARD_SIZE, "relative overflow-visible")}>
         {cards.map((card, i, all) => {
           return (
@@ -21,16 +31,18 @@ export const GameCardStack = (props: {
               key={i}
               className={cn(
                 GAME_CARD_SIZE,
-                "bg-card/50 absolute top-0 left-0",
-                i < all.length - 2 && "border-l",
+                "absolute top-1/2 left-1/2 flex justify-center items-center transition-transform",
+                (isShuffling || i < all.length - 2) && "border-l bg-card",
               )}
               style={{
-                transform: `translateY(-${i * cardThickness}px) translateX(${i * cardThickness}px)`,
-                borderColor: `hsl(var(--${getRarityName(card.initialRarity)}))`,
+                transform: `translateY(calc(-50% - ${i * cardThickness}px)) translateX(calc(-50% + ${i * cardThickness}px)) ${
+                  isShuffling ? `rotate(${i % 2 ? -10 : 10}deg)` : ""
+                }`,
+                borderColor: `hsl(var(--${getRarityName(card.rarity)}))`,
               }}
             >
-              {i >= all.length - 2 && (
-                <div className="translate-x-[15px] -translate-y-[1px]">
+              {!isShuffling && i >= all.length - 2 && (
+                <div style={{ transform: "translateY(10px)" }}>
                   <GameCard card={card} isStack />
                 </div>
               )}

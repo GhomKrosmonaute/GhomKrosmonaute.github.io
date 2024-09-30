@@ -25,7 +25,7 @@ import upgrades from "@/data/upgrades.tsx"
 import cardModifiers from "@/data/cardModifiers.ts"
 
 import {
-  generateRandomAdvantage,
+  generateRandomRarity,
   generateRandomResource,
   canBeBuy,
   shuffle,
@@ -87,7 +87,7 @@ export function generateChoiceOptions(
           return {
             name: option.name,
             state: "landing",
-            initialRarity: generateRandomAdvantage(),
+            initialRarity: generateRandomRarity(),
           } as GameCardCompact
         })
     },

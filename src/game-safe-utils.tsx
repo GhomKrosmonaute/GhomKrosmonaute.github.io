@@ -273,6 +273,14 @@ export function includeCard(
   return from.filter((c) => toInclude.includes(c.name))
 }
 
+export function dropToStack<T>(from: T[], items: T[], onTop?: boolean): T[] {
+  return onTop ? [...from, ...items] : [...items, ...from]
+}
+
+export function drawFromStack<T>(from: T[]): T | undefined {
+  return from.pop()
+}
+
 /**
  * Update the state of a card in a list of cards
  */
@@ -430,7 +438,7 @@ export async function handleErrorsAsync(
  * Generate a random advantage from LOCAL_ADVANTAGE (represents rarities)
  * Each rarity has a different probability to be selected
  */
-export function generateRandomAdvantage(): number {
+export function generateRandomRarity(): number {
   let advantage: number = RARITIES.common
 
   const seed = Math.random()
@@ -448,7 +456,7 @@ export function generateRandomResource(state: GameState): GameResource {
   const id = Math.random().toFixed(6)
 
   if (type < 0.48) {
-    const advantage = generateRandomAdvantage()
+    const advantage = generateRandomRarity()
 
     return {
       id,
@@ -756,6 +764,7 @@ export function createEffect<
         "tags",
       ),
       tags: options.tags ?? [],
+      needsPlayZone: options.needsPlayZone ?? !!options.select,
     }
   }
 }
@@ -915,6 +924,8 @@ export function canBeBuy(card: GameCardInfo<true>, state: GameState) {
 
 export const fakeState: GameState = {
   cardDetail: null,
+  riseToTheStackSurface: async () => {},
+  shuffleStack: async () => {},
   transformCardsAnimation: async () => {},
   setCardDetail: () => {},
   addEnergy: async () => {},

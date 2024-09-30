@@ -128,7 +128,7 @@ export const GameCard = (
           }
         } else {
           if (game.choiceOptions.length > 0 && !notAllowed) {
-            await game.pickOption(props.card)
+            await game.pickOption(props.card, props.options!)
           }
         }
       }}

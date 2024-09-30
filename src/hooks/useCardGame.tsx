@@ -55,7 +55,7 @@ import { metadata } from "@/game-metadata.ts"
 import { Difficulty } from "@/game-typings.ts"
 import { difficultyIndex, settings } from "@/game-settings.ts"
 import {
-  generateRandomAdvantage,
+  generateRandomRarity,
   updateGameAutoSpeed,
   handleErrorsAsync,
   fetchSettings,
@@ -68,7 +68,6 @@ import {
   wait,
   excludeCard,
   updateCardState,
-  includeCard,
   canBeBuy,
   getUsableCost,
   costToEnergy,
@@ -77,6 +76,8 @@ import {
   waitFor,
   getRevivedDeck,
   getGameSpeed,
+  map,
+  dropToStack,
 } from "@/game-safe-utils.tsx"
 import { Tag } from "@/components/game/Texts.tsx"
 
@@ -170,6 +171,11 @@ export interface GameState {
     names: string[],
     onMiddle: (cards: GameCardInfo<true>[]) => unknown,
   ) => Promise<void>
+  shuffleStack: (stack: "draw" | "discard") => Promise<void>
+  riseToTheStackSurface: (
+    stack: "draw" | "discard",
+    filter: (card: GameCardInfo<true>) => boolean,
+  ) => Promise<void>
   drawCard: (
     count: number,
     options: GameMethodOptions &
@@ -186,8 +192,8 @@ export interface GameState {
   }) => Promise<void>
   removeCard: (name: string) => Promise<void>
   recycleCard: (
-    count: number,
     options: GameMethodOptions & {
+      count?: number
       filter?: (card: GameCardInfo<true>) => boolean
     },
   ) => Promise<void>
@@ -201,7 +207,10 @@ export interface GameState {
     timeout?: number
   }) => Promise<GameCardInfo<true> | null>
   skip: (options: MethodWhoLog) => Promise<void>
-  pickOption: (option: GameCardInfo<true> | GameResource) => Promise<void>
+  pickOption: (
+    option: GameCardInfo<true> | GameResource,
+    resolvedOptions: (GameCardInfo<true> | GameResource)[],
+  ) => Promise<void>
   win: () => void
   defeat: (reason: GameOverReason) => void
   reset: () => void
@@ -394,7 +403,7 @@ function generateGameState(): Omit<
       .map((c) => ({
         name: c.name,
         state: "idle" as const,
-        initialRarity: generateRandomAdvantage(),
+        initialRarity: generateRandomRarity(),
       }))
 
     startingChoices.push({
@@ -571,14 +580,15 @@ function generateGameMethods(
 
         state.setOperationInProgress("advanceTime", true)
 
-        const upgradeCompletion = state.upgrade.length / upgrades.length
+        const upgradeCompletion = state.upgrades.length / upgrades.length
         const cardCompletion = getDeck(state).length / cards.length
-        const energyToDays =
-          ENERGY_TO_DAYS -
-          ENERGY_TO_DAYS *
-            0.7 *
-            (0.5 * cardCompletion) *
-            (0.5 * upgradeCompletion)
+        const energyToDays = map(
+          0.5 * cardCompletion + 0.5 * upgradeCompletion,
+          0,
+          1,
+          ENERGY_TO_DAYS,
+          ENERGY_TO_DAYS * 0.3,
+        )
 
         const addedTime = Math.max(energyToDays, energy * energyToDays)
 
@@ -1104,67 +1114,140 @@ function generateGameMethods(
       })
     },
 
+    shuffleStack: async (stack) => {
+      await handleErrorsAsync(getState, async () => {
+        const state = getState()
+
+        state.setOperationInProgress(`shuffleStack ${stack}`, true)
+
+        bank.shuffle.play()
+
+        const speed = getGameSpeed() / 2
+
+        await wait(speed)
+
+        set((state) => {
+          const revivedStack =
+            stack === "draw" ? "revivedDraw" : "revivedDiscard"
+          const shuffled = shuffle(state[revivedStack], 3)
+
+          return {
+            [stack]: shuffled.map((c) => compactGameCardInfo(c)),
+            [revivedStack]: shuffled,
+          }
+        })
+
+        await wait(speed)
+
+        state.setOperationInProgress(`shuffleStack ${stack}`, false)
+      })
+    },
+
+    riseToTheStackSurface: async (stack, filter) => {
+      await handleErrorsAsync(getState, async () => {
+        const state = getState()
+
+        state.setOperationInProgress(`shuffleStack ${stack}`, true)
+
+        bank.shuffle.play()
+
+        const speed = getGameSpeed() / 2
+
+        await wait(speed)
+
+        set((state) => {
+          const stackCards = state[stack].map((c) =>
+            reviveCard(c, state as GameState & GlobalGameState),
+          )
+
+          const cards = stackCards.filter(filter)
+          const otherCards = stackCards.filter((c) => !filter(c))
+
+          const sorted = [...cards, ...otherCards]
+
+          return {
+            [stack]: sorted.map((c) => compactGameCardInfo(c)),
+            [stack === "draw" ? "revivedDraw" : "revivedDiscard"]: sorted,
+          }
+        })
+
+        await wait(speed)
+
+        state.setOperationInProgress(`shuffleStack ${stack}`, false)
+      })
+    },
+
     drawCard: async (count = 1, options) => {
       await handleErrorsAsync(getState, async () => {
         let state = getState()
 
-        state.setOperationInProgress("draw", true)
-
         const fromKey = options?.fromDiscardPile ? "discard" : "draw"
 
-        let hand = state.hand.slice()
+        const drawn = state[fromKey]
+          .toReversed()
+          .filter((c) => {
+            if (!options.filter) return true
+            const card = reviveCard(c, state)
+            return options.filter(card)
+          })
+          .slice(
+            0,
+            Math.min(
+              count,
+              MAX_HAND_SIZE - state.hand.length,
+              state[fromKey].length,
+            ),
+          )
 
-        const from = state[fromKey].slice().filter((c) => {
-          const card = reviveCard(c, state)
-          if (options?.filter) return options.filter(card)
-          return true
-        })
+        if (drawn.length === 0) return
 
-        const drawn: GameCardCompact[] = []
+        state.setOperationInProgress("draw", true)
 
-        let handAdded = false
+        if (options.filter)
+          await state.riseToTheStackSurface(fromKey, options.filter)
 
-        for (let i = 0; i < count; i++) {
-          if (from.length === 0) {
-            break
-          }
+        const doTheDraw = async (card: GameCardCompact) => {
+          // on active l'animation de pioche de la carte sur le tas de départ
+          set((state) => ({
+            [fromKey]: updateCardState(state[fromKey], card.name, "playing"),
+          }))
 
-          const cardIndice = from.pop()!
+          await wait()
 
-          cardIndice.state = "drawing"
+          // on retire la carte du tas de départ et on la place dans la main avec l'animation de pioche
+          set((state) => ({
+            [fromKey]: excludeCard(state[fromKey], card.name),
+            hand: toSortedCards(
+              dropToStack(state.hand, updateCardState([card], "landing"), true),
+              state as GameState & GlobalGameState,
+            ).map((c) => compactGameCardInfo(c)),
+          }))
 
-          drawn.push(cardIndice)
-
-          if (hand.length < MAX_HAND_SIZE) {
-            hand.push(cardIndice)
-            handAdded = true
-          }
-        }
-
-        if (handAdded) {
           if (fromKey === "draw") bank.draw.play()
           else bank.recycle.play()
+
+          await wait()
+
+          // on passe la carte en idle
+          set((state) => ({
+            hand: updateCardState(state.hand, card.name, "idle"),
+          }))
         }
 
-        hand = toSortedCards(hand, state).map((c) => compactGameCardInfo(c))
+        if (drawn.length > 3) {
+          const speed = getGameSpeed()
 
-        set({
-          hand,
-          [fromKey]: shuffle(
-            excludeCard(
-              state[fromKey],
-              drawn.map((c) => c.name),
-            ),
-            2,
-          ),
-        })
-
-        await wait()
-
-        // on passe la main en idle
-        set((state) => ({
-          hand: updateCardState(state.hand, "idle"),
-        }))
+          await Promise.all(
+            drawn.map(async (card, index) => {
+              await wait((speed / 2) * index + index)
+              await doTheDraw(card)
+            }),
+          )
+        } else {
+          for (const card of drawn) {
+            await doTheDraw(card)
+          }
+        }
 
         await state.triggerEvent("onDraw")
 
@@ -1189,36 +1272,56 @@ function generateGameMethods(
 
         state.setOperationInProgress("discard", true)
 
-        const hand = state.hand
-          .slice()
-          .filter(
-            (c) =>
-              c.state !== "playing" &&
-              (!options?.filter || options.filter(reviveCard(c, state))),
+        const hand = state.hand.filter(
+          (c) => !options?.filter || options.filter(reviveCard(c, state)),
+        )
+
+        const discarded = options?.random
+          ? [hand[Math.floor(Math.random() * state.hand.length)]]
+          : hand
+
+        const doTheDiscard = async (card: GameCardCompact) => {
+          // on active l'animation de retrait de la carte
+          set((state) => ({
+            hand: updateCardState(state.hand, card.name, "discarding"),
+          }))
+
+          // on attend la fin de l'animation
+          await wait()
+
+          set((state) => ({
+            hand: excludeCard(state.hand, card.name),
+            [toKey]: dropToStack(
+              state[toKey],
+              updateCardState([card], "landing"),
+              true,
+            ),
+          }))
+
+          await wait()
+
+          set((state) => ({
+            [toKey]: updateCardState(state[toKey], card.name, "idle"),
+          }))
+        }
+
+        if (discarded.length === state.hand.length) {
+          const speed = getGameSpeed()
+
+          await Promise.all(
+            discarded.map(async (card, index) => {
+              await wait((speed / 2) * index + index)
+              await doTheDiscard(card)
+            }),
           )
+        } else {
+          // on anime le landing de chaque carte sur la pile de destination une par une
+          for (const card of discarded) {
+            await doTheDiscard(card)
+          }
+        }
 
-        const discarded = (
-          options?.random
-            ? [hand[Math.floor(Math.random() * state.hand.length)]]
-            : hand
-        ).map((c) => c.name)
-
-        // on active l'animation de retrait des cartes
-        set({
-          hand: updateCardState(state.hand, discarded, "discarding"),
-        })
-
-        // on attend la fin de l'animation
-        await wait()
-
-        // les cartes retournent dans le deck et on vide la main
-        set((state) => ({
-          [toKey]: shuffle(
-            [...includeCard(state.hand, discarded), ...state[toKey]],
-            2,
-          ),
-          hand: excludeCard(state.hand, discarded),
-        }))
+        if (toKey === "draw") await state.shuffleStack("draw")
 
         await state.increments("discardedCards", discarded.length)
 
@@ -1236,12 +1339,21 @@ function generateGameMethods(
           // on active l'animation de suppression de la carte
           set({
             hand: updateCardState(state.hand, name, "removing"),
+            discard: updateCardState(state.discard, name, "removing"),
+            draw: updateCardState(state.draw, name, "removing"),
           })
 
           bank.remove.play()
 
           // on attend la fin de l'animation
           await wait()
+
+          // on remet la carte en idle
+          set({
+            hand: updateCardState(state.hand, name, "idle"),
+            discard: updateCardState(state.discard, name, "idle"),
+            draw: updateCardState(state.draw, name, "idle"),
+          })
         }
 
         // on retire la carte de la main, du deck et de la défausse
@@ -1264,44 +1376,76 @@ function generateGameMethods(
     /**
      * Place des cartes de la défausse dans le deck
      */
-    recycleCard: async (count = 1) => {
+    recycleCard: async (options) => {
       await handleErrorsAsync(getState, async () => {
-        if (count <= 0) return
+        if (options.count === undefined) options.count = Infinity
+        if (options.count <= 0) return
 
-        const state = getState()
+        let state = getState()
 
         if (state.discard.length === 0) return
 
         state.setOperationInProgress("recycle", true)
 
+        if (state.discard.length > 1 && options.filter) {
+          await state.riseToTheStackSurface("discard", options.filter)
+          state = getState()
+        }
+
         // on joue le son de la banque
         bank.recycle.play()
 
-        const discard = shuffle(state.discard, 2).slice()
-        const draw = state.draw.slice()
+        const recycled = state.discard
+          .toReversed()
+          .filter(
+            (c) => !options.filter || options.filter(reviveCard(c, state)),
+          )
+          .slice(0, options.count)
 
-        let recycled = 0
+        const doTheRecycle = async (card: GameCardCompact) => {
+          // animation de playing
+          set((state) => ({
+            discard: updateCardState(state.discard, card.name, "playing"),
+          }))
 
-        for (let i = 0; i < count; i++) {
-          if (discard.length === 0) {
-            break
-          }
+          await wait()
 
-          const card = discard.pop()!
+          // animation de landing + déplacement sur la pioche
+          set((state) => ({
+            discard: excludeCard(state.discard, card.name),
+            draw: dropToStack(
+              state.draw,
+              [{ ...card, state: "landing" }],
+              true,
+            ),
+          }))
 
-          draw.push(card)
+          await wait()
 
-          recycled++
+          // idle
+          set((state) => ({
+            draw: updateCardState(state.draw, card.name, "idle"),
+          }))
+
+          recycled.push(card)
         }
 
-        await wait()
+        if (recycled.length > 3) {
+          const speed = getGameSpeed()
 
-        set({
-          draw: shuffle(draw, 2),
-          discard,
-        })
+          await Promise.all(
+            recycled.map(async (card, index) => {
+              await wait((speed / 2) * index + index)
+              await doTheRecycle(card)
+            }),
+          )
+        } else {
+          for (const card of recycled) {
+            await doTheRecycle(card)
+          }
+        }
 
-        await state.increments("recycledCards", recycled)
+        await state.increments("recycledCards", recycled.length)
 
         state.setOperationInProgress("recycle", false)
       })
@@ -1454,6 +1598,18 @@ function generateGameMethods(
             const result = await card.effect.prePlay(state, card)
 
             if (result === "cancel") {
+              // discarding from playZone
+              set((state) => ({
+                playZone: updateCardState(
+                  state.playZone,
+                  card.name,
+                  "discarding",
+                ),
+              }))
+
+              await wait()
+
+              // landing on hand
               set((state) => ({
                 playZone: excludeCard(state.playZone, card.name),
                 hand: updateCardState(
@@ -1464,6 +1620,11 @@ function generateGameMethods(
               }))
 
               await wait()
+
+              // idle
+              set((state) => ({
+                hand: updateCardState(state.hand, card.name, "idle"),
+              }))
 
               state.setOperationInProgress(`play ${card.name}`, false)
 
@@ -1496,23 +1657,27 @@ function generateGameMethods(
         reviveCard(compactGameCardInfo(card), state, { clean: true })
 
         const removing = willBeRemoved(getState(), card)
-        const recycling = card.effect.tags.includes("recyclage")
+        const recyclage = card.effect.tags.includes("recyclage")
 
-        const firstState = removing ? "removing" : "playing"
+        const afterPlayingState = removing ? "removing" : "playing"
 
         if (!card.effect.needsPlayZone && !card.effect.prePlay) {
           set((state) => ({
-            hand: updateCardState(state.hand, card.name, firstState),
+            hand: updateCardState(state.hand, card.name, afterPlayingState),
           }))
         }
 
         const cleanupAndFinish = async () => {
-          if (recycling) bank.recycle.play()
+          if (recyclage) bank.recycle.play()
           if (removing) bank.remove.play()
 
           if (card.effect.needsPlayZone) {
             set((state) => ({
-              playZone: updateCardState(state.playZone, card.name, firstState),
+              playZone: updateCardState(
+                state.playZone,
+                card.name,
+                afterPlayingState,
+              ),
             }))
 
             await wait()
@@ -1521,15 +1686,44 @@ function generateGameMethods(
           // la carte va dans la défausse et on retire la carte de la main ou de la playZone
           set((state) => ({
             discard:
-              removing || recycling
+              removing || recyclage
                 ? state.discard
-                : shuffle([compactGameCardInfo(card), ...state.discard], 3),
-            draw: recycling
-              ? shuffle([compactGameCardInfo(card), ...state.draw], 3)
+                : dropToStack(
+                    state.discard,
+                    [compactGameCardInfo(card, "landing")],
+                    true,
+                  ),
+            draw: recyclage
+              ? dropToStack(
+                  state.draw,
+                  [compactGameCardInfo(card, "landing")],
+                  true,
+                )
               : state.draw,
             hand: excludeCard(state.hand, card.name),
             playZone: excludeCard(state.playZone, card.name),
           }))
+
+          await wait()
+
+          // on passe les cartes en idle
+          set((state) => ({
+            discard: updateCardState(state.discard, card.name, "idle"),
+            draw: updateCardState(state.draw, card.name, "idle"),
+          }))
+
+          const state = getState()
+
+          if (
+            (recyclage || card.effect.tags.includes("recycle")) &&
+            state.draw.length > 1
+          ) {
+            await state.shuffleStack("draw")
+          }
+
+          if (!removing && !recyclage && state.discard.length > 1) {
+            await state.shuffleStack("discard")
+          }
         }
 
         const triggerCardEffect = async () => {
@@ -1541,7 +1735,7 @@ function generateGameMethods(
           await wait()
           await cleanupAndFinish()
           await triggerCardEffect()
-        } else if (card.effect.needsPlayZone) {
+        } else if (card.effect.needsPlayZone || card.effect.prePlay) {
           await triggerCardEffect()
           await cleanupAndFinish()
         } else {
@@ -1581,7 +1775,7 @@ function generateGameMethods(
       })
     },
 
-    pickOption: async (option) => {
+    pickOption: async (option, resolvedOptions) => {
       await handleErrorsAsync(getState, async () => {
         const state = getState()
 
@@ -1594,7 +1788,6 @@ function generateGameMethods(
 
         // on joue le son de la banque
         bank.gain.play()
-        if (choice.options().length > 1) bank.remove.play()
 
         // on active les animations
         set({
@@ -1602,11 +1795,11 @@ function generateGameMethods(
             {
               ...choice,
               options: () =>
-                choice.options().map((c) => {
+                resolvedOptions.map((c) => {
                   return (isGameResource(c) ? c.id : c.name) ===
                     (isGameResource(option) ? option.id : option.name)
                     ? { ...c, state: "playing" }
-                    : { ...c, state: "removing" }
+                    : { ...c, state: "discarding" }
                 }),
             },
             ...state.choiceOptions.slice(1),
@@ -1643,18 +1836,7 @@ function generateGameMethods(
             choiceOptions: [
               {
                 ...choice,
-                options: () =>
-                  updateCardState(choice.options(), option.id, "removed"),
-              },
-              ...state.choiceOptions.slice(1),
-            ],
-          }))
-
-          set((state) => ({
-            choiceOptions: [
-              {
-                ...choice,
-                options: () => updateCardState(choice.options(), null),
+                options: () => updateCardState(resolvedOptions, null),
               },
               ...state.choiceOptions.slice(1),
             ],
@@ -1674,18 +1856,7 @@ function generateGameMethods(
             choiceOptions: [
               {
                 ...choice,
-                options: () =>
-                  updateCardState(choice.options(), option.name, "removed"),
-              },
-              ...state.choiceOptions.slice(1),
-            ],
-          }))
-
-          set((state) => ({
-            choiceOptions: [
-              {
-                ...choice,
-                options: () => updateCardState(choice.options(), null),
+                options: () => updateCardState(resolvedOptions, null),
               },
               ...state.choiceOptions.slice(1),
             ],
@@ -1696,22 +1867,23 @@ function generateGameMethods(
           set((state) => {
             const to = state.hand.length < MAX_HAND_SIZE ? "hand" : "draw"
 
-            let picked =
+            const picked =
               to === "draw"
-                ? shuffle([...state.draw, compactGameCardInfo(option)], 3)
-                : [
-                    ...state.hand,
-                    compactGameCardInfo(
-                      option,
-                      "landing",
-                    ) satisfies GameCardCompact,
-                  ]
-
-            if (to === "hand")
-              picked = toSortedCards(
-                picked,
-                state as GameState & GlobalGameState,
-              ).map((c) => compactGameCardInfo(c))
+                ? dropToStack(
+                    state.draw,
+                    [compactGameCardInfo(option, "landing")],
+                    true,
+                  )
+                : toSortedCards(
+                    [
+                      ...state.hand,
+                      compactGameCardInfo(
+                        option,
+                        "landing",
+                      ) satisfies GameCardCompact,
+                    ],
+                    state as GameState & GlobalGameState,
+                  ).map((c) => compactGameCardInfo(c))
 
             return {
               choiceOptions: state.choiceOptions.slice(1),
@@ -1723,7 +1895,8 @@ function generateGameMethods(
 
           // on passe les cartes en idle
           set((state) => ({
-            hand: updateCardState(state.hand, "idle"),
+            hand: updateCardState(state.hand, option.name, "idle"),
+            draw: updateCardState(state.draw, option.name, "idle"),
           }))
 
           state.checkDiscoveries()

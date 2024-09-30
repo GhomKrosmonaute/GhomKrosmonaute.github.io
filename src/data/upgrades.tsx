@@ -95,7 +95,7 @@ const upgrades: RawUpgrade[] = [
     ),
     condition: (state) => state.discard.length > 0,
     onTrigger: async (state, upgrade, reason) => {
-      await state.recycleCard(upgrade.cumul, { reason })
+      await state.recycleCard({ reason, count: upgrade.cumul })
     },
     max: 5,
     cost: { type: "money", value: 150 },

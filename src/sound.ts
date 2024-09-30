@@ -85,4 +85,9 @@ export const bank = {
     volume: 0.5,
     preload: true,
   }),
+  shuffle: new Howl({
+    src: ["sounds/shuffle.mp3"],
+    volume: 0.5,
+    preload: true,
+  }),
 }

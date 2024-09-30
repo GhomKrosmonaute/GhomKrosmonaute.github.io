@@ -773,6 +773,7 @@ const actions: ActionCardInfo[] = (
         costType: "money",
         dynamicEffect: {
           cost: 1,
+          min: 5,
           max: (state) => Math.floor(state.energyMax / 2),
         },
         description: ({ value, plural }) => (

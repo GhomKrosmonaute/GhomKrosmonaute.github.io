@@ -194,7 +194,8 @@ const reusable = {
         condition: (state) => state.revivedDiscard.some(options.filter),
         onPlayed: async (state, _, reason) => {
           if (recycleSpecific.value > 0)
-            await state.recycleCard(recycleSpecific.value, {
+            await state.recycleCard({
+              count: recycleSpecific.value,
               filter: options.filter,
               reason,
             })
@@ -208,6 +209,7 @@ const reusable = {
         },
         cost: resolveCost(price.value),
         tags: ["recycle"],
+        needsPlayZone: true,
       }
     }
   },
@@ -313,7 +315,7 @@ const supports: SupportCardInfo[] = (
             qui <Tag name="recycle" />
           </>
         ),
-        filter: (card) => !card.effect.tags.includes("recycle"),
+        filter: (card) => card.effect.tags.includes("recycle"),
       }),
     },
     {
@@ -366,7 +368,7 @@ const supports: SupportCardInfo[] = (
       image: "pgsql.png",
       effect: reusable.drawSpecific({
         label: <Tag name="upgrade" />,
-        filter: (card) => Boolean(card.effect.tags.includes("upgrade")),
+        filter: (card) => card.effect.tags.includes("upgrade"),
         ephemeral: true,
       }),
     },
@@ -453,7 +455,7 @@ const supports: SupportCardInfo[] = (
         ),
         condition: (state) => state.discard.length > 0,
         async onPlayed(state, _, reason) {
-          await state.recycleCard(state.discard.length, { reason })
+          await state.recycleCard({ reason })
         },
         needsPlayZone: true,
       }),
@@ -566,7 +568,7 @@ const supports: SupportCardInfo[] = (
         ),
         condition: (state) => state.discard.length >= 1,
         async onPlayed(state, _, reason) {
-          await state.recycleCard(1, { skipGameOverPause: true, reason })
+          await state.recycleCard({ count: 1, skipGameOverPause: true, reason })
         },
         needsPlayZone: true,
         costType: "money",
