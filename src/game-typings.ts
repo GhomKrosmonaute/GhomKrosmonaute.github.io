@@ -8,6 +8,7 @@ import events from "@/data/events.tsx"
 import { GlobalCardModifierIndex, Speed } from "@/game-enums.ts"
 import { pick, tags } from "@/game-safe-utils.tsx"
 import type cardModifiers from "@/data/cardModifiers.ts"
+import type { qualityPresets } from "@/game-settings.ts"
 
 export type RarityName = keyof typeof RARITIES
 
@@ -21,7 +22,10 @@ export interface QualityOptions {
   foil: boolean // montre le reflet et la texture des cartes ou non
   animations: boolean // utilise les keyframes ou non
   perspective: boolean // transformStyle: "preserve-3d" | "flat"
+  preset: QualityPresetName
 }
+
+export type QualityPresetName = keyof typeof qualityPresets | "custom"
 
 export interface Settings {
   theme: string

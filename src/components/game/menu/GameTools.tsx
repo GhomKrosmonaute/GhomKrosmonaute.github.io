@@ -11,7 +11,7 @@ import {
 } from "@/game-constants.ts"
 import { BentoCard } from "@/components/BentoCard.tsx"
 
-export const ToolsTab = () => {
+export const GameTools = () => {
   const [value, setValue] = React.useState(0)
 
   return (

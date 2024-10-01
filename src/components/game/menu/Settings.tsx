@@ -21,8 +21,12 @@ import { useCardGame } from "@/hooks/useCardGame.tsx"
 import { useGlobalState } from "@/hooks/useGlobalState.ts"
 import { useSettings } from "@/hooks/useSettings.ts"
 
-import type { Difficulty, QualityOptions } from "@/game-typings.ts"
-import { settings, translations } from "@/game-settings.ts"
+import type {
+  Difficulty,
+  QualityOptions,
+  QualityPresetName,
+} from "@/game-typings.ts"
+import { qualityPresets, settings, translations } from "@/game-settings.ts"
 import { GAME_ADVANTAGE } from "@/game-constants.ts"
 import { Speed } from "@/game-enums.ts"
 
@@ -32,8 +36,17 @@ import Sound from "@/assets/icons/sound.svg"
 
 import themes from "@/data/themes.json"
 import { BentoCard } from "@/components/BentoCard.tsx"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select.tsx"
+import { omit } from "@/game-safe-utils.tsx"
+import { cn } from "@/utils.ts"
 
-export const SettingsTab = (props: { show: boolean }) => {
+export const Settings = (props: { show: boolean }) => {
   const [score, difficulty] = useCardGame((state) => [
     state.score,
     state.difficulty,
@@ -62,9 +75,11 @@ export const SettingsTab = (props: { show: boolean }) => {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-baseline">
-        <h2 className="text-3xl">Settings</h2>
-        {props.show && <FPS className="text-2xl font-mono" />}
+      <div className="relative flex justify-between items-baseline">
+        <h2 className="text-3xl absolute top-0 left-0 w-full text-center mt-1">
+          Settings
+        </h2>
+        {props.show && <FPS className="text-2xl font-mono ml-2" />}
         <div className="flex gap-2">
           <Button onClick={toggleMuted} variant="icon" size="icon">
             {muted ? <Muted /> : <Sound />}
@@ -73,7 +88,7 @@ export const SettingsTab = (props: { show: boolean }) => {
       </div>
       <div className="flex gap-5">
         <BentoCard>
-          <div className="text-2xl">Difficulté</div>
+          <h3>Difficulté</h3>
           <RadioGroup
             className="space-y-0 gap-0"
             value={settingsCache.difficulty}
@@ -90,32 +105,74 @@ export const SettingsTab = (props: { show: boolean }) => {
           </RadioGroup>
         </BentoCard>
 
-        <BentoCard>
-          <div className="text-2xl">Qualité</div>
+        <BentoCard className="relative">
+          <h3>Qualité</h3>
+          <Select
+            defaultValue={settingsCache.quality.preset}
+            onValueChange={(preset: QualityPresetName) => {
+              settingsCache.updateQuality({
+                preset,
+                ...(preset === "custom"
+                  ? {}
+                  : Object.fromEntries(
+                      Object.entries(omit(settingsCache.quality, "preset")).map(
+                        ([key]) => {
+                          return [
+                            key,
+                            qualityPresets[preset].includes(key as any),
+                          ]
+                        },
+                      ),
+                    )),
+              })
+            }}
+          >
+            <SelectTrigger className="w-36 text-xl absolute right-2 -top-2">
+              <SelectValue placeholder="Preset" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="custom">{translations.custom}</SelectItem>
+              {Object.entries(qualityPresets).map(([key]) => (
+                <SelectItem key={key} value={key}>
+                  {translations[key as QualityPresetName]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <div className="grid grid-cols-2 grid-rows-5">
-            {Object.keys(settings.quality).map((key) => (
+            {Object.keys(omit(settings.quality, "preset")).map((key) => (
               <Label
-                className="flex items-center gap-2 py-2 select-none odd:pr-5"
+                className={cn(
+                  "flex items-center gap-2 py-2 select-none odd:pr-5",
+                  settingsCache.quality.preset !== "custom" &&
+                    "cursor-not-allowed",
+                )}
                 key={key}
               >
                 <Checkbox
+                  disabled={settingsCache.quality.preset !== "custom"}
                   defaultChecked={
                     settingsCache.quality[
-                      key as keyof QualityOptions
+                      key as keyof Omit<QualityOptions, "preset">
+                    ] as boolean
+                  }
+                  checked={
+                    settingsCache.quality[
+                      key as keyof Omit<QualityOptions, "preset">
                     ] as boolean
                   }
                   onCheckedChange={(value) =>
                     settingsCache.updateQuality({ [key]: value })
                   }
                 />
-                {translations[key as keyof QualityOptions]}
+                {translations[key as keyof Omit<QualityOptions, "preset">]}
               </Label>
             ))}
           </div>
         </BentoCard>
 
         <BentoCard>
-          <div className="text-2xl">Thême (WIP)</div>
+          <h3>Thême</h3>
           <RadioGroup
             className="space-y-0 gap-0"
             defaultValue={settings.theme}
@@ -143,7 +200,7 @@ export const SettingsTab = (props: { show: boolean }) => {
         </BentoCard>
 
         <BentoCard>
-          <div className="text-2xl">Vitesse</div>
+          <h3>Vitesse</h3>
           <RadioGroup
             className="space-y-0 gap-0"
             value={settingsCache.speed}

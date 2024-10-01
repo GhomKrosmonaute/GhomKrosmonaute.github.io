@@ -11,13 +11,13 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs.tsx"
 
-import { SettingsTab } from "@/components/game/settings/SettingsTab.tsx"
-import { StatsTab } from "@/components/game/settings/StatsTab.tsx"
-import { HelpTab } from "@/components/game/settings/HelpTab.tsx"
-import { ToolsTab } from "@/components/game/settings/ToolsTab.tsx"
-import { ScoresTab } from "@/components/game/settings/ScoresTab.tsx"
+import { Settings } from "@/components/game/menu/Settings.tsx"
+import { Statistics } from "@/components/game/menu/Statistics.tsx"
+import { Helpers } from "@/components/game/menu/Helpers.tsx"
+import { GameTools } from "@/components/game/menu/GameTools.tsx"
+import { Scoreboard } from "@/components/game/menu/Scoreboard.tsx"
 
-export const SettingsModal = (props: { show: boolean }) => {
+export const Menu = (props: { show: boolean }) => {
   const toggleSettings = useGlobalState((state) => state.toggleSettings)
   const settingsCache = useSettings()
 
@@ -54,19 +54,19 @@ export const SettingsModal = (props: { show: boolean }) => {
           </TabsList>
           <div className="space-y-2">
             <TabsContent value="settings">
-              <SettingsTab show={props.show} />
+              <Settings show={props.show} />
             </TabsContent>
             <TabsContent value="stats">
-              <StatsTab />
+              <Statistics />
             </TabsContent>
             <TabsContent value="scores">
-              <ScoresTab />
+              <Scoreboard />
             </TabsContent>
             <TabsContent value="help">
-              <HelpTab />
+              <Helpers />
             </TabsContent>
             <TabsContent value="tools">
-              <ToolsTab />
+              <GameTools />
             </TabsContent>
           </div>
         </Tabs>

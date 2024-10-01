@@ -1,11 +1,40 @@
 import { GAME_ADVANTAGE } from "@/game-constants.ts"
 import { Speed } from "@/game-enums.ts"
-import type { Difficulty, QualityOptions, Settings } from "@/game-typings.ts"
+import type {
+  Difficulty,
+  QualityOptions,
+  QualityPresetName,
+  Settings,
+} from "@/game-typings.ts"
 
 export const difficultyIndex = Object.entries(GAME_ADVANTAGE).reduce(
   (acc, entry, index) => ({ ...acc, [entry[0]]: index + 1 }),
   {} as Record<Difficulty, number>,
 )
+
+export const qualityPresets = {
+  low: ["tilt", "foil", "animations", "perspective"],
+  medium: [
+    "tilt",
+    "foil",
+    "animations",
+    "perspective",
+    "borderLights",
+    "transparency",
+    "shadows",
+  ],
+  high: [
+    "tilt",
+    "foil",
+    "animations",
+    "perspective",
+    "borderLights",
+    "transparency",
+    "shadows",
+    "godRays",
+    "blur",
+  ],
+} satisfies Record<string, (keyof Omit<QualityOptions, "preset">)[]>
 
 export const defaultSettings: Settings = {
   difficulty: "normal",
@@ -22,6 +51,7 @@ export const defaultSettings: Settings = {
     foil: true,
     animations: true,
     perspective: true,
+    preset: "high",
   },
 }
 
@@ -79,7 +109,10 @@ if (settings.speed !== Speed.Auto) {
 }
 
 export const translations: Record<
-  keyof QualityOptions | Difficulty | Speed,
+  | keyof Omit<QualityOptions, "preset">
+  | Difficulty
+  | Speed
+  | (QualityPresetName & string),
   string
 > = {
   noob: "Débutant",
@@ -100,4 +133,8 @@ export const translations: Record<
   slow: "Lent",
   fast: "Rapide",
   extreme: "Extrême",
+  low: "Faible",
+  medium: "Moyenne",
+  high: "Maximale",
+  custom: "Personnalisée",
 }

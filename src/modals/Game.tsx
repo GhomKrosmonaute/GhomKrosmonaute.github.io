@@ -7,7 +7,6 @@ import { useGameWatching } from "@/hooks/useGameWatching.ts"
 
 import steps from "@/data/tutorial.tsx"
 
-import { SettingsModal } from "@/components/game/settings/SettingsModal.tsx"
 import { CrashReportProvider } from "@/components/game/CrashReportProvider.tsx"
 import { TutorialProvider } from "@/components/game/TutorialProvider.tsx"
 import { ScreenMessages } from "@/components/game/ScreenMessages.tsx"
@@ -25,6 +24,7 @@ import { GameMusic } from "@/components/game/GameMusic.tsx"
 import { GameOver } from "@/components/game/GameOver.tsx"
 import { GameHand } from "@/components/game/GameHand.tsx"
 import { GameHUD } from "@/components/game/GameHUD.tsx"
+import { Menu } from "@/components/game/menu/Menu.tsx"
 
 import "@/game-automatisms.ts"
 
@@ -79,10 +79,10 @@ export const Game = () => {
         <GameCardStacks show={show} />
         <GameHand show={show} />
         <GameCardDetail show={show} />
-        <SettingsModal show={show && showSettings} />
-        <HelpPopover show={show} />
-        <GameTutorial show={show} />
         <ScreenMessages show={show} />
+        <GameTutorial show={show} />
+        <Menu show={show && showSettings} />
+        <HelpPopover show={show} />
 
         {(import.meta.env.DEV || debug) && <GameDebug />}
       </CrashReportProvider>

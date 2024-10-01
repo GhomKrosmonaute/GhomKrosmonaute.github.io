@@ -5,7 +5,7 @@ import { translations } from "@/game-settings.ts"
 import { rankColor } from "@/game-safe-utils.tsx"
 import { BentoCard } from "@/components/BentoCard.tsx"
 
-export const ScoresTab = () => {
+export const Scoreboard = () => {
   return (
     <div className="space-y-2 pointer-events-auto flex flex-col items-center">
       <h2 className="text-3xl">Scoreboard</h2>

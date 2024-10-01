@@ -7,7 +7,7 @@ import { reviveCard } from "@/game-utils.ts"
 import { useCardGame } from "@/hooks/useCardGame.tsx"
 import { BentoCard } from "@/components/BentoCard.tsx"
 
-export const StatsTab = () => {
+export const Statistics = () => {
   const stats = useCardGame()
 
   return (

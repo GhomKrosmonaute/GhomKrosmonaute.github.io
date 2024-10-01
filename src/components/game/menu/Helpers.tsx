@@ -1,7 +1,7 @@
 import helpers from "@/data/helpers.tsx"
 import { BentoCard } from "@/components/BentoCard.tsx"
 
-export const HelpTab = () => {
+export const Helpers = () => {
   return (
     <div className="space-y-4">
       <h2 className="text-3xl text-center">Aide</h2>
