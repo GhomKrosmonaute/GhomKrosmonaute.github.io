@@ -681,9 +681,11 @@ const supports: SupportCardInfo[] = (
         ),
         description: (
           <>
-            Si la <Tag name="reputation" /> est inférieur à{" "}
-            {Math.floor(MAX_REPUTATION / 2)}. <Tag name="draw" /> une carte{" "}
-            <Tag name="upgrade" />
+            Si la <Tag name="reputation" /> est inférieur{" "}
+            <span className="whitespace-nowrap">
+              à {Math.floor(MAX_REPUTATION / 2)},
+            </span>{" "}
+            <Tag name="draw" /> une carte <Tag name="upgrade" />
           </>
         ),
         condition: (state) =>
