@@ -139,76 +139,79 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
             </div>
           </div>
           <Separator />
-          <div className="relative">
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Rechercher dans le deck..."
-              className="flex-grow"
-            />
-            {search.length > 0 && (
-              <Cross
-                onClick={() => setSearch("")}
-                className="cursor-pointer w-3 h-3 absolute top-1/2 right-4 -translate-y-1/2"
+          <div id="deck" className="space-y-2">
+            <div className="relative">
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Rechercher dans le deck..."
+                className="flex-grow"
               />
-            )}
-          </div>
-          <div id="deck" className="flex justify-between">
-            <div className="flex justify-end col-span-2">
-              {getRevivedDeck(game)
-                .filter(
-                  (c) =>
-                    !search ||
-                    c.type.includes(search.toLowerCase()) ||
-                    c.name.toLowerCase().includes(search.toLowerCase()) ||
-                    c.effect.tags.some(
-                      (t) =>
-                        t.includes(search.toLowerCase()) ||
-                        tags[t]?.name
-                          .toLowerCase()
-                          .includes(search.toLowerCase()),
-                    ) ||
-                    (c.type === "action" &&
-                      c.families.some((f) =>
-                        f.toLowerCase().includes(search.toLowerCase()),
-                      )) ||
-                    extractTextFromReactNode(c.effect.description)
-                      .toLowerCase()
-                      .includes(search.toLowerCase()),
-                )
-                .toSorted((a, b) => {
-                  if (a.type === b.type)
-                    return a.effect.tags.includes("upgrade") ? 1 : -1
-                  return b.type > a.type ? 1 : -1
-                })
-                .map((c, i) => (
-                  <HelpPopoverTrigger
-                    popover={<MinimalistGameCardDetail card={c} />}
-                    key={i}
-                  >
-                    <div
-                      className="h-6 hover:shrink-0 pointer-events-auto cursor-help"
-                      onContextMenu={(e) => {
-                        e.preventDefault()
-                        game.setCardDetail(c)
-                      }}
-                    >
-                      <MiniatureImage
-                        item={c}
-                        className={cn(
-                          "ring-0 rounded-none object-contain border-b-2",
-                          {
-                            "border-action": c.type === "action",
-                            "border-support": c.type === "support",
-                            "border-upgrade": c.effect.tags.includes("upgrade"),
-                          },
-                        )}
-                      />
-                    </div>
-                  </HelpPopoverTrigger>
-                ))}
+              {search.length > 0 && (
+                <Cross
+                  onClick={() => setSearch("")}
+                  className="cursor-pointer w-3 h-3 absolute top-1/2 right-4 -translate-y-1/2"
+                />
+              )}
             </div>
-            <CollectionCounter collection="deck" />
+            <div className="flex justify-between">
+              <div className="flex justify-end col-span-2">
+                {getRevivedDeck(game)
+                  .filter(
+                    (c) =>
+                      !search ||
+                      c.type.includes(search.toLowerCase()) ||
+                      c.name.toLowerCase().includes(search.toLowerCase()) ||
+                      c.effect.tags.some(
+                        (t) =>
+                          t.includes(search.toLowerCase()) ||
+                          tags[t]?.name
+                            .toLowerCase()
+                            .includes(search.toLowerCase()),
+                      ) ||
+                      (c.type === "action" &&
+                        c.families.some((f) =>
+                          f.toLowerCase().includes(search.toLowerCase()),
+                        )) ||
+                      extractTextFromReactNode(c.effect.description)
+                        .toLowerCase()
+                        .includes(search.toLowerCase()),
+                  )
+                  .toSorted((a, b) => {
+                    if (a.type === b.type)
+                      return a.effect.tags.includes("upgrade") ? 1 : -1
+                    return b.type > a.type ? 1 : -1
+                  })
+                  .map((c, i) => (
+                    <HelpPopoverTrigger
+                      popover={<MinimalistGameCardDetail card={c} />}
+                      key={i}
+                    >
+                      <div
+                        className="h-6 hover:shrink-0 pointer-events-auto cursor-help"
+                        onContextMenu={(e) => {
+                          e.preventDefault()
+                          game.setCardDetail(c)
+                        }}
+                      >
+                        <MiniatureImage
+                          item={c}
+                          className={cn(
+                            "ring-0 rounded-none object-contain border-b-2",
+                            {
+                              "border-action": c.type === "action",
+                              "border-support": c.type === "support",
+                              "border-upgrade":
+                                c.effect.tags.includes("upgrade"),
+                            },
+                          )}
+                        />
+                      </div>
+                    </HelpPopoverTrigger>
+                  ))}
+              </div>
+              <CollectionCounter collection="deck" />
+            </div>
           </div>
           <Separator />
         </>
