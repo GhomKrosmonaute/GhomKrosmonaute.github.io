@@ -171,7 +171,7 @@ const achievements: {
         Gagne <Money M$={100} /> avant le deuxième <Tag name="day" />
       </>
     ),
-    unlockCondition: (state) => state.money >= 100 && state.day <= 2,
+    unlockCondition: (state) => state.money >= 100 && state.day <= 1,
   },
   {
     name: "Ultra badass",

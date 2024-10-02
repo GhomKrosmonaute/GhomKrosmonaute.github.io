@@ -192,7 +192,7 @@ const actions: ActionCardInfo[] = (
       description: "My personal portfolio with a card game",
       detail:
         "Mon portfolio réalisé avec TypeScript, React, Vite, Tailwind CSS, Zustand et beaucoup de passion",
-      families: ["Site web", "TypeScript", "React", "Open Source"],
+      families: ["Site web", "TypeScript", "React", "Open Source", "Jeu vidéo"],
       effect: (advantage = 0) => {
         const basePrice = 4
         const baseMoneyGain = 5

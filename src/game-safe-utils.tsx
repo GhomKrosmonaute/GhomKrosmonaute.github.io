@@ -139,6 +139,7 @@ export const tags = {
     plural: "s",
     description:
       "Un sprint est une période de 7 jours. A la fin d'un sprint, vous gagnez des cartes",
+    className: "text-upgrade",
   },
   inflation: {
     name: "Inflation",

@@ -47,6 +47,7 @@ export const HelpPopover = (props: { show: boolean }) => {
       style={{
         top: cursor.y + 5,
         left: cursor.x + 5,
+        zIndex: 999999,
       }}
     >
       {lastSubject}
