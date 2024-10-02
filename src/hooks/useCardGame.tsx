@@ -25,6 +25,7 @@ import {
   isGameResource,
   ChoiceOptions,
   CoinFlipOptions,
+  GameDetailData,
 } from "@/game-typings"
 
 import {
@@ -99,8 +100,8 @@ export interface GlobalGameState {
 }
 
 export interface GameState {
-  cardDetail: GameCardCompact | null
-  setCardDetail: (card: GameCardCompact | null) => void
+  detail: GameDetailData
+  setDetail: (card: GameDetailData) => void
   inflation: number
   coinFlips: number
   recycledCards: number
@@ -195,6 +196,7 @@ export interface GameState {
     options: GameMethodOptions & {
       count?: number
       filter?: (card: GameCardInfo<true>) => boolean
+      shuffleBefore?: boolean
     },
   ) => Promise<void>
   playCard: (
@@ -413,7 +415,7 @@ function generateGameState(): Omit<
   }
 
   return {
-    cardDetail: null,
+    detail: null,
     selectedCard: null,
     coinFlips: 0,
     recycledCards: 0,
@@ -488,8 +490,8 @@ function generateGameMethods(
   getState: () => GameState & GlobalGameState,
 ) {
   return {
-    setCardDetail: (card) => {
-      set({ cardDetail: card })
+    setDetail: (card) => {
+      set({ detail: card })
     },
 
     skip: async (options) => {
@@ -1387,13 +1389,15 @@ function generateGameMethods(
 
         state.setOperationInProgress("recycle", true)
 
-        if (state.discard.length > 1 && options.filter) {
-          await state.riseToTheStackSurface("discard", options.filter)
-          state = getState()
+        if (state.discard.length > 1) {
+          if (options.filter) {
+            await state.riseToTheStackSurface("discard", options.filter)
+            state = getState()
+          } else if (options.shuffleBefore) {
+            await state.shuffleStack("discard")
+            state = getState()
+          }
         }
-
-        // on joue le son de la banque
-        bank.recycle.play()
 
         const recycled = state.discard
           .toReversed()
@@ -1403,6 +1407,9 @@ function generateGameMethods(
           .slice(0, options.count)
 
         const doTheRecycle = async (card: GameCardCompact) => {
+          // on joue le son de la banque
+          bank.recycle.play()
+
           // animation de playing
           set((state) => ({
             discard: updateCardState(state.discard, card.name, "playing"),
@@ -1426,8 +1433,6 @@ function generateGameMethods(
           set((state) => ({
             draw: updateCardState(state.draw, card.name, "idle"),
           }))
-
-          recycled.push(card)
         }
 
         if (recycled.length > 3) {

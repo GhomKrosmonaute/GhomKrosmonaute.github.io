@@ -43,7 +43,7 @@ export const GameCardStack = (props: {
             >
               {!isShuffling && i >= all.length - 2 && (
                 <div style={{ transform: "translateY(10px)" }}>
-                  <GameCard card={card} isStack />
+                  <GameCard card={card} isStack={props.revivedKey} />
                 </div>
               )}
             </div>

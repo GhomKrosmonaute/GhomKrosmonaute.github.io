@@ -11,11 +11,13 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs.tsx"
 
-import { Settings } from "@/components/game/menu/Settings.tsx"
-import { Statistics } from "@/components/game/menu/Statistics.tsx"
+import { About } from "@/components/game/menu/About.tsx"
+import { Credits } from "@/components/game/menu/Credits.tsx"
 import { Helpers } from "@/components/game/menu/Helpers.tsx"
+import { Settings } from "@/components/game/menu/Settings.tsx"
 import { GameTools } from "@/components/game/menu/GameTools.tsx"
 import { Scoreboard } from "@/components/game/menu/Scoreboard.tsx"
+import { Statistics } from "@/components/game/menu/Statistics.tsx"
 
 export const Menu = (props: { show: boolean }) => {
   const toggleSettings = useGlobalState((state) => state.toggleSettings)
@@ -51,8 +53,10 @@ export const Menu = (props: { show: boolean }) => {
             <TabsTrigger value="scores">Scoreboard</TabsTrigger>
             <TabsTrigger value="help">Aide</TabsTrigger>
             <TabsTrigger value="tools">Outils</TabsTrigger>
+            <TabsTrigger value="about">A propos</TabsTrigger>
+            <TabsTrigger value="credits">Crédits</TabsTrigger>
           </TabsList>
-          <div className="space-y-2">
+          <div className={cn("space-y-2", props.show ? "block" : "hidden")}>
             <TabsContent value="settings">
               <Settings show={props.show} />
             </TabsContent>
@@ -67,6 +71,12 @@ export const Menu = (props: { show: boolean }) => {
             </TabsContent>
             <TabsContent value="tools">
               <GameTools />
+            </TabsContent>
+            <TabsContent value="about">
+              <About />
+            </TabsContent>
+            <TabsContent value="credits">
+              <Credits />
             </TabsContent>
           </div>
         </Tabs>

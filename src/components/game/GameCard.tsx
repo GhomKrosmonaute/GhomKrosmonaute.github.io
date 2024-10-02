@@ -12,7 +12,7 @@ import {
   SupportCardInfo,
 } from "@/game-typings"
 
-import { useCardGame } from "@/hooks/useCardGame.tsx"
+import { GameState, useCardGame } from "@/hooks/useCardGame.tsx"
 import { useSettings } from "@/hooks/useSettings.ts"
 
 import { cn } from "@/utils.ts"
@@ -35,7 +35,7 @@ export const GameCard = (
     card: GameCardInfo<true>
     options?: (GameCardInfo<true> | GameResource)[]
     position?: number
-    isStack?: boolean
+    isStack?: keyof GameState & `revived${string}`
     isChoice?: boolean
     isPlaying?: boolean
     withoutDetail?: boolean
@@ -112,7 +112,11 @@ export const GameCard = (
       onClick={async () => {
         if (props.withoutDetail) return
         if (props.isPlaying) return
-        if (props.isStack) return
+
+        if (props.isStack) {
+          game.setDetail(props.isStack)
+          return
+        }
 
         if (!props.isChoice) {
           if (game.selectionInProgress) {
@@ -137,7 +141,7 @@ export const GameCard = (
 
         if (props.withoutDetail) return
 
-        game.setCardDetail(compactGameCardInfo(props.card))
+        game.setDetail(compactGameCardInfo(props.card))
       }}
       style={{
         marginBottom: `${20 - Math.abs(positionFromCenter) * 5}px`, // temporaire, peut causer des problèmes
@@ -175,7 +179,7 @@ export const GameCard = (
         <></>
       ) : (
         <Tilt
-          disabled={props.isStack}
+          disabled={!!props.isStack}
           scale={1.1}
           className={cn(
             "group/game-card",

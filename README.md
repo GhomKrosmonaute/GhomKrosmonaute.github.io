@@ -2,9 +2,9 @@
 
 ## Card game
 
-# Price rules
+### Price rules
 
-Applied on [effects.ts](./src/data/effects.ts). These rules are used to calculate the price of a card. 
+Applied on card effects. These rules are used to calculate the price of a card. 
 
 - 1 energy = 5M$ (exchange rate: x5)
 - 1 reputation = 10 energy (exchange rate: x10)

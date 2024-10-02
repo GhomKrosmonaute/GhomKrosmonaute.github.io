@@ -109,7 +109,7 @@ export const tags = {
     name: "Action",
     plural: "s",
     description:
-      "Une carte Action représente un projet sur lequel Ghom a travaillé. Jouez-la pour obtenir des ressources.",
+      "Une carte Action représente un projet sur lequel Ghom a travaillé (sauf les cartes d'Améliorations). Jouez-la pour obtenir des ressources.",
   },
   support: {
     name: "Support",
@@ -924,11 +924,11 @@ export function canBeBuy(card: GameCardInfo<true>, state: GameState) {
 }
 
 export const fakeState: GameState = {
-  cardDetail: null,
+  detail: null,
   riseToTheStackSurface: async () => {},
   shuffleStack: async () => {},
   transformCardsAnimation: async () => {},
-  setCardDetail: () => {},
+  setDetail: () => {},
   addEnergy: async () => {},
   addGlobalCardModifier: async () => {},
   addLog: () => {},

@@ -9,7 +9,7 @@ import { GlobalCardModifierIndex } from "@/game-enums.ts"
 
 const cardModifiers = {
   "upgrade cost threshold": () => ({
-    index: GlobalCardModifierIndex.Last,
+    index: GlobalCardModifierIndex.AddOrSubtract,
     condition: (card) => card.effect.tags.includes("upgrade"),
     use: (card, state) => {
       if (card.effect.tags.includes("upgrade")) {

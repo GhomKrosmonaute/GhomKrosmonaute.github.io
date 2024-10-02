@@ -18,6 +18,7 @@ export const GameUpgrades = (props: { show: boolean }) => {
     transparency: state,
   }))
 
+  const setDetail = useCardGame((state) => state.setDetail)
   const upgrades = useCardGame((state) => state.upgrades)
 
   return (
@@ -59,12 +60,22 @@ export const GameUpgrades = (props: { show: boolean }) => {
               const event = events[upgrade.eventName]
 
               return (
-                <div key={index} className="group/upgrade shrink-0 relative">
+                <div
+                  key={index}
+                  className="group/upgrade shrink-0 relative cursor-help"
+                  onClick={() => {
+                    setDetail(indice)
+                  }}
+                  onContextMenu={(e) => {
+                    e.preventDefault()
+                    setDetail(indice)
+                  }}
+                >
                   <img
                     src={`images/upgrades/${upgrade.image}`}
                     alt={upgrade.name}
                     className={cn(
-                      "block object-cover w-16 h-16 aspect-square rounded-full pointer-events-auto cursor-pointer mx-auto ring-upgrade ring-4",
+                      "block object-cover w-16 h-16 aspect-square rounded-full pointer-events-auto mx-auto ring-upgrade ring-4",
                       {
                         // "": upgrade.state === "idle",
                         // "animate-appear": upgrade.state === "appear",

@@ -35,7 +35,8 @@ import {
   tags,
 } from "@/game-safe-utils.tsx"
 import { HelpPopoverTrigger } from "@/components/game/HelpPopoverTrigger.tsx"
-import { MinimalistGameCardDetail } from "@/components/game/GameCardDetail.tsx"
+import { MinimalistGameCardDetail } from "@/components/game/GameDetail.tsx"
+import { compactGameCardInfo } from "@/game-typings.ts"
 
 export const Stat = ({
   name,
@@ -154,7 +155,7 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
                 />
               )}
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between gap-2">
               <div className="flex justify-end col-span-2">
                 {getRevivedDeck(game)
                   .filter(
@@ -189,9 +190,12 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
                     >
                       <div
                         className="h-6 hover:shrink-0 pointer-events-auto cursor-help"
+                        onClick={() => {
+                          game.setDetail(compactGameCardInfo(c))
+                        }}
                         onContextMenu={(e) => {
                           e.preventDefault()
-                          game.setCardDetail(c)
+                          game.setDetail(compactGameCardInfo(c))
                         }}
                       >
                         <MiniatureImage

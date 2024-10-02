@@ -294,6 +294,12 @@ const actions: ActionCardInfo[] = (
       families: ["Serveur Discord"],
       effect: createEffect({
         basePrice: ACTIONS_COST.condition + ACTIONS_COST.levelUp * 2,
+        hint: (
+          <>
+            Vous devez avoir au moins une carte qui n'est pas un{" "}
+            <Tag name="token" /> en main
+          </>
+        ),
         description: (
           <>
             Augmente de 2 <Tag name="level" plural /> une carte en main
@@ -301,7 +307,9 @@ const actions: ActionCardInfo[] = (
           </>
         ),
         condition: (state, card) =>
-          state.hand.filter((c) => c.name !== card.name).length > 0,
+          state.revivedHand.filter(
+            (c) => !c.effect.tags.includes("token") && c.name !== card.name,
+          ).length > 0,
         async onPlayed(state, card) {
           const target = shuffle(
             state.revivedHand
@@ -550,11 +558,21 @@ const actions: ActionCardInfo[] = (
       effect: createEffect({
         basePrice: ACTIONS_COST.levelUp * MAX_HAND_SIZE,
         costType: "money",
+        hint: (
+          <>
+            Vous devez avoir au moins une carte qui n'est pas un{" "}
+            <Tag name="token" /> en main
+          </>
+        ),
         description: (
           <>
             Augmente d'un <Tag name="level" /> les cartes en main
           </>
         ),
+        condition: (state, card) =>
+          state.revivedHand.filter(
+            (c) => !c.effect.tags.includes("token") && c.name !== card.name,
+          ).length > 0,
         async onPlayed(state, card) {
           const targets = state.revivedHand
             .filter((c) => !c.effect.tags.includes("token"))

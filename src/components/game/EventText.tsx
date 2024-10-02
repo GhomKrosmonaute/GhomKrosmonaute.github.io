@@ -16,13 +16,25 @@ export const EventText = (props: {
         props.className,
       )}
     >
-      <GameValueIcon
-        value={<event.icon className="h-5" />}
-        colors={"colors" in event ? event.colors : "bg-background"}
-        miniature
-        className="block h-6 w-6"
-      />
+      <EventIcon name={props.eventName} />
       <span className="font-zain test-sm">{event.name}</span>
     </div>
+  )
+}
+
+export const EventIcon = (props: {
+  name: TriggerEventName
+  className?: string
+  backgroundClassName?: string
+}) => {
+  const event = events[props.name]
+
+  return (
+    <GameValueIcon
+      value={<event.icon className={cn("h-5", props.className)} />}
+      colors={"colors" in event ? event.colors : "bg-background"}
+      miniature
+      className={cn("block h-6 w-6", props.backgroundClassName)}
+    />
   )
 }

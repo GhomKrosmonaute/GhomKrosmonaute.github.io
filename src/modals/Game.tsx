@@ -10,7 +10,6 @@ import steps from "@/data/tutorial.tsx"
 import { CrashReportProvider } from "@/components/game/CrashReportProvider.tsx"
 import { TutorialProvider } from "@/components/game/TutorialProvider.tsx"
 import { ScreenMessages } from "@/components/game/ScreenMessages.tsx"
-import { GameCardDetail } from "@/components/game/GameCardDetail.tsx"
 import { GameCardStacks } from "@/components/game/GameCardStacks.tsx"
 import { GameTutorial } from "@/components/game/GameTutorial.tsx"
 import { GameUpgrades } from "@/components/game/GameUpgrades.tsx"
@@ -18,6 +17,7 @@ import { CornerIcons } from "@/components/game/CornerIcons.tsx"
 import { GameActions } from "@/components/game/GameActions.tsx"
 import { GameHelpers } from "@/components/game/GameHelpers.tsx"
 import { HelpPopover } from "@/components/game/HelpPopover.tsx"
+import { GameDetail } from "@/components/game/GameDetail.tsx"
 import { GameAlert } from "@/components/game/GameAlert.tsx"
 import { GameDebug } from "@/components/game/GameDebug.tsx"
 import { GameMusic } from "@/components/game/GameMusic.tsx"
@@ -78,7 +78,7 @@ export const Game = () => {
         <CornerIcons show={show} />
         <GameCardStacks show={show} />
         <GameHand show={show} />
-        <GameCardDetail show={show} />
+        <GameDetail show={show} />
         <ScreenMessages show={show} />
         <GameTutorial show={show} />
         <Menu show={show && showSettings} />

@@ -568,7 +568,12 @@ const supports: SupportCardInfo[] = (
         ),
         condition: (state) => state.discard.length >= 1,
         async onPlayed(state, _, reason) {
-          await state.recycleCard({ count: 1, skipGameOverPause: true, reason })
+          await state.recycleCard({
+            count: 1,
+            shuffleBefore: true,
+            skipGameOverPause: true,
+            reason,
+          })
         },
         needsPlayZone: true,
         costType: "money",
@@ -656,6 +661,7 @@ const supports: SupportCardInfo[] = (
           </>
         ),
         condition: (state) =>
+          state.reputation === MAX_REPUTATION &&
           state.revivedDraw.some((c) => c.effect.tags.includes("upgrade")),
         async onPlayed(state, _, reason) {
           await state.drawCard(1, {

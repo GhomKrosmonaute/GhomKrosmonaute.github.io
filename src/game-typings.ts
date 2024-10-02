@@ -10,6 +10,12 @@ import { pick, tags } from "@/game-safe-utils.tsx"
 import type cardModifiers from "@/data/cardModifiers.ts"
 import type { qualityPresets } from "@/game-settings.ts"
 
+export type GameDetailData =
+  | GameCardCompact
+  | UpgradeCompact
+  | (keyof GameState & `revived${string}`)
+  | null
+
 export type RarityName = keyof typeof RARITIES
 
 export interface QualityOptions {
