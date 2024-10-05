@@ -16,6 +16,8 @@ import {
   isGameCardInfo,
   ChoiceOptions,
   compactGameCardInfo,
+  ActionCardFamily,
+  ChoiceOptionFilter,
 } from "@/game-typings"
 
 import { MAX_HAND_SIZE, RARITIES, INFINITE_DRAW_COST } from "@/game-constants"
@@ -30,23 +32,59 @@ import {
   canBeBuy,
   shuffle,
   calculateRarityAdvantage,
+  tags,
 } from "@/game-safe-utils.tsx"
 
-export function generateChoiceOptions(
-  state: GameState & GlobalGameState,
-  options?: ChoiceOptionsGeneratorOptions,
-): ChoiceOptions {
-  state.setOperationInProgress("choices", true)
+export const choiceOptionFilters = {
+  byType:
+    (pattern: `${"!" | ""}${"@action" | "@support"}`) =>
+    (card: GameCardInfo) => {
+      return pattern.startsWith("!")
+        ? pattern === "!@action"
+          ? card.type === "action"
+          : card.type === "support"
+        : pattern === "@action"
+          ? card.type !== "action"
+          : card.type !== "support"
+    },
+  byTag:
+    (pattern: `${"!" | ""}@${keyof typeof tags}`) => (card: GameCardInfo) => {
+      return pattern.startsWith("!")
+        ? !card.effect().tags.includes(pattern.slice(2) as keyof typeof tags)
+        : card.effect().tags.includes(pattern.slice(1) as keyof typeof tags)
+    },
+  byFamily:
+    (pattern: `${"!" | ""}#${ActionCardFamily}`) => (card: GameCardInfo) => {
+      return (
+        card.type === "action" &&
+        (pattern.startsWith("!")
+          ? !card.families.includes(pattern.slice(2) as ActionCardFamily)
+          : card.families.includes(pattern.slice(1) as ActionCardFamily))
+      )
+    },
+} satisfies Record<string, (pattern: any) => (card: GameCardInfo) => boolean>
 
+export function resolveChoiceOptionFilter(filter: ChoiceOptionFilter) {
+  if (/^!?@(?:action|support)/.test(filter))
+    return choiceOptionFilters.byType(
+      filter as `${"!" | ""}${"@action" | "@support"}`,
+    )
+
+  if (/^!?@/.test(filter))
+    return choiceOptionFilters.byTag(
+      filter as `${"!" | ""}@${keyof typeof tags}`,
+    )
+
+  return choiceOptionFilters.byFamily(
+    filter as `${"!" | ""}#${ActionCardFamily}`,
+  )
+}
+
+export function resolveChoiceOptions(
+  state: GameState & GlobalGameState,
+  options: ChoiceOptions<false>,
+): ChoiceOptions<true> {
   const filter = (card: GameCardInfo) =>
-    // (state.choiceOptions.length === 0 ||
-    //   state.choiceOptions.every(
-    //     (choice) =>
-    //       choice.options.length === 0 ||
-    //       choice.options.every(
-    //         (i) => !isGameResource(i) && i.name !== card.name,
-    //       ),
-    //   )) &&
     (state.draw.length === 0 ||
       state.draw.every((c) => c.name !== card.name)) &&
     (state.discard.length === 0 ||
@@ -54,8 +92,11 @@ export function generateChoiceOptions(
     (state.hand.length === 0 ||
       state.hand.every((c) => c.name !== card.name)) &&
     (!options?.exclude ||
-      options?.exclude?.every((name) => name !== card.name)) &&
-    (!options?.filter || options?.filter?.(card, state)) &&
+      options.exclude?.every((name) => name !== card.name)) &&
+    (!options?.filter ||
+      options.filter.every((filter) =>
+        resolveChoiceOptionFilter(filter)(card),
+      )) &&
     (!card.effect().tags.includes("upgrade") ||
       state.upgrades.length === 0 ||
       state.upgrades.every((u) => {
@@ -63,35 +104,42 @@ export function generateChoiceOptions(
         return up.name !== card.name || up.cumul < up.max
       }))
 
-  return {
-    header: options?.header ?? "Choisis une carte",
-    options: () => {
-      const _cards: (GameCardInfo | GameResource)[] = cards.filter(filter)
+  const _cards: (GameCardInfo | GameResource)[] = cards.filter(filter)
 
-      if (_cards.length < state.choiceOptionCount) {
-        while (_cards.length < state.choiceOptionCount) {
-          _cards.push(generateRandomResource(state))
-        }
-      } else if (!options?.noResource) {
-        const length = _cards.length
-        for (let i = 0; i < Math.ceil(length / 10); i++) {
-          _cards.push(generateRandomResource(state))
-        }
-      }
-
-      return shuffle(_cards, 3)
-        .slice(0, state.choiceOptionCount)
-        .map((option) => {
-          if (isGameResource(option)) return option
-
-          return {
-            name: option.name,
-            state: "landing",
-            initialRarity: generateRandomRarity(),
-          } as GameCardCompact
-        })
-    },
+  if (_cards.length < state.choiceOptionCount) {
+    while (_cards.length < state.choiceOptionCount) {
+      _cards.push(generateRandomResource(state))
+    }
+  } else if (!options?.noResource) {
+    const length = _cards.length
+    for (let i = 0; i < Math.ceil(length / 10); i++) {
+      _cards.push(generateRandomResource(state))
+    }
   }
+
+  return {
+    header: options.header,
+    options: shuffle(_cards, 3)
+      .slice(0, state.choiceOptionCount)
+      .map((option) => {
+        if (isGameResource(option)) return option
+
+        return {
+          name: option.name,
+          state: "landing",
+          initialRarity: generateRandomRarity(),
+        } as GameCardCompact
+      }),
+  }
+}
+
+export function createChoiceOptions(
+  state: GameState & GlobalGameState,
+  options: ChoiceOptionsGeneratorOptions,
+): ChoiceOptions<false> {
+  state.setOperationInProgress("choices", true)
+
+  return options
 }
 
 export function isGameOver(

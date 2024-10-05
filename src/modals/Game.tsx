@@ -72,15 +72,15 @@ export const Game = () => {
         <GameHelpers show={show} />
         <GameAlert show={show} />
         <GameHUD show={show} />
-        <GameOver show={show} />
+        <GameCardStacks show={show} />
         <GameActions show={show} />
         <GameUpgrades show={show} />
-        <CornerIcons show={show} />
-        <GameCardStacks show={show} />
         <GameHand show={show} />
         <GameDetail show={show} />
         <ScreenMessages show={show} />
         <GameTutorial show={show} />
+        <GameOver show={show} />
+        <CornerIcons show={show} />
         <Menu show={show && showSettings} />
         <HelpPopover show={show} />
 

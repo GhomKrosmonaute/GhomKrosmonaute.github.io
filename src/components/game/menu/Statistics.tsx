@@ -6,6 +6,7 @@ import { MinimalistGameCardDetail } from "@/components/game/GameDetail.tsx"
 import { reviveCard } from "@/game-utils.ts"
 import { useCardGame } from "@/hooks/useCardGame.tsx"
 import { BentoCard } from "@/components/BentoCard.tsx"
+import { GameCardInfo } from "@/game-typings.ts"
 
 export const Statistics = () => {
   const stats = useCardGame()
@@ -59,20 +60,26 @@ export const Statistics = () => {
           <h3 className="font-changa">Cartes découvertes</h3>
           <BadgeList>
             {stats.discoveries.length > 0
-              ? stats.discoveries.map((discovery, i) => (
-                  <HelpPopoverTrigger
-                    key={i}
-                    popover={
-                      <MinimalistGameCardDetail
-                        card={reviveCard(discovery, stats)}
-                      />
-                    }
-                  >
-                    <li>
-                      <Badge>{discovery}</Badge>
-                    </li>
-                  </HelpPopoverTrigger>
-                ))
+              ? stats.discoveries.map((discovery, i) => {
+                  let card: GameCardInfo<true>
+
+                  try {
+                    card = reviveCard(discovery, stats)
+                  } catch {
+                    return null
+                  }
+
+                  return (
+                    <HelpPopoverTrigger
+                      key={i}
+                      popover={<MinimalistGameCardDetail card={card} />}
+                    >
+                      <li>
+                        <Badge>{discovery}</Badge>
+                      </li>
+                    </HelpPopoverTrigger>
+                  )
+                })
               : "Aucune découverte"}
           </BadgeList>
         </BentoCard>
@@ -89,10 +96,8 @@ export const Statistics = () => {
                     <>
                       <h2 className="mb-2">{achievement}</h2>
                       <p>
-                        {
-                          achievements.find((a) => a.name === achievement)!
-                            .description
-                        }
+                        {achievements.find((a) => a.name === achievement)
+                          ?.description ?? "Ce succès n'existe plus."}
                       </p>
                     </>
                   }

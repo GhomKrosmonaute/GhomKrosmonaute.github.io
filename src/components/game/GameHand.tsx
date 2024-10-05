@@ -13,15 +13,15 @@ export const GameHand = (props: { show: boolean }) => {
     <div
       id="hand"
       className={cn(
-        "absolute flex items-center -translate-x-1/2 max-w-[100vw] left-[50vw]",
+        "absolute left-[50vw]",
         {
           "transition-[bottom] ease-in-out duration-1000": quality.animations,
         },
-        props.show ? "bottom-[-50px]" : "-bottom-full",
+        props.show ? "bottom-[250px]" : "-bottom-full",
       )}
     >
       {hand.map((card, index) => (
-        <GameCard key={index} card={card} position={index} />
+        <GameCard key={card.name} card={card} position={index} />
       ))}
     </div>
   )

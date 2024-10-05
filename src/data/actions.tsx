@@ -2,6 +2,8 @@ import React from "react"
 
 import {
   ActionCardInfo,
+  ChoiceOptionFilter,
+  ChoiceOptionHeaderId,
   CoinFlipOptions,
   compactGameCardInfo,
   EffectBuilder,
@@ -66,8 +68,9 @@ const reusable = {
       needsPlayZone: true,
     }),
   choseSpecific: (
+    header: ChoiceOptionHeaderId,
     label: React.ReactNode,
-    filter: (card: GameCardInfo) => boolean,
+    filter: ChoiceOptionFilter[],
   ) =>
     createEffect({
       basePrice: ACTIONS_COST.choseSpecific,
@@ -79,17 +82,17 @@ const reusable = {
       onPlayed: async (state) => {
         bank.powerUp.play()
 
-        const { generateChoiceOptions } = await import("@/game-utils.ts")
+        const { createChoiceOptions } = await import("@/game-utils.ts")
 
         state.dangerouslyUpdate({
           choiceOptions: [
             ...state.choiceOptions,
-            generateChoiceOptions(state, {
-              header: <>Choisis une carte {label}</>,
+            createChoiceOptions(state, {
+              header,
               filter,
               noResource: true,
             }),
-          ],
+          ] as any,
         })
 
         await wait()
@@ -230,9 +233,9 @@ const actions: ActionCardInfo[] = (
       url: "https://discord.gg/3vC2XWK",
       families: ["Serveur Discord"],
       effect: reusable.choseSpecific(
+        ["family", "Bot Discord"],
         <Family name="Bot Discord" />,
-        (card) =>
-          card.type === "action" && card.families.includes("Bot Discord"),
+        ["#Bot Discord"],
       ),
     },
     {
@@ -386,11 +389,9 @@ const actions: ActionCardInfo[] = (
             <Money M$={20 * ENERGY_TO_MONEY} />
           </>
         ),
-        condition: (state, card) =>
-          state.revivedHand
-            .filter((c) => !c.effect.tags.includes("token"))
-            .filter((c) => c.name !== card.name).length > 0,
-        select: (_, card, testedCard) => card.name !== testedCard.name,
+        select: (_, card, testedCard) =>
+          card.name !== testedCard.name &&
+          !testedCard.effect.tags.includes("token"),
         async onPlayed(state, card, reason, selected) {
           await state.transformCardsAnimation([selected.name], () =>
             state.addGlobalCardModifier(
@@ -492,8 +493,9 @@ const actions: ActionCardInfo[] = (
       url: "https://github.com/GhomKrosmonaute/TypedShooterGame",
       families: ["Jeu vidéo", "TypeScript"],
       effect: reusable.choseSpecific(
+        ["family", "PlayCurious"],
         <Family name="PlayCurious" />,
-        (c) => c.type === "action" && c.families.includes("PlayCurious"),
+        ["#PlayCurious"],
       ),
     },
     {
@@ -599,10 +601,11 @@ const actions: ActionCardInfo[] = (
       url: "https://playcurious.games/our-games/sea-rescue/",
       families: ["Jeu vidéo", "TypeScript", "PlayCurious"],
       effect: reusable.choseSpecific(
+        ["tag", "recycle", "qui"],
         <>
           qui <Tag name="recycle" />
         </>,
-        (c) => c.effect().tags.includes("recycle"),
+        ["@recycle"],
       ),
     },
     {
@@ -688,6 +691,7 @@ const actions: ActionCardInfo[] = (
               ),
           )
         },
+        needsPlayZone: true,
       }),
     },
     {

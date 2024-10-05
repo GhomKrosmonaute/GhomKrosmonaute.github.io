@@ -4,7 +4,12 @@ import { INFINITE_DRAW_COST, MAX_HAND_SIZE } from "@/game-constants.ts"
 
 import { cn } from "@/utils.ts"
 import { bank } from "@/sound.ts"
-import { isGameOver, reviveCard, toSortedCards } from "@/game-utils"
+import {
+  isGameOver,
+  resolveChoiceOptions,
+  reviveCard,
+  toSortedCards,
+} from "@/game-utils"
 
 import { Button } from "@/components/ui/button.tsx"
 import { GameCard } from "@/components/game/GameCard.tsx"
@@ -14,19 +19,39 @@ import { GameResourceCard } from "@/components/game/GameResourceCard.tsx"
 import { useCardGame } from "@/hooks/useCardGame.tsx"
 import { useSettings } from "@/hooks/useSettings.ts"
 
-import { energyCostColor, isNewSprint, wait } from "@/game-safe-utils.tsx"
-import { isGameResource } from "@/game-typings.ts"
+import {
+  choiceOptionsHeaders,
+  energyCostColor,
+  isNewSprint,
+  wait,
+} from "@/game-safe-utils.tsx"
+import {
+  ChoiceOptions,
+  isChoiceOptionsResolved,
+  isGameResource,
+} from "@/game-typings.ts"
 
 export const GameActions = (props: { show: boolean }) => {
   const game = useCardGame()
   const animation = useSettings((state) => state.quality.animations)
 
-  const newSprint = React.useMemo(() => isNewSprint(game.day), [game.day])
+  const newSprint = isNewSprint(game.day)
 
-  const resolvedOptions = React.useMemo(
-    () => toSortedCards(game.choiceOptions[0]?.options() ?? [], game),
-    [game.choiceOptions[0]],
-  )
+  const [resolvedOptions, resolvedHeader] = React.useMemo(() => {
+    if (!game.choiceOptions[0]) return [[], ""]
+
+    if (!isChoiceOptionsResolved(game.choiceOptions[0])) {
+      game.choiceOptions[0] = resolveChoiceOptions(game, game.choiceOptions[0])
+    }
+
+    const choice = game.choiceOptions[0] as ChoiceOptions<true>
+
+    return [
+      toSortedCards(choice.options, game),
+      // @ts-expect-error le slice extrait les paramètres de la fonction
+      choiceOptionsHeaders[choice.header[0]](...choice.header.slice(1)),
+    ]
+  }, [game.choiceOptions[0]])
 
   const runningOps =
     game.operationInProgress.filter((o) => o !== "choices").length > 0
@@ -78,7 +103,7 @@ export const GameActions = (props: { show: boolean }) => {
               ? "Clique sur une carte de la main"
               : game.playZone[game.playZone.length - 1].name // Affiche le titre de la dernière carte ajoutée à la playZone
             : game.choiceOptions.length > 0
-              ? game.choiceOptions[0].header
+              ? resolvedHeader
               : "Actions"}
         </h2>
         {game.playZone.length > 0 ? (
@@ -143,9 +168,7 @@ export const GameActions = (props: { show: boolean }) => {
             </Button>
             {(() => {
               if (resolvedOptions.length === 0) {
-                game.dangerouslyUpdate({
-                  choiceOptions: game.choiceOptions.slice(1),
-                })
+                game.nextChoiceOptions()
               }
 
               return (

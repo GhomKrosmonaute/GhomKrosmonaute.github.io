@@ -26,6 +26,7 @@ import {
   ChoiceOptions,
   CoinFlipOptions,
   GameDetailData,
+  ChoiceOptionsGeneratorOptions,
 } from "@/game-typings"
 
 import {
@@ -47,9 +48,10 @@ import {
   reviveCard,
   reviveUpgrade,
   willBeRemoved,
-  generateChoiceOptions,
+  createChoiceOptions,
   revivedState,
   toSortedCards,
+  resolveChoiceOptions,
 } from "@/game-utils.ts"
 
 import { metadata } from "@/game-metadata.ts"
@@ -114,7 +116,7 @@ export interface GameState {
   error: Error | null
   handleError: <T>(error: T) => T
   choiceOptionCount: number
-  choiceOptions: ChoiceOptions[]
+  choiceOptions: [ChoiceOptions<true>, ...ChoiceOptions<false>[]] | []
   logs: GameLog[]
   screenMessageQueue: ScreenMessageOptions[]
   operationInProgress: string[]
@@ -208,6 +210,7 @@ export interface GameState {
     from: T[]
     timeout?: number
   }) => Promise<GameCardInfo<true> | null>
+  nextChoiceOptions: () => void
   skip: (options: MethodWhoLog) => Promise<void>
   pickOption: (
     option: GameCardInfo<true> | GameResource,
@@ -385,32 +388,30 @@ function generateGameState(): Omit<
 
   // startingDeck = shuffle(startingDeck, 3)
 
-  const startingChoices: ChoiceOptions[] = []
+  const startingChoices: GameState["choiceOptions"] = [
+    {
+      header: ["default"],
+      options: shuffle(
+        cards.filter(
+          (c) =>
+            startingDeck.every((name) => name !== c.name) &&
+            !c.effect().tags.includes("upgrade"),
+        ),
+        5,
+      )
+        .slice(0, INITIAL_CHOICE_OPTION_COUNT)
+        .map((c) => ({
+          name: c.name,
+          state: "idle" as const,
+          initialRarity: generateRandomRarity(),
+        })),
+    },
+  ]
 
   for (let i = 0; i < INITIAL_CHOICE_COUNT; i++) {
-    const current = shuffle(
-      cards.filter(
-        (c) =>
-          startingChoices.every((choice) =>
-            choice
-              .options()
-              .every((o) => (o as GameCardCompact).name !== c.name),
-          ) &&
-          startingDeck.every((name) => name !== c.name) &&
-          !c.effect().tags.includes("upgrade"),
-      ),
-      5,
-    )
-      .slice(0, INITIAL_CHOICE_OPTION_COUNT)
-      .map((c) => ({
-        name: c.name,
-        state: "idle" as const,
-        initialRarity: generateRandomRarity(),
-      }))
-
     startingChoices.push({
-      header: "Choisis une carte",
-      options: () => current,
+      header: ["default"],
+      filter: ["!@upgrade"],
     })
   }
 
@@ -494,6 +495,27 @@ function generateGameMethods(
       set({ detail: card })
     },
 
+    nextChoiceOptions: () => {
+      const state = getState()
+
+      const nextChoiceOptions = state.choiceOptions.slice(
+        1,
+      ) as ChoiceOptionsGeneratorOptions[]
+
+      set((state) => ({
+        choiceOptions:
+          nextChoiceOptions.length > 0
+            ? [
+                resolveChoiceOptions(
+                  state as GameState & GlobalGameState,
+                  nextChoiceOptions[0],
+                ),
+                ...nextChoiceOptions.slice(1),
+              ]
+            : [],
+      }))
+    },
+
     skip: async (options) => {
       await handleErrorsAsync(getState, async () => {
         bank.play.play()
@@ -508,9 +530,7 @@ function generateGameMethods(
           },
         )
 
-        set((state) => ({
-          choiceOptions: state.choiceOptions.slice(1),
-        }))
+        state.nextChoiceOptions()
 
         await state.increments("skippedChoices")
       })
@@ -584,12 +604,15 @@ function generateGameMethods(
 
         const upgradeCompletion = state.upgrades.length / upgrades.length
         const cardCompletion = getDeck(state).length / cards.length
+        const moneyCompletion = state.money / MONEY_TO_REACH
         const energyToDays = map(
-          0.5 * cardCompletion + 0.5 * upgradeCompletion,
+          0.3 * cardCompletion +
+            0.3 * upgradeCompletion +
+            0.4 * moneyCompletion,
           0,
           1,
           ENERGY_TO_DAYS,
-          ENERGY_TO_DAYS * 0.3,
+          ENERGY_TO_DAYS * 0.2,
         )
 
         const addedTime = Math.max(energyToDays, energy * energyToDays)
@@ -635,13 +658,13 @@ function generateGameMethods(
             dayFull: false,
             choiceOptions: newSprint
               ? state.choiceOptions
-              : [
+              : ([
                   ...state.choiceOptions,
-                  generateChoiceOptions(getState(), {
-                    header: "Choisis une carte",
-                    filter: (c) => !c.effect().tags.includes("upgrade"),
+                  createChoiceOptions(getState(), {
+                    header: ["default"],
+                    filter: ["!@upgrade"],
                   }),
-                ],
+                ] as any),
           }))
 
           if (newSprint) {
@@ -653,26 +676,17 @@ function generateGameMethods(
               sprintFull: false,
               choiceOptions: [
                 ...state.choiceOptions,
-                generateChoiceOptions(fullState, {
+                createChoiceOptions(fullState, {
                   noResource: true,
-                  header: (
-                    <>
-                      Choisis une carte <Tag name="action" />
-                    </>
-                  ),
-                  filter: (c) =>
-                    !c.effect().tags.includes("upgrade") && c.type === "action",
+                  header: ["action"],
+                  filter: ["!@upgrade", "@action"],
                 }),
-                generateChoiceOptions(fullState, {
+                createChoiceOptions(fullState, {
                   noResource: true,
-                  header: (
-                    <>
-                      Choisis une carte <Tag name="upgrade" />
-                    </>
-                  ),
-                  filter: (c) => Boolean(c.effect().tags.includes("upgrade")),
+                  header: ["upgrade"],
+                  filter: ["@upgrade"],
                 }),
-              ],
+              ] as any,
             }))
 
             if (newMonth) {
@@ -1165,7 +1179,7 @@ function generateGameMethods(
           const cards = stackCards.filter(filter)
           const otherCards = stackCards.filter((c) => !filter(c))
 
-          const sorted = [...cards, ...otherCards]
+          const sorted = [...otherCards, ...cards]
 
           return {
             [stack]: sorted.map((c) => compactGameCardInfo(c)),
@@ -1780,7 +1794,7 @@ function generateGameMethods(
       })
     },
 
-    pickOption: async (option, resolvedOptions) => {
+    pickOption: async (option) => {
       await handleErrorsAsync(getState, async () => {
         const state = getState()
 
@@ -1789,7 +1803,7 @@ function generateGameMethods(
           true,
         )
 
-        const choice = state.choiceOptions[0]
+        const choice = state.choiceOptions[0]!
 
         // on joue le son de la banque
         bank.gain.play()
@@ -1799,15 +1813,16 @@ function generateGameMethods(
           choiceOptions: [
             {
               ...choice,
-              options: () =>
-                resolvedOptions.map((c) => {
-                  return (isGameResource(c) ? c.id : c.name) ===
-                    (isGameResource(option) ? option.id : option.name)
-                    ? { ...c, state: "playing" }
-                    : { ...c, state: "discarding" }
-                }),
+              options: choice.options.map((c) => {
+                return (isGameResource(c) ? c.id : c.name) ===
+                  (isGameResource(option) ? option.id : option.name)
+                  ? { ...c, state: "playing" }
+                  : { ...c, state: "discarding" }
+              }),
             },
-            ...state.choiceOptions.slice(1),
+            ...(state.choiceOptions.slice(
+              1,
+            ) as ChoiceOptionsGeneratorOptions[]),
           ],
         })
 
@@ -1841,17 +1856,17 @@ function generateGameMethods(
             choiceOptions: [
               {
                 ...choice,
-                options: () => updateCardState(resolvedOptions, null),
+                options: updateCardState(choice.options, null),
               },
-              ...state.choiceOptions.slice(1),
+              ...(state.choiceOptions.slice(
+                1,
+              ) as ChoiceOptionsGeneratorOptions[]),
             ],
           }))
 
           // on retire un groupe de choix
 
-          set((state) => ({
-            choiceOptions: state.choiceOptions.slice(1),
-          }))
+          state.nextChoiceOptions()
         } else {
           // on attend la fin de l'animation "played"
 
@@ -1861,9 +1876,11 @@ function generateGameMethods(
             choiceOptions: [
               {
                 ...choice,
-                options: () => updateCardState(resolvedOptions, null),
+                options: updateCardState(choice.options, null),
               },
-              ...state.choiceOptions.slice(1),
+              ...(state.choiceOptions.slice(
+                1,
+              ) as ChoiceOptionsGeneratorOptions[]),
             ],
           }))
 
@@ -1890,11 +1907,10 @@ function generateGameMethods(
                     state as GameState & GlobalGameState,
                   ).map((c) => compactGameCardInfo(c))
 
-            return {
-              choiceOptions: state.choiceOptions.slice(1),
-              [to]: picked,
-            }
+            return { [to]: picked }
           })
+
+          state.nextChoiceOptions()
 
           await wait()
 
@@ -1977,6 +1993,8 @@ useCardGame.subscribe(async (state, prevState) => {
     async () => {
       if (state.error) return
 
+      save(state)
+
       // on met à jour le score
       if (
         state.reputation !== prevState.reputation ||
@@ -1986,6 +2004,15 @@ useCardGame.subscribe(async (state, prevState) => {
         state.day !== prevState.day
       )
         state.updateScore()
+
+      // mise a jour de la vitesse auto
+      if (
+        state.money !== prevState.money ||
+        getDeck(state).length !== getDeck(prevState).length ||
+        state.upgrades.length !== prevState.upgrades.length
+      ) {
+        updateGameAutoSpeed(state, cards, upgrades)
+      }
 
       // si aucune opération n'est en cours
       if (
@@ -2003,8 +2030,6 @@ useCardGame.subscribe(async (state, prevState) => {
 
         await state.checkAchievements()
 
-        updateGameAutoSpeed(state, upgrades)
-
         // on vérifie si le jeu est fini
         if (isGameWon(state)) {
           state.win()
@@ -2017,8 +2042,6 @@ useCardGame.subscribe(async (state, prevState) => {
             state.addPlayedGame()
           }
         }
-
-        save(state)
 
         // todo: trouver un moyen de faire fonctionner les templates
         // const cardWithTemplate = state.hand.filter((card) => card.effect.template);

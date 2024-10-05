@@ -108,13 +108,11 @@ export const GameStackDetail = (props: {
             ref={scrollBox}
             className="grid grid-cols-4 gap-x-10 px-10 max-w-[1000px] max-h-[600px] overflow-y-scroll"
           >
-            {cards.map((card, index) => (
+            {cards.map((card) => (
               <ScrollItem
-                key={index}
+                key={card.name}
                 scrollBox={scrollBox}
-                child={
-                  <GameCard key={index} card={card} isStack={props.stack} />
-                }
+                child={<GameCard card={card} isStack={props.stack} />}
                 placeholder={<div className={GAME_CARD_SIZE} />}
               />
             ))}
@@ -255,6 +253,7 @@ export const GameCardDetail = (props: { card: GameCardInfo<true> }) => {
             </div>
           </BentoCard>
         )}
+
         {(props.card.effect.tags.includes("token") || modifiers.length > 0) && (
           <BentoCard className="shrink-0">
             <h2 className="text-center text-2xl">Ta carte</h2>

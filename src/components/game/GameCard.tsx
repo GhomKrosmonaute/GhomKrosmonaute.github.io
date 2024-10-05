@@ -76,12 +76,12 @@ export const GameCard = (
 
   return (
     <div
-      // key={props.card.name}
       className={cn(
         "game-card relative",
         GAME_CARD_SIZE,
         "-mx-3.5 z-10 hover:z-30 cursor-pointer select-none",
         {
+          "-translate-x-[85px]": typeof props.position === "number",
           // "z-20": props.card.state === "highlighted",
           "cursor-not-allowed":
             props.isStack ||
@@ -90,7 +90,7 @@ export const GameCard = (
               (notAllowed ||
                 props.isPlaying ||
                 (!props.isChoice && game.choiceOptions.length > 0))),
-          [cn("transition-transform", props.card.state)]: quality.animation,
+          [cn("transition-all", props.card.state)]: quality.animation,
           [cn({
             "-translate-y-14": props.card.state === "selected",
             "hover:-translate-y-14": props.card.state !== "removing",
@@ -149,6 +149,11 @@ export const GameCard = (
         transitionDuration: quality.animation ? "0.3s" : "0",
         transitionTimingFunction: quality.animation ? "ease-in-out" : "linear",
         scale: props.card.state === "highlighted" ? "1.1" : "1",
+        position: typeof props.position === "number" ? "absolute" : "relative",
+        left:
+          typeof props.position === "number"
+            ? `${positionFromCenter * 170}px`
+            : "0",
       }}
     >
       {props.card.state === "removing" && quality.animation ? (

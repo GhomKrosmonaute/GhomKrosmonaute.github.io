@@ -85,7 +85,7 @@ const upgrades: RawUpgrade[] = [
   },
   {
     name: "Recyclage",
-    eventName: "onDraw",
+    eventName: "daily",
     image: "recyclage.png",
     description: (cumul) => (
       <>
@@ -100,6 +100,8 @@ const upgrades: RawUpgrade[] = [
         count: upgrade.cumul,
         shuffleBefore: true,
       })
+
+      await state.shuffleStack("draw")
     },
     max: 5,
     cost: { type: "money", value: 150 },
@@ -174,13 +176,12 @@ const upgrades: RawUpgrade[] = [
         <Tag name="draw" /> {cumul} carte{cumul > 1 && "s"}
       </>
     ),
-    condition: (state) =>
-      state.draw.length > 0 && state.hand.length < MAX_HAND_SIZE,
+    condition: (state) => state.draw.length > 0,
     onTrigger: async (state, upgrade, reason) => {
-      await state.drawCard(
-        Math.min(upgrade.cumul, MAX_HAND_SIZE - state.hand.length),
-        { skipGameOverPause: true, reason },
-      )
+      await state.drawCard(Math.min(upgrade.cumul + 1, MAX_HAND_SIZE), {
+        skipGameOverPause: true,
+        reason,
+      })
     },
     max: Math.floor(MAX_HAND_SIZE / 2),
     cost: { type: "money", value: 100 },

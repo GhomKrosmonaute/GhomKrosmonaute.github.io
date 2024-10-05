@@ -6,7 +6,7 @@ import { GAME_ADVANTAGE, RARITIES } from "@/game-constants.ts"
 
 import events from "@/data/events.tsx"
 import { GlobalCardModifierIndex, Speed } from "@/game-enums.ts"
-import { pick, tags } from "@/game-safe-utils.tsx"
+import { type choiceOptionsHeaders, pick, tags } from "@/game-safe-utils.tsx"
 import type cardModifiers from "@/data/cardModifiers.ts"
 import type { qualityPresets } from "@/game-settings.ts"
 
@@ -334,12 +334,30 @@ export interface DynamicEffectValue {
 
 export interface ChoiceOptionsGeneratorOptions {
   exclude?: string[]
-  filter?: (card: GameCardInfo, state: GameState) => boolean
+  filter?: ChoiceOptionFilter[]
   noResource?: boolean
-  header: React.ReactNode
+  header: ChoiceOptionHeaderId
 }
 
-export interface ChoiceOptions {
-  header: React.ReactNode
-  options: () => (GameCardCompact | GameResource)[]
+export type ChoiceOptionHeaderId<
+  K extends
+    keyof typeof choiceOptionsHeaders = keyof typeof choiceOptionsHeaders,
+> = [K, ...Parameters<(typeof choiceOptionsHeaders)[K]>]
+
+export type ChoiceOptions<Defined extends boolean> = Defined extends true
+  ? {
+      header: ChoiceOptionHeaderId
+      options: (GameCardCompact | GameResource)[]
+    }
+  : ChoiceOptionsGeneratorOptions
+
+export function isChoiceOptionsResolved(
+  options: ChoiceOptions<boolean>,
+): options is ChoiceOptions<true> {
+  return "options" in options
 }
+
+export type ChoiceOptionFilter = `${"!" | ""}${
+  | `@${keyof typeof tags}`
+  | GameCardInfo["type"]
+  | `#${ActionCardFamily}`}`

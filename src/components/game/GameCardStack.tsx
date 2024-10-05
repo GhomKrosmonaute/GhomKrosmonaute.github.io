@@ -20,7 +20,7 @@ export const GameCardStack = (props: {
     ),
   )
 
-  const cardThickness = isHover ? 2 : 1
+  const cardThickness = isHover ? 1.5 : 1
 
   return (
     <div ref={ref} className="space-y-4" style={{ zIndex: props.zIndex ?? 1 }}>
@@ -28,7 +28,7 @@ export const GameCardStack = (props: {
         {cards.map((card, i, all) => {
           return (
             <div
-              key={i}
+              key={card.name}
               className={cn(
                 GAME_CARD_SIZE,
                 "absolute top-1/2 left-1/2 flex justify-center items-center transition-transform",

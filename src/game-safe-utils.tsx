@@ -37,7 +37,7 @@ import { defaultSettings } from "@/game-settings.ts"
 import type { Settings } from "@/game-typings.ts"
 
 import type { GameState, GlobalGameState } from "@/hooks/useCardGame.tsx"
-import { Money, Muted, Tag } from "@/components/game/Texts.tsx"
+import { Family, Money, Muted, Tag } from "@/components/game/Texts.tsx"
 
 export const extractTextFromReactNode = (node: React.ReactNode): string => {
   if (typeof node === "string" || typeof node === "number") {
@@ -66,6 +66,30 @@ export function includesSome<T>(array: T[], ...values: T[]): boolean {
 export async function fetch<T>(importer: Promise<{ default: T }>): Promise<T> {
   return importer.then((m) => m.default)
 }
+
+export const choiceOptionsHeaders = {
+  default: () => "Choisis une carte",
+  action: () => (
+    <>
+      Choisis une carte <Tag name="action" />
+    </>
+  ),
+  upgrade: () => (
+    <>
+      Choisis une carte <Tag name="upgrade" />
+    </>
+  ),
+  family: (family: ActionCardFamily) => (
+    <>
+      Choisis une carte <Family name={family} />
+    </>
+  ),
+  tag: (tag: keyof typeof tags, before?: string) => (
+    <>
+      Choisis une carte {before} <Tag name={tag} />
+    </>
+  ),
+} satisfies Record<string, (...args: any[]) => React.ReactNode>
 
 export const families: ActionCardFamily[] = [
   "Jeu vidéo",
@@ -174,8 +198,8 @@ export const tags = {
     className: "text-foreground",
   },
   pick: {
-    name: "Choisi",
-    description: "Choisi une carte a ajouter à ton deck",
+    name: "Choisis",
+    description: "Choisis une carte a ajouter à ton deck",
     className: "text-foreground",
   },
   coinFlip: {
@@ -351,11 +375,14 @@ export function fetchSettings(): Settings {
 
 export function updateGameAutoSpeed(
   state: GameState,
+  cards: GameCardInfo[],
   upgrades: RawUpgrade[],
 ): number {
   const upgradeCompletion = state.upgrades.length / upgrades.length
+  const cardCompletion = getDeck(state).length / cards.length
   const moneyCompletion = state.money / MONEY_TO_REACH
-  const completion = upgradeCompletion * 0.5 + moneyCompletion * 0.5
+  const completion =
+    upgradeCompletion * 0.3 + moneyCompletion * 0.3 + cardCompletion * 0.4
 
   // 50ms to 500ms - Plus on est avancé dans la partie, plus c'est rapide
   const speed = Math.floor(50 + 450 * (1 - completion))
@@ -455,6 +482,7 @@ export function generateRandomRarity(): number {
 export function generateRandomResource(state: GameState): GameResource {
   const type = Math.random()
   const id = Math.random().toFixed(6)
+  const cardState = "landing" as const
 
   if (type < 0.48) {
     const advantage = generateRandomRarity()
@@ -462,7 +490,7 @@ export function generateRandomResource(state: GameState): GameResource {
     return {
       id,
       type: "money",
-      state: "drawing",
+      state: cardState,
       value: 50 * Math.max(1, advantage),
     }
   } else if (type < 0.96) {
@@ -470,7 +498,7 @@ export function generateRandomResource(state: GameState): GameResource {
 
     return {
       id,
-      state: "drawing",
+      state: cardState,
       value: rdm < 0.6 ? Math.floor(state.energyMax / 2) : state.energyMax,
       type: "energy",
     }
@@ -478,7 +506,7 @@ export function generateRandomResource(state: GameState): GameResource {
     const rdm = Math.random()
     return {
       id,
-      state: "drawing",
+      state: cardState,
       value: rdm < 0.6 ? Math.floor(MAX_REPUTATION / 2) : MAX_REPUTATION,
       type: "reputation",
     }
@@ -550,27 +578,11 @@ export function save(state: GameState & GlobalGameState) {
 }
 
 export function parseSave(save: string) {
-  const state: GameState & GlobalGameState = {
-    ...JSON.parse(save, (key, value) => {
-      if (typeof value === "object") {
-        switch (key) {
-          case "operationInProgress":
-            return []
-        }
-      }
-
-      if (key === "isOperationInProgress") {
-        return false
-      }
-
-      return value
-    }),
-  }
+  const state: GameState & GlobalGameState = JSON.parse(save)
 
   state.revivedHand = []
   state.revivedDraw = []
   state.revivedDiscard = []
-  state.choiceOptions = []
 
   return state
 }
@@ -925,6 +937,7 @@ export function canBeBuy(card: GameCardInfo<true>, state: GameState) {
 
 export const fakeState: GameState = {
   detail: null,
+  nextChoiceOptions: () => {},
   riseToTheStackSurface: async () => {},
   shuffleStack: async () => {},
   transformCardsAnimation: async () => {},
