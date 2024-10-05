@@ -37,13 +37,13 @@ import {
 
 export const choiceOptionFilters = {
   byType:
-    (pattern: `${"!" | ""}${"@action" | "@support"}`) =>
+    (pattern: `${"!" | ""}@${"action" | "support"}`) =>
     (card: GameCardInfo) => {
       return pattern.startsWith("!")
-        ? pattern === "!@action"
+        ? pattern === "@action"
           ? card.type === "action"
           : card.type === "support"
-        : pattern === "@action"
+        : pattern === "!@action"
           ? card.type !== "action"
           : card.type !== "support"
     },

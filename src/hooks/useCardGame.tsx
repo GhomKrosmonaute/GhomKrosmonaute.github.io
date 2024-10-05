@@ -410,6 +410,7 @@ function generateGameState(): Omit<
 
   for (let i = 0; i < INITIAL_CHOICE_COUNT; i++) {
     startingChoices.push({
+      noResource: true,
       header: ["default"],
       filter: ["!@upgrade"],
     })
