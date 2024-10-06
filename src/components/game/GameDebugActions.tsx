@@ -132,10 +132,7 @@ export const GameDebugActions = () => {
             game.addGlobalCardModifier(
               "level up cards",
               [targets, ADVANTAGE_THRESHOLD],
-              {
-                name: "Level up button",
-                body: "Level up button",
-              },
+              "Level up button",
             ),
           )
         }}

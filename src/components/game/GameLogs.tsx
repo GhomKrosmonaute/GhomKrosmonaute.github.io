@@ -3,8 +3,7 @@ import { useCardGame } from "@/hooks/useCardGame.tsx"
 import { GameMiniature } from "@/components/game/GameMiniature.tsx"
 import { GameMoneyIcon } from "@/components/game/GameMoneyIcon.tsx"
 import { GameValueIcon } from "@/components/game/GameValueIcon.tsx"
-
-const SIZE = 10
+import { MAX_LOG_COUNT } from "@/game-constants.ts"
 
 export const GameLogs = (props: { show: boolean }) => {
   const logs = useCardGame((state) => state.logs.toReversed())
@@ -12,23 +11,20 @@ export const GameLogs = (props: { show: boolean }) => {
   return (
     <div
       id="logs"
-      className={cn(
-        "absolute right-0 bottom-0 translate-x-full pointer-events-none min-w-52",
-        {
-          hidden: !props.show,
-        },
-      )}
+      className={cn("absolute right-0 bottom-0 translate-x-full min-w-52", {
+        "hidden pointer-events-none": !props.show,
+      })}
     >
       <table>
         <tbody>
-          {new Array(SIZE).fill(0).map((_, index) => {
-            const log = logs.slice()[SIZE - 1 - index]
+          {new Array(MAX_LOG_COUNT).fill(0).map((_, index) => {
+            const log = logs.slice()[MAX_LOG_COUNT - 1 - index]
 
             return log ? (
               <tr
                 key={index}
                 style={{
-                  opacity: index / SIZE,
+                  opacity: index / MAX_LOG_COUNT,
                 }}
               >
                 <td>

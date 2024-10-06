@@ -23,7 +23,7 @@ export const Statistics = () => {
               <tr>
                 <td>Score moyen</td>
                 <td className="font-changa text-upgrade">
-                  {stats.scoreAverage} pts
+                  {Math.floor(stats.scoreAverage).toLocaleString()} pts
                 </td>
               </tr>
               <tr>

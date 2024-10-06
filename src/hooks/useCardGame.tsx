@@ -41,6 +41,7 @@ import {
   INITIAL_CHOICE_COUNT,
   INITIAL_CHOICE_OPTION_COUNT,
   ADVANTAGE_THRESHOLD,
+  MAX_LOG_COUNT,
 } from "@/game-constants.ts"
 
 import {
@@ -82,7 +83,6 @@ import {
   map,
   dropToStack,
 } from "@/game-safe-utils.tsx"
-import { Tag } from "@/components/game/Texts.tsx"
 
 export interface GlobalGameState {
   debug: boolean
@@ -456,18 +456,12 @@ function generateGameState(): Omit<
       {
         name: "upgrade cost threshold",
         params: [],
-        reason: {
-          name: "Promotion temporaire",
-          body: "Promotion temporaire",
-        },
+        reason: "Promotion temporaire",
       },
       {
         name: "all card inflation",
         params: [],
-        reason: {
-          name: "Inflation",
-          body: <Tag name="inflation" />,
-        },
+        reason: "Inflation",
       },
     ],
     day: 0,
@@ -714,7 +708,7 @@ function generateGameMethods(
 
     addLog: (log) => {
       set((state) => ({
-        logs: [...state.logs, log],
+        logs: [...state.logs, log].slice(-MAX_LOG_COUNT),
       }))
     },
 
@@ -1632,11 +1626,14 @@ function generateGameMethods(
               // landing on hand
               set((state) => ({
                 playZone: excludeCard(state.playZone, card.name),
-                hand: updateCardState(
-                  [...state.hand, compactGameCardInfo(card)],
-                  card.name,
-                  "landing",
-                ),
+                hand: toSortedCards(
+                  updateCardState(
+                    [...state.hand, compactGameCardInfo(card)],
+                    card.name,
+                    "landing",
+                  ),
+                  state as GameState & GlobalGameState,
+                ).map((c) => compactGameCardInfo(c)),
               }))
 
               await wait()

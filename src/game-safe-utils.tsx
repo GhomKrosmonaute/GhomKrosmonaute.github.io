@@ -38,6 +38,7 @@ import type { Settings } from "@/game-typings.ts"
 
 import type { GameState, GlobalGameState } from "@/hooks/useCardGame.tsx"
 import { Family, Money, Muted, Tag } from "@/components/game/Texts.tsx"
+import { reviveCard } from "@/game-utils.ts"
 
 export const extractTextFromReactNode = (node: React.ReactNode): string => {
   if (typeof node === "string" || typeof node === "number") {
@@ -514,15 +515,20 @@ export function generateRandomResource(state: GameState): GameResource {
 }
 
 export function getDeck(
-  state: Pick<GameState, "draw" | "discard" | "hand">,
+  state: Pick<GameState, "draw" | "discard" | "hand" | "playZone">,
 ): GameCardCompact[] {
-  return [...state.draw, ...state.discard, ...state.hand]
+  return [...state.draw, ...state.discard, ...state.hand, ...state.playZone]
 }
 
 export function getRevivedDeck(
-  state: Pick<GameState, "revivedDraw" | "revivedDiscard" | "revivedHand">,
+  state: GameState & GlobalGameState,
 ): GameCardInfo<true>[] {
-  return [...state.revivedDraw, ...state.revivedDiscard, ...state.revivedHand]
+  return [
+    ...state.revivedDraw,
+    ...state.revivedDiscard,
+    ...state.revivedHand,
+    ...state.playZone.map((c) => reviveCard(c, state)),
+  ]
 }
 
 export function energyCostColor(
@@ -1036,6 +1042,7 @@ export const gameStateExcluded = [
   "revivedHand",
   "revivedDraw",
   "revivedDiscard",
+  "detail",
   ...(Object.keys(fakeGlobalState) as (keyof GlobalGameState)[]),
 ] as const
 

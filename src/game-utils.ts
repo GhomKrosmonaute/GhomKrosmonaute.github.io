@@ -13,7 +13,7 @@ import {
   GameModifierLog,
   GameResolvable,
   isGameResource,
-  isGameCardInfo,
+  isGameCardInfoRevived,
   ChoiceOptions,
   compactGameCardInfo,
   ActionCardFamily,
@@ -295,7 +295,7 @@ export function toSortedCards<T extends GameResolvable>(
       if (!isGameResource(a) && isGameResource(b)) return -1
       if (isGameResource(a) && !isGameResource(b)) return 1
 
-      if (isGameCardInfo(a) && isGameCardInfo(b)) {
+      if (isGameCardInfoRevived(a) && isGameCardInfoRevived(b)) {
         const typeA = a.type === "action" ? 1 : 0
         const typeB = b.type === "action" ? 1 : 0
         const priceA =

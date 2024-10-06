@@ -177,7 +177,11 @@ export type GameCardInfo<Resolved = false> =
   | ActionCardInfo<Resolved>
   | SupportCardInfo<Resolved>
 
-export function isGameCardInfo(
+export function isGameCardInfo(option: GameResolvable): option is GameCardInfo {
+  return "effect" in option && typeof option.effect === "function"
+}
+
+export function isGameCardInfoRevived(
   option: GameResolvable,
 ): option is GameCardInfo<true> {
   return "effect" in option && typeof option.effect !== "function"
@@ -208,6 +212,10 @@ export interface GameResource {
 
 export function isGameResource(option: GameResolvable): option is GameResource {
   return "id" in option && "value" in option && "type" in option
+}
+
+export function isGameCard(option: GameResolvable): option is GameCardCompact {
+  return "name" in option && "state" in option && "initialRarity" in option
 }
 
 export function isGameCardCompact(
@@ -271,7 +279,7 @@ export type GameLog = {
 }
 
 export type GameModifierLog = {
-  reason: GameCardCompact | { name: string; body: React.ReactNode }
+  reason: GameCardCompact | string
 } & (
   | {
       type: "localAdvantage"

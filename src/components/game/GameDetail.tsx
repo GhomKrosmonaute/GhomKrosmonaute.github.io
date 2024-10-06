@@ -21,7 +21,7 @@ import {
   ActionCardInfo,
   compactGameCardInfo,
   GameCardInfo,
-  isGameCardCompact,
+  isGameCard,
   Upgrade,
 } from "@/game-typings.ts"
 import { GAME_CARD_SIZE, RARITIES } from "@/game-constants.ts"
@@ -75,7 +75,7 @@ export const GameDetail = (props: { show: boolean }) => {
         <Card className="space-y-4 z-30 w-fit h-fit flex flex-col items-center">
           {typeof detail === "string" ? (
             <GameStackDetail stack={detail} />
-          ) : isGameCardCompact(detail) ? (
+          ) : isGameCard(detail) ? (
             <GameCardDetail card={reviveCard(detail, getState())} />
           ) : (
             <GameUpgradeDetail upgrade={reviveUpgrade(detail)} />
@@ -206,7 +206,15 @@ export const GameCardDetail = (props: { card: GameCardInfo<true> }) => {
                       }
 
                       if (sortBy === "tri par raison") {
-                        return a.reason.name.localeCompare(b.reason.name)
+                        return (
+                          typeof a.reason === "object"
+                            ? a.reason.name
+                            : a.reason
+                        ).localeCompare(
+                          typeof b.reason === "object"
+                            ? b.reason.name
+                            : b.reason,
+                        )
                       }
 
                       return 0
@@ -215,8 +223,8 @@ export const GameCardDetail = (props: { card: GameCardInfo<true> }) => {
                       <tr key={index} className="odd:bg-muted/50">
                         <th>#{index + 1}</th>
                         <th className="whitespace-nowrap">
-                          {"body" in modifier.reason ? (
-                            <span>{modifier.reason.body}</span>
+                          {typeof modifier.reason === "string" ? (
+                            <span>{modifier.reason}</span>
                           ) : (
                             <GameMiniature item={modifier.reason} />
                           )}

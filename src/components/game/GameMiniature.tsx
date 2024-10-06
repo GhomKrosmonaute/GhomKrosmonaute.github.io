@@ -23,15 +23,27 @@ export const GameMiniature = (props: { item: GameLog["reason"] }) => {
 
   return (
     <span
+      onClick={() => {
+        if (typeof revived === "object") {
+          game.setDetail(revived)
+        }
+      }}
+      onContextMenu={(e) => {
+        e.preventDefault()
+
+        if (typeof revived === "object") {
+          game.setDetail(revived)
+        }
+      }}
       className={cn(
         "inline-flex items-center h-7 w-full rounded-full",
         typeof revived === "string"
           ? ""
-          : {
+          : cn("cursor-help", {
               "bg-action text-action-foreground": revived.type === "action",
               "bg-support text-support-foreground": revived.type === "support",
               "bg-upgrade text-upgrade-foreground": revived.type === "upgrade",
-            },
+            }),
       )}
     >
       {typeof revived === "object" && <MiniatureImage item={revived} />}
