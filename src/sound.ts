@@ -90,4 +90,14 @@ export const bank = {
     volume: 0.5,
     preload: true,
   }),
+  bubble: new Howl({
+    src: ["sounds/bubble.mp3"],
+    volume: 0.5,
+    preload: true,
+  }),
+  coins: new Howl({
+    src: ["sounds/coins.mp3"],
+    volume: 0.5,
+    preload: true,
+  }),
 }

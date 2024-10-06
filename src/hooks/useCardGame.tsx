@@ -846,6 +846,8 @@ function generateGameMethods(
           const consumedEnergy = Math.min(Math.abs(count), state.energy)
 
           if (consumedEnergy > 0) {
+            bank.bubble.play()
+
             state.addLog({
               value: -consumedEnergy,
               type: "energy",
@@ -956,12 +958,12 @@ function generateGameMethods(
             type: "money",
             reason: options?.reason,
           })
-        }
 
-        if (count > 0) {
-          bank.cashing.play()
-
-          await wait()
+          if (count > 0) {
+            bank.cashing.play()
+          } else {
+            bank.coins.play()
+          }
         }
 
         set((state) => {
