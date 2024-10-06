@@ -87,49 +87,33 @@
 /* Shake the card and apply red filter temporary, then return to original state */
 @keyframes unauthorized {
   0% {
-    left: 0;
+    margin-left: 0;
     opacity: 1;
     scale: 1;
     top: 0;
   }
-  10% {
-    left: -10px;
-    filter: grayscale(1);
-  }
   20% {
-    left: 10px;
-    filter: grayscale(1);
-  }
-  30% {
-    left: -10px;
+    margin-left: -5px;
     filter: grayscale(1);
   }
   40% {
-    left: 10px;
+    margin-left: 8px;
     filter: grayscale(1);
   }
   50% {
-    left: -10px;
+    margin-left: -10px;
     filter: grayscale(1);
   }
   60% {
-    left: 10px;
-    filter: grayscale(1);
-  }
-  70% {
-    left: -10px;
+    margin-left: 8px;
     filter: grayscale(1);
   }
   80% {
-    left: 10px;
-    filter: grayscale(1);
-  }
-  90% {
-    left: -10px;
+    margin-left: -5px;
     filter: grayscale(1);
   }
   100% {
-    left: 0;
+    margin-left: 0;
     opacity: 1;
     scale: 1;
     top: 0;

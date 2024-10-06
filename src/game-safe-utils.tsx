@@ -40,6 +40,32 @@ import type { GameState, GlobalGameState } from "@/hooks/useCardGame.tsx"
 import { Family, Money, Muted, Tag } from "@/components/game/Texts.tsx"
 import { reviveCard } from "@/game-utils.ts"
 
+import Draw from "@/assets/icons/game/draw.svg"
+import Destroy from "@/assets/icons/game/destroy.svg"
+import Discard from "@/assets/icons/game/discard.svg"
+import Recycle from "@/assets/icons/game/recycle.svg"
+import GiveBack from "@/assets/icons/game/giveBack.svg"
+import Pick from "@/assets/icons/game/pick.svg"
+import Play from "@/assets/icons/game/play.svg"
+
+import { ArrowLeft } from "lucide-react"
+import { cn } from "@/utils.ts"
+
+// eslint-disable-next-line react-refresh/only-export-components
+const DrawFromDiscard = ({
+  className,
+  ["aria-label"]: subClassName,
+  ...props
+}: React.ComponentProps<"div">) => {
+  return (
+    <div {...props} className={cn("flex items-center", className)}>
+      <Draw className={subClassName} />
+      <ArrowLeft className={subClassName} />
+      <Discard className={subClassName} />
+    </div>
+  )
+}
+
 export const extractTextFromReactNode = (node: React.ReactNode): string => {
   if (typeof node === "string" || typeof node === "number") {
     // Si le noeud est une chaîne ou un nombre, on le retourne tel quel
@@ -67,6 +93,36 @@ export function includesSome<T>(array: T[], ...values: T[]): boolean {
 export async function fetch<T>(importer: Promise<{ default: T }>): Promise<T> {
   return importer.then((m) => m.default)
 }
+
+export const gameLogCardManagementValues = {
+  draw: 0,
+  discard: 1,
+  recycle: 2,
+  giveBack: 3,
+  drawFromDiscard: 4,
+  destroy: 5,
+  pick: 6,
+  play: 7,
+} as const
+
+export const gameLogIcons = {
+  draw: Draw,
+  destroy: Destroy,
+  discard: Discard,
+  recycle: Recycle,
+  giveBack: GiveBack,
+  drawFromDiscard: DrawFromDiscard,
+  pick: Pick,
+  play: Play,
+} satisfies Record<
+  keyof typeof gameLogCardManagementValues,
+  React.FunctionComponent<
+    React.DetailedHTMLProps<
+      React.HTMLAttributes<HTMLDivElement>,
+      HTMLDivElement
+    >
+  >
+>
 
 export const choiceOptionsHeaders = {
   default: () => "Choisis une carte",
@@ -978,7 +1034,7 @@ export const fakeState: GameState = {
   hand: [],
   handleError: (t) => t,
   increments: async () => {},
-  incrementsInflation: () => {},
+  incrementsInflation: async () => {},
   infinityMode: false,
   inflation: 0,
   isGameOver: false,
@@ -1004,7 +1060,7 @@ export const fakeState: GameState = {
   selectCard: () => {},
   selectedCard: null,
   setOperationInProgress: () => {},
-  skip: async () => {},
+  skipChoiceOptions: async () => {},
   skippedChoices: 0,
   sprintFull: false,
   triggerEvent: async () => {},

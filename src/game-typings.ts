@@ -214,11 +214,13 @@ export function isGameResource(option: GameResolvable): option is GameResource {
   return "id" in option && "value" in option && "type" in option
 }
 
-export function isGameCard(option: GameResolvable): option is GameCardCompact {
+export function isGameCardCompact(
+  option: GameResolvable,
+): option is GameCardCompact {
   return "name" in option && "state" in option && "initialRarity" in option
 }
 
-export function isGameCardCompact(
+export function isStrictGameCardCompact(
   option: GameResolvable,
 ): option is GameCardCompact {
   return (
@@ -273,7 +275,7 @@ export type GameOverReason =
   | null
 
 export type GameLog = {
-  type: "money" | "reputation" | "energy" | "level"
+  type: "money" | "reputation" | "energy" | "cardManagement"
   value: number
   reason: GameCardCompact | UpgradeCompact | string
 }

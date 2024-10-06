@@ -8,7 +8,6 @@ import {
   ActionCardInfo,
   compactGameCardInfo,
   GameCardInfo,
-  GameResource,
   SupportCardInfo,
 } from "@/game-typings"
 
@@ -33,7 +32,6 @@ import { GAME_CARD_SIZE } from "@/game-constants.ts"
 export const GameCard = (
   props: React.PropsWithoutRef<{
     card: GameCardInfo<true>
-    options?: (GameCardInfo<true> | GameResource)[]
     position?: number
     isStack?: keyof GameState & `revived${string}`
     isChoice?: boolean
@@ -132,7 +130,7 @@ export const GameCard = (
           }
         } else {
           if (game.choiceOptions.length > 0 && !notAllowed) {
-            await game.pickOption(props.card, props.options!)
+            await game.pickOption(props.card)
           }
         }
       }}

@@ -4,7 +4,7 @@ import "./GameCard.css"
 
 import BrokenCard from "@/assets/icons/game/broken-card.svg"
 
-import { GameCardInfo, GameResource } from "@/game-typings"
+import { GameResource } from "@/game-typings"
 
 import { useCardGame } from "@/hooks/useCardGame.tsx"
 import { useSettings } from "@/hooks/useSettings.ts"
@@ -17,7 +17,6 @@ import { Money, Tag } from "@/components/game/Texts.tsx"
 export const GameResourceCard = (
   props: React.PropsWithoutRef<{
     resource: GameResource
-    options: (GameCardInfo<true> | GameResource)[]
   }>,
 ) => {
   const quality = useSettings((state) => ({
@@ -45,7 +44,7 @@ export const GameResourceCard = (
         },
       )}
       onClick={async () => {
-        await game.pickOption(props.resource, props.options)
+        await game.pickOption(props.resource)
       }}
       style={{
         transitionDuration: quality.animation ? "0.3s" : "0",

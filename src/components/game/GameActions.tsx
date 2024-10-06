@@ -155,7 +155,7 @@ export const GameActions = (props: { show: boolean }) => {
               className="flex gap-3 absolute right-2 -top-2"
               disabled={runningOps}
               onClick={async () => {
-                await game.skip({ reason: "Bouton passer" })
+                await game.skipChoiceOptions({ reason: "Bouton passer" })
               }}
             >
               <GameValueIcon
@@ -184,18 +184,9 @@ export const GameActions = (props: { show: boolean }) => {
                   />
                   {resolvedOptions.map((option, i) =>
                     isGameResource(option) ? (
-                      <GameResourceCard
-                        key={i}
-                        resource={option}
-                        options={resolvedOptions}
-                      />
+                      <GameResourceCard key={i} resource={option} />
                     ) : (
-                      <GameCard
-                        key={i}
-                        card={option}
-                        isChoice
-                        options={resolvedOptions}
-                      />
+                      <GameCard key={i} card={option} isChoice />
                     ),
                   )}
                 </div>

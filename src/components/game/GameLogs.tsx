@@ -1,30 +1,54 @@
+import React from "react"
 import { cn } from "@/utils.ts"
 import { useCardGame } from "@/hooks/useCardGame.tsx"
 import { GameMiniature } from "@/components/game/GameMiniature.tsx"
 import { GameMoneyIcon } from "@/components/game/GameMoneyIcon.tsx"
 import { GameValueIcon } from "@/components/game/GameValueIcon.tsx"
-import { MAX_LOG_COUNT } from "@/game-constants.ts"
+import {
+  gameLogCardManagementValues,
+  gameLogIcons,
+} from "@/game-safe-utils.tsx"
+import { HelpPopoverTrigger } from "@/components/game/HelpPopoverTrigger.tsx"
+import { Tag } from "@/components/game/Texts.tsx"
+
+const DISPLAYED_LOGS = 10
+const ITEM_HEIGHT = 41
 
 export const GameLogs = (props: { show: boolean }) => {
-  const logs = useCardGame((state) => state.logs.toReversed())
+  const logs = useCardGame((state) => state.logs)
+  const scrollBox = React.useRef<HTMLDivElement>(null)
+
+  React.useEffect(() => {
+    if (scrollBox.current) {
+      scrollBox.current.scrollTop = scrollBox.current.scrollHeight
+    }
+  }, [logs])
 
   return (
     <div
       id="logs"
-      className={cn("absolute right-0 bottom-0 translate-x-full min-w-52", {
-        "hidden pointer-events-none": !props.show,
-      })}
+      ref={scrollBox}
+      className={cn(
+        "absolute right-0 bottom-0 translate-x-full min-w-52 overflow-y-scroll",
+        {
+          "hidden pointer-events-none": !props.show,
+        },
+      )}
+      style={{
+        height: DISPLAYED_LOGS * ITEM_HEIGHT,
+        maskImage: "linear-gradient(to bottom, transparent, black 50%)",
+        scrollbarWidth: "none",
+        scrollBehavior: "smooth",
+      }}
     >
       <table>
         <tbody>
-          {new Array(MAX_LOG_COUNT).fill(0).map((_, index) => {
-            const log = logs.slice()[MAX_LOG_COUNT - 1 - index]
-
+          {logs.map((log, index) => {
             return log ? (
               <tr
                 key={index}
                 style={{
-                  opacity: index / MAX_LOG_COUNT,
+                  opacity: index / DISPLAYED_LOGS,
                 }}
               >
                 <td>
@@ -34,13 +58,14 @@ export const GameLogs = (props: { show: boolean }) => {
                   <span
                     className={cn(
                       "inline-block ring-2",
-                      log.value > 0 ? "ring-green-500" : "ring-red-500",
+                      log.type !== "cardManagement" &&
+                        (log.value > 0 ? "ring-green-500" : "ring-red-500"),
                       log.type === "money" ? "" : "rounded-full",
                     )}
                   >
                     {log.type === "money" ? (
                       <GameMoneyIcon miniature value={log.value} symbol />
-                    ) : (
+                    ) : log.type === "reputation" || log.type === "energy" ? (
                       <GameValueIcon
                         miniature
                         symbol
@@ -52,6 +77,37 @@ export const GameLogs = (props: { show: boolean }) => {
                           }) as `bg-${string}`
                         }
                       />
+                    ) : (
+                      <>
+                        {(() => {
+                          const key = Object.entries(
+                            gameLogCardManagementValues,
+                          ).find(
+                            (entry) => entry[1] === log.value,
+                          )![0] as keyof typeof gameLogIcons
+
+                          const Icon = gameLogIcons[key]
+
+                          return (
+                            <HelpPopoverTrigger
+                              popover={
+                                key === "drawFromDiscard" ? (
+                                  "Pioche dans la défausse"
+                                ) : key === "play" ? (
+                                  "Joue"
+                                ) : (
+                                  <Tag name={key} />
+                                )
+                              }
+                            >
+                              <Icon
+                                className="h-6 w-auto"
+                                aria-label="w-5 h-5"
+                              />
+                            </HelpPopoverTrigger>
+                          )
+                        })()}
+                      </>
                     )}
                   </span>
                 </td>

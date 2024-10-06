@@ -21,7 +21,7 @@ import {
   ActionCardInfo,
   compactGameCardInfo,
   GameCardInfo,
-  isGameCard,
+  isGameCardCompact,
   Upgrade,
 } from "@/game-typings.ts"
 import { GAME_CARD_SIZE, RARITIES } from "@/game-constants.ts"
@@ -75,7 +75,7 @@ export const GameDetail = (props: { show: boolean }) => {
         <Card className="space-y-4 z-30 w-fit h-fit flex flex-col items-center">
           {typeof detail === "string" ? (
             <GameStackDetail stack={detail} />
-          ) : isGameCard(detail) ? (
+          ) : isGameCardCompact(detail) ? (
             <GameCardDetail card={reviveCard(detail, getState())} />
           ) : (
             <GameUpgradeDetail upgrade={reviveUpgrade(detail)} />

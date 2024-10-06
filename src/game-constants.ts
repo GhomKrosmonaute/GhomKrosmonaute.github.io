@@ -1,7 +1,7 @@
 export const INITIAL_CHOICE_OPTION_COUNT = 3
 export const INITIAL_CHOICE_COUNT = 5
 
-export const MAX_LOG_COUNT = 10
+export const MAX_LOG_COUNT = 100
 
 export const GAME_CARD_SIZE = "w-[210px] h-[293px] rounded-xl"
 

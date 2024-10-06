@@ -82,6 +82,7 @@ import {
   getGameSpeed,
   map,
   dropToStack,
+  gameLogCardManagementValues,
 } from "@/game-safe-utils.tsx"
 
 export interface GlobalGameState {
@@ -110,7 +111,7 @@ export interface GameState {
   discardedCards: number
   skippedChoices: number
   increments: (key: keyof GameState, count?: number) => Promise<void>
-  incrementsInflation: () => void
+  incrementsInflation: () => Promise<void>
   selectedCard: string | null
   difficulty: Difficulty
   error: Error | null
@@ -187,12 +188,13 @@ export interface GameState {
         filter: (card: GameCardInfo<true>) => boolean
       }>,
   ) => Promise<void>
-  discardCard: (options: {
-    toDraw?: boolean
-    random?: boolean
-    reason: GameLog["reason"]
-    filter?: (card: GameCardInfo<true>) => boolean
-  }) => Promise<void>
+  discardCard: (
+    options: MethodWhoLog & {
+      toDraw?: boolean
+      random?: boolean
+      filter?: (card: GameCardInfo<true>) => boolean
+    },
+  ) => Promise<void>
   removeCard: (name: string) => Promise<void>
   recycleCard: (
     options: GameMethodOptions & {
@@ -211,11 +213,8 @@ export interface GameState {
     timeout?: number
   }) => Promise<GameCardInfo<true> | null>
   nextChoiceOptions: () => void
-  skip: (options: MethodWhoLog) => Promise<void>
-  pickOption: (
-    option: GameCardInfo<true> | GameResource,
-    resolvedOptions: (GameCardInfo<true> | GameResource)[],
-  ) => Promise<void>
+  skipChoiceOptions: (options: MethodWhoLog) => Promise<void>
+  pickOption: (option: GameCardInfo<true> | GameResource) => Promise<void>
   win: () => void
   defeat: (reason: GameOverReason) => void
   reset: () => void
@@ -511,7 +510,7 @@ function generateGameMethods(
       }))
     },
 
-    skip: async (options) => {
+    skipChoiceOptions: async (options) => {
       await handleErrorsAsync(getState, async () => {
         bank.play.play()
 
@@ -541,11 +540,26 @@ function generateGameMethods(
       await state.checkAchievements()
     },
 
-    incrementsInflation: () => {
+    incrementsInflation: async () => {
       const state = getState()
-      const newInflation = state.inflation + ADVANTAGE_THRESHOLD
 
-      set({ inflation: newInflation })
+      state.setOperationInProgress("inflation", true)
+
+      await state.transformCardsAnimation(
+        getDeck(state).map((c) => c.name),
+        async () => {
+          bank.powerUp.play()
+
+          set((state) => {
+            const newInflation = state.inflation + ADVANTAGE_THRESHOLD
+            return {
+              inflation: newInflation,
+            }
+          })
+        },
+      )
+
+      state.setOperationInProgress("inflation", false)
     },
 
     handleError: (error) => {
@@ -1218,6 +1232,15 @@ function generateGameMethods(
           await state.riseToTheStackSurface(fromKey, options.filter)
 
         const doTheDraw = async (card: GameCardCompact) => {
+          state.addLog({
+            reason: card,
+            type: "cardManagement",
+            value:
+              fromKey === "draw"
+                ? gameLogCardManagementValues.draw
+                : gameLogCardManagementValues.drawFromDiscard,
+          })
+
           // on active l'animation de pioche de la carte sur le tas de départ
           set((state) => ({
             [fromKey]: updateCardState(state[fromKey], card.name, "playing"),
@@ -1276,9 +1299,6 @@ function generateGameMethods(
       await handleErrorsAsync(getState, async () => {
         const toKey = options?.toDraw ? "draw" : "discard"
 
-        // on joue le son de la banque
-        bank.drop.play()
-
         const state = getState()
 
         state.setOperationInProgress("discard", true)
@@ -1292,6 +1312,17 @@ function generateGameMethods(
           : hand
 
         const doTheDiscard = async (card: GameCardCompact) => {
+          bank.drop.play()
+
+          state.addLog({
+            reason: card,
+            type: "cardManagement",
+            value:
+              toKey === "discard"
+                ? gameLogCardManagementValues.discard
+                : gameLogCardManagementValues.giveBack,
+          })
+
           // on active l'animation de retrait de la carte
           set((state) => ({
             hand: updateCardState(state.hand, card.name, "discarding"),
@@ -1346,12 +1377,19 @@ function generateGameMethods(
 
         state.setOperationInProgress(`removeCard ${name}`, true)
 
+        state.addLog({
+          reason: getDeck(state).find((c) => c.name === name)!,
+          type: "cardManagement",
+          value: gameLogCardManagementValues.destroy,
+        })
+
         if (state.hand.some((c) => c.name === name)) {
           // on active l'animation de suppression de la carte
           set({
             hand: updateCardState(state.hand, name, "removing"),
             discard: updateCardState(state.discard, name, "removing"),
             draw: updateCardState(state.draw, name, "removing"),
+            playZone: updateCardState(state.playZone, name, "removing"),
           })
 
           bank.remove.play()
@@ -1364,12 +1402,13 @@ function generateGameMethods(
             hand: updateCardState(state.hand, name, "idle"),
             discard: updateCardState(state.discard, name, "idle"),
             draw: updateCardState(state.draw, name, "idle"),
+            playZone: updateCardState(state.playZone, name, "idle"),
           })
         }
 
         // on retire la carte de la main, du deck et de la défausse
 
-        const from = ["discard", "draw", "hand"] as const
+        const from = ["discard", "draw", "hand", "playZone"] as const
 
         set((state) => ({
           ...from.reduce((acc, key) => {
@@ -1416,6 +1455,12 @@ function generateGameMethods(
           .slice(0, options.count)
 
         const doTheRecycle = async (card: GameCardCompact) => {
+          state.addLog({
+            reason: card,
+            type: "cardManagement",
+            value: gameLogCardManagementValues.recycle,
+          })
+
           // on joue le son de la banque
           bank.recycle.play()
 
@@ -1651,6 +1696,12 @@ function generateGameMethods(
             }
           }
         }
+
+        state.addLog({
+          reason: compactGameCardInfo(card),
+          type: "cardManagement",
+          value: gameLogCardManagementValues.play,
+        })
 
         // on paye le coût de la carte
         if (!free) {
@@ -1912,11 +1963,17 @@ function generateGameMethods(
 
           await wait()
 
-          // on passe les cartes en idle
+          // on passe la carte en idle
           set((state) => ({
             hand: updateCardState(state.hand, option.name, "idle"),
             draw: updateCardState(state.draw, option.name, "idle"),
           }))
+
+          state.addLog({
+            reason: compactGameCardInfo(option),
+            type: "cardManagement",
+            value: gameLogCardManagementValues.pick,
+          })
 
           state.checkDiscoveries()
         }
