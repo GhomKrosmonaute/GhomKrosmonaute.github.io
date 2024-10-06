@@ -27,6 +27,7 @@ import {
   CoinFlipOptions,
   GameDetailData,
   ChoiceOptionsGeneratorOptions,
+  GameMetrics,
 } from "@/game-typings"
 
 import {
@@ -103,6 +104,7 @@ export interface GlobalGameState {
 }
 
 export interface GameState {
+  metrics: GameMetrics[]
   detail: GameDetailData
   setDetail: (card: GameDetailData) => void
   inflation: number
@@ -416,6 +418,7 @@ function generateGameState(): Omit<
   }
 
   return {
+    metrics: [],
     detail: null,
     selectedCard: null,
     coinFlips: 0,
@@ -662,6 +665,15 @@ function generateGameMethods(
           })
 
           await state.triggerEvent("daily")
+
+          getState().metrics.push({
+            day: currentDay + 1,
+            energy: state.energy,
+            reputation: state.reputation,
+            money: state.money,
+            inflation: state.inflation,
+            score: state.score,
+          })
 
           set((state) => ({
             dayFull: false,

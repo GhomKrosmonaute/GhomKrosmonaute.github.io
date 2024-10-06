@@ -10,6 +10,11 @@ import { type choiceOptionsHeaders, pick, tags } from "@/game-safe-utils.tsx"
 import type cardModifiers from "@/data/cardModifiers.ts"
 import type { qualityPresets } from "@/game-settings.ts"
 
+export type GameMetrics = Pick<
+  GameState,
+  "day" | "energy" | "reputation" | "money" | "inflation" | "score"
+>
+
 export type GameDetailData =
   | GameCardCompact
   | UpgradeCompact

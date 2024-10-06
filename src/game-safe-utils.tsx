@@ -998,6 +998,7 @@ export function canBeBuy(card: GameCardInfo<true>, state: GameState) {
 }
 
 export const fakeState: GameState = {
+  metrics: [],
   detail: null,
   nextChoiceOptions: () => {},
   riseToTheStackSurface: async () => {},

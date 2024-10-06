@@ -7,12 +7,16 @@ import { reviveCard } from "@/game-utils.ts"
 import { useCardGame } from "@/hooks/useCardGame.tsx"
 import { BentoCard } from "@/components/BentoCard.tsx"
 import { GameCardInfo } from "@/game-typings.ts"
+import { GameMetricsChart } from "@/components/game/GameMetricsChart.tsx"
 
 export const Statistics = () => {
   const stats = useCardGame()
 
   return (
-    <div className="space-y-4">
+    <div
+      className="space-y-4 max-h-[550px] overflow-y-scroll"
+      style={{ scrollbarWidth: "none" }}
+    >
       <h2 className="text-3xl text-center">Statistiques</h2>
 
       <div className="grid grid-cols-4 gap-4">
@@ -109,6 +113,17 @@ export const Statistics = () => {
               ))
             : "Aucun succès"}
         </ul>
+      </BentoCard>
+
+      <BentoCard>
+        <h3 className="font-changa">Graphiques</h3>
+        {stats.metrics.length >= 10 ? (
+          <GameMetricsChart />
+        ) : (
+          <p className="text-muted-foreground">
+            Un graphique sera généré après 10 jours passés en jeu.
+          </p>
+        )}
       </BentoCard>
     </div>
   )
