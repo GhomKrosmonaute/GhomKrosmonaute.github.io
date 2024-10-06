@@ -7,6 +7,7 @@ import { GameValueIcon } from "@/components/game/GameValueIcon.tsx"
 import {
   gameLogCardManagementValues,
   gameLogIcons,
+  map,
 } from "@/game-safe-utils.tsx"
 import { HelpPopoverTrigger } from "@/components/game/HelpPopoverTrigger.tsx"
 import { Tag } from "@/components/game/Texts.tsx"
@@ -35,8 +36,10 @@ export const GameLogs = (props: { show: boolean }) => {
         },
       )}
       style={{
-        height: DISPLAYED_LOGS * ITEM_HEIGHT,
-        maskImage: "linear-gradient(to bottom, transparent, black 50%)",
+        maxHeight: DISPLAYED_LOGS * ITEM_HEIGHT,
+        maskImage: `linear-gradient(to bottom, transparent, black ${Math.floor(
+          map(logs.length, 0, DISPLAYED_LOGS, 0, 100, true),
+        )}%)`,
         scrollbarWidth: "none",
         scrollBehavior: "smooth",
       }}
@@ -45,12 +48,7 @@ export const GameLogs = (props: { show: boolean }) => {
         <tbody>
           {logs.map((log, index) => {
             return log ? (
-              <tr
-                key={index}
-                style={{
-                  opacity: index / DISPLAYED_LOGS,
-                }}
-              >
+              <tr key={index}>
                 <td>
                   <GameMiniature item={log.reason} />
                 </td>
