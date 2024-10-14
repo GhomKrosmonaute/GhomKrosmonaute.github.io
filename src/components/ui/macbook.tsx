@@ -1,7 +1,9 @@
-import { cn } from "@/utils.ts"
+import { accordStyleToTheme, cn } from "@/utils.ts"
 import { useGlobalState } from "@/hooks/useGlobalState.ts"
+import { useSettings } from "@/hooks/useSettings.ts"
 
 export const Macbook = ({ force }: { force?: true }) => {
+  const theme = useSettings((state) => state.theme)
   const isLoaded = useGlobalState((state) => state.splineLoaded)
 
   return (
@@ -11,6 +13,7 @@ export const Macbook = ({ force }: { force?: true }) => {
         { hidden: isLoaded && !force },
       )}
       style={{
+        ...accordStyleToTheme(theme),
         backgroundImage: "url(images/spline-placeholder.png)",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",

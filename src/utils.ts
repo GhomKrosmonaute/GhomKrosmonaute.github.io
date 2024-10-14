@@ -1,5 +1,7 @@
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
+import themes from "@/data/themes.json"
+import React from "react"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -49,4 +51,14 @@ export function transferDOMRect(rect: DOMRect, to: HTMLElement) {
   to.style.left = `${rect.left}px`
   to.style.width = `${rect.width}px`
   to.style.height = `${rect.height}px`
+}
+
+export function accordStyleToTheme(theme: string): React.CSSProperties {
+  const existing = themes.find((t) => t[0] === theme)
+
+  return existing
+    ? {
+        filter: `hue-rotate(${existing[1]}deg)`,
+      }
+    : {}
 }

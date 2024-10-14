@@ -13,14 +13,13 @@ import { Home } from "./modals/Home.tsx"
 import { Tarifs } from "./modals/Tarifs.tsx"
 import { Contact } from "./modals/Contact.tsx"
 
-import { cn } from "@/utils.ts"
+import { accordStyleToTheme, cn } from "@/utils.ts"
 
 import { useGlobalState } from "@/hooks/useGlobalState.ts"
 import { useSettings } from "@/hooks/useSettings.ts"
 
 import Theme from "@/assets/icons/theme.svg"
 
-import themes from "@/data/themes.json"
 import { Macbook } from "@/components/ui/macbook.tsx"
 
 const SplineMacbook = React.lazy(() =>
@@ -107,9 +106,7 @@ export default function App() {
             src="images/background.svg"
             alt="background"
             className="fixed top-0 left-0 w-screen h-screen object-cover pointer-events-none bg-primary opacity-70"
-            style={{
-              filter: `hue-rotate(${themes.find((t) => t[0] === theme)?.[1] ?? 0}deg)`,
-            }}
+            style={accordStyleToTheme(theme)}
           />
         </>
       )}

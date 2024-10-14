@@ -1,9 +1,11 @@
 import { useGlobalState } from "@/hooks/useGlobalState.ts"
-import { cn } from "@/utils.ts"
+import { accordStyleToTheme, cn } from "@/utils.ts"
 import Spline from "@splinetool/react-spline"
 import { useEffect, useState } from "react"
+import { useSettings } from "@/hooks/useSettings.ts"
 
 export const SplineMacbook = (props: { showGame: boolean }) => {
+  const theme = useSettings((state) => state.theme)
   const [isLoaded, setIsLoaded] = useGlobalState((state) => [
     state.splineLoaded,
     state.setSplineLoaded,
@@ -42,6 +44,7 @@ export const SplineMacbook = (props: { showGame: boolean }) => {
         "pointer-events-none opacity-0": !isLoaded,
         hidden: unload,
       })}
+      style={accordStyleToTheme(theme)}
       // onLoad={() => {
       //   if (!isLoaded) {
       //     setIsLoaded(true)
