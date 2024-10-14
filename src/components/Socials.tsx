@@ -22,19 +22,22 @@ export const Socials = () => {
   return (
     <div
       className={cn(
-        "grid grid-cols-6 mx-auto md:scale-100 max-w-sm md:max-w-sm",
+        "grid grid-cols-3 mx-auto md:scale-100 max-w-sm md:max-w-sm",
       )}
     >
       {socials.map((social) => (
         <a
           href={social.url}
           target="_blank"
-          className="flex justify-center items-center p-2 md:m-1 md:p-3 group/social"
+          className="flex justify-center items-center gap-2 p-2 md:m-1 md:p-3 group/social"
           key={social.name}
           title={`${social.name}: ${social.username}`}
         >
-          <div className="transition-all md:group-hover/social:scale-150 md:group-hover/social:rotate-[360deg]">
+          <div className="transition-all md:group-hover/social:scale-150 md:group-hover/social:rotate-[360deg] shrink-0 max-h-8 max-w-8">
             {icons[social.icon]}
+          </div>
+          <div className="transition-all hidden font-changa xs:block md:group-hover/social:scale-110 md:group-hover/social:translate-x-2">
+            {social.name}
           </div>
         </a>
       ))}

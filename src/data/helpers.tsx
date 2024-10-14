@@ -1,6 +1,6 @@
 import React from "react"
 
-import { Money, Tag } from "@/components/game/Texts.tsx"
+import { Bold, Money, Tag } from "@/components/game/Texts.tsx"
 import { MAX_HAND_SIZE, MONEY_TO_REACH } from "@/game-constants.ts"
 import type { GameOverReason } from "@/game-typings.ts"
 
@@ -92,8 +92,12 @@ const helpers = {
       <Tag name="energy" />.
     </>
   ),
-  rightClicDetail:
-    "Fait un clic droit sur une carte pour avoir plus d'informations.",
+  rightClicDetail: (
+    <>
+      Fait un <Bold>clic droit</Bold> sur une carte pour avoir plus
+      d'informations.
+    </>
+  ),
   recycleTarget: (
     <>
       Une carte qui <Tag name="recycle" /> sort une cible de la défausse pour la

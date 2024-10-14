@@ -91,7 +91,7 @@ export const Statistics = () => {
 
       <BentoCard>
         <h3 className="font-changa">Succès</h3>
-        <ul className="flex flex-wrap gap-x-2">
+        <BadgeList>
           {stats.achievements.length > 0
             ? stats.achievements.map((achievement, i) => (
                 <HelpPopoverTrigger
@@ -112,7 +112,7 @@ export const Statistics = () => {
                 </HelpPopoverTrigger>
               ))
             : "Aucun succès"}
-        </ul>
+        </BadgeList>
       </BentoCard>
 
       <BentoCard>

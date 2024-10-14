@@ -119,7 +119,7 @@ const achievements: {
     name: "Perfectionniste",
     description: (
       <>
-        Découvrir toutes les cartes <Tag name="upgrade" />
+        Découvre toutes les cartes <Tag name="upgrade" />
       </>
     ),
     unlockCondition: (state) =>

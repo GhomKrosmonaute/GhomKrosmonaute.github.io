@@ -6,12 +6,6 @@
     "icon": "discord"
   },
   {
-    "name": "Twitter",
-    "url": "https://x.com/GhomKrosmonaute",
-    "username": "@GhomKrosmonaute",
-    "icon": "twitter"
-  },
-  {
     "name": "Github",
     "url": "https://github.com/GhomKrosmonaute",
     "username": "GhomKrosmonaute",
@@ -22,17 +16,5 @@
     "url": "https://www.linkedin.com/in/camille-abella-a99950176/",
     "username": "Camille Abella",
     "icon": "linkedin"
-  },
-  {
-    "name": "Instagram",
-    "url": "https://www.instagram.com/camsakaghom/",
-    "username": "@camsakaghom",
-    "icon": "instagram"
-  },
-  {
-    "name": "Facebook",
-    "url": "https://www.facebook.com/camille.abella.7921",
-    "username": "Camille Abella",
-    "icon": "facebook"
   }
 ]

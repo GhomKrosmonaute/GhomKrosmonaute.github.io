@@ -26,101 +26,109 @@ export const GameLogs = (props: { show: boolean }) => {
   }, [logs])
 
   return (
-    <div
-      id="logs"
-      ref={scrollBox}
-      className={cn(
-        "absolute right-0 bottom-0 translate-x-full min-w-52 overflow-y-scroll",
-        {
-          "hidden pointer-events-none": !props.show,
-        },
-      )}
-      style={{
-        maxHeight: DISPLAYED_LOGS * ITEM_HEIGHT,
-        maskImage: `linear-gradient(to bottom, transparent, black ${Math.floor(
-          map(logs.length, 0, DISPLAYED_LOGS, 0, 100, true),
-        )}%)`,
-        scrollbarWidth: "none",
-        scrollBehavior: "smooth",
-      }}
-    >
-      <table>
-        <tbody>
-          {logs.map((log, index) => {
-            return log ? (
-              <tr key={index}>
-                <td>
-                  <GameMiniature item={log.reason} />
-                </td>
-                <td className="pb-1.5">
-                  <span
-                    className={cn(
-                      "inline-block ring-2",
-                      log.type !== "cardManagement" &&
-                        (log.value > 0 ? "ring-green-500" : "ring-red-500"),
-                      log.type === "money" ? "" : "rounded-full",
-                    )}
-                  >
-                    {log.type === "money" ? (
-                      <GameMoneyIcon miniature value={log.value} symbol />
-                    ) : log.type === "reputation" || log.type === "energy" ? (
-                      <GameValueIcon
-                        miniature
-                        symbol
-                        value={log.value}
-                        colors={
-                          cn({
-                            "bg-reputation": log.type === "reputation",
-                            "bg-energy": log.type === "energy",
-                          }) as `bg-${string}`
-                        }
-                      />
-                    ) : (
-                      <>
-                        {(() => {
-                          const key = Object.entries(
-                            gameLogCardManagementValues,
-                          ).find(
-                            (entry) => entry[1] === log.value,
-                          )![0] as keyof typeof gameLogIcons
+    <>
+      <div
+        id="logs"
+        className="absolute w-52 right-0 bottom-0 translate-x-full pointer-events-none"
+        style={{
+          height: DISPLAYED_LOGS * ITEM_HEIGHT,
+        }}
+      />
+      <div
+        ref={scrollBox}
+        className={cn(
+          "absolute right-0 bottom-0 translate-x-full min-w-52 overflow-y-scroll",
+          {
+            "hidden pointer-events-none": !props.show,
+          },
+        )}
+        style={{
+          maxHeight: DISPLAYED_LOGS * ITEM_HEIGHT,
+          maskImage: `linear-gradient(to bottom, transparent, black ${Math.floor(
+            map(logs.length, 0, DISPLAYED_LOGS, 0, 100, true),
+          )}%)`,
+          scrollbarWidth: "none",
+          scrollBehavior: "smooth",
+        }}
+      >
+        <table>
+          <tbody>
+            {logs.map((log, index) => {
+              return log ? (
+                <tr key={index}>
+                  <td>
+                    <GameMiniature item={log.reason} />
+                  </td>
+                  <td className="pb-1.5">
+                    <span
+                      className={cn(
+                        "inline-block ring-2",
+                        log.type !== "cardManagement" &&
+                          (log.value > 0 ? "ring-green-500" : "ring-red-500"),
+                        log.type === "money" ? "" : "rounded-full",
+                      )}
+                    >
+                      {log.type === "money" ? (
+                        <GameMoneyIcon miniature value={log.value} symbol />
+                      ) : log.type === "reputation" || log.type === "energy" ? (
+                        <GameValueIcon
+                          miniature
+                          symbol
+                          value={log.value}
+                          colors={
+                            cn({
+                              "bg-reputation": log.type === "reputation",
+                              "bg-energy": log.type === "energy",
+                            }) as `bg-${string}`
+                          }
+                        />
+                      ) : (
+                        <>
+                          {(() => {
+                            const key = Object.entries(
+                              gameLogCardManagementValues,
+                            ).find(
+                              (entry) => entry[1] === log.value,
+                            )![0] as keyof typeof gameLogIcons
 
-                          const Icon = gameLogIcons[key]
+                            const Icon = gameLogIcons[key]
 
-                          return (
-                            <HelpPopoverTrigger
-                              popover={
-                                key === "drawFromDiscard" ? (
-                                  "Pioche dans la défausse"
-                                ) : key === "play" ? (
-                                  "Joue"
-                                ) : (
-                                  <Tag name={key} />
-                                )
-                              }
-                            >
-                              <Icon
-                                className="h-6 w-auto"
-                                aria-label="w-5 h-5"
-                              />
-                            </HelpPopoverTrigger>
-                          )
-                        })()}
-                      </>
-                    )}
-                  </span>
-                </td>
-              </tr>
-            ) : (
-              <tr key={index}>
-                <td className="pb-1.5">
-                  <span className="inline-block h-7"></span>
-                </td>
-                <td></td>
-              </tr>
-            )
-          })}
-        </tbody>
-      </table>
-    </div>
+                            return (
+                              <HelpPopoverTrigger
+                                popover={
+                                  key === "drawFromDiscard" ? (
+                                    "Pioche dans la défausse"
+                                  ) : key === "play" ? (
+                                    "Joue"
+                                  ) : (
+                                    <Tag name={key} />
+                                  )
+                                }
+                              >
+                                <Icon
+                                  className="h-6 w-auto"
+                                  aria-label="w-5 h-5"
+                                />
+                              </HelpPopoverTrigger>
+                            )
+                          })()}
+                        </>
+                      )}
+                    </span>
+                  </td>
+                </tr>
+              ) : (
+                <tr key={index}>
+                  <td className="pb-1.5">
+                    <span className="inline-block h-7"></span>
+                  </td>
+                  <td></td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+    </>
   )
 }

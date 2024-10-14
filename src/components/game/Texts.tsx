@@ -209,3 +209,11 @@ export const Badge = (props: React.ComponentProps<"span">) => {
 export const BadgeList = (props: { children: React.ReactNode }) => {
   return <ul className="flex flex-wrap gap-x-2 gap-y-1">{props.children}</ul>
 }
+
+export const Bold = (props: React.ComponentProps<"span">) => {
+  return (
+    <span className={sharedClassName} style={sharedStyle}>
+      {props.children}
+    </span>
+  )
+}

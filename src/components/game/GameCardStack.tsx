@@ -23,8 +23,13 @@ export const GameCardStack = (props: {
   const cardThickness = isHover ? 1.5 : 1
 
   return (
-    <div ref={ref} className="space-y-4" style={{ zIndex: props.zIndex ?? 1 }}>
-      <div className={cn(GAME_CARD_SIZE, "relative overflow-visible")}>
+    <div ref={ref} className="space-y-2" style={{ zIndex: props.zIndex ?? 1 }}>
+      <div
+        className={cn(
+          GAME_CARD_SIZE,
+          "relative overflow-visible border-2 border-dotted border-foreground",
+        )}
+      >
         {cards.map((card, i, all) => {
           return (
             <div
@@ -50,7 +55,7 @@ export const GameCardStack = (props: {
           )
         })}
       </div>
-      <div className="text-center">
+      <div className="text-center font-changa">
         {props.name} ({cards.length})
       </div>
     </div>

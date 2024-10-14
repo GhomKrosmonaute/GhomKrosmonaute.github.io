@@ -5,7 +5,7 @@ import { TutorialStep } from "@/components/game/TutorialProvider.tsx"
 import { Button } from "@/components/ui/button.tsx"
 import { MONEY_TO_REACH } from "@/game-constants.ts"
 import { bank } from "@/sound.ts"
-import { Money, Tag } from "@/components/game/Texts.tsx"
+import { Bold, Money, Tag } from "@/components/game/Texts.tsx"
 
 const cardStyle: React.CSSProperties = {
   backgroundColor: "hsl(var(--card))",
@@ -317,7 +317,7 @@ const steps: TutorialStep[] = [
         <h2>Informations d'une carte</h2>
         <p>
           Si tu veux plus d'informations sur une carte, <br />
-          tu peux faire un clic droit dessus.
+          tu peux faire un <Bold>clic droit</Bold> dessus.
         </p>
         <p>
           Une popup s'ouvrira avec les formes alternatives <br />
