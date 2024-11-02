@@ -10,7 +10,7 @@ export const useGhostWrapper = (ref: React.RefObject<HTMLElement>) => {
       const handRect = getAbsoluteBoundingRect(ref.current)
       transferDOMRect(handRect, wrapper.current)
     }
-  }, [ref, wrapper])
+  })
 
   return wrapper
 }
