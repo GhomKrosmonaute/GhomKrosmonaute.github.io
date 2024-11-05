@@ -93,11 +93,13 @@ export const Credits = () => {
           </p>
         </BentoCard>
         <BentoCard className="col-span-5">
-          <h3>✅ Play tests</h3>
+          <h3>✅ Playtests</h3>
           <ul>
             <li>Mélodie Deichfischer (Mel-Andrew)</li>
             <li>empereuronyx (𝕺𝖓𝖞𝖝)</li>
             <li>kikuchi_003 (kikuchi)</li>
+            <li>Xibalba</li>
+            <li>threemsymbols</li>
           </ul>
         </BentoCard>
       </div>
