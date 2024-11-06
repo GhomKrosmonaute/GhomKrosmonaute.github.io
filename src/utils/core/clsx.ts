@@ -9,11 +9,12 @@ function toVal(mix: TODO) {
     str += mix
   } else if (typeof mix === "object") {
     if (Array.isArray(mix)) {
-      let len = mix.length
+      const len = mix.length
       for (k = 0; k < len; k++) {
         if (mix[k]) {
           if ((y = toVal(mix[k]))) {
             // Changed assignment to conditional expression
+            // eslint-disable-next-line @typescript-eslint/no-unused-expressions
             str && (str += " ")
             str += y
           }
@@ -22,6 +23,7 @@ function toVal(mix: TODO) {
     } else {
       for (y in mix) {
         if (mix[y]) {
+          // eslint-disable-next-line @typescript-eslint/no-unused-expressions
           str && (str += " ")
           str += y
         }
@@ -56,6 +58,7 @@ export function clsx(...inputs: ClassValue[]): string {
       // Changed assignment to conditional expression
       if ((x = toVal(tmp))) {
         // Changed assignment to conditional expression
+        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
         str && (str += " ")
         str += x
       }

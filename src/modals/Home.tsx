@@ -1,13 +1,14 @@
-import { Heading } from "@/components/Heading.tsx"
-import { Socials } from "@/components/Socials.tsx"
-import { Slogan } from "@/components/Slogan.tsx"
-import { Button } from "@/components/ui/button.tsx"
 import { CenterCard } from "@/components/CenterCard.tsx"
+import { Heading } from "@/components/Heading.tsx"
+import { Slogan } from "@/components/Slogan.tsx"
+import { Socials } from "@/components/Socials.tsx"
+import { Button } from "@/components/ui/button.tsx"
 
-import { useMediaQuery } from "usehooks-ts"
-import { useNavigate } from "react-router-dom"
 import { useGlobalState } from "@/hooks/useGlobalState.ts"
 import { useSettings } from "@/hooks/useSettings.ts"
+import { t } from "@/i18n"
+import { useNavigate } from "react-router-dom"
+import { useMediaQuery } from "usehooks-ts"
 
 export const Home = () => {
   const navigate = useNavigate()
@@ -43,7 +44,7 @@ export const Home = () => {
               e.key === "Escape" && setCardGameVisibility(false)
             }
           >
-            Jouer
+            {t("Jouer", "Play")}
           </Button>
         )}
         <Button onClick={() => navigate("/pricing")}>Tarifs</Button>
