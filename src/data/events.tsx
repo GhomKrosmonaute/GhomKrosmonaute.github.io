@@ -1,19 +1,28 @@
 import type { TriggerEvent } from "@/game-typings.ts"
 
+import Cross from "@/assets/icons/cross.svg"
 import Day from "@/assets/icons/game/day.svg"
+import Down from "@/assets/icons/game/down.svg"
+import Draw from "@/assets/icons/game/draw.svg"
 import Play from "@/assets/icons/game/play.svg"
 import Sprint from "@/assets/icons/game/sprint.svg"
-import Draw from "@/assets/icons/game/draw.svg"
-import Down from "@/assets/icons/game/down.svg"
-import Cross from "@/assets/icons/cross.svg"
 import Upgrade from "@/assets/icons/game/upgrade.svg"
 import { Tag } from "@/components/game/Texts.tsx"
+
+import { t } from "@/i18n"
 
 const events = {
   daily: {
     name: (
       <>
-        Tous les <Tag name="day" plural />
+        {t(
+          <>
+            Tous les <Tag name="day" plural />
+          </>,
+          <>
+            Every <Tag name="day" plural />
+          </>,
+        )}
       </>
     ),
     icon: Day,
@@ -22,7 +31,14 @@ const events = {
   weekly: {
     name: (
       <>
-        Toutes les fins de <Tag name="sprint" />
+        {t(
+          <>
+            Toutes les fins de <Tag name="sprint" />
+          </>,
+          <>
+            Every end of <Tag name="sprint" />
+          </>,
+        )}
       </>
     ),
     icon: Sprint,
@@ -31,39 +47,63 @@ const events = {
   monthly: {
     name: (
       <>
-        Tous les <Tag name="inflation">Mois</Tag>
+        {t(
+          <>
+            Tous les <Tag name="inflation">Mois</Tag>
+          </>,
+          <>
+            Every <Tag name="inflation">Month</Tag>
+          </>,
+        )}
       </>
     ),
     icon: Sprint,
     colors: "bg-inflation",
   },
   onPlay: {
-    name: "À chaque carte jouée",
+    name: t("À chaque carte jouée", "Every card played"),
     icon: Play,
   },
   onDraw: {
     name: (
       <>
-        À chaque <Tag name="draw" />
+        {t(
+          <>
+            À chaque <Tag name="draw" />
+          </>,
+          <>
+            Every <Tag name="draw" />
+          </>,
+        )}
       </>
     ),
     icon: Draw,
   },
   onEmptyHand: {
-    name: "Quand ta main est vide",
+    name: t("Quand ta main est vide", "When your hand is empty"),
     icon: Cross,
   },
   onReputationDeclines: {
     name: (
       <>
-        Quand la <Tag name="reputation" /> diminue
+        {t(
+          <>
+            Quand la <Tag name="reputation" /> diminue
+          </>,
+          <>
+            When the <Tag name="reputation" /> decreases
+          </>,
+        )}
       </>
     ),
     icon: Down,
     colors: "bg-reputation",
   },
   onUpgradeThis: {
-    name: "Chaque fois que tu joues la carte de cette amélioration",
+    name: t(
+      "Chaque fois que tu joues la carte de cette amélioration",
+      "Each time you play the card of this upgrade",
+    ),
     icon: Upgrade,
     colors: "bg-upgrade",
   },
