@@ -1,6 +1,6 @@
+import { useHover } from "@/hooks/useHover.ts"
 import React from "react"
 import { create } from "zustand"
-import { useHover } from "@/hooks/useHover.ts"
 
 interface HelpPopoverState {
   subjects: React.ReactNode[]
@@ -31,5 +31,6 @@ export const useHelpPopover = (
   React.useEffect(() => {
     if (isHovered) addSubject(subject)
     else removeSubject(subject)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isHovered])
 }

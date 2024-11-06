@@ -1,90 +1,91 @@
 import { bank } from "@/sound.ts"
 import { create } from "zustand"
 
-import cards from "@/data/cards.tsx"
-import upgrades from "@/data/upgrades.tsx"
 import achievements from "@/data/achievements.tsx"
 import cardModifiers from "@/data/cardModifiers.ts"
+import cards from "@/data/cards.tsx"
+import upgrades from "@/data/upgrades.tsx"
 
 import {
-  GameLog,
-  GameResource,
-  GameCardInfo,
-  MethodWhoLog,
-  UpgradeCompact,
-  GameCardCompact,
-  GameOverReason,
-  TriggerEventName,
-  ScreenMessageOptions,
-  GameMethodOptions,
   CardModifierCompact,
-  MethodWhoCheckIfGameOver,
-  GameModifierLog,
-  compactUpgrade,
-  compactGameCardInfo,
-  isGameResource,
   ChoiceOptions,
-  CoinFlipOptions,
-  GameDetailData,
   ChoiceOptionsGeneratorOptions,
+  CoinFlipOptions,
+  GameCardCompact,
+  GameCardInfo,
+  GameDetailData,
+  GameLog,
+  GameMethodOptions,
   GameMetrics,
+  GameModifierLog,
+  GameOverReason,
+  GameResource,
+  MethodWhoCheckIfGameOver,
+  MethodWhoLog,
+  ScreenMessageOptions,
+  TriggerEventName,
+  UpgradeCompact,
+  compactGameCardInfo,
+  compactUpgrade,
+  isGameResource,
 } from "@/game-typings"
 
 import {
-  MAX_ENERGY,
-  MAX_HAND_SIZE,
-  MAX_REPUTATION,
-  MONEY_TO_REACH,
+  ADVANTAGE_THRESHOLD,
   ENERGY_TO_DAYS,
   ENERGY_TO_MONEY,
-  RARITIES,
-  REPUTATION_TO_ENERGY,
   INITIAL_CHOICE_COUNT,
   INITIAL_CHOICE_OPTION_COUNT,
-  ADVANTAGE_THRESHOLD,
+  MAX_ENERGY,
+  MAX_HAND_SIZE,
   MAX_LOG_COUNT,
+  MAX_REPUTATION,
+  MONEY_TO_REACH,
+  RARITIES,
+  REPUTATION_TO_ENERGY,
 } from "@/game-constants.ts"
 
 import {
+  createChoiceOptions,
   isGameOver,
+  resolveChoiceOptions,
   reviveCard,
   reviveUpgrade,
-  willBeRemoved,
-  createChoiceOptions,
   revivedState,
   toSortedCards,
-  resolveChoiceOptions,
+  willBeRemoved,
 } from "@/game-utils.ts"
 
 import { metadata } from "@/game-metadata.ts"
-import { Difficulty } from "@/game-typings.ts"
-import { difficultyIndex, settings } from "@/game-settings.ts"
 import {
-  generateRandomRarity,
-  updateGameAutoSpeed,
-  handleErrorsAsync,
-  fetchSettings,
-  handleErrors,
-  isNewSprint,
-  isGameWon,
-  parseSave,
-  getDeck,
-  shuffle,
-  wait,
-  excludeCard,
-  updateCardState,
   canBeBuy,
-  getUsableCost,
   costToEnergy,
-  save,
-  updateUpgradeState,
-  waitFor,
-  getRevivedDeck,
-  getGameSpeed,
-  map,
   dropToStack,
+  excludeCard,
+  fetchSettings,
   gameLogCardManagementValues,
+  generateRandomRarity,
+  getDeck,
+  getGameSpeed,
+  getRevivedDeck,
+  getUsableCost,
+  handleErrors,
+  handleErrorsAsync,
+  isGameWon,
+  isNewSprint,
+  map,
+  parseSave,
+  save,
+  shuffle,
+  updateCardState,
+  updateGameAutoSpeed,
+  updateUpgradeState,
+  wait,
+  waitFor,
 } from "@/game-safe-utils.tsx"
+import { difficultyIndex, settings } from "@/game-settings.ts"
+import { Difficulty } from "@/game-typings.ts"
+import { t } from "@/i18n"
 
 export interface GlobalGameState {
   debug: boolean
@@ -286,12 +287,12 @@ function generateGlobalGameMethods(
         const state = getState()
 
         for (const achievement of achievements) {
-          if (state.achievements.includes(achievement.name)) continue
+          if (state.achievements.includes(achievement.id)) continue
 
           if (achievement.unlockCondition(getState())) {
             state.setOperationInProgress("checkAchievements", true)
 
-            await state.addAchievement(achievement.name)
+            await state.addAchievement(achievement.id)
           }
         }
 
@@ -319,19 +320,23 @@ function generateGlobalGameMethods(
       })
     },
 
-    addAchievement: async (name) => {
+    addAchievement: async (id) => {
       await handleErrorsAsync(getState, async () => {
+        const existing = achievements.find((a) => a.id === id)
+
+        if (!existing) throw new Error(`Achievement ${id} not found`)
+
         set((state) => {
           return {
-            achievements: Array.from(new Set([...state.achievements, name])),
+            achievements: Array.from(new Set([...state.achievements, id])),
           }
         })
 
         bank.achievement.play()
 
         await getState().addScreenMessage({
-          header: "Succès déverrouillé",
-          message: name,
+          header: t("Succès déverrouillé", "Success unlocked"),
+          message: existing.name,
           className: "bg-primary text-primary-foreground text-center",
         })
 
@@ -458,7 +463,7 @@ function generateGameState(): Omit<
       {
         name: "upgrade cost threshold",
         params: [],
-        reason: "Promotion temporaire",
+        reason: t("Promotion temporaire", "Temporary on sale"),
       },
       {
         name: "all card inflation",
@@ -658,7 +663,7 @@ function generateGameMethods(
           await state.addScreenMessage({
             message: newSprint
               ? `Sprint ${Math.floor((currentDay + 1) / 7)}`
-              : `Jour ${currentDay + 1}`,
+              : `${t("Jour", "Day")} ${currentDay + 1}`,
             className: newSprint
               ? "bg-upgrade text-upgrade-foreground"
               : "bg-day text-day-foreground",
@@ -712,8 +717,8 @@ function generateGameMethods(
 
             if (newMonth) {
               await state.addScreenMessage({
-                header: "L'inflation augmente",
-                message: `Mois ${Math.floor((currentDay + 1) / 7)}`,
+                header: t("L'inflation augmente", "Inflation increases"),
+                message: `${t("Mois", "Month")} ${Math.floor((currentDay + 1) / 7)}`,
                 className: "bg-inflation text-inflation-foreground",
               })
 
@@ -1893,19 +1898,19 @@ function generateGameMethods(
           switch (option.type) {
             case "money":
               await state.addMoney(option.value, {
-                reason: "Ressource",
+                reason: t("Ressource", "Resource"),
                 skipGameOverPause: true,
               })
               break
             case "reputation":
               await state.addReputation(option.value, {
-                reason: "Ressource",
+                reason: t("Ressource", "Resource"),
                 skipGameOverPause: true,
               })
               break
             case "energy":
               await state.addEnergy(option.value, {
-                reason: "Ressource",
+                reason: t("Ressource", "Resource"),
                 skipGameOverPause: true,
               })
               break
@@ -2092,7 +2097,7 @@ useCardGame.subscribe(async (state, prevState) => {
         state.dangerouslyUpdate(revivedState(state, true))
 
         if (isGameWon(state)) {
-          await state.addAchievement("Première victoire")
+          await state.addAchievement("first-win")
         }
 
         state.checkDiscoveries()

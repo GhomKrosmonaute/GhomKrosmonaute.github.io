@@ -5,7 +5,8 @@ export function usePrevious<T>(value: T): T | undefined {
 
   React.useEffect(() => {
     if (value !== stack[1]) setStack((prev) => [prev[1], value])
-  }, [value])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stack])
 
   return stack[0]
 }

@@ -1,6 +1,6 @@
-import React from "react"
-import { useGlobalState } from "@/hooks/useGlobalState.ts"
 import { useCardGame } from "@/hooks/useCardGame.tsx"
+import { useGlobalState } from "@/hooks/useGlobalState.ts"
+import React from "react"
 
 export const useGameWatching = () => {
   const show = useGlobalState((state) => state.isCardGameVisible)
@@ -20,5 +20,6 @@ export const useGameWatching = () => {
     }, 1000)
 
     return () => clearInterval(interval)
-  }, [show, isOperationInProgress, checkAchievements])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [show, isOperationInProgress])
 }
