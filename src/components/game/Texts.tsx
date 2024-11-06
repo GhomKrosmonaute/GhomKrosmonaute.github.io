@@ -1,9 +1,9 @@
-import React from "react"
-import { cn } from "@/utils.ts"
 import { getRarityName, tags } from "@/game-safe-utils.tsx"
 import type { ActionCardFamily } from "@/game-typings.ts"
-import { useLazyImport } from "@/hooks/useLazyImport.ts"
 import { useHelpPopover } from "@/hooks/useHelpPopover.tsx"
+import { useLazyImport } from "@/hooks/useLazyImport.ts"
+import { cn } from "@/utils.ts"
+import React from "react"
 
 const sharedClassName = "inline-block font-bold px-0.5 -mx-0.5 py-0 rounded-sm"
 // const sharedParentStyle = { transformStyle: "preserve-3d" } as const
@@ -85,6 +85,12 @@ export const Tag = ({
 
   const ref = React.useRef<HTMLSpanElement>(null)
 
+  const computed = plural
+    ? "plural" in tag
+      ? tag.name.replace(/y$/, "ie") + tag.plural
+      : tag.name
+    : tag.name
+
   useHelpPopover(
     ref,
     <>
@@ -108,12 +114,7 @@ export const Tag = ({
         color: "className" in tag ? undefined : `hsl(var(--${name}))`,
       }}
     >
-      {children ?? (
-        <>
-          {tag.name}
-          {plural && "plural" in tag ? tag.plural : ""}
-        </>
-      )}
+      {children ?? computed}
     </span>
   )
 }

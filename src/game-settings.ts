@@ -1,4 +1,3 @@
-import { t } from "@/i18n.ts"
 import { GAME_ADVANTAGE } from "@/game-constants.ts"
 import { Speed } from "@/game-enums.ts"
 import type {
@@ -7,6 +6,7 @@ import type {
   QualityPresetName,
   Settings,
 } from "@/game-typings.ts"
+import { t } from "@/i18n.ts"
 
 export const difficultyIndex = Object.entries(GAME_ADVANTAGE).reduce(
   (acc, entry, index) => ({ ...acc, [entry[0]]: index + 1 }),

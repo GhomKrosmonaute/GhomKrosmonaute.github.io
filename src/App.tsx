@@ -1,17 +1,17 @@
-import React from "react"
 import DeviceDetector from "device-detector-js"
+import React from "react"
 import { RouterProvider, createBrowserRouter } from "react-router-dom"
 
 import "./App.css"
 
 import { Button } from "@/components/ui/button.tsx"
 
-import { useMediaQuery } from "usehooks-ts"
 import { useDarkMode } from "@/hooks/useDarkMode.ts"
+import { useMediaQuery } from "usehooks-ts"
 
+import { Contact } from "./modals/Contact.tsx"
 import { Home } from "./modals/Home.tsx"
 import { Tarifs } from "./modals/Tarifs.tsx"
-import { Contact } from "./modals/Contact.tsx"
 
 import { accordStyleToTheme, cn } from "@/utils.ts"
 
@@ -71,7 +71,7 @@ export default function App() {
     if (!largeScreen && import.meta.env.PROD) {
       setCardGameVisibility(false)
     }
-  }, [largeScreen])
+  }, [largeScreen, setCardGameVisibility])
 
   const router = React.useMemo(
     () =>

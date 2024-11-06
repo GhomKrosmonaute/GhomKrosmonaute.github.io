@@ -4,10 +4,10 @@ import {
   ADVANTAGE_THRESHOLD,
   ENERGY_TO_MONEY,
   GAME_ADVANTAGE,
-  RARITIES,
   MAX_ENERGY,
   MAX_REPUTATION,
   MONEY_TO_REACH,
+  RARITIES,
   UPGRADE_COST_THRESHOLDS,
 } from "@/game-constants.ts"
 
@@ -36,20 +36,22 @@ import { defaultSettings } from "@/game-settings.ts"
 
 import type { Settings } from "@/game-typings.ts"
 
-import type { GameState, GlobalGameState } from "@/hooks/useCardGame.tsx"
 import { Family, Money, Muted, Tag } from "@/components/game/Texts.tsx"
 import { reviveCard } from "@/game-utils.ts"
+import type { GameState, GlobalGameState } from "@/hooks/useCardGame.tsx"
 
-import Draw from "@/assets/icons/game/draw.svg"
 import Destroy from "@/assets/icons/game/destroy.svg"
 import Discard from "@/assets/icons/game/discard.svg"
-import Recycle from "@/assets/icons/game/recycle.svg"
+import Draw from "@/assets/icons/game/draw.svg"
 import GiveBack from "@/assets/icons/game/giveBack.svg"
 import Pick from "@/assets/icons/game/pick.svg"
 import Play from "@/assets/icons/game/play.svg"
+import Recycle from "@/assets/icons/game/recycle.svg"
 
-import { ArrowLeft } from "lucide-react"
 import { cn } from "@/utils.ts"
+import { ArrowLeft } from "lucide-react"
+
+import { t } from "./i18n"
 
 // eslint-disable-next-line react-refresh/only-export-components
 const DrawFromDiscard = ({
@@ -125,27 +127,43 @@ export const gameLogIcons = {
 >
 
 export const choiceOptionsHeaders = {
-  default: () => "Choisis une carte",
-  action: () => (
-    <>
-      Choisis une carte <Tag name="action" />
-    </>
-  ),
-  upgrade: () => (
-    <>
-      Choisis une carte <Tag name="upgrade" />
-    </>
-  ),
-  family: (family: ActionCardFamily) => (
-    <>
-      Choisis une carte <Family name={family} />
-    </>
-  ),
-  tag: (tag: keyof typeof tags, before?: string) => (
-    <>
-      Choisis une carte {before} <Tag name={tag} />
-    </>
-  ),
+  default: () => t("Choisis une carte", "Choose a card"),
+  action: () =>
+    t(
+      <>
+        Choisis une carte <Tag name="action" />
+      </>,
+      <>
+        Choose an <Tag name="action" /> card
+      </>,
+    ),
+  upgrade: () =>
+    t(
+      <>
+        Choisis une carte <Tag name="upgrade" />
+      </>,
+      <>
+        Choose an <Tag name="upgrade" /> card
+      </>,
+    ),
+  family: (family: ActionCardFamily) =>
+    t(
+      <>
+        Choisis une carte <Family name={family} />
+      </>,
+      <>
+        Choose a <Family name={family} /> card
+      </>,
+    ),
+  tag: (tag: keyof typeof tags, before?: string) =>
+    t(
+      <>
+        Choisis une carte {before} <Tag name={tag} />
+      </>,
+      <>
+        Choose a card {before} <Tag name={tag} />
+      </>,
+    ),
 } satisfies Record<string, (...args: any[]) => React.ReactNode>
 
 export const families: ActionCardFamily[] = [
@@ -160,119 +178,182 @@ export const families: ActionCardFamily[] = [
   "PlayCurious",
 ]
 
+export const translatedFamilies: Record<ActionCardFamily, string> = {
+  "Bot Discord": t("Bot Discord", "Discord bot"),
+  "Jeu vidéo": t("Jeu vidéo", "Video game"),
+  TypeScript: "TypeScript",
+  React: "React",
+  "Open Source": t("Open Source", "Open source"),
+  Outil: t("Outil", "Tool"),
+  "Serveur Discord": t("Serveur Discord", "Discord server"),
+  "Site web": t("Site web", "Website"),
+  PlayCurious: "PlayCurious",
+}
+
 export const tags = {
   ephemeral: {
-    name: "Éphémère",
+    name: t("Éphémère", "Ephemeral"),
     plural: "s",
-    description: "Une carte Éphémère se détruit lorsqu'elle est jouée",
+    description: t(
+      "Une carte Éphémère se détruit lorsqu'elle est jouée",
+      "An Ephemeral card is destroyed when played",
+    ),
     className: "text-muted-foreground",
   },
   recyclage: {
-    name: "Recyclage",
+    name: t("Recyclage", "Self-recycling"),
     plural: "s",
-    description:
+    description: t(
       "Une carte Recyclage retourne dans la pioche lorsqu'elle est jouée",
+      "A Self-recycling card returns to the deck when played",
+    ),
     className: "text-muted-foreground",
   },
   token: {
     name: "Token",
     plural: "s",
-    description:
+    description: t(
       "Les changements de niveau n'ont aucun effet sur les cartes Token",
+      "Level changes have no effect on Token cards",
+    ),
     className: "text-muted-foreground",
   },
   upgrade: {
-    name: "Amélioration",
+    name: t("Amélioration", "Upgrade"),
     plural: "s",
-    description: "Ajoute un effet permanent à la partie",
+    description: t(
+      "Ajoute un effet permanent à la partie",
+      "Adds a permanent effect to the game",
+    ),
   },
   action: {
     name: "Action",
     plural: "s",
-    description:
+    description: t(
       "Une carte Action représente un projet sur lequel Ghom a travaillé (sauf les cartes d'Améliorations). Jouez-la pour obtenir des ressources.",
+      "An Action card represents a project Ghom has worked on (except Upgrade cards). Play it to gain resources.",
+    ),
   },
   support: {
     name: "Support",
     plural: "s",
-    description:
+    description: t(
       "Les cartes Support représentent des technologies que Ghom utilise pour ses projets. Elles permettent de gérer les cartes.",
+      "Support cards represent technologies Ghom uses for his projects. They help manage cards.",
+    ),
   },
   energy: {
-    name: "Énergie",
+    name: t("Énergie", "Energy"),
     plural: "s",
-    description: "L'énergie est une ressource pour jouer des cartes",
+    description: t(
+      "L'énergie est une ressource pour jouer des cartes",
+      "Energy is a resource for playing cards",
+    ),
   },
   reputation: {
-    name: "Réputation",
+    name: t("Réputation", "Reputation"),
     plural: "s",
-    description:
+    description: t(
       "La réputation est une ressource pour jouer des cartes, si elle s'épuise, vous perdez la partie",
+      "Reputation is a resource for playing cards, if it runs out, you lose the game",
+    ),
   },
   day: {
-    name: "Jour",
+    name: t("Jour", "Day"),
     plural: "s",
-    description:
+    description: t(
       "Chaque jour, vous gagnez une carte, le temps avance lorsque vous jouez des cartes",
+      "Each day, you gain a card, time advances when you play cards",
+    ),
   },
   sprint: {
     name: "Sprint",
     plural: "s",
-    description:
+    description: t(
       "Un sprint est une période de 7 jours. A la fin d'un sprint, vous gagnez des cartes",
+      "A sprint is a period of 7 days. At the end of a sprint, you gain cards",
+    ),
     className: "text-upgrade",
   },
   inflation: {
     name: "Inflation",
     plural: "s",
-    description:
+    description: t(
       "L'inflation augmente le niveau de difficulté du jeu tous les 28 jours",
+      "Inflation increases the game's difficulty level every 28 days",
+    ),
     className: "text-inflation",
   },
   level: {
-    name: "Niveau",
+    name: t("Niveau", "Level"),
     plural: "x",
-    description: "Le niveau d'une carte agis sur sa rareté et sa puissance",
+    description: t(
+      "Le niveau d'une carte agis sur sa rareté et sa puissance",
+      "A card's level affects its rarity and power",
+    ),
     className: "text-inflation",
   },
   draw: {
-    name: "Pioche",
-    description: "Retire une carte de la pioche et l'ajoute à ta main",
+    name: t("Pioche", "Draw"),
+    description: t(
+      "Retire une carte de la pioche et l'ajoute à ta main",
+      "Draws a card from the deck and adds it to your hand",
+    ),
   },
   discard: {
-    name: "Défausse",
-    description: "Retire une carte de ta main et la place dans la défausse",
+    name: t("Défausse", "Discard"),
+    description: t(
+      "Retire une carte de ta main et la place dans la défausse",
+      "Removes a card from your hand and places it in the discard pile",
+    ),
   },
   recycle: {
     name: "Recycle",
     plural: "nt",
-    description: "Déplace le sujet de la défausse vers la pioche",
+    description: t(
+      "Déplace le sujet de la défausse vers la pioche",
+      "Moves the subject from the discard pile to the deck",
+    ),
     className: "text-foreground",
   },
   giveBack: {
-    name: "Rend",
-    description: "Renvoie le sujet dans la pioche",
+    name: t("Rend", "Give Back"),
+    description: t(
+      "Renvoie le sujet dans la pioche",
+      "Returns the subject to the deck",
+    ),
     className: "text-foreground",
   },
   pick: {
-    name: "Choisis",
-    description: "Choisis une carte a ajouter à ton deck",
+    name: t("Choisis", "Pick"),
+    description: t(
+      "Choisis une carte a ajouter à ton deck",
+      "Pick a card to add to your deck",
+    ),
     className: "text-foreground",
   },
   coinFlip: {
-    name: "Lance une pièce",
-    description: "Lance une pièce pour obtenir un effet aléatoire",
+    name: t("Lance une pièce", "Coin Flip"),
+    description: t(
+      "Lance une pièce pour obtenir un effet aléatoire",
+      "Flip a coin to get a random effect",
+    ),
     className: "text-foreground",
   },
   destroy: {
-    name: "Détruit",
-    description: "Retire le sujet du deck",
+    name: t("Détruit", "Destroy"),
+    description: t(
+      "Retire le sujet du deck",
+      "Removes the subject from the deck",
+    ),
     className: "bg-destructive text-destructive-foreground",
   },
   money: {
-    name: "Argent",
-    description:
+    name: t("Argent", "Money"),
+    description: t(
       "L'argent est la ressource principale du jeu, elle peut servir a jouer certaines cartes.",
+      "Money is the main resource of the game, it can be used to play certain cards.",
+    ),
     className: "text-money font-changa",
   },
 } satisfies Record<
@@ -292,8 +373,8 @@ export function formatCoinFlipText(options: {
   return (
     <>
       <Tag name="coinFlip" />. <br />
-      Face: {options.heads} <br />
-      Pile: {options.tails}
+      {t("Face", "Heads")}: {options.heads} <br />
+      {t("Pile", "Tails")}: {options.tails}
     </>
   )
 }
