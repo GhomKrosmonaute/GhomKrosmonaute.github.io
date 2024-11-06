@@ -29,6 +29,10 @@ export const useSettings = create<
   },
 }))
 
-useSettings.subscribe((state) => {
+useSettings.subscribe((state, prevState) => {
   localStorage.setItem("settings", JSON.stringify(state))
+
+  if (state.language !== prevState.language) {
+    window.location.replace("/?game")
+  }
 })

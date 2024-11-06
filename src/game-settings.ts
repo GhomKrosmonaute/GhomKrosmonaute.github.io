@@ -1,3 +1,4 @@
+import { t } from "@/i18n.ts"
 import { GAME_ADVANTAGE } from "@/game-constants.ts"
 import { Speed } from "@/game-enums.ts"
 import type {
@@ -37,6 +38,7 @@ export const qualityPresets = {
 } satisfies Record<string, (keyof Omit<QualityOptions, "preset">)[]>
 
 export const defaultSettings: Settings = {
+  language: navigator.language,
   difficulty: "normal",
   tutorial: true,
   theme: "default",
@@ -115,26 +117,26 @@ export const translations: Record<
   | (QualityPresetName & string),
   string
 > = {
-  noob: "Débutant",
-  easy: "Facile",
+  noob: t("Débutant", "Noob"),
+  easy: t("Facile", "Easy"),
   normal: "Normal",
-  hard: "Difficile",
-  veteran: "Vétéran",
-  shadows: "Ombres",
-  transparency: "Transparence",
-  borderLights: "Lumières de bordure",
-  godRays: "Rayons lumineux",
-  blur: "Flou de transparence",
-  tilt: "Inclinaisons",
-  foil: "Reflets et textures",
+  hard: t("Difficile", "Hard"),
+  veteran: t("Vétéran", "Veteran"),
+  shadows: t("Ombres", "Shadows"),
+  transparency: t("Transparence", "Transparency"),
+  borderLights: t("Lumières de bordure", "Border lights"),
+  godRays: t("Rayons lumineux", "God rays"),
+  blur: t("Flou de transparence", "Transparency blur"),
+  tilt: t("Inclinaisons", "Card tilt"),
+  foil: t("Reflets et textures", "Card foil"),
   animations: "Animations",
-  perspective: "Profondeur",
+  perspective: t("Profondeur", "Card perspective"),
   auto: "Auto",
-  slow: "Lent",
-  fast: "Rapide",
-  extreme: "Extrême",
-  low: "Faible",
-  medium: "Moyenne",
-  high: "Maximale",
-  custom: "Personnalisée",
+  slow: t("Lent", "Slow"),
+  fast: t("Rapide", "Fast"),
+  extreme: t("Extrême", "Extreme"),
+  low: t("Faible", "Low"),
+  medium: t("Moyenne", "Medium"),
+  high: t("Maximale", "High"),
+  custom: t("Personnalisée", "Custom"),
 }

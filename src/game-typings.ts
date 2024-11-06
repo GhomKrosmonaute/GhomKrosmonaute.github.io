@@ -39,6 +39,7 @@ export interface QualityOptions {
 export type QualityPresetName = keyof typeof qualityPresets | "custom"
 
 export interface Settings {
+  language: string
   theme: string
   tutorial: boolean
   speed: Speed
