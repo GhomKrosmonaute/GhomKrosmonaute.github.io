@@ -1010,28 +1010,60 @@ export function computeEffectDescription(options: {
   if (!options.energy || options.energy.value <= 0)
     return (
       <>
-        {before}Gagne <Money M$={options.money!} />
+        {before}
+        {t(
+          <>
+            Gagne <Money M$={options.money!} />
+          </>,
+          <>
+            Earns <Money M$={options.money!} />
+          </>,
+        )}
       </>
     )
 
   if (!options.money || options.money <= 0)
     return (
       <>
-        {before}Gagne {options.energy.value}{" "}
-        <Tag name="energy" plural={options.energy.plural} />
+        {before}
+        {t(
+          <>
+            Gagne {options.energy.value}{" "}
+            <Tag name="energy" plural={options.energy.plural} />
+          </>,
+          <>
+            Earns {options.energy.value}{" "}
+            <Tag name="energy" plural={options.energy.plural} />
+          </>,
+        )}
       </>
     )
 
   return options.energy.value > 0 ? (
     <>
-      {before}Gagne {options.energy.value}{" "}
-      <Tag name="energy" plural={options.energy.plural} />
-      {options.money > 0 ? (
+      {before}
+      {t(
         <>
-          {" "}
-          et <Money M$={options.money} />
-        </>
-      ) : null}
+          Gagne {options.energy.value}{" "}
+          <Tag name="energy" plural={options.energy.plural} />
+          {options.money > 0 ? (
+            <>
+              {" "}
+              et <Money M$={options.money} />
+            </>
+          ) : null}
+        </>,
+        <>
+          Earns {options.energy.value}{" "}
+          <Tag name="energy" plural={options.energy.plural} />
+          {options.money > 0 ? (
+            <>
+              {" "}
+              and <Money M$={options.money} />
+            </>
+          ) : null}
+        </>,
+      )}
     </>
   ) : null
 }
