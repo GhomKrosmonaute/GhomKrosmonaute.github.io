@@ -13,16 +13,18 @@ import {
   MAX_REPUTATION,
 } from "@/game-constants.ts"
 
+import { Bracket, Family, Muted, Tag } from "@/components/game/Texts.tsx"
 import {
   computeEffectDescription,
   computeEffectOnPlayed,
   createEffect,
+  fakeMegaState,
   resolveCost,
   smartClamp,
-  fakeMegaState,
   tags,
 } from "@/game-safe-utils.tsx"
-import { Bracket, Family, Muted, Tag } from "@/components/game/Texts.tsx"
+
+import { t } from "@/i18n"
 
 const reusable = {
   drawSpecific: (options: {
@@ -63,18 +65,23 @@ const reusable = {
       const money = energy.rest * ENERGY_TO_MONEY
 
       return {
-        hint: (
+        hint: t(
           <>
             La pioche doit contenir au moins une carte {options.label} pour
             déclencher l'effet de pioche.
-          </>
+          </>,
+          <>
+            The draw pile must contain at least one {options.label} card to
+            trigger the draw effect.
+          </>,
         ),
         description: (
           <>
             {drawSpecific.value <= 0 ? (
               <Muted>
                 <Tag name="draw" />{" "}
-                {drawSpecific.value > 0 ? drawSpecific.value : baseEffect} carte
+                {drawSpecific.value > 0 ? drawSpecific.value : baseEffect}{" "}
+                {t("carte", "card")}
                 {drawSpecific.plural && "s"}{" "}
                 {typeof options.label === "function"
                   ? options.label(drawSpecific.plural)
@@ -83,7 +90,8 @@ const reusable = {
             ) : (
               <>
                 <Tag name="draw" />{" "}
-                {drawSpecific.value > 0 ? drawSpecific.value : baseEffect} carte
+                {drawSpecific.value > 0 ? drawSpecific.value : baseEffect}{" "}
+                {t("carte", "card")}
                 {drawSpecific.plural && "s"}{" "}
                 {typeof options.label === "function"
                   ? options.label(drawSpecific.plural)
@@ -157,12 +165,17 @@ const reusable = {
       const money = energy.rest * ENERGY_TO_MONEY
 
       return {
-        hint: (
+        hint: t(
           <>
             La défausse doit contenir au moins une carte {options.label} pour
             déclencher l'effet <Tag name="recycle" />
             {options.hint && " et " + options.hint.toLowerCase()}.
-          </>
+          </>,
+          <>
+            The discard pile must contain at least one card {options.label} to
+            trigger the effect <Tag name="recycle" />
+            {options.hint && " and " + options.hint.toLowerCase()}.
+          </>,
         ),
         description: (
           <>
@@ -170,7 +183,8 @@ const reusable = {
               <>
                 <Tag name="recycle" />{" "}
                 {recycleSpecific.value > 0 ? recycleSpecific.value : baseEffect}{" "}
-                carte{recycleSpecific.plural && "s"}{" "}
+                {t("carte", "card")}
+                {recycleSpecific.plural && "s"}{" "}
                 {typeof options.label === "function"
                   ? options.label(recycleSpecific.plural)
                   : options.label}
@@ -179,7 +193,8 @@ const reusable = {
               <Muted>
                 <Tag name="recycle" />{" "}
                 {recycleSpecific.value > 0 ? recycleSpecific.value : baseEffect}{" "}
-                carte{recycleSpecific.plural && "s"}{" "}
+                {t("carte", "card")}
+                {recycleSpecific.plural && "s"}{" "}
                 {typeof options.label === "function"
                   ? options.label(recycleSpecific.plural)
                   : options.label}
@@ -221,14 +236,17 @@ const supports: SupportCardInfo[] = (
       name: "EJS",
       image: "ejs.png",
       effect: reusable.drawSpecific({
-        label: (
+        label: t(
           <>
             coûtant de{" "}
             <span className="whitespace-nowrap">
               l'
               <Tag name="energy" />
             </span>
-          </>
+          </>,
+          <>
+            Costing <Tag name="energy" />
+          </>,
         ),
         filter: (card) =>
           card.effect.cost.value > 0 && card.effect.cost.type === "energy",
@@ -259,7 +277,7 @@ const supports: SupportCardInfo[] = (
       effect: reusable.drawSpecific({
         label: (
           <>
-            <Family name="React" /> ou <Family name="Site web" />
+            <Family name="React" /> {t("ou", "or")} <Family name="Site web" />
           </>
         ),
         filter: (card) =>
@@ -279,16 +297,25 @@ const supports: SupportCardInfo[] = (
           min: 2,
           max: Math.floor(MAX_HAND_SIZE / 2),
         },
-        description: ({ value, plural }) => (
-          <>
-            <Tag name="discard" /> les cartes <Tag name="action" /> en main{" "}
-            <Bracket>min 1</Bracket> puis <Tag name="draw" />{" "}
-            <span className="whitespace-nowrap">
-              {value} carte
-              {plural && "s"}
-            </span>
-          </>
-        ),
+        description: ({ value, plural }) =>
+          t(
+            <>
+              <Tag name="discard" /> les cartes <Tag name="action" /> en main{" "}
+              <Bracket>min 1</Bracket> puis <Tag name="draw" />{" "}
+              <span className="whitespace-nowrap">
+                {value} carte
+                {plural && "s"}
+              </span>
+            </>,
+            <>
+              <Tag name="discard" /> the <Tag name="action" /> cards in your
+              hand <Bracket>min 1</Bracket> then <Tag name="draw" />{" "}
+              <span className="whitespace-nowrap">
+                {value} card
+                {plural && "s"}
+              </span>
+            </>,
+          ),
         condition: (state) =>
           state.revivedHand.some((card) => card.type === "action"),
         async onPlayed(state, _, reason) {
@@ -312,7 +339,7 @@ const supports: SupportCardInfo[] = (
       effect: reusable.drawSpecific({
         label: (
           <>
-            qui <Tag name="recycle" />
+            {t("qui", "that")} <Tag name="recycle" />
           </>
         ),
         filter: (card) => card.effect.tags.includes("recycle"),
@@ -329,18 +356,27 @@ const supports: SupportCardInfo[] = (
           min: 1,
           max: Math.floor(MAX_HAND_SIZE / 2),
         },
-        hint: (
+        hint: t(
           <>
             La pioche doit contenir au moins une carte <Tag name="action" />
-          </>
-        ),
-        description: ({ value, plural }) => (
+          </>,
           <>
-            <Tag name="draw" /> {value} carte{plural && "s"}{" "}
-            <Tag name="action" /> si tu n'as pas de carte <Tag name="action" />{" "}
-            en main
-          </>
+            The draw pile must contain at least one <Tag name="action" /> card
+          </>,
         ),
+        description: ({ value, plural }) =>
+          t(
+            <>
+              <Tag name="draw" /> {value} carte{plural && "s"}{" "}
+              <Tag name="action" /> si tu n'as pas de carte{" "}
+              <Tag name="action" /> en main
+            </>,
+            <>
+              <Tag name="draw" /> {value} card{plural && "s"}{" "}
+              <Tag name="action" /> if you do not have an <Tag name="action" />{" "}
+              card in your hand
+            </>,
+          ),
         condition: (state) =>
           !state.revivedHand.some((card) => card.type === "action") &&
           state.revivedDraw.some((card) => card.type === "action"),
@@ -376,7 +412,7 @@ const supports: SupportCardInfo[] = (
       name: "Docker",
       image: "docker.webp",
       effect: reusable.drawSpecific({
-        label: (plural) => <>gratuite{plural && "s"}</>,
+        label: (plural) => t(<>gratuite{plural && "s"}</>, "free"),
         filter: (card) => card.effect.cost.value <= 0,
       }),
     },
@@ -408,7 +444,7 @@ const supports: SupportCardInfo[] = (
       effect: reusable.recycleSpecific({
         label: (plural) => (
           <>
-            qui <Tag name="draw" plural={plural} />
+            {t("qui", "that")} <Tag name="draw" plural={plural} />
           </>
         ),
         filter: (card) => card.effect.tags.includes("draw"),
@@ -427,7 +463,11 @@ const supports: SupportCardInfo[] = (
         },
         description: ({ value, plural }) => (
           <>
-            <Tag name="draw" /> {value} carte{plural && "s"} dans la défausse
+            <Tag name="draw" /> {value}{" "}
+            {t(
+              <>carte{plural && "s"} dans la défausse</>,
+              <>card{plural && "s"} in the discard pile</>,
+            )}
           </>
         ),
         condition: (state) => state.discard.length >= 1,
@@ -450,7 +490,11 @@ const supports: SupportCardInfo[] = (
         skipEnergyGain: true,
         description: (
           <>
-            <Tag name="recycle" /> toutes les cartes de la défausse
+            <Tag name="recycle" />{" "}
+            {t(
+              "toutes les cartes de la défausse",
+              "all the cards in the discard pile",
+            )}
           </>
         ),
         condition: (state) => state.discard.length > 0,
@@ -467,7 +511,7 @@ const supports: SupportCardInfo[] = (
         basePrice: 1,
         description: (
           <>
-            <Tag name="draw" /> une carte
+            <Tag name="draw" /> {t("une carte", "a card")}
           </>
         ),
         condition: (state) => state.draw.length >= 1,
@@ -488,13 +532,21 @@ const supports: SupportCardInfo[] = (
           min: Math.floor(MAX_HAND_SIZE / 2),
           max: MAX_HAND_SIZE,
         },
-        hint: "La pioche doit contenir au moins une carte",
-        description: ({ value, plural }) => (
-          <>
-            <Tag name="discard" /> toutes les cartes en main et{" "}
-            <Tag name="draw" /> {value} carte{plural && "s"}
-          </>
+        hint: t(
+          "La pioche doit contenir au moins une carte",
+          "The draw pile must contain at least one card",
         ),
+        description: ({ value, plural }) =>
+          t(
+            <>
+              <Tag name="discard" /> toutes les cartes en main et{" "}
+              <Tag name="draw" /> {value} carte{plural && "s"}
+            </>,
+            <>
+              <Tag name="discard" /> all your cards and <Tag name="draw" />{" "}
+              {value} card{plural && "s"}
+            </>,
+          ),
         condition: (state) => state.draw.length >= 1,
         async onPlayed(state, _, reason) {
           await state.discardCard({ reason })
@@ -519,12 +571,17 @@ const supports: SupportCardInfo[] = (
           min: 5,
           max: MAX_HAND_SIZE,
         },
-        description: ({ value, plural }) => (
-          <>
-            <Tag name="giveBack" /> ta main puis <br />
-            <Tag name="draw" /> {value} carte{plural && "s"}
-          </>
-        ),
+        description: ({ value, plural }) =>
+          t(
+            <>
+              <Tag name="giveBack" /> ta main puis <br />
+              <Tag name="draw" /> {value} carte{plural && "s"}
+            </>,
+            <>
+              <Tag name="giveBack" /> your hand then <br />
+              <Tag name="draw" /> {value} card{plural && "s"}
+            </>,
+          ),
         async onPlayed(state, _, reason) {
           await state.discardCard({ toDraw: true, reason })
 
@@ -544,7 +601,7 @@ const supports: SupportCardInfo[] = (
         basePrice: 1,
         description: (
           <>
-            <Tag name="draw" /> une carte
+            <Tag name="draw" /> {t("une carte", "a card")}
           </>
         ),
         condition: (state) => state.draw.length >= 1,
@@ -563,7 +620,7 @@ const supports: SupportCardInfo[] = (
         basePrice: 2,
         description: (
           <>
-            <Tag name="recycle" /> une carte aléatoire
+            <Tag name="recycle" /> {t("une carte aléatoire", "a random card")}
           </>
         ),
         condition: (state) => state.discard.length >= 1,
@@ -591,12 +648,17 @@ const supports: SupportCardInfo[] = (
           min: 2,
           max: Math.floor(MAX_HAND_SIZE / 2),
         },
-        description: ({ value, plural }) => (
-          <>
-            <Tag name="draw" /> {value} carte{plural && "s"} si tu as moins de 5
-            cartes en main
-          </>
-        ),
+        description: ({ value, plural }) =>
+          t(
+            <>
+              <Tag name="draw" /> {value} carte{plural && "s"} si tu as moins de
+              5 cartes en main
+            </>,
+            <>
+              <Tag name="draw" /> {value} card{plural && "s"} if you have less
+              than 5 cards in your hand
+            </>,
+          ),
         condition: (state) => state.hand.length < 5 && state.draw.length >= 1,
         async onPlayed(state, _, reason) {
           await state.drawCard(this.value, {
@@ -628,7 +690,7 @@ const supports: SupportCardInfo[] = (
       name: "MacOS",
       image: "macos.png",
       effect: reusable.recycleSpecific({
-        label: (plural) => <>gratuite{plural && "s"}</>,
+        label: (plural) => t(<>gratuite{plural && "s"}</>, "free"),
         filter: (card) => card.effect.cost.value <= 0,
       }),
     },
@@ -638,7 +700,7 @@ const supports: SupportCardInfo[] = (
       effect: reusable.recycleSpecific({
         label: (plural) => (
           <>
-            qui <Tag name="recycle" plural={plural} />
+            {t("qui", "that")} <Tag name="recycle" plural={plural} />
           </>
         ),
         filter: (card) => card.effect.tags.includes("recycle"),
@@ -649,16 +711,23 @@ const supports: SupportCardInfo[] = (
       image: "ruby.png",
       effect: createEffect({
         basePrice: 10,
-        hint: (
+        hint: t(
           <>
             La pioche doit contenir au moins une carte <Tag name="upgrade" />
-          </>
+          </>,
+          <>
+            The draw pile must contain at least one <Tag name="upgrade" /> card
+          </>,
         ),
-        description: (
+        description: t(
           <>
             <Tag name="draw" /> une carte <Tag name="upgrade" /> si ta{" "}
             <Tag name="reputation" /> est au max
-          </>
+          </>,
+          <>
+            <Tag name="draw" /> a <Tag name="upgrade" /> card if your{" "}
+            <Tag name="reputation" /> is at max
+          </>,
         ),
         condition: (state) =>
           state.reputation === MAX_REPUTATION &&
@@ -680,19 +749,29 @@ const supports: SupportCardInfo[] = (
       image: "esbuild.png",
       effect: createEffect({
         basePrice: 10,
-        hint: (
+        hint: t(
           <>
             La pioche doit contenir au moins une carte <Tag name="upgrade" />
-          </>
+          </>,
+          <>
+            The draw must contain at least one <Tag name="upgrade" /> card
+          </>,
         ),
-        description: (
+        description: t(
           <>
             Si la <Tag name="reputation" /> est inférieur{" "}
             <span className="whitespace-nowrap">
               à {Math.floor(MAX_REPUTATION / 2)},
             </span>{" "}
             <Tag name="draw" /> une carte <Tag name="upgrade" />
-          </>
+          </>,
+          <>
+            If your <Tag name="reputation" /> is less than{" "}
+            <span className="whitespace-nowrap">
+              {Math.floor(MAX_REPUTATION / 2)},
+            </span>{" "}
+            <Tag name="draw" /> a <Tag name="upgrade" /> card
+          </>,
         ),
         condition: (state) =>
           state.reputation < Math.floor(MAX_REPUTATION / 2) &&
@@ -716,18 +795,26 @@ const supports: SupportCardInfo[] = (
           ACTIONS_COST.discardAll -
           ACTIONS_COST.condition +
           ACTIONS_COST.drawSpecific * 2,
-        hint: (
+        hint: t(
           <>
             Ta main doit contenir au moins une autre carte et la pioche doit
             contenir au moins une carte <Family name="PlayCurious" />
-          </>
+          </>,
+          <>
+            Your hand must contain at least one other card and the draw pile
+            must contain at least one <Family name="PlayCurious" /> card
+          </>,
         ),
-        description: (
+        description: t(
           <>
             <Tag name="discard" /> ta main sauf les cartes{" "}
             <Family name="TypeScript" /> puis
             <Tag name="draw" /> 2 cartes <Family name="PlayCurious" />
-          </>
+          </>,
+          <>
+            <Tag name="discard" /> your hand except <Family name="TypeScript" />
+            then <Tag name="draw" /> 2 <Family name="PlayCurious" /> cards
+          </>,
         ),
         condition: (state, card) =>
           state.revivedDraw.some(

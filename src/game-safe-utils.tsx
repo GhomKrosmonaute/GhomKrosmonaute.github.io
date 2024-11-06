@@ -286,7 +286,7 @@ export const tags = {
   },
   level: {
     name: t("Niveau", "Level"),
-    plural: "x",
+    plural: t("x", "s"),
     description: t(
       "Le niveau d'une carte agis sur sa rareté et sa puissance",
       "A card's level affects its rarity and power",
@@ -295,6 +295,7 @@ export const tags = {
   },
   draw: {
     name: t("Pioche", "Draw"),
+    plural: t("nt", ""),
     description: t(
       "Retire une carte de la pioche et l'ajoute à ta main",
       "Draws a card from the deck and adds it to your hand",
@@ -302,6 +303,7 @@ export const tags = {
   },
   discard: {
     name: t("Défausse", "Discard"),
+    plural: t("nt", ""),
     description: t(
       "Retire une carte de ta main et la place dans la défausse",
       "Removes a card from your hand and places it in the discard pile",
@@ -309,7 +311,7 @@ export const tags = {
   },
   recycle: {
     name: "Recycle",
-    plural: "nt",
+    plural: t("nt", ""),
     description: t(
       "Déplace le sujet de la défausse vers la pioche",
       "Moves the subject from the discard pile to the deck",

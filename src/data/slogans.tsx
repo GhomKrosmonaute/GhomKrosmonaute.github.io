@@ -1,13 +1,4 @@
-import React from "react"
-
-const Bold: React.FC<React.ComponentProps<"span">> = ({
-  children,
-  ...props
-}) => (
-  <span {...props} className="font-changa">
-    {children}
-  </span>
-)
+import { Bold } from "@/components/game/Texts.tsx"
 
 const slogans: React.ReactNode[] = [
   <>
