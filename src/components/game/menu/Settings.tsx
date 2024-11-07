@@ -1,10 +1,6 @@
 import React from "react"
 
 import { FPS } from "@/components/game/FPS.tsx"
-import { Button } from "@/components/ui/button.tsx"
-import { Label } from "@/components/ui/label.tsx"
-import { Checkbox } from "@/components/ui/checkbox.tsx"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,25 +12,29 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog.tsx"
+import { Button } from "@/components/ui/button.tsx"
+import { Checkbox } from "@/components/ui/checkbox.tsx"
+import { Label } from "@/components/ui/label.tsx"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx"
+import { t, translations } from "@/i18n"
 
 import { useCardGame } from "@/hooks/useCardGame.tsx"
 import { useGlobalState } from "@/hooks/useGlobalState.ts"
 import { useSettings } from "@/hooks/useSettings.ts"
 
+import { GAME_ADVANTAGE } from "@/game-constants.ts"
+import { Speed } from "@/game-enums.ts"
+import { qualityPresets, settings } from "@/game-settings.ts"
 import type {
   Difficulty,
   QualityOptions,
   QualityPresetName,
 } from "@/game-typings.ts"
-import { qualityPresets, settings, translations } from "@/game-settings.ts"
-import { GAME_ADVANTAGE } from "@/game-constants.ts"
-import { Speed } from "@/game-enums.ts"
 
-import Warning from "@/assets/icons/warning.svg"
 import Muted from "@/assets/icons/muted.svg"
 import Sound from "@/assets/icons/sound.svg"
+import Warning from "@/assets/icons/warning.svg"
 
-import themes from "@/data/themes.json"
 import { BentoCard } from "@/components/BentoCard.tsx"
 import {
   Select,
@@ -43,6 +43,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select.tsx"
+import themes from "@/data/themes.json"
 import { omit } from "@/game-safe-utils.tsx"
 import { cn } from "@/utils.ts"
 
@@ -63,9 +64,15 @@ export const Settings = (props: { show: boolean }) => {
   const [hasChangedDifficulty, needReload] = React.useMemo(() => {
     return [
       difficulty !== settingsCache.difficulty,
-      settingsCache.quality.animations !== settings.quality.animations,
+      settingsCache.quality.animations !== settings.quality.animations ||
+        settingsCache.language !== settings.language,
     ]
-  }, [difficulty, settingsCache.quality.animations, settingsCache.difficulty])
+  }, [
+    difficulty,
+    settingsCache.difficulty,
+    settingsCache.quality.animations,
+    settingsCache.language,
+  ])
 
   const apply = React.useCallback(() => {
     if (needReload) {
@@ -77,10 +84,17 @@ export const Settings = (props: { show: boolean }) => {
     <div className="space-y-4">
       <div className="relative flex justify-between items-baseline">
         <h2 className="text-3xl absolute top-0 left-0 w-full text-center mt-1">
-          Settings
+          {t("Paramètres", "Settings")}
         </h2>
         {props.show && <FPS className="text-2xl font-mono ml-2" />}
         <div className="flex gap-2">
+          <Button
+            onClick={settingsCache.toggleLanguage}
+            variant="icon"
+            size="icon"
+          >
+            {t("FR", "EN")}
+          </Button>
           <Button onClick={toggleMuted} variant="icon" size="icon">
             {muted ? <Muted /> : <Sound />}
           </Button>
@@ -88,7 +102,7 @@ export const Settings = (props: { show: boolean }) => {
       </div>
       <div className="flex gap-5">
         <BentoCard>
-          <h3>Difficulté</h3>
+          <h3>{t("Difficulté", "Difficulty")}</h3>
           <RadioGroup
             className="space-y-0 gap-0"
             value={settingsCache.difficulty}
@@ -106,7 +120,7 @@ export const Settings = (props: { show: boolean }) => {
         </BentoCard>
 
         <BentoCard className="relative">
-          <h3>Qualité</h3>
+          <h3>{t("Qualité", "Quality")}</h3>
           <Select
             defaultValue={settingsCache.quality.preset}
             onValueChange={(preset: QualityPresetName) => {
@@ -172,7 +186,7 @@ export const Settings = (props: { show: boolean }) => {
         </BentoCard>
 
         <BentoCard>
-          <h3>Thême</h3>
+          <h3>{t("Thême", "Theme")}</h3>
           <RadioGroup
             className="space-y-0 gap-0"
             defaultValue={settings.theme}
@@ -200,7 +214,7 @@ export const Settings = (props: { show: boolean }) => {
         </BentoCard>
 
         <BentoCard>
-          <h3>Vitesse</h3>
+          <h3>{t("Vitesse", "Speed")}</h3>
           <RadioGroup
             className="space-y-0 gap-0"
             value={settingsCache.speed}
@@ -225,7 +239,7 @@ export const Settings = (props: { show: boolean }) => {
               toggleSettings()
             }}
           >
-            Annuler
+            {t("Annuler", "Cancel")}
           </Button>
         )}
         {score > 0 && hasChangedDifficulty ? (
@@ -235,28 +249,38 @@ export const Settings = (props: { show: boolean }) => {
                 variant={hasChangedDifficulty ? "cta" : "default"}
                 disabled={!hasChangedDifficulty}
               >
-                Appliquer
+                {t("Appliquer", "Apply")}
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent className="w-fit">
               <AlertDialogHeader>
                 <AlertDialogTitle className="text-2xl">
-                  Une partie est en cours !
+                  {t("Une partie est en cours !", "A game is in progress!")}
                 </AlertDialogTitle>
                 <AlertDialogDescription className="text-xl leading-5">
-                  Le nouveau mode de difficulté sera <br />
-                  appliqué à la prochaine partie.
+                  {t(
+                    <>
+                      Le nouveau mode de difficulté sera <br />
+                      appliqué à la prochaine partie.
+                    </>,
+                    <>
+                      The new difficulty mode will be <br />
+                      applied to the next game.
+                    </>,
+                  )}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>Annuler</AlertDialogCancel>
-                <AlertDialogAction onClick={apply}>Continuer</AlertDialogAction>
+                <AlertDialogCancel>{t("Annuler", "Cancel")}</AlertDialogCancel>
+                <AlertDialogAction onClick={apply}>
+                  {t("Continuer", "Continue")}
+                </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
         ) : (
           <Button variant={needReload ? "cta" : "default"} onClick={apply}>
-            Appliquer
+            {t("Appliquer", "Apply")}
           </Button>
         )}
 
@@ -264,8 +288,14 @@ export const Settings = (props: { show: boolean }) => {
           <div className="flex-grow border rounded-lg flex items-center gap-3 px-3">
             <Warning className="w-5" />{" "}
             {needReload
-              ? "Un rechargement peut être nécessaire."
-              : "Le mode de difficulté sera appliqué à la prochaine partie."}
+              ? t(
+                  "Un rechargement peut être nécessaire.",
+                  "A browser reload may be required.",
+                )
+              : t(
+                  "Le mode de difficulté sera appliqué à la prochaine partie.",
+                  "The difficulty will be applied to the next game.",
+                )}
           </div>
         )}
       </div>

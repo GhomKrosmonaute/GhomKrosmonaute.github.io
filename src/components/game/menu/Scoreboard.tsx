@@ -1,9 +1,9 @@
 import Trophy from "@/assets/icons/game/trophy.svg"
-import scores from "@/data/scores.json"
-import { cn } from "@/utils.ts"
-import { translations } from "@/game-settings.ts"
-import { rankColor } from "@/game-safe-utils.tsx"
 import { BentoCard } from "@/components/BentoCard.tsx"
+import scores from "@/data/scores.json"
+import { rankColor } from "@/game-safe-utils.tsx"
+import { t, translations } from "@/i18n"
+import { cn } from "@/utils.ts"
 
 export const Scoreboard = () => {
   return (
@@ -47,8 +47,16 @@ export const Scoreboard = () => {
       </BentoCard>
 
       <p className="text-muted-foreground text-lg leading-5 bg-muted py-1 px-2 rounded-md whitespace-nowrap">
-        Si tu as un meilleur score, tu peux me le soumettre <br />
-        en me contactant sur{" "}
+        {t(
+          <>
+            Si tu as un meilleur score, tu peux me le soumettre <br />
+            en me contactant sur
+          </>,
+          <>
+            If you have a better score, you can submit it to me <br />
+            by contacting me on
+          </>,
+        )}{" "}
         <a
           href="https://discord.gg/3vC2XWK"
           target="_blank"
@@ -56,7 +64,7 @@ export const Scoreboard = () => {
         >
           Discord
         </a>{" "}
-        ou{" "}
+        {t("ou", "or")}{" "}
         <a
           href="https://www.linkedin.com/in/camille-abella-a99950176/"
           target="_blank"

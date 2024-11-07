@@ -11,6 +11,7 @@ export const useSettings = create<
     updateDifficulty: (difficulty: Difficulty) => void
     updateTutorial: (tutorial: boolean) => void
     updateSpeed: (speed: Speed) => void
+    toggleLanguage: () => void
   }
 >((set) => ({
   ...settings,
@@ -27,12 +28,12 @@ export const useSettings = create<
     // change the css variable --game-speed from the root element
     updateGameSpeed(speed)
   },
+  toggleLanguage: () =>
+    set((state) => ({
+      language: state.language === "fr" ? "en" : "fr",
+    })),
 }))
 
-useSettings.subscribe((state, prevState) => {
+useSettings.subscribe((state) => {
   localStorage.setItem("settings", JSON.stringify(state))
-
-  if (state.language !== prevState.language) {
-    window.location.replace("/?game")
-  }
 })

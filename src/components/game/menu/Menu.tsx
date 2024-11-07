@@ -1,5 +1,5 @@
-import { cn } from "@/utils.ts"
 import { Card } from "@/components/Card.tsx"
+import { cn } from "@/utils.ts"
 
 import { useGlobalState } from "@/hooks/useGlobalState.ts"
 import { useSettings } from "@/hooks/useSettings.ts"
@@ -13,11 +13,12 @@ import {
 
 import { About } from "@/components/game/menu/About.tsx"
 import { Credits } from "@/components/game/menu/Credits.tsx"
-import { Helpers } from "@/components/game/menu/Helpers.tsx"
-import { Settings } from "@/components/game/menu/Settings.tsx"
 import { GameTools } from "@/components/game/menu/GameTools.tsx"
+import { Helpers } from "@/components/game/menu/Helpers.tsx"
 import { Scoreboard } from "@/components/game/menu/Scoreboard.tsx"
+import { Settings } from "@/components/game/menu/Settings.tsx"
 import { Statistics } from "@/components/game/menu/Statistics.tsx"
+import { t } from "@/i18n"
 
 export const Menu = (props: { show: boolean }) => {
   const toggleSettings = useGlobalState((state) => state.toggleSettings)
@@ -48,13 +49,19 @@ export const Menu = (props: { show: boolean }) => {
       <Card className="z-40 max-w-[1500px]">
         <Tabs defaultValue="settings">
           <TabsList className="w-full -translate-y-2">
-            <TabsTrigger value="settings">Paramètres</TabsTrigger>
-            <TabsTrigger value="stats">Statistiques</TabsTrigger>
-            <TabsTrigger value="scores">Scoreboard</TabsTrigger>
-            <TabsTrigger value="help">Aide</TabsTrigger>
-            <TabsTrigger value="tools">Outils</TabsTrigger>
-            <TabsTrigger value="about">A propos</TabsTrigger>
-            <TabsTrigger value="credits">Crédits</TabsTrigger>
+            <TabsTrigger value="settings">
+              {t("Paramètres", "Settings")}
+            </TabsTrigger>
+            <TabsTrigger value="stats">
+              {t("Statistiques", "Statistics")}
+            </TabsTrigger>
+            <TabsTrigger value="scores">
+              {t("Classement", "Scoreboard")}
+            </TabsTrigger>
+            <TabsTrigger value="help">{t("Aide", "Helpers")}</TabsTrigger>
+            <TabsTrigger value="tools">{t("Outils", "Game Tools")}</TabsTrigger>
+            <TabsTrigger value="about">{t("À propos", "About")}</TabsTrigger>
+            <TabsTrigger value="credits">{t("Crédits", "Credits")}</TabsTrigger>
           </TabsList>
           <div className={cn("space-y-2", props.show ? "block" : "hidden")}>
             <TabsContent value="settings">

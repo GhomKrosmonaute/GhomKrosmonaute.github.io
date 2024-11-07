@@ -1,4 +1,5 @@
 import { BentoCard } from "@/components/BentoCard.tsx"
+import { t } from "@/i18n"
 
 // const credits = {
 //   "</> Développement": [""],
@@ -23,10 +24,10 @@ const me = "Camille ABELLA (Ghom)"
 export const Credits = () => {
   return (
     <div className="space-y-4">
-      <h2 className="text-3xl text-center">Crédits</h2>
+      <h2 className="text-3xl text-center">{t("Crédits", "Credits")}</h2>
       <div className="grid grid-cols-12 gap-5">
         <BentoCard className="col-span-4">
-          <h3>&lt;/&gt; Développement</h3>
+          <h3>&lt;/&gt; {t("Développement", "Development")}</h3>
           <p>{me}</p>
         </BentoCard>
         <BentoCard className="col-span-4">
@@ -34,11 +35,11 @@ export const Credits = () => {
           <p>{me}</p>
         </BentoCard>
         <BentoCard className="col-span-4">
-          <h3>🎵 Musiques</h3>
+          <h3>🎵 {t("Musiques", "Musics")}</h3>
           <p>{me}</p>
         </BentoCard>
         <BentoCard className="col-span-2">
-          <h3>🔊 Sons</h3>
+          <h3>🔊 {t("Sons", "Sound design")}</h3>
           <ul>
             <li>
               <a
@@ -61,7 +62,7 @@ export const Credits = () => {
           </ul>
         </BentoCard>
         <BentoCard className="col-span-5">
-          <h3>🖌️ Graphismes & icônes</h3>
+          <h3>🖌️ {t("Graphismes & icônes", "Graphics & icons")}</h3>
           <p>
             {me}
             <br />

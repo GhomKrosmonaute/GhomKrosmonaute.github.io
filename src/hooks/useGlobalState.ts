@@ -1,5 +1,5 @@
-import { create } from "zustand"
 import { defaultSettings, settings } from "@/game-settings.ts"
+import { create } from "zustand"
 
 type State = {
   tutorial: boolean

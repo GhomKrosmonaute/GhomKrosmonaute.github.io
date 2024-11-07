@@ -1,12 +1,6 @@
 import { GAME_ADVANTAGE } from "@/game-constants.ts"
 import { Speed } from "@/game-enums.ts"
-import type {
-  Difficulty,
-  QualityOptions,
-  QualityPresetName,
-  Settings,
-} from "@/game-typings.ts"
-import { t } from "@/i18n.ts"
+import type { Difficulty, QualityOptions, Settings } from "@/game-typings.ts"
 
 export const difficultyIndex = Object.entries(GAME_ADVANTAGE).reduce(
   (acc, entry, index) => ({ ...acc, [entry[0]]: index + 1 }),
@@ -108,35 +102,4 @@ if (settings.theme !== "default") {
 
 if (settings.speed !== Speed.Auto) {
   updateGameSpeed(settings.speed)
-}
-
-export const translations: Record<
-  | keyof Omit<QualityOptions, "preset">
-  | Difficulty
-  | Speed
-  | (QualityPresetName & string),
-  string
-> = {
-  noob: t("Débutant", "Noob"),
-  easy: t("Facile", "Easy"),
-  normal: "Normal",
-  hard: t("Difficile", "Hard"),
-  veteran: t("Vétéran", "Veteran"),
-  shadows: t("Ombres", "Shadows"),
-  transparency: t("Transparence", "Transparency"),
-  borderLights: t("Lumières de bordure", "Border lights"),
-  godRays: t("Rayons lumineux", "God rays"),
-  blur: t("Flou de transparence", "Transparency blur"),
-  tilt: t("Inclinaisons", "Card tilt"),
-  foil: t("Reflets et textures", "Card foil"),
-  animations: "Animations",
-  perspective: t("Profondeur", "Card perspective"),
-  auto: "Auto",
-  slow: t("Lent", "Slow"),
-  fast: t("Rapide", "Fast"),
-  extreme: t("Extrême", "Extreme"),
-  low: t("Faible", "Low"),
-  medium: t("Moyenne", "Medium"),
-  high: t("Maximale", "High"),
-  custom: t("Personnalisée", "Custom"),
 }

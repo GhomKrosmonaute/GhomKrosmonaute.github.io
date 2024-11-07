@@ -5,7 +5,6 @@ import {
   MAX_REPUTATION,
   MONEY_TO_REACH,
 } from "@/game-constants.ts"
-import { translations } from "@/game-settings.ts"
 import { cn } from "@/utils.ts"
 
 import { useCardGame } from "@/hooks/useCardGame.tsx"
@@ -37,7 +36,7 @@ import {
   tags,
 } from "@/game-safe-utils.tsx"
 import { compactGameCardInfo } from "@/game-typings.ts"
-import { t } from "@/i18n.ts"
+import { t, translations } from "@/i18n.ts"
 
 export const Stat = ({
   name,
@@ -81,7 +80,7 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
           <div className="grid grid-cols-3 w-full gap-x-2 *:grid *:grid-cols-subgrid *:col-span-3 *:*:col-span-2">
             <div id="energy">
               <GameGauge
-                title="Energie"
+                title={t("Énergie", "Energy")}
                 value={game.energy}
                 max={game.energyMax}
                 color="bg-energy"
@@ -103,7 +102,7 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
             </div>
             <div id="day">
               <GameGauge
-                title="Journée"
+                title={t("Journée", "Day")}
                 display={(f) => (Math.floor(f * 24) % 24) + "h"}
                 value={
                   game.dayFull === null ? game.day % 1 : game.dayFull ? 1 : 0
@@ -115,7 +114,7 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
               <div className="last:col-span-1 flex items-center">
                 <Stat
                   Icon={Day}
-                  name="Jour"
+                  name={t("Jour", "Day")}
                   value={Math.floor(game.day)}
                   className="h-5"
                 />
