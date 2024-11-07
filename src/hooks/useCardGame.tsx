@@ -388,6 +388,19 @@ function generateGameState(): Omit<
     return parseSave(save)
   }
 
+  const globalSave = localStorage.getItem("globals")
+
+  if (
+    save &&
+    globalSave &&
+    saveMetadata &&
+    metadata.version.split(".")[1] !==
+      JSON.parse(saveMetadata).version.split(".")[1]
+  ) {
+    // reset the global state
+    localStorage.removeItem("globals")
+  }
+
   localStorage.setItem("metadata", JSON.stringify(metadata))
 
   const startingDeck: string[] = ["Prettier", "Knex", "Jest", "Processing"]
