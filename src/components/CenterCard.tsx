@@ -1,11 +1,11 @@
-import React from "react"
 import Cross from "@/assets/icons/cross.svg"
+import React from "react"
 
-import { cn } from "@/utils.ts"
-import { useMediaQuery } from "usehooks-ts"
 import { Card } from "@/components/Card.tsx"
 import { Button } from "@/components/ui/button.tsx"
 import { useSettings } from "@/hooks/useSettings.ts"
+import { cn } from "@/utils.ts"
+import { useMediaQuery } from "usehooks-ts"
 
 export const CenterCard = (
   props: React.PropsWithChildren<{
@@ -24,8 +24,10 @@ export const CenterCard = (
   }))
 
   React.useEffect(() => {
-    if (modalRef.current) {
-      const focusableElements = modalRef.current.querySelectorAll<HTMLElement>(
+    const currentModalRef = modalRef.current
+
+    if (currentModalRef) {
+      const focusableElements = currentModalRef.querySelectorAll<HTMLElement>(
         'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
       )
 
@@ -50,13 +52,13 @@ export const CenterCard = (
         }
       }
 
-      modalRef.current.addEventListener("keydown", trapFocus)
+      currentModalRef.addEventListener("keydown", trapFocus)
 
       // Focus sur le premier élément focusable à l'ouverture de la modal
       //firstElement?.focus();
 
       return () => {
-        modalRef.current?.removeEventListener("keydown", trapFocus)
+        currentModalRef?.removeEventListener("keydown", trapFocus)
       }
     }
   }, [modalRef])

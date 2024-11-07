@@ -1,7 +1,8 @@
+import { CenterCard } from "@/components/CenterCard.tsx"
+import { Button } from "@/components/ui/button.tsx"
+import { t } from "@/i18n"
 import React from "react"
 import { useNavigate } from "react-router-dom"
-import { Button } from "@/components/ui/button.tsx"
-import { CenterCard } from "@/components/CenterCard.tsx"
 
 export const Modal = (
   props: React.PropsWithChildren<{
@@ -31,7 +32,7 @@ export const Modal = (
         }}
       >
         {/*<img src={cross} alt="back" />*/}
-        Retour
+        {t("Retour", "Back")}
       </Button>
     </>
   )
