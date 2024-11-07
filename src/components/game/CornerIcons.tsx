@@ -1,8 +1,8 @@
 import { useGlobalState } from "@/hooks/useGlobalState.ts"
 import { useSettings } from "@/hooks/useSettings.ts"
 
-import Settings from "@/assets/icons/settings.svg"
 import Question from "@/assets/icons/question.svg"
+import Settings from "@/assets/icons/settings.svg"
 import Github from "@/assets/icons/social/github.svg"
 
 import socials from "@/data/socials.json"
@@ -12,6 +12,7 @@ import { cn } from "@/utils.ts"
 import { Button, buttonVariants } from "@/components/ui/button.tsx"
 import { BuyMeACoffee } from "@/components/ui/buy-me-a-coffe.tsx"
 import { useTutorial } from "@/hooks/useTutorial.ts"
+import { t } from "@/i18n"
 
 const github = socials.find((s) => s.name === "Github")!
 
@@ -57,7 +58,7 @@ export const CornerIcons = (props: { show: boolean }) => {
         variant="icon"
         size="icon"
         className="pointer-events-auto"
-        title="Lancer le tutoriel"
+        title={t("Lancer le tutoriel", "Launch the tutorial")}
       >
         <Question />
       </Button>
@@ -66,7 +67,7 @@ export const CornerIcons = (props: { show: boolean }) => {
         variant="icon"
         size="icon"
         className="pointer-events-auto"
-        title="Ouvrir les paramètres"
+        title={t("Ouvrir les paramètres", "Open the settings")}
       >
         <Settings />
       </Button>

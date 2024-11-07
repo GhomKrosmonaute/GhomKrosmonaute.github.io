@@ -1,5 +1,6 @@
-import { cn } from "@/utils.ts"
 import { GameCardStack } from "@/components/game/GameCardStack.tsx"
+import { t } from "@/i18n"
+import { cn } from "@/utils.ts"
 
 export const GameCardStacks = (props: { show: boolean }) => {
   return (
@@ -11,8 +12,15 @@ export const GameCardStacks = (props: { show: boolean }) => {
         props?.show && "opacity-100 pointer-events-auto",
       )}
     >
-      <GameCardStack name="Pioche" revivedKey="revivedDraw" zIndex={2} />
-      <GameCardStack name="Défausse" revivedKey="revivedDiscard" />
+      <GameCardStack
+        name={t("Pioche", "Draw pile")}
+        revivedKey="revivedDraw"
+        zIndex={2}
+      />
+      <GameCardStack
+        name={t("Défausse", "Discard pile")}
+        revivedKey="revivedDiscard"
+      />
     </div>
   )
 }

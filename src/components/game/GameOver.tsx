@@ -1,22 +1,23 @@
 import React from "react"
 
 import { useCardGame } from "@/hooks/useCardGame.tsx"
-import { useSettings } from "@/hooks/useSettings.ts"
 import { useGlobalState } from "@/hooks/useGlobalState.ts"
+import { useSettings } from "@/hooks/useSettings.ts"
 
-import { settings } from "@/game-settings.ts"
 import { rankColor } from "@/game-safe-utils.tsx"
+import { settings } from "@/game-settings.ts"
 
-import scores from "@/data/scores.json"
 import helpers, { gameOverHelpers } from "@/data/helpers.tsx"
+import scores from "@/data/scores.json"
 
-import { Button } from "@/components/ui/button.tsx"
-import { BuyMeACoffee } from "@/components/ui/buy-me-a-coffe.tsx"
 import { Stats } from "@/components/game/GameStats.tsx"
 import { Tilt } from "@/components/game/Tilt.tsx"
+import { Button } from "@/components/ui/button.tsx"
+import { BuyMeACoffee } from "@/components/ui/buy-me-a-coffe.tsx"
 import { cn } from "@/utils.ts"
 
 import { confettiFireworks } from "@/components/ui/confetti"
+import { t } from "@/i18n"
 import { bank } from "@/sound.ts"
 
 export const GameOver = (props: { show: boolean }) => {
@@ -71,10 +72,14 @@ export const GameOver = (props: { show: boolean }) => {
 
               <div className="*:text-7xl *:whitespace-nowrap *:font-amsterdam text-center">
                 {game.isWon && (
-                  <div className="text-green-500">Tu as gagné !</div>
+                  <div className="text-green-500">
+                    {t("Tu as gagné !", "You won!")}
+                  </div>
                 )}
                 {!game.isWon && (
-                  <div className="text-red-500">Tu as perdu !</div>
+                  <div className="text-red-500">
+                    {t("Tu as perdu !", "You lost!")}
+                  </div>
                 )}
               </div>
             </Tilt>
@@ -83,10 +88,22 @@ export const GameOver = (props: { show: boolean }) => {
               <p className="text-4xl">
                 {
                   {
-                    reputation: "Tu as utilisé toute ta jauge de réputation...",
-                    mill: "Tu n'as plus de carte...",
-                    "soft-lock": "Ta main est injouable...",
-                    "mill-lock": "Tu n'as plus de carte à piocher...",
+                    reputation: t(
+                      "Tu as utilisé toute ta jauge de réputation...",
+                      "You used all your reputation...",
+                    ),
+                    mill: t(
+                      "Tu n'as plus de carte...",
+                      "You don't have any more cards...",
+                    ),
+                    "soft-lock": t(
+                      "Ta main est injouable...",
+                      "Your hand is unplayable...",
+                    ),
+                    "mill-lock": t(
+                      "Tu n'as plus de carte à piocher...",
+                      "You don't have any more cards to draw...",
+                    ),
                   }[game.reason]
                 }
               </p>
@@ -124,29 +141,46 @@ export const GameOver = (props: { show: boolean }) => {
                           target="_blank"
                           className="text-primary font-changa hover:underline"
                         >
-                          Contacte-moi
+                          {t("Contacte-moi", "Contact me")}
                         </a>
                         <br />
-                        pour soumettre ton score !
+                        {t(
+                          "pour soumettre ton score !",
+                          "for submitting your score!",
+                        )}
                       </p>
                     </>
                   ) : (
                     <div className="text-2xl whitespace-nowrap">
-                      Tu n'es pas classé, <br /> ton score est trop faible.{" "}
-                      <br /> Essaye{" "}
+                      {t(
+                        <>
+                          Tu n'es pas classé, <br /> ton score est trop faible.
+                        </>,
+                        <>
+                          You are not ranked, <br /> your score is too low.
+                        </>,
+                      )}{" "}
+                      <br /> {t("Essaye", "Try")}{" "}
                       {settings.difficulty === "noob" ||
                       settings.difficulty === "easy" ? (
                         <>
-                          une difficulté plus élevée ! <br />
+                          {t(
+                            "une difficulté plus élevée !",
+                            "a higher difficulty!",
+                          )}
+                          <br />
                           <span
                             className="text-primary font-changa cursor-pointer hover:underline"
                             onClick={toggleSettings}
                           >
-                            Paramètres de difficulté
+                            {t(
+                              "Paramètres de difficulté",
+                              "Difficulty settings",
+                            )}
                           </span>
                         </>
                       ) : (
-                        "de nouveau !"
+                        t("de nouveau !", "again!")
                       )}
                     </div>
                   )}
@@ -184,19 +218,21 @@ export const GameOver = (props: { show: boolean }) => {
 
             <div className="flex gap-4">
               <Button onClick={() => setVisible(false)} variant={"default"}>
-                Quitter
+                {t("Quitter", "Quit")}
               </Button>
               <Button
                 onClick={() => game.reset()}
                 variant={game.isWon ? "default" : "cta"}
                 size={game.isWon ? "default" : "cta"}
               >
-                {!game.isWon ? "Recommencer" : "Nouvelle partie"}
+                {!game.isWon
+                  ? t("Recommencer", "Restart")
+                  : t("Nouvelle partie", "New game")}
               </Button>
               {game.isWon && (
                 <Button
                   onClick={() => game.continue()}
-                  popover={
+                  popover={t(
                     <div>
                       <h3>Mode Infini</h3>
                       <p>
@@ -204,12 +240,20 @@ export const GameOver = (props: { show: boolean }) => {
                         possible ! Mais le jeu continueras indéfiniment et ton
                         score ne sera pas recevable
                       </p>
-                    </div>
-                  }
+                    </div>,
+                    <div>
+                      <h3>Infinite mode</h3>
+                      <p>
+                        If you want to continue to have fun on this game, it is
+                        possible! But the game will continue indefinitely and
+                        your score will not be received
+                      </p>
+                    </div>,
+                  )}
                   variant="cta"
                   size="cta"
                 >
-                  Mode infini
+                  {t("Mode infini", "Infinite mode")}
                 </Button>
               )}
             </div>

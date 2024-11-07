@@ -10,9 +10,10 @@ import { useCardGame } from "@/hooks/useCardGame.tsx"
 import { useSettings } from "@/hooks/useSettings.ts"
 import { cn } from "@/utils.ts"
 
+import { Money, Tag } from "@/components/game/Texts.tsx"
 import { Tilt, TiltFoil } from "@/components/game/Tilt.tsx"
 import { BorderLight } from "@/components/ui/border-light.tsx"
-import { Money, Tag } from "@/components/game/Texts.tsx"
+import { t } from "@/i18n"
 
 export const GameResourceCard = (
   props: React.PropsWithoutRef<{
@@ -139,7 +140,7 @@ export const GameResourceCard = (
                 "text-muted-foreground": !quality.transparency,
               })}
             >
-              Instantané
+              {t("Instantané", "Instantaneous")}
             </div>
           </div>
 

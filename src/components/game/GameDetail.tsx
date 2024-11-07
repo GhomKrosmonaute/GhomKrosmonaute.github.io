@@ -5,18 +5,14 @@ import { ArrowRight, Link } from "lucide-react"
 import QuoteLeft from "@/assets/icons/quote-left.svg"
 import QuoteRight from "@/assets/icons/quote-right.svg"
 
+import { GAME_CARD_SIZE, RARITIES } from "@/game-constants.ts"
 import {
-  tags,
-  getRarityName,
-  resolveSubTypes,
   calculateRarityAdvantage,
+  getRarityName,
   isActionCardInfo,
+  resolveSubTypes,
+  tags,
 } from "@/game-safe-utils.tsx"
-import {
-  getGlobalCardModifierLogs,
-  reviveCard,
-  reviveUpgrade,
-} from "@/game-utils.ts"
 import {
   ActionCardInfo,
   compactGameCardInfo,
@@ -24,23 +20,28 @@ import {
   isGameCardCompact,
   Upgrade,
 } from "@/game-typings.ts"
-import { GAME_CARD_SIZE, RARITIES } from "@/game-constants.ts"
+import {
+  getGlobalCardModifierLogs,
+  reviveCard,
+  reviveUpgrade,
+} from "@/game-utils.ts"
 import { cn } from "@/utils.ts"
 
 import { GameState, useCardGame } from "@/hooks/useCardGame.tsx"
 import { useSettings } from "@/hooks/useSettings.ts"
 
+import { BentoCard } from "@/components/BentoCard.tsx"
 import { Card } from "@/components/Card.tsx"
-import { Button } from "@/components/ui/button.tsx"
+import { EventIcon } from "@/components/game/EventText.tsx"
 import { GameCard } from "@/components/game/GameCard.tsx"
+import { GameCardSubType } from "@/components/game/GameCardSubType.tsx"
 import { GameCost } from "@/components/game/GameCost.tsx"
 import { GameMiniature } from "@/components/game/GameMiniature.tsx"
-import { Family, Tag, RarityBadge } from "@/components/game/Texts.tsx"
-import { GameCardSubType } from "@/components/game/GameCardSubType.tsx"
-import { BentoCard } from "@/components/BentoCard.tsx"
-import events from "@/data/events.tsx"
-import { EventIcon } from "@/components/game/EventText.tsx"
+import { Family, RarityBadge, Tag } from "@/components/game/Texts.tsx"
 import ScrollItem from "@/components/ScrollItem.tsx"
+import { Button } from "@/components/ui/button.tsx"
+import events from "@/data/events.tsx"
+import { t } from "@/i18n"
 
 export const GameDetail = (props: { show: boolean }) => {
   const settings = useSettings()
@@ -94,14 +95,14 @@ export const GameStackDetail = (props: {
   const cards = useCardGame((state) => state[props.stack])
 
   const name = {
-    revivedDraw: "Pioche",
-    revivedDiscard: "Défausse",
-    revivedHand: "Main",
+    revivedDraw: t("Pioche", "Draw pile"),
+    revivedDiscard: t("Défausse", "Discard pile"),
+    revivedHand: t("Main", "Hand"),
   }[props.stack]
 
   return (
     <>
-      <h1 className="text-3xl">Pile de {name}</h1>
+      <h1 className="text-3xl">{name}</h1>
       <div className="flex ">
         <BentoCard>
           <div
@@ -129,8 +130,8 @@ export const GameCardDetail = (props: { card: GameCardInfo<true> }) => {
   const colRef = React.useRef<HTMLDivElement>(null)
 
   const [sortBy, setSortBy] = React.useState<
-    "tri par ordre d'exécution" | "tri par raison" | "tri par type"
-  >("tri par ordre d'exécution")
+    "sort by execution order" | "sort by reason" | "sort by type"
+  >("sort by execution order")
 
   const modifiers = getGlobalCardModifierLogs(
     getState(),
@@ -145,7 +146,9 @@ export const GameCardDetail = (props: { card: GameCardInfo<true> }) => {
 
   return (
     <>
-      <h1 className="text-3xl">A propos de "{props.card.name}"</h1>
+      <h1 className="text-3xl">
+        {t("A propos de", "About")} "{props.card.name}"
+      </h1>
       {!props.card.effect.tags.includes("token") && (
         <div className="flex">
           {Object.entries(RARITIES)
@@ -184,28 +187,30 @@ export const GameCardDetail = (props: { card: GameCardInfo<true> }) => {
             <Button
               className="absolute top-0 right-0"
               onClick={() => {
-                if (sortBy === "tri par ordre d'exécution") {
-                  setSortBy("tri par raison")
-                } else if (sortBy === "tri par raison") {
-                  setSortBy("tri par type")
+                if (sortBy === "sort by execution order") {
+                  setSortBy("sort by reason")
+                } else if (sortBy === "sort by reason") {
+                  setSortBy("sort by type")
                 } else {
-                  setSortBy("tri par ordre d'exécution")
+                  setSortBy("sort by execution order")
                 }
               }}
             >
               {sortBy}
             </Button>
-            <h2 className="text-2xl">Modificateurs actifs</h2>
+            <h2 className="text-2xl">
+              {t("Modificateurs actifs", "Active modifiers")}
+            </h2>
             <div className="max-h-[300px] overflow-y-scroll flex-grow">
               <table>
                 <tbody>
                   {modifiers
                     .sort((a, b) => {
-                      if (sortBy === "tri par type") {
+                      if (sortBy === "sort by type") {
                         return a.type.localeCompare(b.type)
                       }
 
-                      if (sortBy === "tri par raison") {
+                      if (sortBy === "sort by reason") {
                         return (
                           typeof a.reason === "object"
                             ? a.reason.name
@@ -264,7 +269,9 @@ export const GameCardDetail = (props: { card: GameCardInfo<true> }) => {
 
         {(props.card.effect.tags.includes("token") || modifiers.length > 0) && (
           <BentoCard className="shrink-0">
-            <h2 className="text-center text-2xl">Ta carte</h2>
+            <h2 className="text-center text-2xl">
+              {t("Ta carte", "Your card")}
+            </h2>
             <GameCard card={props.card} withoutDetail />
           </BentoCard>
         )}
@@ -291,7 +298,7 @@ export const GameCardDetail = (props: { card: GameCardInfo<true> }) => {
 
           {props.card.effect.hint && (
             <BentoCard>
-              <h2 className="text-2xl">A savoir</h2>
+              <h2 className="text-2xl">{t("A savoir", "To know")}</h2>
               <p className="text-2xl">{props.card.effect.hint}</p>
             </BentoCard>
           )}
@@ -310,10 +317,12 @@ export const GameUpgradeDetail = (props: { upgrade: Upgrade }) => {
 
   return (
     <>
-      <h1 className="text-3xl">A propos de "{props.upgrade.name}"</h1>
+      <h1 className="text-3xl">
+        {t("A propos de", "About")} "{props.upgrade.name}"
+      </h1>
       <div className="flex gap-5">
         <BentoCard>
-          <h2 className="text-2xl">Carte associée</h2>
+          <h2 className="text-2xl">{t("Carte associée", "Associated card")}</h2>
           <GameCard
             card={reviveCard(props.upgrade.name, getState())}
             withoutDetail
@@ -323,7 +332,7 @@ export const GameUpgradeDetail = (props: { upgrade: Upgrade }) => {
           <BentoCard>
             <div className="flex justify-between gap-5">
               <div>
-                <h2 className="text-2xl">Déclencheur</h2>
+                <h2 className="text-2xl">{t("Déclencheur", "Trigger")}</h2>
                 <p className="text-2xl">
                   {events[props.upgrade.eventName].name}
                 </p>
@@ -338,7 +347,10 @@ export const GameUpgradeDetail = (props: { upgrade: Upgrade }) => {
             </div>
           </BentoCard>
           <BentoCard>
-            <h2 className="text-2xl">Effet{props.upgrade.max > 1 && "s"}</h2>
+            <h2 className="text-2xl">
+              {t("Effet", "Effect")}
+              {props.upgrade.max > 1 && "s"}
+            </h2>
             <div className="max-h-[200px] overflow-y-scroll">
               <table>
                 <tbody>
@@ -397,7 +409,7 @@ export const ActionCardDetail = (props: { card: ActionCardInfo<true> }) => {
     <>
       {props.card.families.length > 0 && (
         <BentoCard>
-          <h2 className="text-2xl">Familles</h2>
+          <h2 className="text-2xl">{t("Familles", "Families")}</h2>
           <div className="flex flex-wrap gap-2">
             {props.card.families.map((family) => (
               <Family name={family} key={family} />
@@ -417,7 +429,7 @@ export const ActionCardDetail = (props: { card: ActionCardInfo<true> }) => {
             target="_blank"
           >
             <h2 className="inline text-2xl whitespace-nowrap">
-              Projet "{props.card.name}"
+              {t("Projet", "")} "{props.card.name}" {t("", "Projet")}
             </h2>
             {props.card.url && <Link className="inline self-center" />}
             {props.card.description && (

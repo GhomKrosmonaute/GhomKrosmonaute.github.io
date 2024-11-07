@@ -1,35 +1,37 @@
-import React from "react"
 import { cn } from "@/utils.ts"
+import React from "react"
 import { Area, AreaChart, CartesianGrid, XAxis } from "recharts"
 
+import { Bold, Tag } from "@/components/game/Texts.tsx"
 import {
   ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
+import { tags } from "@/game-safe-utils"
 import { useCardGame } from "@/hooks/useCardGame.tsx"
-import { Bold, Tag } from "@/components/game/Texts.tsx"
+import { t } from "@/i18n"
 
 const chartConfig = {
   day: {
-    label: "Jour",
+    label: tags.day.name,
     color: "hsl(var(--day))",
   },
   energy: {
-    label: "Énergie",
+    label: tags.energy.name,
     color: "hsl(var(--energy))",
   },
   reputation: {
-    label: "Réputation",
+    label: tags.reputation.name,
     color: "hsl(var(--reputation))",
   },
   money: {
-    label: "Argent",
+    label: tags.money.name,
     color: "hsl(var(--money))",
   },
   inflation: {
-    label: "Inflation",
+    label: tags.inflation.name,
     color: "hsl(var(--inflation))",
   },
   score: {
@@ -48,7 +50,7 @@ export const GameMetricsChart = ({
     <div {...props} className={cn("grid grid-cols-2 gap-5", className)}>
       <div>
         <h4 className="text-center">
-          <Tag name="energy" /> et <Tag name="reputation" />
+          <Tag name="energy" /> {t("et", "and")} <Tag name="reputation" />
         </h4>
         <ChartContainer config={chartConfig}>
           <AreaChart
@@ -116,7 +118,8 @@ export const GameMetricsChart = ({
       </div>
       <div>
         <h4 className="text-center">
-          <Tag name="inflation" />, <Tag name="money" /> et <Bold>Score</Bold>
+          <Tag name="inflation" />, <Tag name="money" /> {t("et", "and")}{" "}
+          <Bold>Score</Bold>
         </h4>
         <ChartContainer config={chartConfig}>
           <AreaChart

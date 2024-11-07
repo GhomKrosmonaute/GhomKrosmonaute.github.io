@@ -1,42 +1,43 @@
 import React from "react"
 
-import { cn } from "@/utils.ts"
-import { translations } from "@/game-settings.ts"
 import {
   ADVANTAGE_THRESHOLD,
   MAX_REPUTATION,
   MONEY_TO_REACH,
 } from "@/game-constants.ts"
+import { translations } from "@/game-settings.ts"
+import { cn } from "@/utils.ts"
 
 import { useCardGame } from "@/hooks/useCardGame.tsx"
 import { useSettings } from "@/hooks/useSettings.ts"
 
-import Day from "@/assets/icons/game/day.svg"
-import Infinity from "@/assets/icons/game/infinity.svg"
-import Money from "@/assets/icons/game/money.svg"
-import Score from "@/assets/icons/game/score.svg"
-import Settings from "@/assets/icons/settings.svg"
-import Sprint from "@/assets/icons/game/sprint.svg"
-import Energy from "@/assets/icons/game/energy.svg"
-import Reputation from "@/assets/icons/game/reputation.svg"
-import Inflation from "@/assets/icons/game/inflation.svg"
 import Cross from "@/assets/icons/cross.svg"
+import Day from "@/assets/icons/game/day.svg"
+import Energy from "@/assets/icons/game/energy.svg"
+import Infinity from "@/assets/icons/game/infinity.svg"
+import Inflation from "@/assets/icons/game/inflation.svg"
+import Money from "@/assets/icons/game/money.svg"
+import Reputation from "@/assets/icons/game/reputation.svg"
+import Score from "@/assets/icons/game/score.svg"
+import Sprint from "@/assets/icons/game/sprint.svg"
+import Settings from "@/assets/icons/settings.svg"
 
-import { Separator } from "@/components/ui/separator.tsx"
 import { GameGauge } from "@/components/game/GameGauge.tsx"
 import { MiniatureImage } from "@/components/game/GameMiniature.tsx"
+import { Separator } from "@/components/ui/separator.tsx"
 
+import { CollectionCounter } from "@/components/game/CollectionCounter.tsx"
+import { MinimalistGameCardDetail } from "@/components/game/GameDetail.tsx"
+import { HelpPopoverTrigger } from "@/components/game/HelpPopoverTrigger.tsx"
 import { Money as Dollars, Tag } from "@/components/game/Texts.tsx"
 import { Input } from "@/components/ui/input.tsx"
-import { CollectionCounter } from "@/components/game/CollectionCounter.tsx"
 import {
   extractTextFromReactNode,
   getRevivedDeck,
   tags,
 } from "@/game-safe-utils.tsx"
-import { HelpPopoverTrigger } from "@/components/game/HelpPopoverTrigger.tsx"
-import { MinimalistGameCardDetail } from "@/components/game/GameDetail.tsx"
 import { compactGameCardInfo } from "@/game-typings.ts"
+import { t } from "@/i18n.ts"
 
 export const Stat = ({
   name,
@@ -236,7 +237,7 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
               <Dollars M$={game.money} />{" "}
               {props.forHUD && (
                 <>
-                  sur <Dollars M$={MONEY_TO_REACH} />
+                  {t("sur", "out of")} <Dollars M$={MONEY_TO_REACH} />
                 </>
               )}
             </span>

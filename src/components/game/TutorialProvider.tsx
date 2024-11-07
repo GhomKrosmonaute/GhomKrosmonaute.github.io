@@ -1,11 +1,12 @@
+import Forward from "@/assets/icons/forward.svg"
+import { Button } from "@/components/ui/button.tsx"
+import { Progress } from "@/components/ui/progress.tsx"
+import { useGlobalState } from "@/hooks/useGlobalState.ts"
+import { useSettings } from "@/hooks/useSettings.ts"
+import { t } from "@/i18n"
+import { bank } from "@/sound.ts"
 import React from "react"
 import { TutorialOpaque } from "./TutorialOpaque"
-import { Progress } from "@/components/ui/progress.tsx"
-import { Button } from "@/components/ui/button.tsx"
-import Forward from "@/assets/icons/forward.svg"
-import { bank } from "@/sound.ts"
-import { useSettings } from "@/hooks/useSettings.ts"
-import { useGlobalState } from "@/hooks/useGlobalState.ts"
 
 export interface TutorialStep {
   id: string
@@ -241,7 +242,8 @@ export const TutorialProvider = ({ steps, children, opaqueStyle }: Props) => {
               </div>
             )}
             <Button variant="cta" size="cta" className="my-2" onClick={finish}>
-              Passer le didacticiel <Forward className="ml-2 h-5" />
+              {t("Passer le didacticiel", "Skip the tutorial")}{" "}
+              <Forward className="ml-2 h-5" />
             </Button>
             <Progress value={(((index ?? 0) + 1) / steps.length) * 100} />
           </div>

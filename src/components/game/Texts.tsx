@@ -1,7 +1,8 @@
-import { getRarityName, tags } from "@/game-safe-utils.tsx"
+import { getRarityName, tags, translatedFamilies } from "@/game-safe-utils.tsx"
 import type { ActionCardFamily } from "@/game-typings.ts"
 import { useHelpPopover } from "@/hooks/useHelpPopover.tsx"
 import { useLazyImport } from "@/hooks/useLazyImport.ts"
+import { t } from "@/i18n"
 import { cn } from "@/utils.ts"
 import React from "react"
 
@@ -43,11 +44,8 @@ export const Money = ({
   useHelpPopover(
     ref,
     <>
-      <h3>Argent</h3>
-      <p>
-        L'argent est la monnaie du jeu. <br />
-        Il est utilisé pour jouer certaines cartes.
-      </p>
+      <h3>{tags.money.name}</h3>
+      <p>{tags.money.description}</p>
     </>,
   )
 
@@ -95,7 +93,7 @@ export const Tag = ({
     ref,
     <>
       <h3>{tag.name}</h3>
-      {tag.description}
+      <p>{tag.description}</p>
     </>,
   )
 
@@ -129,7 +127,9 @@ export const Family = ({
   useHelpPopover(
     ref,
     <>
-      <h3 className="mb-2">Famille {name}</h3>
+      <h3 className="mb-2">
+        {t("Famille", "")} {translatedFamilies[name]} {t("", "Family")}
+      </h3>
       <BadgeList>
         {cards
           ?.filter(
@@ -157,7 +157,7 @@ export const Family = ({
         ...props.style,
       }}
     >
-      # {name}
+      # {translatedFamilies[name]}
     </span>
   )
 }

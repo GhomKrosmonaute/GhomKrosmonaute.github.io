@@ -2,19 +2,19 @@ import React from "react"
 
 import { INFINITE_DRAW_COST, MAX_HAND_SIZE } from "@/game-constants.ts"
 
-import { cn } from "@/utils.ts"
-import { bank } from "@/sound.ts"
 import {
   isGameOver,
   resolveChoiceOptions,
   reviveCard,
   toSortedCards,
 } from "@/game-utils"
+import { bank } from "@/sound.ts"
+import { cn } from "@/utils.ts"
 
-import { Button } from "@/components/ui/button.tsx"
 import { GameCard } from "@/components/game/GameCard.tsx"
-import { GameValueIcon } from "@/components/game/GameValueIcon.tsx"
 import { GameResourceCard } from "@/components/game/GameResourceCard.tsx"
+import { GameValueIcon } from "@/components/game/GameValueIcon.tsx"
+import { Button } from "@/components/ui/button.tsx"
 
 import { useCardGame } from "@/hooks/useCardGame.tsx"
 import { useSettings } from "@/hooks/useSettings.ts"
@@ -30,6 +30,7 @@ import {
   isChoiceOptionsResolved,
   isGameResource,
 } from "@/game-typings.ts"
+import { t } from "@/i18n"
 
 export const GameActions = (props: { show: boolean }) => {
   const game = useCardGame()
@@ -51,6 +52,7 @@ export const GameActions = (props: { show: boolean }) => {
       // @ts-expect-error le slice extrait les paramètres de la fonction
       choiceOptionsHeaders[choice.header[0]](...choice.header.slice(1)),
     ]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [game.choiceOptions[0]])
 
   const runningOps =
@@ -76,6 +78,7 @@ export const GameActions = (props: { show: boolean }) => {
     ) {
       game.setOperationInProgress("choices", true)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [game.choiceOptions.length, game.operationInProgress])
 
   return (
@@ -100,7 +103,10 @@ export const GameActions = (props: { show: boolean }) => {
         >
           {game.playZone.length > 0
             ? game.operationInProgress.includes("selectCard")
-              ? "Clique sur une carte de la main"
+              ? t(
+                  "Clique sur une carte de la main",
+                  "Click on a card from your hand",
+                )
               : game.playZone[game.playZone.length - 1].name // Affiche le titre de la dernière carte ajoutée à la playZone
             : game.choiceOptions.length > 0
               ? resolvedHeader
@@ -147,7 +153,7 @@ export const GameActions = (props: { show: boolean }) => {
               className="w-8 h-8"
               colors={energyCostColor(game, INFINITE_DRAW_COST)}
             />{" "}
-            Piocher une carte
+            {t("Piocher une carte", "Draw a card")}
           </Button>
         ) : (
           <>
@@ -164,7 +170,7 @@ export const GameActions = (props: { show: boolean }) => {
                 miniature
                 colors="bg-energy"
               />
-              Passer
+              {t("Passer", "Skip")}
             </Button>
             {(() => {
               if (resolvedOptions.length === 0) {

@@ -1,7 +1,7 @@
-import React from "react"
-import ReactHowler from "react-howler"
 import { useCardGame } from "@/hooks/useCardGame.tsx"
 import { useGlobalState } from "@/hooks/useGlobalState.ts"
+import React from "react"
+import ReactHowler from "react-howler"
 
 const MAX_VOLUME = 0.4
 
@@ -39,6 +39,7 @@ export const GameMusic = () => {
       }, 100)
     }
     return () => clearInterval(interval)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isCardGameVisible, isGameOver])
 
   return (
