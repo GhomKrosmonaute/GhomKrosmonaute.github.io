@@ -83,7 +83,7 @@ const steps: TutorialStep[] = [
           <div className="flex gap-2">
             <Button onClick={back}>{t("Retour", "Back")}</Button>
             <Button variant="cta" size="cta" onClick={next}>
-              t("Suivant", "Next")
+              {t("Suivant", "Next")}
             </Button>
           </div>
         </Tutorial>
@@ -121,7 +121,7 @@ const steps: TutorialStep[] = [
           <div className="flex gap-2">
             <Button onClick={back}>{t("Retour", "Back")}</Button>
             <Button variant="cta" size="cta" onClick={next}>
-              t("Suivant", "Next")
+              {t("Suivant", "Next")}
             </Button>
           </div>
         </Tutorial>
@@ -159,7 +159,7 @@ const steps: TutorialStep[] = [
           <div className="flex gap-2">
             <Button onClick={back}>{t("Retour", "Back")}</Button>
             <Button variant="cta" size="cta" onClick={next}>
-              t("Suivant", "Next")
+              {t("Suivant", "Next")}
             </Button>
           </div>
         </Tutorial>
@@ -198,7 +198,7 @@ const steps: TutorialStep[] = [
         <div className="flex gap-2">
           <Button onClick={back}>{t("Retour", "Back")}</Button>
           <Button variant="cta" size="cta" onClick={next}>
-            t("Suivant", "Next")
+            {t("Suivant", "Next")}
           </Button>
         </div>
       </Tutorial>
@@ -239,7 +239,7 @@ const steps: TutorialStep[] = [
         <div className="flex gap-2">
           <Button onClick={back}>{t("Retour", "Back")}</Button>
           <Button variant="cta" size="cta" onClick={next}>
-            t("Suivant", "Next")
+            {t("Suivant", "Next")}
           </Button>
         </div>
       </Tutorial>
@@ -266,7 +266,7 @@ const steps: TutorialStep[] = [
         <div className="flex gap-2">
           <Button onClick={back}>{t("Retour", "Back")}</Button>
           <Button variant="cta" size="cta" onClick={next}>
-            t("Suivant", "Next")
+            {t("Suivant", "Next")}
           </Button>
         </div>
       </Tutorial>
@@ -316,7 +316,7 @@ const steps: TutorialStep[] = [
         <div className="flex gap-2">
           <Button onClick={back}>{t("Retour", "Back")}</Button>
           <Button variant="cta" size="cta" onClick={next}>
-            t("Suivant", "Next")
+            {t("Suivant", "Next")}
           </Button>
         </div>
       </Tutorial>
@@ -346,7 +346,7 @@ const steps: TutorialStep[] = [
         <div className="flex gap-2">
           <Button onClick={back}>{t("Retour", "Back")}</Button>
           <Button variant="cta" size="cta" onClick={next}>
-            t("Suivant", "Next")
+            {t("Suivant", "Next")}
           </Button>
         </div>
       </Tutorial>
@@ -393,7 +393,7 @@ const steps: TutorialStep[] = [
         <div className="flex gap-2">
           <Button onClick={back}>{t("Retour", "Back")}</Button>
           <Button variant="cta" size="cta" onClick={next}>
-            t("Suivant", "Next")
+            {t("Suivant", "Next")}
           </Button>
         </div>
       </Tutorial>
@@ -425,7 +425,7 @@ const steps: TutorialStep[] = [
         <div className="flex gap-2">
           <Button onClick={back}>{t("Retour", "Back")}</Button>
           <Button variant="cta" size="cta" onClick={next}>
-            t("Suivant", "Next")
+            {t("Suivant", "Next")}
           </Button>
         </div>
       </Tutorial>
@@ -459,7 +459,7 @@ const steps: TutorialStep[] = [
         <div className="flex gap-2">
           <Button onClick={back}>{t("Retour", "Back")}</Button>
           <Button variant="cta" size="cta" onClick={next}>
-            t("Suivant", "Next")
+            {t("Suivant", "Next")}
           </Button>
         </div>
       </Tutorial>
@@ -497,7 +497,7 @@ const steps: TutorialStep[] = [
         <div className="flex gap-2">
           <Button onClick={back}>{t("Retour", "Back")}</Button>
           <Button variant="cta" size="cta" onClick={next}>
-            t("Suivant", "Next")
+            {t("Suivant", "Next")}
           </Button>
         </div>
       </Tutorial>
@@ -549,7 +549,7 @@ const steps: TutorialStep[] = [
               next()
             }}
           >
-            t("Suivant", "Next")
+            {t("Suivant", "Next")}
           </Button>
         </div>
       </Tutorial>
