@@ -70,6 +70,8 @@ export const Money = ({
   )
 }
 
+const PLURAL_Y_TO_IE_EXCEPTIONS = ["day"]
+
 export const Tag = ({
   name,
   plural,
@@ -85,7 +87,9 @@ export const Tag = ({
 
   const computed = plural
     ? "plural" in tag
-      ? tag.name.replace(/y$/, "ie") + tag.plural
+      ? (!PLURAL_Y_TO_IE_EXCEPTIONS.includes(tag.name)
+          ? tag.name.replace(/y$/, "ie")
+          : tag.name) + tag.plural
       : tag.name
     : tag.name
 
