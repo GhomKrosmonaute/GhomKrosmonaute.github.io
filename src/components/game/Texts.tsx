@@ -87,7 +87,7 @@ export const Tag = ({
 
   const computed = plural
     ? "plural" in tag
-      ? (!PLURAL_Y_TO_IE_EXCEPTIONS.includes(tag.name)
+      ? (!PLURAL_Y_TO_IE_EXCEPTIONS.includes(tag.name.toLocaleLowerCase())
           ? tag.name.replace(/y$/, "ie")
           : tag.name) + tag.plural
       : tag.name
