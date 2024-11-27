@@ -87,7 +87,7 @@ const reusable = {
           <Tag name="pick" /> une carte {label}
         </>,
         <>
-          <Tag name="pick" /> a {label} card
+          <Tag name="pick" /> a card {label}
         </>,
       ),
       onPlayed: async (state) => {
@@ -610,7 +610,7 @@ const actions: ActionCardInfo[] = (
               "Baisse le prix des cartes en main de",
               "Lowers the price of the cards in your hand of",
             )}{" "}
-            <Tag name="energy" plural={plural} /> {t("ou de", "or")}{" "}
+            {value} <Tag name="energy" plural={plural} /> {t("ou de", "or")}{" "}
             <Money M$={value * ENERGY_TO_MONEY} />
           </>
         ),
@@ -822,10 +822,7 @@ const actions: ActionCardInfo[] = (
         description: (
           <>
             <Tag name="destroy" />{" "}
-            {t(
-              "une carte et gagne son coût en",
-              "destroy a card and gain its cost in",
-            )}{" "}
+            {t("une carte et gagne son coût en", "a card and gain its cost in")}{" "}
             <Tag name="reputation" />
           </>
         ),

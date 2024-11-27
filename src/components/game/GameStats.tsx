@@ -145,7 +145,10 @@ export const Stats = (props: { className?: string; forHUD?: boolean }) => {
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Rechercher dans le deck..."
+                placeholder={t(
+                  "Rechercher dans le deck...",
+                  "Search in deck...",
+                )}
                 className="flex-grow"
               />
               {search.length > 0 && (

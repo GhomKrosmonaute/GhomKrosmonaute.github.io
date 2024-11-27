@@ -129,7 +129,11 @@ export const GameResourceCard = (
                 <Money M$={props.resource.value} />
               ) : (
                 <>
-                  {props.resource.value} <Tag name={props.resource.type} />
+                  {props.resource.value}{" "}
+                  <Tag
+                    name={props.resource.type}
+                    plural={props.resource.value > 1}
+                  />
                 </>
               )}
             </div>
