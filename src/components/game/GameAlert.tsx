@@ -1,4 +1,4 @@
-import Warning from "@/assets/icons/Warning.svg"
+import Warning from "@/assets/icons/warning.svg"
 import { Tag } from "@/components/game/Texts.tsx"
 import { MAX_HAND_SIZE } from "@/game-constants.ts"
 import { getDeck } from "@/game-safe-utils.tsx"
