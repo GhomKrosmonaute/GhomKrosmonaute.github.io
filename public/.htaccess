@@ -1,0 +1,11 @@
+# Support du routing côté client pour React
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ /index.html [L]
+
+# Configuration des en-têtes de sécurité avec des sources externes autorisées
+<IfModule mod_headers.c>
+    # Policy permettant les ressources externes nécessaires
+    Header set Content-Security-Policy "default-src 'self' https://prod.spline.design https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; img-src 'self' data: https://prod.spline.design; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://prod.spline.design https://unpkg.com"
+</IfModule>
