@@ -1,5 +1,9 @@
-# Support du routing côté client pour React
+# Redirection vers HTTPS
 RewriteEngine On
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Support du routing côté client pour React
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^ /index.html [L]
