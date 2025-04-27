@@ -53,5 +53,5 @@ export const useKonamiCode = () => {
     return () => {
       window.removeEventListener("keydown", onKeyDown)
     }
-  }, [index, timer, debug, setDebug])
+  }, [debug, timer, index])
 }

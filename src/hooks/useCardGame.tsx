@@ -296,7 +296,8 @@ function generateGlobalGameMethods(
           }
         }
 
-        state.setOperationInProgress("checkAchievements", false)
+        if(getState().operationInProgress.includes("checkAchievements"))
+          state.setOperationInProgress("checkAchievements", false)
       })
     },
 
@@ -310,6 +311,8 @@ function generateGlobalGameMethods(
 
     addDiscovery: (...names) => {
       handleErrors(getState, () => {
+        if(names.length === getState().discoveries.length) return
+
         set((state) => {
           return {
             discoveries: Array.from(new Set([...state.discoveries, ...names])),
